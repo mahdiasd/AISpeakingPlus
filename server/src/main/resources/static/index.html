@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AISpeaking | تمرین مکالمه انگلیسی با هوش مصنوعی – تقویت اسپیکینگ بدون استرس</title>
+    <meta name="description" content="با AISpeaking هر روز مکالمه انگلیسی را با یک پارتنر هوش مصنوعی تمرین کن؛ تلفظت را اصلاح کن، بازخورد فارسی بگیر و با اعتمادبه‌نفس انگلیسی حرف بزن. دانلود رایگان اپلیکیشن تمرین مکالمه انگلیسی."/>
+    <meta name="keywords" content="تمرین مکالمه انگلیسی, هوش مصنوعی, تقویت اسپیکینگ, یادگیری زبان انگلیسی, اپلیکیشن زبان, پارتنر مکالمه, تصحیح تلفظ, AISpeaking"/>
+    <link rel="icon" href="https://aispeaking.ir/resources/landing/logo.png" type="image/png"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+
+        :root{
+            --brand:#6C63FF;
+            --brand-dark:#5A4FCF;
+            --accent:#4ECDC4;
+            --accent-dark:#45B7AC;
+            --ink:#2D1B69;
+            --muted:#6B7280;
+            --surface:#FFFFFF;
+            --soft:#F8FAFC;
+            --soft-border:rgba(108,99,255,.08);
+            --gradient-primary:linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            --gradient-secondary:linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+            --shadow-soft:0 10px 30px rgba(0,0,0,0.1);
+            --shadow-hover:0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        *{margin:0;padding:0;box-sizing:border-box}
+        html{scroll-behavior:smooth}
+        body{
+            font-family:'Vazirmatn',sans-serif;
+            background:var(--gradient-primary);
+            overflow-x:hidden; line-height:1.7; color:var(--ink);
+        }
+        .container{max-width:1200px;margin:0 auto;padding:0 20px}
+
+        /* Header with Glassmorphism Effect */
+        .header{
+            background:rgba(255, 255, 255, 0.1); /* Translucent light background */
+            backdrop-filter:blur(20px);
+            -webkit-backdrop-filter:blur(20px);
+            border-bottom:1px solid rgba(255,255,255,.2);
+            position:fixed; inset-block-start:0; inline-size:100%;
+            z-index:1000; transition:.3s ease;
+        }
+        .header.scrolled{
+            background:rgba(255, 255, 255, 0.95);
+            box-shadow:var(--shadow-soft)
+        }
+        .header.scrolled .logo{color:var(--ink)}
+        .header.scrolled .nav-links a{color:var(--muted)}
+        .header.scrolled .nav-links a:hover{color:var(--brand)}
+        .nav{display:flex;justify-content:space-between;align-items:center;padding:1rem 0}
+        .logo{font-size:1.6rem;font-weight:800;color:#fff;text-decoration:none;display:flex;gap:.5rem;align-items:center;transition:.3s}
+        .logo img{inline-size:36px;block-size:36px;filter:none}
+        .nav-links{list-style:none;display:flex;gap:2rem; align-items: center;}
+        .nav-links a{color:#fff;text-decoration:none;font-weight:600;transition:.3s}
+        .nav-links a:hover{color:#e0e0ff}
+        .nav-links .download-btn {
+            background: var(--gradient-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            transition: .3s;
+        }
+        .nav-links .download-btn:hover {
+            background: var(--brand);
+            transform: translateY(-2px);
+        }
+
+        /* Hero */
+        .hero{
+            min-height:100vh; display:flex; align-items:center; position:relative; overflow:hidden; color:#fff; padding-top:110px;
+        }
+        .hero::before{
+            content:''; position:absolute; inset:0;
+            background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a"><stop offset="0%" stop-color="rgba(255,255,255,0.15)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient></defs><circle cx="200" cy="200" r="4" fill="url(%23a)"/><circle cx="600" cy="300" r="3" fill="url(%23a)"/><circle cx="800" cy="100" r="5" fill="url(%23a)"/><circle cx="300" cy="600" r="3" fill="url(%23a)"/><circle cx="900" cy="700" r="4" fill="url(%23a)"/><circle cx="100" cy="800" r="2" fill="url(%23a)"/></svg>');
+            animation:float 25s ease-in-out infinite;
+        }
+        @keyframes float{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-30px) rotate(180deg)}}
+
+        .hero-content{display:grid; grid-template-columns:1.2fr 0.8fr; gap:clamp(2rem,4vw,5rem); align-items:center; position:relative; z-index:2}
+        .hero-text h1{
+            font-size:clamp(2rem,3vw + 1rem,3rem);
+            line-height:1.3; margin-bottom:clamp(1.2rem,2.5vw,1.5rem);
+            letter-spacing:-0.3px; position:relative;
+        }
+        .hero-text h1::after{
+            content:''; position:absolute; bottom:-10px; right:0; width:60px; height:3px; background:var(--gradient-secondary); border-radius:2px;
+        }
+        .hero-text .highlight{color:var(--accent); position:relative; z-index:1}
+        .hero-text p{
+            font-size:clamp(1rem,1.1vw + 0.6rem,1.1rem);
+            line-height:1.8; color:rgba(255,255,255,.95);
+            margin-bottom:clamp(1.5rem,3vw,2.5rem); max-width:55ch;
+        }
+
+        /* CTA - FIX for hover */
+        .cta-button{
+            display:inline-flex; align-items:center; gap:.6rem;
+            background:var(--gradient-secondary); color:#fff;
+            padding:clamp(.9rem,1.8vw,1.1rem) clamp(1.3rem,3vw,2rem);
+            border-radius:50px; text-decoration:none; font-weight:700;
+            font-size:clamp(1rem,0.9vw,1.1rem);
+            transition:.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); box-shadow:var(--shadow-soft);
+            position:relative; overflow:hidden;
+            white-space: nowrap;
+        }
+        .cta-button > * { position: relative; z-index: 2; } /* Keep content above the hover effect */
+        .cta-button::before{
+            content:''; position:absolute; inset:0; background:var(--gradient-primary); opacity:0; transition:.3s; z-index: 1;
+        }
+        .cta-button:hover::before{opacity:1}
+        .cta-button:hover{transform:translateY(-4px) scale(1.02); box-shadow:var(--shadow-hover)}
+
+        .hero-visual{position:relative}
+        .phone-mockup{
+            inline-size:clamp(240px,28vw,320px);
+            block-size:clamp(480px,56vw,640px);
+            background:linear-gradient(145deg,#2D1B69,#1E0F3A);
+            border-radius:40px; padding:25px; margin:0 auto; position:relative;
+            box-shadow:0 40px 80px rgba(0,0,0,.3); animation:phoneFloat 4s ease-in-out infinite;
+        }
+        @keyframes phoneFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-15px) rotate(2deg)}}
+        .phone-screen{
+            inline-size:100%; block-size:100%; background:var(--gradient-primary);
+            border-radius:25px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:2.5rem;
+            position:relative; overflow:hidden;
+        }
+        .phone-screen::before{
+            content:''; position:absolute; inset:0; background:radial-gradient(circle at 30% 70%, rgba(78,205,196,0.3) 0%, transparent 50%);
+            animation:pulse 3s ease-in-out infinite;
+        }
+        @keyframes pulse{0%,100%{opacity:0.5; transform:scale(1)}50%{opacity:1; transform:scale(1.1)}}
+        .phone-screen i{font-size:4rem; margin-bottom:1rem; color:var(--accent); position:relative; z-index:1}
+        .phone-screen h3{font-size:1.1rem; margin-bottom:.5rem; position:relative; z-index:1}
+        .phone-screen p{font-size:.95rem; position:relative; z-index:1}
+
+        .floating-elements{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:140%; height:140%; pointer-events:none}
+        .floating-element{
+            position:absolute; background:rgba(255,255,255,.15); backdrop-filter:blur(15px);
+            border:1px solid rgba(255,255,255,.3); border-radius:20px; padding:1rem 1.2rem; font-size:.9rem;
+            animation:floatAround 10s ease-in-out infinite; box-shadow:var(--shadow-soft);
+        }
+        .floating-element:nth-child(1){top:15%; right:15%; animation-delay:0s}
+        .floating-element:nth-child(2){bottom:25%; left:10%; animation-delay:3s}
+        .floating-element:nth-child(3){top:65%; right:5%; animation-delay:6s}
+        @keyframes floatAround{0%,100%{transform:translateY(0) rotate(0deg) scale(1); opacity:.8}50%{transform:translateY(-25px) rotate(10deg) scale(1.05); opacity:1}}
+
+        /* Sections */
+        .section{padding:7rem 0; background:var(--surface); position:relative}
+        .section-title{text-align:center; margin-bottom:4rem}
+        .section-title h2{font-size:2.3rem; font-weight:800; margin-bottom:.8rem; position:relative}
+        .section-title p{font-size:1.1rem; color:var(--muted); max-width:60ch; margin:0 auto}
+
+        /* How it works */
+        #how-it-works{background:linear-gradient(135deg, var(--soft) 0%, #E0E7FF 100%)}
+        .how-it-works-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:2.5rem}
+        .step-card{text-align:center; padding:2.5rem; background:var(--surface); border-radius:25px; transition:.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow:var(--shadow-soft); position:relative; overflow:hidden;}
+        .step-card::before{
+            content:''; position:absolute; inset:0; background:var(--gradient-secondary); opacity:0; transition:.4s;
+        }
+        .step-card:hover::before{opacity:0.05}
+        .step-card:hover{transform:translateY(-10px); box-shadow:var(--shadow-hover)}
+        .step-icon{
+            inline-size:90px; block-size:90px; background:var(--gradient-primary);
+            border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;
+            font-size:2.5rem; color:#fff; transition:.3s; box-shadow:var(--shadow-soft);
+        }
+        .step-card:hover .step-icon{transform:rotate(360deg) scale(1.1)}
+        .step-card h3{font-size:1.3rem; margin-bottom:.5rem; font-weight:700}
+        .step-card p{color:var(--muted); line-height:1.8}
+
+        /* Features */
+        .features-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:2rem}
+        .feature-card{
+            background:var(--surface); padding:2.5rem; border-radius:25px; text-align:center; transition:.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border:1px solid var(--soft-border); position:relative; overflow:hidden; box-shadow:var(--shadow-soft);
+        }
+        .feature-card::before{
+            content:''; position:absolute; top:0; right:-100%; width:100%; height:100%; background:linear-gradient(90deg, transparent, rgba(108,99,255,0.05), transparent);
+            transition:.6s; pointer-events:none;
+        }
+        .feature-card:hover::before{right:100%}
+        .feature-card:hover{transform:translateY(-12px) rotate(1deg); box-shadow:var(--shadow-hover)}
+        .feature-icon{
+            inline-size:80px; block-size:80px; background:var(--gradient-secondary);
+            border-radius:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;
+            font-size:2rem; color:#fff; transition:.3s;
+        }
+        .feature-card:hover .feature-icon{transform:scale(1.1) rotate(180deg)}
+        .feature-card h3{font-size:1.25rem; font-weight:800; margin-bottom:.8rem}
+        .feature-card p{color:var(--muted); font-size:1rem; line-height:1.8}
+
+        /* Testimonials - Enhanced Slider */
+        #testimonials{background:linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 100%)}
+        .slider{position:relative; overflow:hidden; border-radius:25px; padding:1rem; background:var(--surface); box-shadow:var(--shadow-soft)}
+        .slides{
+            display:flex; gap:1.5rem; scroll-snap-type:x mandatory; overflow-x:auto; padding-bottom:1rem;
+            -webkit-overflow-scrolling:touch; scroll-behavior:smooth;
+        }
+        .slides::-webkit-scrollbar{height:6px; background:transparent}
+        .slides::-webkit-scrollbar-thumb{background:var(--brand); border-radius:10px; opacity:0.5}
+        .slides::-webkit-scrollbar-thumb:hover{opacity:1}
+        .slide{
+            flex:0 0 35%; min-width:340px; max-width:420px;
+            scroll-snap-align:center;
+        }
+        .testimonial-card{
+            background:linear-gradient(135deg, #F8FAFC, #E2E8F0); padding:2rem; border-radius:20px; border:1px solid rgba(108,99,255,0.1);
+            height:100%; display:flex; flex-direction:column; gap:1rem; transition:.3s; box-shadow:var(--shadow-soft);
+        }
+        .testimonial-card:hover{transform:scale(1.02); box-shadow:var(--shadow-hover)}
+        .testimonial-header{display:flex; align-items:center; gap:1rem}
+        .testimonial-header img{inline-size:52px; block-size:52px; border-radius:50%; object-fit:cover; border:2px solid var(--accent)}
+        .testimonial-header h4{font-size:1.05rem; font-weight:600}
+        .testimonial-card blockquote{color:var(--ink); font-style:italic; line-height:1.8; font-size:1rem; position:relative}
+        .testimonial-card blockquote::before{content:'"'; font-size:3rem; color:var(--accent); position:absolute; top:-10px; right:0; opacity: 0.5;}
+        .testimonial-card blockquote::after{content:'"'; font-size:3rem; color:var(--accent); position:absolute; bottom:-20px; left:0; transform:rotate(180deg); opacity: 0.5;}
+        .slider-controls{display:flex; justify-content:center; align-items:center; gap:.5rem; margin-top:1.5rem}
+        .dot{
+            inline-size:10px; block-size:10px; border-radius:50%; background:var(--soft-border); opacity:.6; transition:.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor:pointer;
+        }
+        .dot.active{background:var(--brand); opacity:1; transform:scale(1.2)}
+        .slider-nav{
+            position:absolute; inset-block-start:0; inset-block-end:0; inset-inline:0;
+            display:flex; justify-content:space-between; align-items:flex-end;
+            padding-bottom:1rem; pointer-events:none;
+        }
+        .slider-btn{
+            pointer-events:auto; background:rgba(255,255,255,.95); border:1px solid var(--soft-border);
+            inline-size:45px; block-size:45px;
+            display:flex; align-items:center; justify-content:center; border-radius:50%;
+            cursor:pointer; transition:.3s; box-shadow:var(--shadow-soft);
+        }
+        .slider-btn:hover{transform:translateY(-3px) scale(1.1); background:var(--brand); color:#fff}
+        .slider-btn i{font-size:1.2rem}
+
+        /* Download */
+        .download{padding:7rem 0; background:linear-gradient(135deg, var(--soft) 0%, #E0E7FF 100%); text-align:center}
+        .download-content{max-width:700px; margin:0 auto}
+        .download-content h2{font-size:1.8rem; margin-bottom:.8rem; position:relative}
+        .download-content p{font-size:1.05rem; color:var(--muted); line-height:1.8; margin-bottom:1.5rem}
+        .download-image-link{display:inline-block; transition:.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); border-radius:20px; overflow:hidden; box-shadow:var(--shadow-soft)}
+        .download-image-link:hover{transform:translateY(-8px) rotate(2deg); box-shadow:var(--shadow-hover)}
+        .download-image-link img{max-width:240px; height:auto; display:block; transition:.3s}
+
+        /* Footer */
+        .footer{background:linear-gradient(135deg, #1E0F3A 0%, #2D1B69 100%); color:#fff; padding:4rem 0 2rem}
+        .footer-content{text-align:center}
+        .footer h3{font-size:1.3rem; margin-bottom:.8rem}
+        .footer p{opacity:.9; margin-bottom:2rem}
+        .social-links{display:flex; justify-content:center; gap:1.2rem; margin-bottom:2rem}
+        .social-links a{
+            inline-size:50px; block-size:50px; background:rgba(255,255,255,.1); border-radius:50%;
+            display:flex; align-items:center; justify-content:center; color:#fff; text-decoration:none; transition:.3s;
+            box-shadow:var(--shadow-soft);
+        }
+        .social-links a:hover{transform:translateY(-5px) rotate(360deg); box-shadow:var(--shadow-hover)}
+        .social-links a.whatsapp:hover{background:#25D366}
+        .social-links a.telegram:hover{background:#0088CC}
+        .copyright{text-align:center; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,.1); opacity:.8; font-size:.9rem}
+
+        /* Very wide screens */
+        @media (min-width:1400px){
+            .container{max-width:1150px}
+            .floating-elements{transform:translate(-50%,-50%) scale(0.9)}
+        }
+
+        /* Mobile */
+        @media (max-width:900px){
+            .hero-content{grid-template-columns:1fr; text-align:center; gap:2rem}
+            .hero-text h1{font-size:clamp(1.8rem,4vw + .8rem,2.5rem); line-height:1.35}
+            .hero-text h1::after{left:50%; transform:translateX(-50%)}
+            .hero-text p{margin:0 auto 2.5rem}
+            .phone-mockup{inline-size:260px; block-size:520px; margin-top:1.5rem}
+        }
+        @media (max-width:768px){
+            .nav-links{display:none}
+            .section{padding:5rem 0}
+            .features-grid,.how-it-works-grid{grid-template-columns:1fr; gap:1.5rem}
+            .slides{gap:1rem}
+            .slide{flex:0 0 90%; min-width:90%}
+            .slider-nav{display:none}
+            .download-content h2{font-size:1.5rem}
+            .social-links{gap:1rem}
+            .social-links a{inline-size:45px; block-size:45px}
+        }
+    </style>
+</head>
+<body>
+<header class="header" id="header">
+    <div class="container">
+        <nav class="nav" aria-label="ناوبری اصلی">
+            <a href="#" class="logo" aria-label="AISpeaking - صفحه اصلی">
+                <img src="https://aispeaking.ir/resources/landing/logo.png" alt="لوگوی AISpeaking"/> AISpeaking
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">ویژگی‌ها</a></li>
+                <li><a href="#how-it-works">چطور کار می‌کند؟</a></li>
+                <li><a href="#testimonials">تجربه زبان‌آموزها</a></li>
+                <li><a href="#download" class="download-btn">دانلود اپلیکیشن</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text" data-aos="fade-up" data-aos-duration="1000">
+                    <h1>
+                        تمرین مکالمهٔ انگلیسی با هوش مصنوعی<br/>
+                        <span class="highlight">روان و بی‌استرس حرف بزن</span>
+                    </h1>
+                    <p>
+                        <strong>AISpeaking</strong> پارتنر هوشمند توئه؛ هر روز توی سناریوهای واقعی تمرین کن،
+                        اشتباهاتت رو همون لحظه ببین و کم‌کم با اعتمادبه‌نفس انگلیسی صحبت کن.
+                    </p>
+                    <a href="#download" class="cta-button" aria-label="دانلود رایگان اپلیکیشن تمرین مکالمه انگلیسی">
+                        <i class="fas fa-download" aria-hidden="true"></i>
+                        <span>دانلود رایگان و شروع تمرین</span>
+                    </a>
+                </div>
+
+                <div class="hero-visual" data-aos="fade-left" data-aos-duration="1000" data-aos-delay="300">
+                    <div class="phone-mockup">
+                        <div class="phone-screen">
+                            <i class="fas fa-comments"></i>
+                            <h3>مکالمهٔ هوشمند</h3>
+                            <p>پارتنر مکالمه همیشه کنارته</p>
+                        </div>
+                    </div>
+                    <div class="floating-elements">
+                        <div class="floating-element"><i class="fas fa-user-robot" aria-hidden="true"></i> پارتنر هوش مصنوعی</div>
+                        <div class="floating-element"><i class="fas fa-check-circle" aria-hidden="true"></i> تصحیح اشتباهات مکالمه</div>
+                        <div class="floating-element"><i class="fas fa-fire" aria-hidden="true"></i> چالش روزانه</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="how-it-works">
+        <div class="container">
+            <div class="section-title" data-aos="fade-up">
+                <h2>فقط ۳ قدم تا اسپیکینگ روان</h2>
+                <p>با این مراحل ساده، هر روز پیشرفت کن و به هدفت برسی</p>
+            </div>
+            <div class="how-it-works-grid">
+                <div class="step-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="step-icon"><i class="fas fa-map-signs" aria-hidden="true"></i></div>
+                    <h3>۱. سناریو رو انتخاب کن</h3>
+                    <p>از رستوران تا مصاحبه شغلی؛ موقعیت‌های واقعی رو انتخاب کن تا برای شرایطِ واقعی آماده باشی.</p>
+                </div>
+                <div class="step-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="step-icon"><i class="fas fa-microphone-alt" aria-hidden="true"></i></div>
+                    <h3>۲. شروع مکالمه</h3>
+                    <p>بدون استرس حرف بزن؛ هوش مصنوعی همیشه آمادهٔ تمرینه و مکالمه رو روان جلو می‌بره.</p>
+                </div>
+                <div class="step-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="step-icon"><i class="fas fa-spell-check" aria-hidden="true"></i></div>
+                    <h3>۳. بازخورد فوری</h3>
+                    <p>اشتباهات گرامر و تلفظ رو با توضیح فارسی همون لحظه ببین و قدم‌به‌قدم بهتر شو.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="features">
+        <div class="container">
+            <div class="section-title" data-aos="fade-up">
+                <h2>همه‌چیز برای تقویت اسپیکینگ اینجاست</h2>
+                <p>هرچی برای یادگیری مؤثر و نتیجه‌گرفتن لازم داری، توی یک اپلیکیشن جمع شده</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon"><i class="fas fa-theater-masks" aria-hidden="true"></i></div>
+                    <h3>سناریوهای واقعی</h3>
+                    <p>خرید، سفر، مصاحبه و... تو موقعیت‌های شبیه‌سازی‌شده مهارت‌های کاربردی رو تمرین کن.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon"><i class="fas fa-lightbulb" aria-hidden="true"></i></div>
+                    <h3>پیشنهاد هوشمند</h3>
+                    <p>اگه گیر کردی و دیگه نمیدونستی چی باید بگی، هوش مصنوعی بهت میگه چی باید بگی</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
+                    <h3>تصحیح فوری</h3>
+                    <p>خطاهایی که در حین مکالمه داری رو هوش مصنوعی به فارسی بهت توضیح میده و شکل صحیحش رو میگه</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-icon"><i class="fas fa-calendar-alt" aria-hidden="true"></i></div>
+                    <h3>چالش‌های روزانه</h3>
+                    <p>با تمرین‌ها و کلمه‌های روزانه پایِ تمرین بمون و پیوسته پیشرفت کن.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
+                    <div class="feature-icon"><i class="fas fa-trophy" aria-hidden="true"></i></div>
+                    <h3>رقابت و امتیاز</h3>
+                    <p>امتیاز بگیر، برو بالای جدول و نتیجهٔ تمرین‌هات رو ملموس ببین.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="600">
+                    <div class="feature-icon"><i class="fas fa-bookmark" aria-hidden="true"></i></div>
+                    <h3>جعبه لایتنر</h3>
+                    <p>کلماتی که نمیدونی رو با ترجمشون به لایتنر اضافه کن تا بعد مرور کنی</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="testimonials">
+        <div class="container">
+            <div class="section-title" data-aos="fade-up">
+                <h2>تجربهٔ زبان‌آموزهای AISpeaking</h2>
+                <p>ببین چطور AISpeaking مسیر یادگیریشون رو تغییر داد</p>
+            </div>
+
+            <div class="slider" data-aos="fade-up" data-aos-delay="200">
+                <div class="slider-nav" aria-hidden="true">
+                    <button class="slider-btn" id="prevBtn" aria-label="قبلی"><i class="fas fa-chevron-right"></i></button>
+                    <button class="slider-btn" id="nextBtn" aria-label="بعدی"><i class="fas fa-chevron-left"></i></button>
+                </div>
+
+                <div class="slides" id="slides" tabindex="0">
+                    <article class="slide"><div class="testimonial-card"><div class="testimonial-header"><img src="https://i.pravatar.cc/100?img=5" alt="نظر کاربر سارا احمدی"/><h4>سارا احمدی</h4></div><blockquote>بهترین اپلیکیشن برای اسپیکینگ! هر وقت بخوام یه پارتنر هوشمند دارم. بازخوردها دقیق و به‌دردبخوره.</blockquote></div></article>
+                    <article class="slide"><div class="testimonial-card"><div class="testimonial-header"><img src="https://i.pravatar.cc/100?img=11" alt="نظر کاربر علی رضایی"/><h4>علی رضایی</h4></div><blockquote>همیشه از حرف‌زدن به انگلیسی می‌ترسیدم؛ با سناریوها و جمله‌های پیشنهادی، ترسم ریخت و الان خیلی روون‌تر حرف می‌زنم.</blockquote></div></article>
+                    <article class="slide"><div class="testimonial-card"><div class="testimonial-header"><img src="https://i.pravatar.cc/100?img=21" alt="نظر کاربر نگار محمدی"/><h4>نگار محمدی</h4></div><blockquote>بازخورد فارسیش عالیه. دقیقاً می‌گه کجا اشتباه گفتم و همون‌جا مثال می‌زنه که بهتر بگم.</blockquote></div></article>
+                    <article class="slide"><div class="testimonial-card"><div class="testimonial-header"><img src="https://i.pravatar.cc/100?img=56" alt="نظر کاربر پارسا میرزایی"/><h4>پارسا میرزایی</h4></div><blockquote>چالش‌های روزانه باعث شد هر روز حتی ۱۰ دقیقه تمرین کنم. نتیجه‌ش واقعاً ملموسه.</blockquote></div></article>
+                    <article class="slide"><div class="testimonial-card"><div class="testimonial-header"><img src="https://i.pravatar.cc/100?img=10" alt="نظر کاربر آیدا سهرابی"/><h4>آیدا سهرابی</h4></div><blockquote>برای مصاحبهٔ کاری آماده شدم و کلی اعتمادبه‌نفس گرفتم. سناریوهایش دقیق و کاربردی‌ان.</blockquote></div></article>
+                    <article class="slide"><div class="testimonial-card"><div class="testimonial-header"><img src="https://i.pravatar.cc/100?img=12" alt="نظر کاربر امیرحسین کاظمی"/><h4>امیرحسین کاظمی</h4></div><blockquote>جعبهٔ لایتنر واقعاً کمک کرد کلمات رو یادم نره. پیشنهاد می‌کنم امتحانش کنید.</blockquote></div></article>
+                </div>
+                <div class="slider-controls" id="dots" aria-label="صفحه‌بندی اسلایدها"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="download" id="download">
+        <div class="container">
+            <div class="download-content" data-aos="zoom-in" data-aos-duration="1000">
+                <h2>آماده‌ای اسپیکینگت رو متحول کنی؟</h2>
+                <p>اپلیکیشن رو رایگان دانلود کن و همین امروز اولین مکالمه‌ات رو با پارتنر هوشمند شروع کن.</p>
+                <a href="https://cafebazaar.ir/app/ir.aispeaking" class="download-image-link" target="_blank" rel="noopener noreferrer">
+                    <img src="https://aispeaking.ir/resources/landing/bazaar.png" alt="دانلود اپلیکیشن AISpeaking از کافه بازار"/>
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-content" data-aos="fade-up">
+            <h3>AISpeaking</h3>
+            <p>پارتنر هوشمند تمرین مکالمهٔ انگلیسی</p>
+            <div class="social-links" aria-label="شبکه‌های اجتماعی">
+                <a href="https://t.me/+989023125414" class="telegram" aria-label="تلگرام" target="_blank" rel="noopener noreferrer"><i class="fab fa-telegram" aria-hidden="true"></i></a>
+                <a href="https://wa.me/989023125414" class="whatsapp" aria-label="واتس‌اپ" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2025 AISpeaking. تمام حقوق محفوظ است.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({duration: 1000, once: true, offset: 100});
+
+    // Header scroll effect
+    window.addEventListener('scroll', function () {
+        const header = document.getElementById('header');
+        if (window.scrollY > 50) { header.classList.add('scrolled'); }
+        else { header.classList.remove('scrolled'); }
+    });
+
+    // Enhanced Testimonials Slider
+    (function(){
+        const slides = document.getElementById('slides');
+        if (!slides) return;
+
+        const dotsWrap = document.getElementById('dots');
+        const prev = document.getElementById('prevBtn');
+        const next = document.getElementById('nextBtn');
+        const items = Array.from(slides.querySelectorAll('.slide'));
+        const total = items.length;
+        let autoPlayInterval;
+
+        // build dots
+        items.forEach((_, i)=>{
+            const d=document.createElement('span');
+            d.className='dot';
+            d.setAttribute('role','button');
+            d.setAttribute('tabindex','0');
+            d.ariaLabel = `رفتن به اسلاید ${i + 1}`;
+            d.addEventListener('click', ()=>goTo(i));
+            d.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); goTo(i);} });
+            dotsWrap.appendChild(d);
+        });
+
+        const dots = Array.from(dotsWrap.children);
+
+        function getVisibleIndex(){
+            let closestIndex = 0;
+            let smallestDistance = Infinity;
+            const scrollCenter = slides.scrollLeft + slides.clientWidth / 2;
+
+            items.forEach((item, index) => {
+                const itemCenter = item.offsetLeft + item.clientWidth / 2;
+                const distance = Math.abs(scrollCenter - itemCenter);
+                if (distance < smallestDistance) {
+                    smallestDistance = distance;
+                    closestIndex = index;
+                }
+            });
+            return closestIndex;
+        }
+
+        function updateDots(){
+            const idx = getVisibleIndex();
+            dots.forEach((d,i)=> d.classList.toggle('active', i===idx));
+        }
+
+        function goTo(i){
+            const el = items[i];
+            const scrollPos = el.offsetLeft - (slides.clientWidth - el.clientWidth) / 2;
+            slides.scrollTo({left: scrollPos, behavior:'smooth'});
+            setTimeout(updateDots, 400); // Wait for scroll to finish
+        }
+
+        function startAutoplay() {
+            stopAutoplay();
+            autoPlayInterval = setInterval(()=> {
+                let nextIndex = (getVisibleIndex() + 1) % total;
+                goTo(nextIndex);
+            }, 5000);
+        }
+
+        function stopAutoplay() {
+            clearInterval(autoPlayInterval);
+        }
+
+        // Event Listeners
+        if(prev && next){
+            prev.addEventListener('click', ()=>goTo(Math.max(0, getVisibleIndex()-1)));
+            next.addEventListener('click', ()=>goTo(Math.min(total-1, getVisibleIndex()+1)));
+        }
+
+        let scrollTimeout;
+        slides.addEventListener('scroll', ()=>{
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(updateDots, 150);
+        });
+        window.addEventListener('resize', updateDots);
+
+        slides.addEventListener('mouseenter', stopAutoplay);
+        slides.addEventListener('mouseleave', startAutoplay);
+        slides.addEventListener('touchstart', stopAutoplay, {passive: true});
+        slides.addEventListener('touchend', startAutoplay, {passive: true});
+
+        // Keyboard navigation
+        slides.addEventListener('keydown', (e)=>{
+            const currentIndex = getVisibleIndex();
+            if(e.key==='ArrowLeft') { // For RTL, left is next
+                goTo(Math.min(total-1, currentIndex + 1));
+            } else if(e.key==='ArrowRight'){
+                goTo(Math.max(0, currentIndex - 1));
+            }
+        });
+
+        // Initialize
+        updateDots();
+        startAutoplay();
+    })();
+</script>
+</body>
+</html>

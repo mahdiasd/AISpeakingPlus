@@ -1,0 +1,41 @@
+
+*.iml
+.gradle
+.idea
+.kotlin
+.DS_Store
+build/
+**/build/
+captures
+.externalNativeBuild
+.cxx
+local.properties
+service-account-key.json
+**/service-account-key.json
+*.env
+*.keystore
+*.gpg
+*yarn.lock
+
+# Database backups & CSV dumps
+*.sql
+*.sql.gz
+*.dump
+*.csv
+backups/
+**/backups/
+
+# Graphify
+graphify-out/
+**/graphify-out/
+
+# Deploy archives & containers
+*.tar.gz
+*.tar
+deploy/
+deploy_dist/
+deploy_files/
+**/deploy/
+**/deploy_dist/
+**/deploy_files/
+

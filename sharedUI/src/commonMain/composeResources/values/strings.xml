@@ -1,0 +1,362 @@
+<resources>
+    <string name="cyclone">Cyclone</string>
+    <string name="open_github">Open github</string>
+    <string name="run">Run</string>
+    <string name="stop">Stop</string>
+    <string name="theme">Theme</string>
+
+    <string name="app_name">AI Speaking</string>
+    <string name="splash_title">Dahi System</string>
+    <string name="splash_description">Remote Support and Repair</string>
+    <string name="splash_loading_text">Receiving Information</string>
+    <string name="try_again">Try Again</string>
+
+    <!--  Invalidate Errors  -->
+    <string name="error_field_is_empty">Please fill in this field.</string>
+    <string name="error_persian_characters_not_support">Please do not use Persian letters.</string>
+    <string name="error_space_detect">Please do not use spaces.</string>
+    <string name="error_mobile_start_invalid">Your phone number must start with 09.</string>
+    <string name="error_mobile_length_invalid">Your phone number must have 11 numbers.</string>
+    <string name="error_mobile_format_invalid">Your phone number is not right.</string>
+    <string name="error_no_digit_format">Please enter only numbers.</string>
+    <string name="error_max_length">You used too many letters.</string>
+    <string name="error_language_level">We can not find your language level.</string>
+    <string name="error_cant_find_scenario_id">The scenario you picked has a problem. Sorry, can you pick another one?</string>
+    <string name="error_local_user_not_found">We can not find your details. Sorry, can you log in again?</string>
+    <string name="error_local_scenario_not_found">We can not find the scenario info. Sorry, can you log in again?</string>
+    <string name="error_device_not_support_text_tp_speech">Sorry, your device can not play our AI voice.</string>
+    <string name="error_play_voice">We can not play the voice. Sorry.</string>
+
+    <!--  MainScreen  -->
+    <string name="profile">Profile</string>
+    <string name="scenarios">Scenarios</string>
+    <string name="challenge">Challenge</string>
+    <string name="lightener">Lightener</string>
+    <string name="my_scores">Roadmap</string>
+
+    <!--  AvatarListDialog  -->
+    <string name="avatar_dialog_title">Pick an avatar you like from our list.</string>
+
+    <!-- Button`s -->
+    <string name="send">Send</string>
+
+    <!-- Permissions -->
+    <string name="permission_camera_title">Camera Access</string>
+    <string name="permission_camera_description">We need this to scan codes, take photos, and do video calls.</string>
+
+    <string name="permission_audio_title">Microphone Access</string>
+    <string name="permission_audio_description">To talk with AI, we need your microphone.</string>
+
+    <string name="permission_notification_title">Notification Access</string>
+    <string name="permission_notification_description">We need this to show messages and share screens.</string>
+
+    <!-- PerPermissionScreen -->
+    <string name="_continue">Continue</string>
+    <string name="i_allow">I Allow</string>
+    <string name="permission_guide">To continue, please give permission</string>
+
+    <!-- Empty Screen -->
+    <string name="empty_content_description">Nothing to show here.</string>
+
+    <!-- Error Screen -->
+    <string name="error_content_description">"Oops! Couldn't load data.\nCheck your internet and try again?"</string>
+
+    <!-- Error Screen -->
+    <string name="error_first_chat_of_ai">"It looks like there is a problem with the internet. We could not get the message."</string>
+
+    <!-- Re-Auth Screen -->
+    <string name="re_Auth_content_description">Your session is over. Please log in again.</string>
+    <string name="auth">Login to Application</string>
+
+    <!-- Tabs Titles -->
+    <string name="tab_tile_completed">Completed</string>
+    <string name="tab_tile_canceled">Canceled</string>
+
+    <!-- Session Types -->
+    <string name="public_session">Public Session</string>
+    <string name="private_session">Private Session</string>
+    <string name="create_session">Create Session</string>
+    <string name="join_session">Join Session</string>
+    <string name="_public">Public</string>
+    <string name="_private">Private</string>
+
+    <!-- ComposeFilePicker Config -->
+    <string name="imageTitle">Image</string>
+    <string name="videoTitle">Video</string>
+    <string name="audioTitle">Audio</string>
+    <string name="storageTitle">File</string>
+    <string name="imageAndVideoTitle">Image and Video</string>
+    <string name="dialogTitle">Pick an option</string>
+    <string name="search">Search</string>
+
+    <!-- Language levels name-->
+    <string name="language_level_a1">A1 - (Beginner)</string>
+    <string name="language_level_a2">A2 - (Elementary)</string>
+    <string name="language_level_b1">B1 - (Intermediate)</string>
+    <string name="language_level_b2">B2 - (Upper-Intermediate)</string>
+    <string name="language_level_c1">C1 - (Advanced)</string>
+    <string name="language_level_c2">C2 - (Proficient)</string>
+
+    <!-- Language levels description-->
+    <string name="language_level_a1_desc">"I'm just starting."</string>
+    <string name="language_level_a2_desc">I can use basic phrases.</string>
+    <string name="language_level_b1_desc">I can chat about familiar topics.</string>
+    <string name="language_level_b2_desc">I can discuss complex topics.</string>
+    <string name="language_level_c1_desc">I can express myself fluently.</string>
+    <string name="language_level_c2_desc">I can use English with ease.</string>
+
+    <!-- Language group levels name-->
+    <string name="language_level_group_basic">Easy</string>
+    <string name="language_level_group_intermediate">Normal</string>
+    <string name="language_level_group_advanced">Hard</string>
+
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="level">Level</string>
+
+    <string name="points">Points</string>
+    <string name="login_signup">Login / Signup</string>
+    <string name="error_translation">There is a problem with translation. Please check your internet.</string>
+    <string name="translation_dialog_translate">Translate</string>
+    <string name="translation_dialog_more_translation">More translations</string>
+    <string name="translation_dialog_example">Example</string>
+    <string name="text_copied">Text Copied</string>
+
+    <string name="translations_created">Saved to lightener. Good job!</string>
+    <string name="example">Example</string>
+    <string name="not_now">Not now</string>
+    <string name="delete">Delete</string>
+    <string name="exit">Exit</string>
+    <string name="add_to_lightener">Add to lightener</string>
+    <string name="in_lightener">In Lightener</string>
+
+    <string name="subscription">subscription</string>
+    <string name="choose_the_application_theme">Pick the app theme you like.</string>
+
+    <string name="theme_system_title">System Default</string>
+    <string name="theme_dark_title">Dark Mode</string>
+    <string name="theme_light_title">Light Mode</string>
+    <string name="retry">Retry</string>
+    <string name="unauthorized_content_btn">Get Started</string>
+    <string name="unauthorized_content_title">Speak with AI, improve faster!</string>
+    <string name="unauthorized_content_description">Log in to unlock your personalized speaking practice.</string>
+    <string name="necessary_permission">Necessary Permission</string>
+    <string name="request_permissions">"Tap Continue and choose 'While using the app' for each"</string>
+    <string name="guide">راهنمای اپلیکیشن</string>
+    <string name="guide_dialog_exit">بستن راهنمای اپلیکیشن</string>
+
+
+    <!--Auth-->
+    <string name="auth_screen_mobile_input_hint">09…</string>
+    <string name="auth_screen_otp_input_hint" />
+    <string name="auth_screen_btn_waiting_mobile">Send Code</string>
+    <string name="auth_screen_btn_waiting_otp">"Let's Go"</string>
+    <string name="password">Password</string>
+    <string name="btn_enter">Login</string>
+    <string name="enter_with_scan_barcode">Login with Barcode Scan</string>
+    <string name="have_a_problem_with_enter">Need help logging in?</string>
+    <string name="send_message">Send Message</string>
+    <string name="auth_screen_title">Welcome to AI Speaking!</string>
+    <string name="auth_screen_description">To start, please enter your phone number.</string>
+    <string name="auth_screen_description_otp_mode">Please enter the code we sent to your phone.</string>
+    <string name="auth_screen_wrong_number">Wrong phone number?</string>
+    <string name="auth_screen_change_it">Change it.</string>
+    <string name="retry_send_sms">Send SMS again</string>
+    <string name="otp_code_is_empty">Please fill in the code.</string>
+    <string name="close_privacy_dialog_btn">بستن</string>
+
+
+    <!--Splash-->
+    <string name="syncing_data_from_server">Getting things ready</string>
+    <string name="update">Update</string>
+    <string name="update_available">A new update is ready.</string>
+    <string name="no_browser_installed">لطفا از طریق کافه بازار، اپلیکیشن را بروز نمایید!</string>
+    <string name="exit_app_dialog_title">Exit App</string>
+    <string name="are_you_sure_to_exit_the_app">Are you sure you want to exit?</string>
+
+
+    <string name="register_screen_input_nick_name">Display Name (required)</string>
+    <string name="register_screen_input_first_name">First Name</string>
+    <string name="register_screen_input_last_name">Last Name</string>
+    <string name="register_screen_step1_title">"What's your English level?"</string>
+    <string name="register_screen_step2_title">Please choose an avatar for your profile.</string>
+    <string name="register_screen_step2_title2">Please enter your information here.</string>
+
+    <string name="register_screen_step1_btn">Next Step</string>
+    <string name="register_screen_step2_btn">Register</string>
+    <string name="register_screen_do_not_know_level">Not sure?</string>
+    <string name="register_screen_go_to_language_level">Take the test</string>
+    <string name="register_success_message">You registered successfully. Welcome to our community!</string>
+    <string name="congratulations">Congratulations!</string>
+    <string name="gift_message">As a new user, you get a %1$d-day free trial. Enjoy all app features for free.</string>
+    <string name="lets_start">"Let's Start"</string>
+
+
+    <string name="top_users_title">Top Ten</string>
+    <string name="daily_word_title">Daily Word Question</string>
+    <string name="daily_challenge">Daily Scenario Challenge</string>
+    <string name="btn_word_answer_accept">Send Answer</string>
+    <string name="no_daily_word_exist">Sorry, no daily word for today.</string>
+    <string name="show_more">Show More</string>
+    <string name="show_less">Show Less</string>
+
+    <!-- Chat -->
+    <string name="chat_screen_message_hint">Please write your message here…</string>
+    <string name="chat_screen_title">Speak with</string>
+    <string name="chat_sent_error">We could not send it. Please tap to try again.</string>
+    <string name="close_dialog">Close</string>
+    <string name="dialog_ai_voice_setting_description">This shows the words from the voice.</string>
+    <string name="dialog_ai_voice_setting_title">Voice Text</string>
+    <string name="dialog_pitch_title">Pitch</string>
+    <string name="dialog_speed_title">Speed</string>
+    <string name="dialog_voice_list_engine_title">Your Engine</string>
+    <string name="dialog_voice_list_name_title">Name</string>
+    <string name="dialog_voice_list_quality_title">Quality</string>
+    <string name="dialog_voice_list_title">Voices</string>
+    <string name="exit_dialog_message">Do you want to leave the chat? If you leave, we will not save messages. You will not get points.</string>
+    <string name="exit_dialog_title">Exit</string>
+    <string name="female">Female</string>
+    <string name="finished_task_exit_btn">Exit</string>
+    <string name="finished_task_failed_btn">Try Saving Again</string>
+    <string name="finished_task_failed_state">There was a problem saving. Please check your internet. If we can not save, you will not get points.</string>
+    <string name="finished_task_loading_state">We are saving your score. Please wait a bit!</string>
+    <string name="finished_task_not_exit_btn">Continue</string>
+    <string name="finished_task_sent_state">Great job! You finished all tasks.</string>
+    <string name="finished_task_title">Tasks Finished</string>
+    <string name="grammar_hint">Grammar hint</string>
+    <string name="grammar_is_checking">We are checking grammar.</string>
+    <string name="grammar_is_ok">Grammar is good.</string>
+    <string name="install_tts">Install Text To Speech</string>
+    <string name="male">Male</string>
+    <string name="menu_ai_voice_setting">AI Voice Settings</string>
+    <string name="menu_show_hide_suggest">Show or Hide Suggestions</string>
+    <string name="menu_show_hide_voice_transcript">Show or Hide Voice Text</string>
+    <string name="menu_voice_model">Voice Models</string>
+    <string name="no_new_suggestions_to_show">No new suggestions here.</string>
+    <string name="no_suggestion_exist">Sorry, no suggestions for this message.</string>
+    <string name="setting">Settings</string>
+    <string name="show_case_chat_more_sub_title">Here you can change AI voice and other things.</string>
+    <string name="show_case_chat_more_title">Settings</string>
+    <string name="show_case_chat_tasks_sub_title">Here you can see your tasks for this chat.</string>
+    <string name="show_case_chat_tasks_title">Tasks</string>
+    <string name="tasks_dialog_title">Scenario Tasks</string>
+    <string name="tts_install_message">Your device needs text to speech. Please tap settings to install it.</string>
+    <string name="unknown">Unknown</string>
+    <string name="you_should_start_conversation">Please start the chat. Write a message or record your voice and send it.</string>
+
+    <!-- Edit Profile -->
+    <string name="edit_profile_toolbar_title">Edit Profile</string>
+    <string name="input_first_name">First Name</string>
+    <string name="input_language_level">Language Level</string>
+    <string name="input_last_name">Last Name</string>
+    <string name="input_nick_name">Display Name (required)</string>
+    <string name="language_level">Language Level</string>
+    <string name="update_btn">Update</string>
+    <string name="your_information_was_updated_successfully">Great! We updated your information.</string>
+
+    <!-- English Level -->
+    <string name="english_level_continue_to_register">Sign Up</string>
+    <string name="english_level_continue_to_register_fa">ادامه ی ثبت نام</string>
+    <string name="english_level_error_answer_all_questions">Please answer all questions!</string>
+    <string name="english_level_error_answer_all_questions_fa">باید به همه سوالها جواب بدی!</string>
+    <string name="english_level_result_dialog_description">With your answers, your English level is:</string>
+    <string name="english_level_result_dialog_description_fa">با جواب هایی که به سوالاتمون دادی، سطح زبانت هست:</string>
+    <string name="english_level_result_dialog_show_btn">Show Answers</string>
+    <string name="english_level_result_dialog_show_btn_fa">مشاهده پاسخ های صحیح</string>
+    <string name="english_level_result_dialog_title">Your Answer</string>
+    <string name="english_level_result_dialog_title_fa">جواب آزمون</string>
+    <string name="english_level_screen_btn">See Result</string>
+    <string name="english_level_screen_btn_fa">مشاهده نتیجه</string>
+    <string name="english_level_screen_title">Level Test</string>
+    <string name="english_level_screen_title_fa">تعیین سطح</string>
+    <string name="english_level_second_title">Please answer 10 questions to find your English level.</string>
+    <string name="english_level_second_title_fa">برای تعیین سطح زبانت باید به ده تا سوال جواب بدی تا بهت بگیم زبانت در چه سطحی هست</string>
+    <string name="english_level_second_title_persian">Please answer 10 questions to find your English level.</string>
+    <string name="english_level_second_title_persian_fa">برای تعیین سطح زبانت باید به ده تا سوال جواب بدی تا بهت بگیم زبانت در چه سطحی هست</string>
+
+    <!-- Lightener -->
+    <string name="delete_dialog_message">Are you sure you want to delete this item?</string>
+    <string name="delete_dialog_title">Delete</string>
+    <string name="empty_lightener">No words here yet. Please add words from chats. Just pick a text or word.</string>
+    <string name="lightener_toolbar_title">Lightener</string>
+    <string name="search_hint">Please search…</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_body_1">Practice English in fun, interactive stories.</string>
+    <string name="onboarding_body_2">Discover new words daily to build vocabulary.</string>
+    <string name="onboarding_body_3">Get instant feedback on grammar and spelling.</string>
+    <string name="onboarding_footer_1">Earn points after every chat!</string>
+    <string name="onboarding_footer_2">Earn points and level up fast!</string>
+    <string name="onboarding_footer_3">Plus, see Persian translations anytime.</string>
+    <string name="onboarding_title_1">Chat with AI!</string>
+    <string name="onboarding_title_2">Daily Word Challenges!</string>
+    <string name="onboarding_title_3">"We're Here to Help!"</string>
+    <string name="skip">Skip</string>
+
+    <!-- Payment -->
+    <string name="cafe_bazaar_disconnected">ارتباط با کافه بازار قطع شد!</string>
+    <string name="check_discount_code_btn">اعمال کد تخفیف</string>
+    <string name="discount">تخفیف</string>
+    <string name="discount_code">کد تخفیف</string>
+    <string name="discount_code_applied">کد تخفیف اعمال شد.</string>
+    <string name="empty_payment">No items here yet. Please tap the button to add your first one.</string>
+    <string name="error_selected_plan_is_null">هنوز پلنی انتخاب نکردی. یکی رو انتخاب کن تا ادامه بدیم!</string>
+    <string name="failed_to_connect_to_bazaar">کافه بازار بر روی تلفن همراه شما نصب نیست.</string>
+    <string name="navigate_to_home">بزن بریم</string>
+    <string name="pay_price_title">مبلغ قابل پرداخت</string>
+    <string name="payment_detail_title">جزئیات پرداخت</string>
+    <string name="payment_price_title">هزینه اشتراک</string>
+    <string name="payment_screen_buy_btn">خرید اشتراک</string>
+    <string name="payment_tax_title">مالیات</string>
+    <string name="payment_title">پلن ها</string>
+    <string name="payment_toolbar_title">Payment</string>
+    <string name="price_with_discount">قیمت با تخفیف</string>
+    <string name="purchase_success">خرید با موفقیت انجام شد</string>
+    <string name="toman">تومان</string>
+    <string name="welcome_to_our_community">!خوشحالیم که به جمع ما پیوستی</string>
+    <string name="welcome_to_our_community_description">حالا به همه امکانات ویژه دسترسی داری و می‌تونی ازشون لذت ببری.</string>
+
+    <!-- Profile -->
+    <string name="app_theme">App Theme</string>
+    <string name="competitions">Complete\nChallenges</string>
+    <string name="complete_scenarios">Complete\nScenarios</string>
+    <string name="complete_words">Complete\nWords</string>
+    <string name="expiration_subscription">Expiration Date</string>
+    <string name="log_out">Log Out</string>
+    <string name="my_subscription">My Subscription</string>
+    <string name="payment_history">Payment History</string>
+    <string name="purchase">Purchase / Upgrade</string>
+    <string name="start_subscription">Start Date</string>
+    <string name="support">Support</string>
+    <string name="you_don_t_have_browser_please_in_telegram_search_ai_speaking_support">"You don't have a browser. Please search for @ai_speaking_support in Telegram."</string>
+
+    <!-- Purchases -->
+    <string name="amount_paid">مبلغ پرداختی</string>
+    <string name="date">تاریخ ایجاد</string>
+    <string name="failure_payment">ناموفق</string>
+    <string name="purchase_screen_title">Purchase History</string>
+    <string name="purchases_toolbar_purchases_box_hint">Scenario name</string>
+    <string name="purchases_toolbar_select_category">Category</string>
+    <string name="success_payment">موفق</string>
+    <string name="unknown_payment">نامشخص</string>
+
+    <!-- Scenario Detail -->
+    <string name="btn_when_ready_to_play">Let’s Start</string>
+    <string name="btn_when_user_do_not_have_subscription">Subscription</string>
+    <string name="btn_when_user_not_logged_in">Start / Jump in</string>
+    <string name="error_language_level_click_when_progress_is_null">Please finish the scenario at your level first. Then you can pick another level.</string>
+    <string name="level_group_dialog_title">Please Pick a Level</string>
+    <string name="level_of_conversation">Level:</string>
+    <string name="tasks_title">Tasks You Need to Do</string>
+    <string name="tasks_title_fa">کارهایی که باید انجام بدی</string>
+
+    <!-- Scenarios -->
+    <string name="close_dialog_btn">بستن</string>
+    <string name="dont_show_again_btn">دیگه نمایش نده</string>
+    <string name="scenarios_title">Scenarios</string>
+    <string name="see_more">بیشتر</string>
+
+    <!-- Search -->
+    <string name="search_toolbar_search_box_hint">Scenario name</string>
+    <string name="search_toolbar_select_category">Category</string>
+</resources>

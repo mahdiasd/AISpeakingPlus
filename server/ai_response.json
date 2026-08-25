@@ -1,0 +1,34 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\"finishedTasksIndex\": [], \"message\": \"Certainly, take your time. I'll be back in a few minutes to take your order.\", \"grammar\": \"need a take should be need to take\"}"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "avgLogprobs": -0.0063215916933015339
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 352,
+    "candidatesTokenCount": 43,
+    "totalTokenCount": 395,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 352
+      }
+    ],
+    "candidatesTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 43
+      }
+    ]
+  },
+  "modelVersion": "gemini-1.5-flash"
+}

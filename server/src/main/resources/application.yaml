@@ -1,0 +1,55 @@
+ktor:
+  application:
+    modules:
+      - ir.speaking.ApplicationKt.module
+  deployment:
+    port: 8080
+    host: 0.0.0.0
+  development: false
+
+jwt:
+  secret: "secret"
+  issuer: "http://0.0.0.0:8080/"
+  audience: "http://0.0.0.0:8080/hello"
+  realm: "Access to 'hello'"
+
+sms:
+  key: "InIBEeagvNpmc1gpp53HqtZUpdEf9FCnCOH6G91O4ev31gsR"
+
+token:
+  ai_token: "aa-lxQDITg9kPak6lr1HYbsLUYsHmg7Zf644Zex3nKPa63CMZdw"
+
+admin:
+  username: "admin"
+  password: "T1yh8vVHnR6jc6peMHM2moDzBfLftDMiKP"
+
+stt:
+  # Maximum number of concurrent OnlineStream / WebSocket sessions.
+  # When the limit is reached, new connections receive
+  # {"type":"error","message":"server_busy"} and are closed.
+  maxConcurrentStreams: 2
+  # Number of inference threads per OnlineRecognizer (keep low on 2-4 vCPU hosts).
+  numThreads: 1
+  # Sample rate expected by the model (Hz). Clients must send mono PCM16 at this rate.
+  sampleRate: 16000
+  # Endpoint-det tuning (seconds). rule1 fires after utterance + trailing silence;
+  # rule2 fires after speech + trailing silence; rule3 caps max utterance length.
+  rule1:
+    mustContainNonSilence: false
+    minTrailingSilence: 2.4
+    minUtteranceLength: 0.0
+  rule2:
+    mustContainNonSilence: true
+    minTrailingSilence: 1.4
+    minUtteranceLength: 0.0
+  rule3:
+    mustContainNonSilence: false
+    minTrailingSilence: 0.0
+    minUtteranceLength: 20.0
+  # Model directory (absolute or relative to the working directory).
+  # Expected files inside:
+  #   encoder-epoch-99-avg-1.int8.onnx
+  #   decoder-epoch-99-avg-1.onnx
+  #   joiner-epoch-99-avg-1.int8.onnx
+  #   tokens.txt
+  modelDir: "/app/models/sherpa-onnx-streaming-zipformer-en-2023-06-21"

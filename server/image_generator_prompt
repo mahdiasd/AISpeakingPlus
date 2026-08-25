@@ -1,0 +1,70 @@
+Given the following code describing a scenario, generate a highly detailed, photorealistic, and cinematic image prompt suitable for an advanced image generation model.
+
+code:
+
+```
+  val scenario5Id = ScenarioTable.insertAndGetId {
+            it[categoryId] = cId.value
+            it[title] = "Handling a Customer Complaint"
+            it[persianTitle] = "رسیدگی به شکایت مشتری"
+            it[description] = """
+        You are a customer support agent at a software company.
+        A customer has called to complain that a recent update caused the app to crash frequently.
+        You need to listen actively, show empathy, offer a temporary solution, and escalate the issue.
+        Be calm, patient, and helpful.
+    """.trimIndent()
+            it[persianDescription] = """
+        شما یک کارمند پشتیبانی مشتری در یک شرکت نرم‌افزاری هستید.
+        مشتری تماس گرفته و شکایت دارد که پس از به‌روزرسانی اخیر، اپلیکیشن مرتباً کرش می‌کند.
+        باید به‌طور فعال گوش دهید، همدلی نشان دهید، یک راه‌حل موقت پیشنهاد دهید و مشکل را به تیم فنی منتقل کنید.
+        آرام، صبور و کمک‌کننده باشید.
+    """.trimIndent()
+            it[aiRole] = "Customer"
+            it[aiName] = "Emily"
+            it[gender] = Gender.Woman
+            it[aiAvatar] = "avatar/ai_avatar_3.png"
+            it[imageUrl] = "scenario/handling_a_customer_complaint.webp"
+            it[starter] = Role.Model
+            it[points] = 14
+            it[createdAt] = LocalDateTime.now()
+        }
+```
+
+Instructions:
+
+Scene: Visually represent the core scenario or activity described in the code.
+People: Include people in the scene, but ensure faces are never clearly visible or identifiable (use views from behind, faces turned away, in shadow, blurred, or cropped out).
+Focus: Specify what elements are in sharp focus (e.g., hands, objects, key environmental details).
+Lighting: Describe the lighting type, quality, and its effect (e.g., warm morning light, soft ambient, dramatic shadows).
+Background: Background should be blurred, out-of-focus, or indistinct, providing context but not distracting from the main elements.
+Style: Always specify “highly photorealistic with a cinematic quality.”
+Textures: Emphasize rich textures relevant to the scene (e.g., wood grain, fabric, paper, glass, ceramics).
+Color Palette: Define the overall color palette (e.g., warm and inviting, cool and modern, vibrant yet muted).
+Mood: Clearly state the atmosphere or mood the image should evoke (e.g., lively and bustling, calm and anticipatory, tense and urgent).
+Output format:
+
+imageName: (snake_case version of the scenario title)
+prompt: (full image prompt as described above)
+
+```
+
+```
+
+imageName: (snake_case version of the scenario title)
+
+prompt:
+
+A highly detailed, whimsical 3D cartoon scene inspired by storybook animation and theme park aesthetics, visually representing [describe the core scenario or activity from the code]. Include people in the scene, but make sure their faces are never clearly visible or identifiable (show them from behind, faces turned away, in shadow, blurred, or cropped out).
+
+Focus on [hands/objects/key environmental details as relevant to the scenario], rendered in sharp detail with smooth, rounded shapes and lively, appealing proportions.
+
+Lighting is bright and soft, with a magical glow that enhances the playful atmosphere and adds gentle, stylized highlights and subtle shadows.
+
+The background is softly blurred and dreamy, providing context without distracting from the main action.
+
+Style is highly polished 3D animation, reminiscent of popular animated theme parks, with rich, smooth textures such as [wood grain, fabric, paper, glass, ceramics, etc. as relevant], and a harmonious, vibrant color palette.
+
+The mood is [state the desired atmosphere: lively and bustling, calm and anticipatory, tense and urgent, etc.], evoking a sense of wonder and joy.
+
+
+

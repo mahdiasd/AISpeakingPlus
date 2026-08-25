@@ -1,0 +1,74 @@
+services:
+  app:
+    image: ai-speaking:latest
+    ports:
+      - "127.0.0.1:8080:8080"  # App only on localhost; nginx proxies public traffic
+    environment:  # Environment variables passed to the app container
+      - DATABASE_URL=jdbc:postgresql://db:5432/ai_speaking
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=asdfasWERASDCASDF89845@af
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # Speech-to-Text (sherpa-onnx) settings
+      - STT_MODEL_DIR=/app/models/sherpa-onnx-streaming-zipformer-en-2023-06-21
+      - STT_MAX_STREAMS=2
+      - STT_NUM_THREADS=1
+      - STT_SAMPLE_RATE=16000
+      # Text-to-Speech (Kokoro-82M) settings
+      - TTS_MODEL_DIR=/app/models/kokoro-en-v0_19
+      - TTS_NUM_THREADS=2
+      - TTS_DEFAULT_SID=0
+      - TTS_DEFAULT_SPEED=1.0
+      - TTS_CACHE_DIR=/app/audio_cache
+      - TTS_ENABLED=true
+    depends_on:  # Ensure these services start before the app
+      db:
+        condition: service_healthy  # Wait until db is healthy before starting app
+      redis:
+        condition: service_healthy  # Wait until redis is healthy before starting app
+    healthcheck:  # Health check to verify if the Ktor app is responsive
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8080; printf \"GET /health HTTP/1.0\\r\\n\\r\\n\" >&3; cat <&3 | head -1 | grep -q 200'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s  # Grace period for JVM startup
+    restart: always  # Automatically restart the container if it crashes
+    volumes:
+      - ./logs:/app/logs
+      - ./audio_cache:/app/audio_cache
+      - ./models:/app/models
+      - ./native:/app/native
+
+  db:
+    image: postgres:15  # Official Postgres image
+    environment:  # Environment variables for Postgres setup
+      POSTGRES_DB: ai_speaking
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: asdfasWERASDCASDF89845@af
+    ports:
+      - "127.0.0.1:5432:5432"  # Postgres only on localhost; the app connects via the Docker network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data  # Persist database data to avoid loss on restart
+    healthcheck:  # Health check to verify if Postgres is ready
+      test: ["CMD-SHELL", "pg_isready -U postgres"]  # Command to check if Postgres is responsive
+      interval: 10s  # Check every 10 seconds
+      timeout: 5s  # Timeout after 5 seconds
+      retries: 5  # Retry 5 times before marking as unhealthy
+    restart: always  # Automatically restart if it crashes
+
+  redis:
+    image: redis:7  # Official Redis image
+    ports:
+      - "127.0.0.1:6379:6379"  # Redis only on localhost; nginx+app reach it via Docker network or host loopback
+    volumes:
+      - redis-data:/data  # Persist Redis data to avoid loss on restart
+    healthcheck:  # Health check to verify if Redis is ready
+      test: ["CMD", "redis-cli", "ping"]  # Command to ping Redis server
+      interval: 10s  # Check every 10 seconds
+      timeout: 5s  # Timeout after 5 seconds
+      retries: 5  # Retry 5 times before marking as unhealthy
+    restart: always  # Automatically restart if it crashes
+
+volumes:  # Define named volumes for data persistence
+  postgres-data:  # Volume for Postgres data
+  redis-data:  # Volume for Redis data
