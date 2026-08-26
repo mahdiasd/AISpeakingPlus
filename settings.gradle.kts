@@ -2,16 +2,9 @@ rootProject.name = "AISpeakingPlus"
 
 pluginManagement {
     repositories {
-        google {
-            content { 
-              	includeGroupByRegex("com\\.android.*")
-              	includeGroupByRegex("com\\.google.*")
-              	includeGroupByRegex("androidx.*")
-              	includeGroupByRegex("android.*")
-            }
-        }
-        gradlePluginPortal()
+        google()
         mavenCentral()
+        gradlePluginPortal()
     }
 }
 plugins {
@@ -20,14 +13,7 @@ plugins {
 
 dependencyResolutionManagement {
     repositories {
-        google {
-            content { 
-              	includeGroupByRegex("com\\.android.*")
-              	includeGroupByRegex("com\\.google.*")
-              	includeGroupByRegex("androidx.*")
-              	includeGroupByRegex("android.*")
-            }
-        }
+        google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
     }
