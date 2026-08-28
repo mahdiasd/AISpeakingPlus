@@ -11,6 +11,10 @@ plugins {
 group = "ir.speaking"
 version = "0.0.1"
 
+kotlin {
+    jvmToolchain(21)
+}
+
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
 
