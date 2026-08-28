@@ -1,6 +1,8 @@
 services:
   app:
     image: ai-speaking:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:8080:8080"  # App only on localhost; nginx proxies public traffic
     environment:  # Environment variables passed to the app container
@@ -9,6 +11,10 @@ services:
       - DATABASE_PASSWORD=asdfasWERASDCASDF89845@af
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - AI_BASE_URL=http://host.docker.internal:20128/v1/
+      - AI_API_KEY=sk-3c185114b476049c-z4geo6-d954b610
+      - AI_PRIMARY_MODEL=MyCombo
+      - AI_FALLBACK_MODEL=MyCombo
       # Speech-to-Text (sherpa-onnx) settings
       - STT_MODEL_DIR=/app/models/sherpa-onnx-streaming-zipformer-en-2023-06-21
       - STT_MAX_STREAMS=2
