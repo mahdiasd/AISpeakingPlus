@@ -1,8 +1,10 @@
 package ir.speaking.core.utils
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.plugins.*
 import ir.speaking.core.exeptions.AppException
 import ir.speaking.feature.challenge.challenge.model.Challenge
 import ir.speaking.feature.scenario.scenario.model.Scenario
@@ -76,12 +78,30 @@ fun String.toUUIDOrNull(): UUID? {
 }
 
 fun ApplicationCall.getBaseUrl(): String {
-    return "https://aispeaking.ir"
+    val proto = request.headers["X-Forwarded-Proto"]
+        ?.takeIf { it.isNotBlank() }
+        ?: request.origin.scheme
+
+    val host = request.headers["X-Forwarded-Host"]
+        ?.takeIf { it.isNotBlank() }
+        ?: request.headers[HttpHeaders.Host]
+        ?.takeIf { it.isNotBlank() }
+        ?: run {
+            val h = request.origin.serverHost
+            val p = request.origin.serverPort
+            if (p == 80 || p == 443 || p <= 0) h else "$h:$p"
+        }
+
+    return "$proto://$host".removeSuffix("/")
 }
 
 fun ApplicationCall.getFullPath(imagePath: String?): String? {
-    return if (imagePath.isNullOrEmpty()) null
-    else "https://aispeaking.ir/resources/${imagePath}"
+    if (imagePath.isNullOrBlank()) return null
+    if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+        return imagePath
+    }
+    val cleanPath = imagePath.trim().removePrefix("/")
+    return "${getBaseUrl()}/resources/$cleanPath"
 }
 
 fun ApplicationCall.getUserUid(): UUID {

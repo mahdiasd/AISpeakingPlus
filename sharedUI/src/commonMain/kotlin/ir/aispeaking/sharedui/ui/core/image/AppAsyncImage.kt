@@ -46,7 +46,7 @@ fun AppAsyncImage(
     contentScale: ContentScale = ContentScale.FillBounds
 ) {
     data.dLog(tag = "Coil3", plusTag = "data")
-    var imageState: ImageState by remember { mutableStateOf(ImageState.Loading) }
+    var imageState: ImageState by remember(data) { mutableStateOf(ImageState.Loading) }
 
     val imageRequest = ImageRequest.Builder(LocalPlatformContext.current)
         .data(data)
@@ -77,8 +77,8 @@ fun AppAsyncImage(
         error = {
             it.result.throwable.message.dLog(tag = "Coil3", plusTag = "error")
             imageState = ImageState.Error(it.result.throwable.message ?: "")
-            Spacer(
-                modifier = modifier.background(color = placeholderColor, shape = shape)
+            Box(
+                modifier = Modifier.matchParentSize().background(color = placeholderColor, shape = shape)
             )
         },
         loading = {
