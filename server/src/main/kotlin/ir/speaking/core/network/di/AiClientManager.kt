@@ -57,9 +57,8 @@ class AiClientManager(
 
     private fun createClient(config: AiPlatformConfig): OpenAI {
         return OpenAI(
-            token = "",
+            token = config.apiKey,
             host = OpenAIHost(baseUrl = config.baseUrl),
-            headers = mapOf("Authorization" to "Bearer ${config.apiKey}"),
             logging = LoggingConfig(LogLevel.All, logger = Logger.Simple),
             timeout = Timeout(socket = 60.seconds),
             httpClientConfig = {
