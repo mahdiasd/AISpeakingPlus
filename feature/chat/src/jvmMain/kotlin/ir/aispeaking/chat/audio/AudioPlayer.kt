@@ -10,11 +10,11 @@ actual class AudioPlayer actual constructor() {
     private var currentClip: Clip? = null
     private var playThread: Thread? = null
 
-    actual fun play(url: String, onComplete: () -> Unit, onError: (Throwable) -> Unit) {
+    actual fun play(url: String, speed: Float, onComplete: () -> Unit, onError: (Throwable) -> Unit) {
         stop()
         playThread = Thread {
             try {
-                "AudioPlayer (JVM): streaming $url".dLog(tag = "AudioPlayer")
+                "AudioPlayer (JVM): streaming $url at speed $speed".dLog(tag = "AudioPlayer")
                 val audioUrl = URI(url).toURL()
                 val audioInputStream = AudioSystem.getAudioInputStream(audioUrl)
                 val clip = AudioSystem.getClip()
@@ -39,6 +39,10 @@ actual class AudioPlayer actual constructor() {
             isDaemon = true
             start()
         }
+    }
+
+    actual fun setSpeed(speed: Float) {
+        // Desktop speed adjustment
     }
 
     actual fun stop() {

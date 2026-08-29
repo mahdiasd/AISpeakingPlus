@@ -12,9 +12,11 @@ import platform.darwin.NSObjectProtocol
 actual class AudioPlayer actual constructor() {
     private var player: AVPlayer? = null
     private var observer: NSObjectProtocol? = null
+    private var currentSpeed: Float = 1.0f
 
-    actual fun play(url: String, onComplete: () -> Unit, onError: (Throwable) -> Unit) {
+    actual fun play(url: String, speed: Float, onComplete: () -> Unit, onError: (Throwable) -> Unit) {
         stop()
+        currentSpeed = speed
         try {
             val nsUrl = NSURL(string = url) ?: run {
                 onError(IllegalArgumentException("Invalid URL: $url"))
@@ -33,10 +35,20 @@ actual class AudioPlayer actual constructor() {
                 onComplete()
             }
             avPlayer.play()
+            avPlayer.rate = speed
         } catch (t: Throwable) {
             stop()
             onError(t)
         }
+    }
+
+    actual fun setSpeed(speed: Float) {
+        currentSpeed = speed
+        try {
+            player?.let {
+                it.rate = speed
+            }
+        } catch (_: Throwable) {}
     }
 
     actual fun stop() {

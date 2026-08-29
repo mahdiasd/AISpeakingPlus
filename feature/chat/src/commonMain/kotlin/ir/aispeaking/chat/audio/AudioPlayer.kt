@@ -8,7 +8,8 @@ import androidx.compose.runtime.remember
  * Cross-platform Audio Player for streaming and playing audio responses from Kokoro-82M TTS.
  */
 expect class AudioPlayer() {
-    fun play(url: String, onComplete: () -> Unit = {}, onError: (Throwable) -> Unit = {})
+    fun play(url: String, speed: Float = 1.0f, onComplete: () -> Unit = {}, onError: (Throwable) -> Unit = {})
+    fun setSpeed(speed: Float)
     fun stop()
     fun release()
 }

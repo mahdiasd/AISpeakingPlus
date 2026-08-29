@@ -22,6 +22,10 @@ import ir.aispeaking.sharedui.ui.model.ui_message.getMessage
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import kotlinx.coroutines.flow.SharedFlow
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.Alignment
+
 @Composable
 fun UiMessageScreen(
     modifier: Modifier = Modifier,
@@ -29,35 +33,40 @@ fun UiMessageScreen(
 ) {
     val uiMessage: UiMessage? by shared.collectAsStateWithLifecycle(null)
 
-    AnimatedVisibility(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .safeContentPadding(),
-        visible = uiMessage != null
+            .statusBarsPadding()
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp),
+        contentAlignment = Alignment.TopCenter
     ) {
-        MessageBox(
-            modifier = Modifier
-                .wrapContentWidth()
-                .testTag("message-box")
-                .background(
-                    color = when (uiMessage?.status) {
-                        MessageStatus.Success -> AppTheme.colors.success
-                        MessageStatus.Failure -> AppTheme.colors.error
-                        else -> AppTheme.colors.primary
-                    },
-                    shape = AppTheme.shapes.roundMedium
-                )
-                .padding(12.dp)
-                .then(modifier),
-            textColor = when (uiMessage?.status) {
-                MessageStatus.Success -> AppTheme.colors.onSuccess
-                MessageStatus.Failure -> AppTheme.colors.onError
-                else -> AppTheme.colors.onSurface
-            },
-            messageText = uiMessage?.content?.getMessage() ?: ""
-        )
+        AnimatedVisibility(
+            modifier = Modifier.wrapContentWidth(),
+            visible = uiMessage != null
+        ) {
+            MessageBox(
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .testTag("message-box")
+                    .background(
+                        color = when (uiMessage?.status) {
+                            MessageStatus.Success -> AppTheme.colors.success
+                            MessageStatus.Failure -> AppTheme.colors.error
+                            else -> AppTheme.colors.primary
+                        },
+                        shape = AppTheme.shapes.roundMedium
+                    )
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .then(modifier),
+                textColor = when (uiMessage?.status) {
+                    MessageStatus.Success -> AppTheme.colors.onSuccess
+                    MessageStatus.Failure -> AppTheme.colors.onError
+                    else -> AppTheme.colors.onSurface
+                },
+                messageText = uiMessage?.content?.getMessage() ?: ""
+            )
+        }
     }
-
 }
 
 @Composable
@@ -70,7 +79,8 @@ fun MessageBox(
         modifier = modifier,
         text = messageText,
         color = textColor,
-        textAlign = TextAlign.Center
+        textAlign = TextAlign.Center,
+        persianFont = true
     )
 }
 

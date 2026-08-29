@@ -277,6 +277,13 @@ class ChatViewModel(
                     )
                 }
                 saveVoiceSetting(updatedSetting)
+                setUiMessage(
+                    UiMessage(
+                        stringValue = "صدای «${event.voice.name}» انتخاب شد. از این پس پیام‌های جدید با این صدا پخش خواهند شد.",
+                        status = MessageStatus.Success,
+                        messageType = MessageType.Device
+                    )
+                )
             }
 
             is ChatUiEvent.SetGuideRead -> {

@@ -107,6 +107,10 @@ fun ChatScreen(
         }
     }
 
+    LaunchedEffect(uiState.voiceSetting.speed) {
+        audioPlayer.setSpeed(uiState.voiceSetting.speed)
+    }
+
     LaunchedEffect(activeAiChat?.uid, activeAiChat?.voiceState) {
         if (activeAiChat != null && activeAiChat.voiceState == AiVoiceState.PendingToPlay) {
             val chatId = activeAiChat.uid
@@ -128,6 +132,7 @@ fun ChatScreen(
             vm.onTriggerEvent(ChatUiEvent.OnChangeAiVoiceState(chatId, AiVoiceState.Playing))
             audioPlayer.play(
                 url = fullUrl,
+                speed = uiState.voiceSetting.speed,
                 onComplete = {
                     vm.onTriggerEvent(ChatUiEvent.OnChangeAiVoiceState(chatId, AiVoiceState.Stopped))
                 },
