@@ -2,6 +2,8 @@ rootProject.name = "AISpeakingPlus"
 
 pluginManagement {
     repositories {
+        maven { url = uri("https://repo.maven.apache.org/maven2") }
+        maven { url = uri("https://plugins.gradle.org/m2") }
         maven { url = uri("https://maven.aliyun.com/repository/google") }
         google()
         mavenCentral()
@@ -14,6 +16,7 @@ plugins {
 
 dependencyResolutionManagement {
     repositories {
+        maven { url = uri("https://repo.maven.apache.org/maven2") }
         maven { url = uri("https://maven.aliyun.com/repository/google") }
         google()
         mavenCentral()
