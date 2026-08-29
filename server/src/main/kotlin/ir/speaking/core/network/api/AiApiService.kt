@@ -17,10 +17,59 @@ import kotlinx.coroutines.isActive
 import org.koin.core.annotation.Single
 import kotlin.time.Duration.Companion.seconds
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+
 @Single
 class AiApiService(
     private val aiClientManager: AiClientManager
 ) {
+
+    fun streamRequest(
+        messages: List<ChatMessage>,
+        responseFormat: ChatResponseFormat = ChatResponseFormat.JsonObject,
+    ): Flow<String> = flow {
+        val (primaryModel, fallbackModel) = aiClientManager.getActiveModels()
+        try {
+            val openAi = aiClientManager.getOpenAiClient()
+            val chatCompletionRequest = ChatCompletionRequest(
+                responseFormat = responseFormat,
+                model = ModelId(primaryModel),
+                messages = messages
+            )
+            openAi.chatCompletions(
+                chatCompletionRequest,
+                requestOptions = RequestOptions(
+                    timeout = Timeout(request = 35.seconds)
+                )
+            ).collect { chunk ->
+                val content = chunk.choices.firstOrNull()?.delta?.content
+                if (!content.isNullOrEmpty()) {
+                    emit(content)
+                }
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            PrintHelper.warning("Primary model streaming failed: ${e.message}. Trying fallback $fallbackModel")
+            val openAi = aiClientManager.getOpenAiClient()
+            val chatCompletionRequest = ChatCompletionRequest(
+                responseFormat = responseFormat,
+                model = ModelId(fallbackModel),
+                messages = messages
+            )
+            openAi.chatCompletions(
+                chatCompletionRequest,
+                requestOptions = RequestOptions(
+                    timeout = Timeout(request = 35.seconds)
+                )
+            ).collect { chunk ->
+                val content = chunk.choices.firstOrNull()?.delta?.content
+                if (!content.isNullOrEmpty()) {
+                    emit(content)
+                }
+            }
+        }
+    }
 
     suspend fun request(
         messages: List<ChatMessage>,

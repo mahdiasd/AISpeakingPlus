@@ -47,6 +47,11 @@ import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 import kotlin.time.Duration.Companion.milliseconds
 
+import ir.aispeaking.domain.model.chat.ChatStreamResult
+import ir.aispeaking.domain.usecase.chat.StreamChatUseCase
+import kotlinx.collections.immutable.persistentListOf
+import kotlin.uuid.Uuid
+
 @KoinViewModel
 class ChatViewModel(
     private val level: String,
@@ -54,6 +59,7 @@ class ChatViewModel(
     private val getLocalScenarioUseCase: GetLocalScenarioUseCase,
 
     private val sendChatUseCase: SendChatUseCase,
+    private val streamChatUseCase: StreamChatUseCase,
 
     private val readVoiceSettingUseCase: ReadVoiceSettingUseCase,
     private val saveVoiceSettingUseCase: SaveVoiceSettingUseCase,
@@ -386,7 +392,9 @@ class ChatViewModel(
         }
 
         viewModelScope.launch {
-            sendChatUseCase.invoke(
+            var streamingChatId: Uuid? = null
+
+            streamChatUseCase.invoke(
                 scenarioId = currentState.scenario!!.id,
                 message = message,
                 starter = currentState.scenario!!.starter,
@@ -395,43 +403,77 @@ class ChatViewModel(
                 englishLevel = userLanguageGroupLevel,
                 voiceId = currentState.voiceSetting.voiceId,
                 generateAudio = true
-            ).collect {
-                collectChatResponse(it)
+            ).collect { streamResult ->
+                when (streamResult) {
+                    is ChatStreamResult.Chunk -> {
+                        if (streamingChatId == null) {
+                            val newAi = Chat.Ai(
+                                message = streamResult.text,
+                                voiceState = AiVoiceState.Stopped,
+                                finishTaskIndexes = persistentListOf(),
+                            )
+                            streamingChatId = newAi.uid
+                            setState {
+                                copy(
+                                    chats = chats.filterNot { it is Chat.WaitingForAi }
+                                        .toMutableList()
+                                        .apply { add(newAi) }
+                                        .toImmutableList(),
+                                    showErrorContent = false
+                                )
+                            }
+                        } else {
+                            setState {
+                                copy(
+                                    chats = chats.map { chat ->
+                                        if (chat.uid == streamingChatId && chat is Chat.Ai) {
+                                            chat.copy(message = chat.message + streamResult.text)
+                                        } else chat
+                                    }.toImmutableList()
+                                )
+                            }
+                        }
+                    }
+
+                    is ChatStreamResult.Done -> {
+                        val finalAiChat = streamResult.chat.copy(
+                            voiceState = AiVoiceState.PendingToPlay
+                        )
+                        updatedFinishedTasks(finalAiChat)
+                        updateUserChat(finalAiChat)
+                        setState {
+                            val updatedList = if (streamingChatId != null) {
+                                chats.map { if (it.uid == streamingChatId) finalAiChat else it }
+                            } else {
+                                chats.filterNot { it is Chat.WaitingForAi }.toMutableList().apply { add(finalAiChat) }
+                            }
+                            copy(
+                                chats = updatedList.toImmutableList(),
+                                showErrorContent = false
+                            )
+                        }
+                    }
+
+                    is ChatStreamResult.Error -> {
+                        setUiMessage(streamResult.error.toUiMessage())
+                        val chats = currentState.chats
+                            .filterNot { it is Chat.WaitingForAi }
+                            .map {
+                                if (it is Chat.User && it.status is ChatStatus.Sending) {
+                                    it.copy(status = ChatStatus.Failed)
+                                } else it
+                            }.toImmutableList()
+
+                        setState {
+                            copy(
+                                chats = chats,
+                                showErrorContent = chats.isEmpty()
+                            )
+                        }
+                    }
+                }
             }
         }
-    }
-
-    private suspend fun collectChatResponse(dataResult: DataResult<Chat>) {
-        dataResult
-            .onSuccess { chat ->
-                updatedFinishedTasks(chat as Chat.Ai)
-                updateUserChat(chat)
-                setState {
-                    copy(
-                        chats = chats.filterNot { it is Chat.WaitingForAi }
-                            .toMutableList()
-                            .apply { add(chat) }
-                            .toImmutableList(),
-                        showErrorContent = false
-                    )
-                }
-            }.onFailure { apiError ->
-                setUiMessage(apiError.toUiMessage())
-                val chats = currentState.chats
-                    .filterNot { it is Chat.WaitingForAi }
-                    .map {
-                        if (it is Chat.User && it.status is ChatStatus.Sending) {
-                            it.copy(status = ChatStatus.Failed)
-                        } else it
-                    }.toImmutableList()
-
-                setState {
-                    copy(
-                        chats = chats,
-                        showErrorContent = chats.isEmpty()
-                    )
-                }
-            }
     }
 
     private fun updateUserChat(aiChat: Chat.Ai) {
