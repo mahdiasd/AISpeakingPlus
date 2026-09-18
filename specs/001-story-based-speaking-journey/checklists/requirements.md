@@ -31,7 +31,8 @@
 
 ## Notes
 
-- All 3 clarification questions have been fully resolved and integrated:
+- All 4 clarification questions have been fully resolved and integrated:
   1. Conflict resolution retains max stars between local guest and cloud records.
   2. Full-screen 2D stage background images are loaded dynamically from the server and cached locally on client devices.
   3. The catalog supports a rich progression of 15+ story stages.
+  4. Expired subscription immediately locks all Stage 3+ content (including previously completed stages) until renewal.

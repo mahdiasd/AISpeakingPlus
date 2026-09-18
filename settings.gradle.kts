@@ -35,14 +35,6 @@ include(":navigation")
 include(":network")
 include(":storage")
 
-include(":feature:auth")
-include(":feature:splash")
-include(":feature:onboarding")
-include(":feature:register")
-include(":feature:main")
-include(":feature:chat")
-include(":feature:profile")
-include(":feature:edit_profile")
-include(":feature:purchases")
+
 
 

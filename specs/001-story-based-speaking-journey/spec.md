@@ -8,6 +8,12 @@
 
 **Input**: User description: "story-based-speaking-journey: episodic roleplay missions with 2D game aesthetics, 0-3 star evaluation rubric deducting for hints and grammar errors, and 3-tiered access gating (Guest -> OTP Registration -> Paywall)"
 
+## Clarifications
+
+### Session 2026-09-18
+
+- Q: When a paid user's subscription expires, how should access to already-completed premium stages (Stage 3+) be handled? (FR-003) → A: Strict Paywall: Immediately lock all Stage 3+ content (including previously completed stages); active subscription is strictly required to play or replay any stage 3+.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Frictionless Guest Entry & Stage 1 Immersion (Priority: P1)
@@ -78,6 +84,7 @@ When a registered free user completes Stage 2 and attempts to access Stage 3 or 
 1. **Given** a registered user without an active subscription, **When** they attempt to enter Stage 3, **Then** the subscription paywall is displayed showing tiered subscription plans (1, 3, 6 months) and promo code redemption.
 2. **Given** a user successfully completing subscription payment, **When** they return to the stage journey map, **Then** Stage 3 is unlocked and accessible.
 3. **Given** a registered user without an active subscription attempting to fetch Stage 3 conversational data via API, **When** the server processes the request, **Then** the server rejects the request with a payment required status.
+4. **Given** a user whose paid subscription has expired, **When** they attempt to play or replay any stage 3 or higher (even if previously completed with stars), **Then** access is blocked by the paywall requiring subscription renewal.
 
 ---
 
@@ -104,6 +111,7 @@ A learner revisits a previously completed stage from the session history or jour
 - **Local Progress Sync Conflict (Max Stars Preserved)**: When a guest logs in with a mobile number that already has server records, the server applies the high-score rule: $\max(\text{local\_stars}, \text{cloud\_stars})$ is retained, ensuring previously earned 3-star achievements are never degraded.
 - **Remote Asset Fetch & Local Caching**: Stage backgrounds are fetched dynamically from the server on demand, rendered full-screen with overlaid navigation and themed controls, and persistently cached locally on the client to ensure instant rendering on subsequent visits.
 - **Rich Journey Catalog (15+ Stages)**: The narrative catalog supports over 15 sequential story stages covering the hero's journey from arrival in London through diverse situational milestones.
+- **Expired Subscription Content Locking**: If a user's subscription expires, all Stage 3+ content immediately reverts to locked state, preventing both progression and replay until subscription renewal, while preserving all historical earned stars and leaderboard rankings.
 
 ## Requirements *(mandatory)*
 
@@ -114,7 +122,7 @@ A learner revisits a previously completed stage from the session history or jour
 - **FR-003**: The system MUST support a 3-tiered access gating model:
   - Stage 1: Completely accessible in Guest Mode with local device persistence.
   - Stage 2: Requires free user registration via mobile number and SMS OTP.
-  - Stage 3+: Requires an active paid subscription.
+  - Stage 3+: Requires an active paid subscription; upon subscription expiration, all Stage 3+ content (including previously completed stages) is immediately locked from playing or replaying until renewal.
 - **FR-004**: The system MUST calculate stage evaluation scores using the strict 0–3 star rubric:
   - 3 Stars: 0 grammar/spelling errors AND 0 hints used.
   - 2 Stars: Exactly 1 total error OR 1 hint used.

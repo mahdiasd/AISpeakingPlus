@@ -35,17 +35,7 @@ kotlin {
     // --- Source Sets & Dependencies ---
     sourceSets {
         commonMain.dependencies {
-            // --- Local Modules ---
             implementation(project(":sharedUI"))
-            implementation(project(":feature:auth"))
-            implementation(project(":feature:splash"))
-            implementation(project(":feature:onboarding"))
-            implementation(project(":feature:register"))
-            implementation(project(":feature:main"))
-            implementation(project(":feature:chat"))
-            implementation(project(":feature:profile"))
-            implementation(project(":feature:edit_profile"))
-            implementation(project(":feature:purchases"))
             implementation(project(":utils"))
             implementation(project(":data"))
             implementation(project(":domain"))

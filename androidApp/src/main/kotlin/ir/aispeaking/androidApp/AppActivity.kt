@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsControllerCompat
-import ir.aispeaking.chat.stt.AndroidAudioCapture
 import ir.aispeaking.navigation.AppNavigation
 import ir.aispeaking.navigation.di.initKoin
 import ir.aispeaking.sharedui.ui.them.AppTheme
@@ -17,10 +16,6 @@ import ir.aispeaking.sharedui.ui.them.AppTheme
 class AppActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Hand the application context to the cross-platform AudioCapture
-        // so the Android `actual` (backed by AudioRecord) can check the
-        // RECORD_AUDIO permission and open the mic.
-        AndroidAudioCapture.attach(applicationContext)
         initKoin()
         enableEdgeToEdge()
         setContent {
