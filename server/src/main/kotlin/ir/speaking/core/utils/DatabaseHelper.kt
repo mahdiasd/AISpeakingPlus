@@ -2,21 +2,8 @@ package ir.speaking.core.utils
 
 import ir.speaking.admin.admin.db.AdminTable
 import ir.speaking.core.network.utils.PrintHelper
-import ir.speaking.feature.category.db.CategoryTable
-import ir.speaking.feature.challenge.challenge.db.ChallengeTable
-import ir.speaking.feature.challenge.progress.db.ChallengeProgressTable
-import ir.speaking.feature.challenge.task.db.ChallengeTaskTable
-import ir.speaking.feature.discount.db.DiscountCodeTable
-import ir.speaking.feature.lightener.db.TranslationTable
-import ir.speaking.feature.plan.db.PlanTable
-import ir.speaking.feature.purchase.db.PurchaseTable
-import ir.speaking.feature.scenario.progress.db.ScenarioProgressTable
-import ir.speaking.feature.scenario.scenario.db.ScenarioTable
-import ir.speaking.feature.scenario.task.db.ScenarioTaskTable
 import ir.speaking.feature.user.db.UserTable
 import ir.speaking.feature.user_device_info.db.UserDeviceInfoTable
-import ir.speaking.feature.word.progress.db.WordProgressTable
-import ir.speaking.feature.word.word.DailyWordTable
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.deleteAll
@@ -27,19 +14,6 @@ object DatabaseHelper {
     private val allTables = arrayOf(
         AdminTable,
         UserTable,
-        CategoryTable,
-        ScenarioTable,
-        ScenarioTaskTable,
-        ScenarioProgressTable,
-        PurchaseTable,
-        PlanTable,
-        DiscountCodeTable,
-        TranslationTable,
-        DailyWordTable,
-        WordProgressTable,
-        ChallengeTable,
-        ChallengeTaskTable,
-        ChallengeProgressTable,
         UserDeviceInfoTable
     )
     

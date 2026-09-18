@@ -45,41 +45,17 @@ data class RegisterRoute(
 ) : AppRoute {
     override val screenName: String = "Register"
 }
-
-@Serializable
-data class EnglishLevelRoute(
-    val mobile: String,
-) : AppRoute {
-    override val screenName: String = "EnglishLevel"
-}
 // endregion
 
-// region Main (bottom-nav host)
+// region Main destinations
+@Serializable
+data object CharacterHomeRoute : AppRoute {
+    override val screenName: String = "CharacterHome"
+}
+
 @Serializable
 data object MainRoute : AppRoute {
     override val screenName: String = "Main"
-}
-// endregion
-
-// region Bottom-nav tabs (rendered inside [MainRoute]'s nested NavDisplay)
-@Serializable
-data object ScenariosRoute : AppRoute {
-    override val screenName: String = "Scenarios"
-}
-
-@Serializable
-data object CompetitionRoute : AppRoute {
-    override val screenName: String = "Competition"
-}
-
-@Serializable
-data object LightenerRoute : AppRoute {
-    override val screenName: String = "Lightener"
-}
-
-@Serializable
-data object RoadmapRoute : AppRoute {
-    override val screenName: String = "Roadmap"
 }
 
 @Serializable
@@ -88,29 +64,7 @@ data object ProfileRoute : AppRoute {
 }
 // endregion
 
-// region Detail / pushed screens (shared between outer and nested stacks)
-@Serializable
-data class SearchRoute(
-    val categoryId: String? = null,
-) : AppRoute {
-    override val screenName: String = "Search"
-}
-
-/**
- * @param imageUrl nullable at the route level; normalized to "" when the screen
- * actually needs a non-null value (see AppNavigation). Kept nullable here so
- * callers can pass `scenario.imageUrl` directly without the `?: ""` noise.
- */
-@Serializable
-data class ScenarioDetailRoute(
-    val id: String,
-    val imageUrl: String?,
-    val title: String,
-    val isChallenge: Boolean,
-) : AppRoute {
-    override val screenName: String = "ScenarioDetail"
-}
-
+// region Detail / pushed screens
 @Serializable
 data class ChatRoute(
     val level: String,

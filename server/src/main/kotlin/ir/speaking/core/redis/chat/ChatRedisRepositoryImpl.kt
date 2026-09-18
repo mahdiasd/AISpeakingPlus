@@ -1,12 +1,8 @@
 package ir.speaking.core.redis.chat
 
-import ir.speaking.core.exeptions.AppException
-import ir.speaking.core.utils.getPrompt
-import ir.speaking.core.utils.toUUID
-import ir.speaking.feature.challenge.challenge.repository.ChallengeRepository
+import ir.speaking.core.utils.MyConstant
 import ir.speaking.feature.chat.model.Chat
 import ir.speaking.feature.chat.model.Role
-import ir.speaking.feature.scenario.scenario.repository.ScenarioRepository
 import org.koin.core.annotation.Single
 import org.redisson.api.RedissonClient
 import org.redisson.api.StreamMessageId
@@ -16,8 +12,6 @@ import java.time.Duration
 @Single
 class ChatRedisRepositoryImpl(
     private val redissonClient: RedissonClient,
-    private val scenarioRepository: ScenarioRepository,
-    private val challengeRepository: ChallengeRepository
 ) : ChatRedisRepository {
 
     override suspend fun addChat(chat: Chat) {
@@ -66,26 +60,13 @@ class ChatRedisRepositoryImpl(
     }
 
     override suspend fun getSystemPrompt(userId: String, scenarioId: String, isChallenge: Boolean): String {
-        when (isChallenge) {
-            true -> {
-                challengeRepository.get(scenarioId)?.let { challenge ->
-                    val prompt = challenge.getPrompt()
-                    return prompt
-                } ?: run{
-                    throw AppException.NotFound("challenge not found!")
-                }
-            }
-
-            false -> {
-                scenarioRepository.getScenarioById(id = scenarioId.toUUID())?.let { scenario ->
-                    val prompt = scenario.getPrompt()
-                    return prompt
-                } ?: run {
-                    throw AppException.NotFound("scenario not found!")
-                }
-            }
-        }
-
+        return MyConstant.BASE_PROMPT
+            .replace("[AI_NAME]", "Assistant")
+            .replace("[AI_ROLE]", "Conversation Partner")
+            .replace("[SCENARIO_DESCRIPTION]", "Free conversation practice")
+            .replace("[STARTER_ROLE]", "AI")
+            .replace("[USER_TASKS]", "Practice English conversation naturally")
+            .trimIndent()
     }
 
 

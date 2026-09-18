@@ -15,7 +15,6 @@ import ir.aispeaking.domain.model.translate.Translation
 import ir.aispeaking.domain.model.tts.DEFAULT_KOKORO_VOICES
 import ir.aispeaking.domain.model.user.User
 import ir.aispeaking.domain.model.voice_setting.VoiceSetting
-import ir.aispeaking.domain.usecase.challenge_progress.CreateChallengeProgressUseCase
 import ir.aispeaking.domain.usecase.chat.GetChatSuggestionsUseCase
 import ir.aispeaking.domain.usecase.chat.SendChatUseCase
 import ir.aispeaking.domain.usecase.guide.ReadGuideStatusUseCase
@@ -66,7 +65,6 @@ class ChatViewModel(
     private val translateUseCase: TranslateUseCase,
 
     private val createScenarioProgressUseCase: CreateScenarioProgressUseCase,
-    private val createChallengeProgressUseCase: CreateChallengeProgressUseCase,
 
     private val createTranslateUseCase: CreateTranslateUseCase,
     private val getChatSuggestionsUseCase: GetChatSuggestionsUseCase,
@@ -515,21 +513,10 @@ class ChatViewModel(
     private fun sendTasksFinished() {
         viewModelScope.launch {
             onTriggerEvent(ChatUiEvent.OnDialogType(DialogType.FinishedTasks(FinishedTasksState.Loading)))
-            when (currentState.scenario!!.isChallenge) {
-                true -> {
-                    createChallengeProgressUseCase(
-                        challengeId = currentState.scenario!!.id,
-                        score = currentState.scenario!!.score
-                    )
-                }
-
-                false -> {
-                    createScenarioProgressUseCase(
-                        scenarioId = currentState.scenario!!.id,
-                        score = currentState.scenario!!.score
-                    )
-                }
-            }.collect {
+            createScenarioProgressUseCase(
+                scenarioId = currentState.scenario!!.id,
+                score = currentState.scenario!!.score
+            ).collect {
                 it.onSuccess {
                     onTriggerEvent(ChatUiEvent.OnDialogType(DialogType.FinishedTasks(FinishedTasksState.Sent)))
                 }.onFailure { apiError ->

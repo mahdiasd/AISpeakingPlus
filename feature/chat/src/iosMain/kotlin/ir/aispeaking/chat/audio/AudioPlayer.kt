@@ -35,7 +35,6 @@ actual class AudioPlayer actual constructor() {
                 onComplete()
             }
             avPlayer.play()
-            avPlayer.rate = speed
         } catch (t: Throwable) {
             stop()
             onError(t)
@@ -44,12 +43,10 @@ actual class AudioPlayer actual constructor() {
 
     actual fun setSpeed(speed: Float) {
         currentSpeed = speed
-        try {
-            player?.let {
-                it.rate = speed
-            }
-        } catch (_: Throwable) {}
     }
+
+
+
 
     actual fun stop() {
         observer?.let {

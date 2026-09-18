@@ -1,9 +1,5 @@
 package ir.aispeaking.domain.fake_data
 
-import ir.aispeaking.domain.model.category.Category
-import ir.aispeaking.domain.model.challenge.Challenge
-import ir.aispeaking.domain.model.challenge.ChallengeSummary
-import ir.aispeaking.domain.model.challenge.ChallengeTask
 import ir.aispeaking.domain.model.chat.AiVoiceState
 import ir.aispeaking.domain.model.chat.Chat
 import ir.aispeaking.domain.model.chat.ChatStatus
@@ -19,7 +15,6 @@ import ir.aispeaking.domain.model.scenario.ScenarioTask
 import ir.aispeaking.domain.model.user.Gender
 import ir.aispeaking.domain.model.user.User
 import ir.aispeaking.domain.model.user.UserSummary
-import ir.aispeaking.domain.model.word.DailyWord
 import ir.aispeaking.utils.MyUtils
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -29,31 +24,6 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 object FakeData {
-    fun provideCategories(): ImmutableList<Category> {
-        return persistentListOf(
-            Category(
-                id = "1",
-                name = "فناوری",
-                imageUrl = "/static/category/technology.png",
-                createdAt = Instant.parse("2023-01-15T10:00:00Z")
-            ),
-            Category(
-                id = "2",
-                name = "سلامتی",
-                imageUrl = "/static/category/health.png",
-                createdAt = Instant.parse("2023-02-20T14:30:00Z")
-            ),
-            Category(
-                id = "3",
-                name = "سفر",
-                imageUrl = "/static/category/travel.png",
-                createdAt = Instant.parse("2023-03-10T09:15:00Z")
-            )
-            // Add more categories as needed
-            // ...
-        )
-    }
-
 
     fun providePurchases(): ImmutableList<Purchase> {
         return listOf(
@@ -268,17 +238,6 @@ object FakeData {
         ).toImmutableList()
     }
 
-    fun provideChallengeSummary(): ChallengeSummary {
-        return ChallengeSummary(
-            id = "placerat",
-            title = "mi",
-            imageUrl = null,
-            description = "diam",
-            aiAvatar = null,
-            score = 5274
-        )
-    }
-
     fun provideScenarioDetail(): ScenarioDetail {
         return ScenarioDetail(
             scenario = provideScenarios().first(),
@@ -353,90 +312,6 @@ object FakeData {
                 avatar = "B-1"
             ),
         ).toImmutableList()
-    }
-
-    fun provideDailyWord(): DailyWord {
-        return DailyWord(
-            uid = MyUtils.generateStringUUID(),
-            word = "Hello",
-            options = listOf("سلام", "غم", "چطوری", "خداحافظ").toImmutableList(),
-            answerIndex = 0,
-            createdAt = Clock.System.now().toString(),
-            expiredAt = Clock.System.now().toString(),
-            wordProgress = null,
-            points = 10
-        )
-    }
-
-    fun provideChallenges(): List<Challenge> {
-        return listOf(
-            Challenge(
-                uid = "challenge1",
-                title = "Learn Kotlin Basics",
-                description = "Master the fundamentals of Kotlin programming language.",
-                imageUrl = "https://example.com/kotlin.png",
-                aiName = "KotlinBot",
-                aiAvatar = "https://example.com/ai_avatar_kotlin.png",
-                points = 100,
-                createdAt = Clock.System.now(),
-                tasks = listOf(
-                    ChallengeTask(
-                        id = "task1",
-                        description = "Understand Kotlin syntax and variables.",
-                        persianDescription = ""
-                    ),
-                    ChallengeTask(
-                        id = "task2",
-                        description = "Learn about Kotlin functions and lambdas.",
-                        persianDescription = ""
-                    )
-                )
-            ),
-            Challenge(
-                uid = "challenge2",
-                title = "Jetpack Compose Mastery",
-                description = "Become proficient in building UIs with Jetpack Compose.",
-                imageUrl = "https://example.com/jetpack_compose.png",
-                aiName = "ComposeAI",
-                aiAvatar = "https://example.com/ai_avatar_compose.png",
-                points = 200,
-                createdAt = Clock.System.now(),
-                tasks = listOf(
-                    ChallengeTask(
-                        id = "task3",
-                        description = "Build your first composable function.",
-                        persianDescription = ""
-                    ),
-                    ChallengeTask(
-                        id = "task4",
-                        description = "Learn state management in Jetpack Compose.",
-                        persianDescription = ""
-                    )
-                )
-            ),
-            Challenge(
-                uid = "challenge3",
-                title = "Android App Development",
-                description = "Develop your first Android app using Kotlin and Jetpack libraries.",
-                imageUrl = null,
-                aiName = "AndroidAssistant",
-                aiAvatar = null,
-                points = 300,
-                createdAt = Clock.System.now(),
-                tasks = listOf(
-                    ChallengeTask(
-                        id = "task5",
-                        description = "Set up your Android development environment.",
-                        persianDescription = ""
-                    ),
-                    ChallengeTask(
-                        id = "task6",
-                        description = "Create a simple to-do app.",
-                        persianDescription = ""
-                    )
-                )
-            )
-        )
     }
 
 }

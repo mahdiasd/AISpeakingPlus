@@ -48,9 +48,12 @@ fun rememberAppTypography(): AppTypography {
     val persianRegular = FontFamily(Font(Res.font.vazir, FontWeight.Normal))
     val persianBold = FontFamily(Font(Res.font.vazir_bold, FontWeight.Bold))
 
-    return remember(regular, bold) {
+    return remember(regular, bold, persianRegular, persianBold) {
         AppTypography(
+            persianRegular = persianRegular,
+            persianBold = persianBold,
             headingLarge = TextStyle(
+
                 fontFamily = regular,
                 fontWeight = FontWeight.Normal,
                 fontSize = 28.sp,

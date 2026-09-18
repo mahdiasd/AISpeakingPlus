@@ -37,5 +37,6 @@ deploy_dist/
 deploy_files/
 **/deploy/
 **/deploy_dist/
-**/deploy_files/
-
+# Xcode user data
+xcuserdata/
+*.xcuserdata

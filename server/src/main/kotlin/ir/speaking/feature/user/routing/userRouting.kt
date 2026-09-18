@@ -18,10 +18,6 @@ import ir.speaking.core.utils.AppUtils
 import ir.speaking.core.utils.MyConstant
 import ir.speaking.core.utils.getUserUid
 import ir.speaking.core.utils.toUUID
-import ir.speaking.feature.challenge.progress.repository.ChallengeProgressRepository
-import ir.speaking.feature.plan.repository.PlanRepository
-import ir.speaking.feature.purchase.repository.PurchaseRepository
-import ir.speaking.feature.scenario.progress.repository.ScenarioProgressRepository
 import ir.speaking.feature.user.dto.request.CreateUserRequest
 import ir.speaking.feature.user.dto.request.UpdateUserRequest
 import ir.speaking.feature.user.dto.request.toUser
@@ -30,25 +26,19 @@ import ir.speaking.feature.user.dto.response.toResponse
 import ir.speaking.feature.user.dto.response.toSummaryResponse
 import ir.speaking.feature.user.model.LanguageLevel
 import ir.speaking.feature.user.repository.UserRepository
-import ir.speaking.feature.word.progress.repository.WordProgressRepository
 import kotlinx.datetime.Clock
 import org.koin.ktor.ext.inject
 
 fun Application.userRouting() {
     val userRepository by inject<UserRepository>()
-    val purchaseRepository by inject<PurchaseRepository>()
-    val planRepository by inject<PlanRepository>()
-    val scenarioProgressRepository by inject<ScenarioProgressRepository>()
-    val wordProgressRepository by inject<WordProgressRepository>()
-    val challengeProgressRepository by inject<ChallengeProgressRepository>()
     val otpRedisRepository by inject<OtpRedisRepository>()
     val smsApiService by inject<SmsApiService>()
 
     routing {
         route("/api/v1/user") {
-            createUser(userRepository, purchaseRepository, planRepository)
-            updateUser(userRepository, scenarioProgressRepository, wordProgressRepository, challengeProgressRepository)
-            getUser(userRepository, scenarioProgressRepository, wordProgressRepository, challengeProgressRepository)
+            createUser(userRepository)
+            updateUser(userRepository)
+            getUser(userRepository)
             getTopTenUsers(userRepository)
         }
 
@@ -66,9 +56,7 @@ fun Application.userRouting() {
 }
 
 private fun Route.createUser(
-    userRepository: UserRepository,
-    purchaseRepository: PurchaseRepository,
-    planRepository: PlanRepository
+    userRepository: UserRepository
 ) {
     post {
         val createUserRequest = call.receive<CreateUserRequest>()
@@ -84,10 +72,6 @@ private fun Route.createUser(
         }
 
         val user = userRepository.createUser(createUserRequest.toUser())
-        val plan = planRepository.getAllPlans().find { !it.visibility }
-        val purchase = if (plan != null) {
-            purchaseRepository.giftCharge(userId = user.uid, plan = plan)
-        } else null
 
         call.successRespond(
             data = AuthResponse(
@@ -96,7 +80,7 @@ private fun Route.createUser(
                     uid = user.uid.toString()
                 ),
                 user = user.toResponse(),
-                giftPurchase = purchase?.plan?.dayDuration ?: 0
+                giftPurchase = 0
             ),
             message = SuccessMessage.USER_CREATED
         )
@@ -104,10 +88,7 @@ private fun Route.createUser(
 }
 
 private fun Route.updateUser(
-    userRepository: UserRepository,
-    scenarioProgressRepository: ScenarioProgressRepository,
-    wordProgressRepository: WordProgressRepository,
-    challengeProgressRepository: ChallengeProgressRepository
+    userRepository: UserRepository
 ) {
     authenticate(MyConstant.USER_JWT_NAME) {
         put {
@@ -138,17 +119,9 @@ private fun Route.updateUser(
                 )
             )
 
-            val completedScenarioCount = scenarioProgressRepository.countByUser(uid)
-            val completedWordCount = wordProgressRepository.countByUser(uid)
-            val completedChallengeCount = challengeProgressRepository.countByUser(uid)
-
             if (updatedUser != null) {
                 call.successRespond(
-                    data = updatedUser.toResponse(
-                        completedScenarioCount = completedScenarioCount,
-                        completedWordCount = completedWordCount,
-                        completedChallengeCount = completedChallengeCount,
-                    ),
+                    data = updatedUser.toResponse(),
                     message = SuccessMessage.USER_UPDATED
                 )
             } else {
@@ -159,26 +132,16 @@ private fun Route.updateUser(
 }
 
 private fun Route.getUser(
-    userRepository: UserRepository,
-    scenarioProgressRepository: ScenarioProgressRepository,
-    wordProgressRepository: WordProgressRepository,
-    challengeProgressRepository: ChallengeProgressRepository
+    userRepository: UserRepository
 ) {
     authenticate(MyConstant.USER_JWT_NAME) {
         get {
             val uid = call.getUserUid()
 
             val user = userRepository.getUserById(uid) ?: throw AppException.NotFound()
-            val completedScenarioCount = scenarioProgressRepository.countByUser(uid)
-            val completedWordCount = wordProgressRepository.countByUser(uid)
-            val completedChallengeCount = challengeProgressRepository.countByUser(uid)
 
             call.successRespond(
-                user.toResponse(
-                    completedScenarioCount = completedScenarioCount,
-                    completedWordCount = completedWordCount,
-                    completedChallengeCount = completedChallengeCount,
-                )
+                user.toResponse()
             )
         }
     }
