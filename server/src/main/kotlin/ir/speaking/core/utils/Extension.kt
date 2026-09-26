@@ -27,6 +27,8 @@ val jsonForConvert = Json {
     ignoreUnknownKeys = true
     isLenient = true
     allowTrailingComma = true
+    encodeDefaults = true
+    explicitNulls = false
 }
 
 inline fun <reified T> T?.toJson(): String? {
