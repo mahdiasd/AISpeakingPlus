@@ -30,6 +30,11 @@ sealed class NetworkError(
         override val message: String = "You can't go here."
     ) : NetworkError(httpStatus, message)
 
+    data class PaymentRequired(
+        override val httpStatus: Int = 402,
+        override val message: String = "Subscription required to access this stage."
+    ) : NetworkError(httpStatus, message)
+
     data class Conflict(
         override val httpStatus: Int = 409,
         override val message: String = "There is a problem with your ask. Please try later."
