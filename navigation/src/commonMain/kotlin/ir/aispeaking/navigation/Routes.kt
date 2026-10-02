@@ -9,6 +9,16 @@ sealed interface AppRoute : NavKey {
 }
 
 @Serializable
+data object SplashRoute : AppRoute {
+    override val screenName: String = "Splash"
+}
+
+@Serializable
+data object LoginRoute : AppRoute {
+    override val screenName: String = "Login"
+}
+
+@Serializable
 data object MainRoute : AppRoute {
     override val screenName: String = "Main"
 }

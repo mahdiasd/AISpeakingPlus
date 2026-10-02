@@ -8,6 +8,8 @@ import kotlinx.serialization.modules.polymorphic
 val navigationConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
+            subclass(SplashRoute::class, SplashRoute.serializer())
+            subclass(LoginRoute::class, LoginRoute.serializer())
             subclass(MainRoute::class, MainRoute.serializer())
         }
     }
