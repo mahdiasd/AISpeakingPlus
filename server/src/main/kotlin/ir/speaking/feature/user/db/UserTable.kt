@@ -12,6 +12,8 @@ object UserTable : UUIDTable("users") {
     val gender = varchar("gender", 16).nullable()
     val score = integer("score").default(0)
     val avatar = varchar("avatar", 255).default("default_avatar")
+    val status = varchar("status", 32).default("ACTIVE")
+    val suspendedReason = text("suspended_reason").nullable()
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
     val updatedAt = timestamp("updated_at").defaultExpression(CurrentTimestamp)
 }

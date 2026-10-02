@@ -10,12 +10,13 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.*
 import io.ktor.utils.io.*
-import ir.speaking.feature.stt.routing.sttRouting
-import ir.speaking.feature.tts.routing.ttsRouting
+import ir.speaking.feature.admin.routing.adminRouting
+import ir.speaking.feature.leaderboard.routing.leaderboardRouting
 import ir.speaking.feature.stage.routing.stageRouting
 import ir.speaking.feature.stage_progress.routing.progressRouting
+import ir.speaking.feature.stt.routing.sttRouting
 import ir.speaking.feature.subscription.routing.subscriptionRouting
-import ir.speaking.feature.leaderboard.routing.leaderboardRouting
+import ir.speaking.feature.tts.routing.ttsRouting
 import ir.speaking.feature.user.routing.authRouting
 
 @OptIn(ExperimentalKtorApi::class)
@@ -28,6 +29,7 @@ fun Application.configureRouting() {
     progressRouting()
     subscriptionRouting()
     leaderboardRouting()
+    adminRouting()
 
     routing {
         staticResources("/resources/stages", "static/stages") {

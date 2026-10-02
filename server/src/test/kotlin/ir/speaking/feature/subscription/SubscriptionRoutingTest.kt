@@ -50,7 +50,7 @@ class SubscriptionRoutingTest {
         assertTrue(plansBody.contains("3_MONTHS") || plansBody.contains("QUARTERLY"))
 
         // 2. Stage 3 unauthenticated or non-subscriber should return 401 or 402
-        val stage3Response = client.get("/api/v2/stages/stage-03-heathrow-border")
+        val stage3Response = client.get("/api/v2/stages/stage-03-baggage-claim")
         if (stage3Response.status != HttpStatusCode.InternalServerError) {
             assertTrue(
                 stage3Response.status == HttpStatusCode.Unauthorized ||

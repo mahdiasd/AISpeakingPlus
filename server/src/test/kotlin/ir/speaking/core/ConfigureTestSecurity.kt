@@ -38,6 +38,39 @@ fun Application.configureTestSecurity() {
                 call.failureRespond(HttpStatusCode.Unauthorized)
             }
         }
+        jwt(MyConstant.ADMIN_JWT_NAME) {
+            realm = "admin-$jwtRealm"
+            verifier(
+                JWT
+                    .require(Algorithm.HMAC256("admin-$jwtSecret"))
+                    .withAudience("admin-$jwtAudience")
+                    .withIssuer("admin-$issuer")
+                    .build()
+            )
+            validate { credential ->
+                val uid = credential.payload.getClaim("uid")?.asString()
+                val role = credential.payload.getClaim("role")?.asString() ?: "ROLE_ADMIN"
+                val username = credential.payload.getClaim("username")?.asString() ?: ""
+                val fullName = credential.payload.getClaim("fullName")?.asString() ?: "Admin"
+                if (!uid.isNullOrBlank()) {
+                    try {
+                        ir.speaking.feature.admin.auth.AdminPrincipal(
+                            id = java.util.UUID.fromString(uid),
+                            username = username,
+                            fullName = fullName,
+                            role = role
+                        )
+                    } catch (_: Exception) {
+                        null
+                    }
+                } else {
+                    null
+                }
+            }
+            challenge { _, _ ->
+                call.failureRespond(HttpStatusCode.Unauthorized)
+            }
+        }
     }
 }
 

@@ -51,6 +51,8 @@ data class SynthesizeRequest(
     val speed: Float? = 1.0f
 )
 
+typealias TtsSynthesizeRequest = SynthesizeRequest
+
 @Serializable
 data class SynthesizeResponse(
     val audioUrl: String,

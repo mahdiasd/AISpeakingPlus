@@ -1,11 +1,16 @@
 package ir.speaking.feature.stt.routing
 
+import io.ktor.http.*
+import io.ktor.openapi.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.routing.*
+import io.ktor.server.routing.openapi.*
 import io.ktor.server.websocket.*
+import io.ktor.utils.io.*
 import io.ktor.websocket.*
+import ir.speaking.core.response.FailureResponse
 import ir.speaking.core.utils.MyConstant
 import ir.speaking.core.utils.getUserUid
 import ir.speaking.feature.stt.dto.SttMessage
@@ -26,86 +31,100 @@ private const val ARG_MAX_FRAME_SAMPLES = 16_000 // 1s @ 16 kHz — generous upp
 /**
  * WebSocket endpoint for streaming English speech-to-text.
  *
- * Route: `/api/v1/stt` (authenticated via user JWT).
- *
- * The `/api/` prefix is proxied by nginx (with WebSocket upgrade headers +
- * 24 h read timeout), so this route is reachable through the reverse proxy
- * without an extra nginx block.
- *
- * Protocol:
- *  - The client streams **mono 16 kHz PCM16** audio as binary frames
- *    (chunks of roughly 100–300 ms, i.e. 3,200–9,600 samples per frame).
- *  - The server sends [SttMessage] instances as text frames (JSON):
- *      * {"type":"ready","message":"..."}        — once, after the stream is acquired
- *      * {"type":"partial","text":"..."}          — interim result after each decode step
- *      * {"type":"final","text":"..."}            — result after an endpoint (utterance boundary)
- *      * {"type":"error","message":"server_busy"}— capacity reached; connection is closed
- *
- * Resource safety: the [OnlineStream] is always released in a `finally`
- * block so that native memory is freed even if the client disconnects
- * abruptly (TCP reset, crash, or WebSocket timeout).
+ * Route: `/api/v2/stt/live` and `/api/v1/stt` (authenticated via user JWT).
  */
+@OptIn(ExperimentalKtorApi::class)
 fun Application.sttRouting() {
     val sttService by inject<SttService>()
 
     routing {
-        route("/api/v1/stt") {
+        // v2 Route with OpenAPI describe
+        route("/api/v2/stt") {
             authenticate(MyConstant.USER_JWT_NAME) {
-                webSocket {
-                    val userId = call.getUserUid()
-                    sttLogger.info("STT WebSocket connected from {} (user={})",
-                        call.request.local.remoteHost, userId)
-
-                    // Try to acquire one of the limited concurrent stream slots.
-                    val stream = sttService.tryAcquireStream()
-                    if (stream == null) {
-                        sttLogger.warn("STT server busy ({}/{} streams in use); rejecting connection",
-                            sttService.activeStreams, sttService.maxConcurrentStreams)
-                        sendText(SttMessage.ErrorMessage("server_busy"))
-                        close(CloseReason(CloseReason.Codes.TRY_AGAIN_LATER, "server_busy"))
-                        return@webSocket
-                    }
-
-                    sttLogger.info("STT stream acquired ({}/{} active)",
-                        sttService.activeStreams, sttService.maxConcurrentStreams)
-
-                    try {
-                        // Signal readiness so the client knows it can start sending audio.
-                        sendText(SttMessage.ReadyMessage())
-
-                        var lastPartialText = ""
-
-                        for (frame in incoming) {
-                            when (frame) {
-                                is Frame.Binary -> handleBinaryFrame(sttService, stream, frame,
-                                    send = { msg -> sendText(msg) },
-                                    onPartial = { newText ->
-                                        if (newText != lastPartialText) {
-                                            lastPartialText = newText
-                                        }
-                                    },
-                                )
-                                is Frame.Text -> {
-                                    // A text frame could be used as a control message in the future
-                                    // (e.g. "stop"). For now we simply ignore it.
-                                }
-                                is Frame.Close -> {
-                                    sttLogger.info("STT client closed the connection")
-                                    break
-                                }
-                                else -> { /* Ping/Pong are handled by the WebSocket plugin */ }
-                            }
+                webSocket("/live") {
+                    handleSttSession(sttService)
+                }.describe {
+                    tag("STT")
+                    summary = "Live STT Stream"
+                    description = "Bidirectional WebSocket connection for real-time streaming speech-to-text (mono 16kHz PCM16)"
+                    responses {
+                        HttpStatusCode.SwitchingProtocols {
+                            description = "برقراری موفقیت‌آمیز اتصال وب‌سوکت استریم صوت"
                         }
-                    } catch (e: Throwable) {
-                        sttLogger.error("STT WebSocket error from {}", call.request.local.remoteHost, e)
-                    } finally {
-                        sttService.releaseStream(stream)
-                        sttLogger.info("STT stream released ({}/{} active)",
-                            sttService.activeStreams, sttService.maxConcurrentStreams)
+                        HttpStatusCode.Unauthorized {
+                            description = "توکن کاربر نامعتبر یا منقضی است"
+                            schema = jsonSchema<FailureResponse>()
+                        }
+                        HttpStatusCode.ServiceUnavailable {
+                            description = "ظرفیت پردازش همزمان صوت تکمیل است (server_busy)"
+                        }
                     }
                 }
             }
         }
+
+        // v1 Legacy route preserved for backward compatibility
+        route("/api/v1/stt") {
+            authenticate(MyConstant.USER_JWT_NAME) {
+                webSocket {
+                    handleSttSession(sttService)
+                }
+            }
+        }
+    }
+}
+
+private suspend fun DefaultWebSocketServerSession.handleSttSession(sttService: SttService) {
+    val userId = call.getUserUid()
+    sttLogger.info("STT WebSocket connected from {} (user={})",
+        call.request.local.remoteHost, userId)
+
+    // Try to acquire one of the limited concurrent stream slots.
+    val stream = sttService.tryAcquireStream()
+    if (stream == null) {
+        sttLogger.warn("STT server busy ({}/{} streams in use); rejecting connection",
+            sttService.activeStreams, sttService.maxConcurrentStreams)
+        sendText(SttMessage.ErrorMessage("server_busy"))
+        close(CloseReason(CloseReason.Codes.TRY_AGAIN_LATER, "server_busy"))
+        return
+    }
+
+    sttLogger.info("STT stream acquired ({}/{} active)",
+        sttService.activeStreams, sttService.maxConcurrentStreams)
+
+    try {
+        // Signal readiness so the client knows it can start sending audio.
+        sendText(SttMessage.ReadyMessage())
+
+        var lastPartialText = ""
+
+        for (frame in incoming) {
+            when (frame) {
+                is Frame.Binary -> handleBinaryFrame(sttService, stream, frame,
+                    send = { msg -> sendText(msg) },
+                    onPartial = { newText ->
+                        if (newText != lastPartialText) {
+                            lastPartialText = newText
+                        }
+                    },
+                )
+                is Frame.Text -> {
+                    // A text frame could be used as a control message in the future
+                    // (e.g. "stop"). For now we simply ignore it.
+                }
+                is Frame.Close -> {
+                    sttLogger.info("STT client closed the connection")
+                    break
+                }
+                else -> { /* Ping/Pong are handled by the WebSocket plugin */ }
+            }
+        }
+    } catch (e: Throwable) {
+        sttLogger.error("STT WebSocket error from {}", call.request.local.remoteHost, e)
+    } finally {
+        sttService.releaseStream(stream)
+        sttLogger.info("STT stream released ({}/{} active)",
+            sttService.activeStreams, sttService.maxConcurrentStreams)
     }
 }
 

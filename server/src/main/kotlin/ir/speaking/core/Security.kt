@@ -13,6 +13,8 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 
+import ir.speaking.feature.admin.auth.AdminPrincipal
+
 fun Application.configureSecurity() {
     
     val jwtSecret = environment.config.property("jwt.secret").getString()
@@ -31,8 +33,21 @@ fun Application.configureSecurity() {
                     .build()
             )
             validate { credential ->
-                if (credential.payload.getClaim("uid").asString() != "") {
-                    JWTPrincipal(credential.payload) // این خط اضافه شود
+                val uid = credential.payload.getClaim("uid").asString()
+                val role = credential.payload.getClaim("role")?.asString() ?: "ROLE_ADMIN"
+                val username = credential.payload.getClaim("username")?.asString() ?: ""
+                val fullName = credential.payload.getClaim("fullName")?.asString() ?: "Admin"
+                if (!uid.isNullOrBlank()) {
+                    try {
+                        AdminPrincipal(
+                            id = UUID.fromString(uid),
+                            username = username,
+                            fullName = fullName,
+                            role = role
+                        )
+                    } catch (_: Exception) {
+                        null
+                    }
                 } else {
                     null
                 }
@@ -77,6 +92,23 @@ fun Application.configureSecurity() {
     }
 }
 
+fun generateToken(call: ApplicationCall, uid: String, adminToken: Boolean = false): String {
+    val jwtSecret = call.application.environment.config.propertyOrNull("jwt.secret")?.getString() ?: "secret"
+    val issuer = call.application.environment.config.propertyOrNull("jwt.issuer")?.getString() ?: "http://0.0.0.0:8080/"
+    val jwtAudience =
+        call.application.environment.config.propertyOrNull("jwt.audience")?.getString() ?: "http://0.0.0.0:8080/hello"
+    val expirationTime = Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30))
+
+    val token = JWT.create()
+        .withAudience(if (adminToken) "admin-$jwtAudience" else jwtAudience)
+        .withIssuer(if (adminToken) "admin-$issuer" else issuer)
+        .withClaim("uid", uid)
+        .withExpiresAt(expirationTime)
+        .sign(Algorithm.HMAC256(if (adminToken) "admin-$jwtSecret" else jwtSecret))
+
+    return token
+}
+
 fun generateToken(routing: Route, uid: String, adminToken: Boolean = false): String {
     val jwtSecret = routing.environment.config.propertyOrNull("jwt.secret")?.getString() ?: "secret"
     val issuer = routing.environment.config.propertyOrNull("jwt.issuer")?.getString() ?: "http://0.0.0.0:8080/"
@@ -93,4 +125,23 @@ fun generateToken(routing: Route, uid: String, adminToken: Boolean = false): Str
 
     return token
 }
+
+fun generateAdminToken(call: ApplicationCall, id: UUID, username: String, fullName: String, role: String): String {
+    val jwtSecret = call.application.environment.config.propertyOrNull("jwt.secret")?.getString() ?: "secret"
+    val issuer = call.application.environment.config.propertyOrNull("jwt.issuer")?.getString() ?: "http://0.0.0.0:8080/"
+    val jwtAudience =
+        call.application.environment.config.propertyOrNull("jwt.audience")?.getString() ?: "http://0.0.0.0:8080/hello"
+    val expirationTime = Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30))
+
+    return JWT.create()
+        .withAudience("admin-$jwtAudience")
+        .withIssuer("admin-$issuer")
+        .withClaim("uid", id.toString())
+        .withClaim("username", username)
+        .withClaim("fullName", fullName)
+        .withClaim("role", role)
+        .withExpiresAt(expirationTime)
+        .sign(Algorithm.HMAC256("admin-$jwtSecret"))
+}
+
 

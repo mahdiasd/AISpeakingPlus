@@ -28,30 +28,11 @@ internal fun Application.configureTestDatabases(dropTables: Boolean = false) {
         try {
             transaction {
                 if (dropTables) {
-                    SchemaUtils.drop(StageProgressTable, SubscriptionTable, StageTable, UserTable)
+                    SchemaUtils.drop(StageProgressTable, SubscriptionTable, StageTable, UserTable, ir.speaking.feature.admin.db.AdminAuditTable, ir.speaking.feature.admin.db.AdminUserTable)
                 }
-                SchemaUtils.create(UserTable, StageTable, StageProgressTable, SubscriptionTable)
-
-                if (StageTable.selectAll().empty()) {
-                    for (stage in StageSeedData.stages) {
-                        StageTable.insert {
-                            it[id] = stage.id
-                            it[orderIndex] = stage.orderIndex
-                            it[title] = stage.title
-                            it[titleFa] = stage.titleFa
-                            it[briefing] = stage.briefing
-                            it[briefingFa] = stage.briefingFa
-                            it[targetObjective] = stage.targetObjective
-                            it[backgroundUrl] = stage.backgroundUrl
-                            it[characterName] = stage.characterName
-                            it[characterAvatarUrl] = stage.characterAvatarUrl
-                            it[characterGender] = stage.characterGender
-                            it[voiceId] = stage.voiceId
-                            it[initialSpeaker] = stage.initialSpeaker
-                            it[maxTurns] = stage.maxTurns
-                        }
-                    }
-                }
+                SchemaUtils.create(UserTable, StageTable, StageProgressTable, SubscriptionTable, ir.speaking.feature.admin.db.AdminUserTable, ir.speaking.feature.admin.db.AdminAuditTable)
+                seedSuperAdminIfEmpty()
+                seedOrSyncStages()
             }
         } catch (e: Exception) {
             println("Test DB setup failed: ${e.message}")
