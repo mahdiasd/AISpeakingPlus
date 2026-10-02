@@ -11,6 +11,7 @@ plugins {
 dependencies {
     implementation(project(":sharedUI"))
     implementation(project(":utils"))
+    implementation(project(":navigation"))
 }
 
 compose.desktop {

@@ -40,3 +40,15 @@ deploy_files/
 # Xcode user data
 xcuserdata/
 *.xcuserdata
+
+# Web Admin / Node.js
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.env*
+server.log
+
+# Uploads
+uploads/
+**/uploads/

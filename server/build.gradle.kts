@@ -47,6 +47,9 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
+    implementation(libs.ktor.server.openapi)
+    implementation(libs.ktor.server.swagger)
+    implementation(libs.ktor.server.routing.openapi)
 
     implementation(libs.exposed.core)
     implementation(libs.exposed.crypt)
@@ -78,5 +81,6 @@ dependencies {
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(kotlin("test-junit5"))
+    testImplementation("com.h2database:h2:2.3.232")
 }
 

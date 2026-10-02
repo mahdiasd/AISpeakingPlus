@@ -70,6 +70,7 @@ kotlin {
             // --- Serialization & Data Structures ---
             api(libs.kotlinx.serialization.json)
             api(libs.kotlinx.collections.immutable)
+            api(libs.kotlinx.datetime)
 
             // --- Image Loading (Coil) ---
             api(libs.coil)
