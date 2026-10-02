@@ -14,6 +14,14 @@
 
 - Q: When a paid user's subscription expires, how should access to already-completed premium stages (Stage 3+) be handled? (FR-003) → A: Strict Paywall: Immediately lock all Stage 3+ content (including previously completed stages); active subscription is strictly required to play or replay any stage 3+.
 
+### Session 2026-09-29 (Narrative Goals, AI Resistance, Bilingual Objectives & Vertical Assets)
+
+- Q: How should stage objectives be framed? → A: Human Need & Motivation rather than Procedural Directives: Instead of mechanical commands (e.g. "Order chicken and ask about the landing card"), objectives must describe diegetic needs and conversational challenges (e.g. "Satisfy in-flight meal hunger and clarify UK landing card procedures prior to landing").
+- Q: How should AI NPCs behave during multi-part objectives? → A: Anti-Spoon-feeding & Natural Friction: The AI NPC must NOT proactively remind or resolve the user's secondary objectives (to avoid trivial auto-wins). If the user neglects an objective dimension before dialogue turns exhaust, the evaluation fails (0 stars). NPCs exhibit role-authentic friction (e.g. grocer demands identity verification before surrendering keys; border officer probes vague answers).
+- Q: How are objectives presented in the UI? → A: Bilingual Exposure: Every stage stores both English (`targetObjective`) and Persian (`targetObjectiveFa`) to be displayed in the stage briefing modal and chat header.
+- Q: What is the format for background artwork? → A: Vertical Mobile-First (9:16 Portrait): Stage backgrounds must be vertical (aspect ratio 9:16, e.g. 1080x1920) designed for full-screen smartphones (replacing legacy horizontal assets).
+- Q: How is NPC roleplay behavior configured? → A: `characterBehavior` field added to `stages` database table and web admin panel to define persona, skepticism, tone, and challenge parameters.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Frictionless Guest Entry & Stage 1 Immersion (Priority: P1)
@@ -129,16 +137,18 @@ A learner revisits a previously completed stage from the session history or jour
   - 1 Star: Exactly 2 total errors and hints used.
   - 0 Stars: 3 or more errors/hints OR mission objective unfulfilled.
 - **FR-005**: The system MUST provide an on-demand in-chat hint capability that delivers contextual sentence prompts while incrementing the session hint penalty count.
-- **FR-006**: The system MUST evaluate mission completion via structured AI output, preventing stage completion until the user satisfies the conversational scenario goal.
+- **FR-006**: The system MUST evaluate mission completion via structured AI output; the AI NPC MUST NOT proactively complete or prompt forgotten user objectives; if the learner neglects required goal dimensions before dialogue exhaustion, the stage evaluates as failed (0 stars).
 - **FR-007**: The system MUST preserve the highest historical star rating and score when a stage is replayed.
 - **FR-008**: The system MUST synchronize local Stage 1 guest progress to the authenticated user account upon successful Stage 2 OTP login, resolving conflicts by preserving the maximum stars.
-- **FR-009**: The system MUST dynamically fetch full-screen 2D stage background illustrations from the server, cache them locally on device, and render game-styled menus and buttons directly over the background image.
+- **FR-009**: The system MUST dynamically fetch full-screen vertical (portrait, aspect ratio 9:16 mobile-optimized) 2D stage background illustrations from the server, cache them locally on device, and render game-styled menus and buttons directly over the background image.
 - **FR-010**: The server MUST calculate leaderboard rankings dynamically based on total completed stages and aggregate stars earned.
 - **FR-011**: The system MUST support an extensive linear catalog of at least 15+ thematic story stages.
+- **FR-012**: The system MUST provide bilingual stage objectives in both English (`targetObjective`) and Persian (`targetObjectiveFa`) displayed prominently in the briefing dialog and chat header.
+- **FR-013**: The system MUST support and persist NPC persona configuration (`characterBehavior`) defining roleplay tone, skepticism, verification gates, and friction barriers.
 
 ### Key Entities *(include if feature involves data)*
 
-- **Stage / Mission**: Represents an individual episodic scenario. Attributes: identifier, sequence index (1 to 15+), title, narrative briefing, remote background image URL, NPC character persona, gender-specific voice profile, conversational initiator (user vs. NPC), and objective completion criteria.
+- **Stage / Mission**: Represents an individual episodic scenario. Attributes: identifier, sequence index (1 to 15+), bilingual title, bilingual narrative briefing, bilingual target objective (`targetObjective` & `targetObjectiveFa`), NPC character behavior prompt (`characterBehavior`), remote vertical portrait background URL (9:16), NPC persona name and avatar, voice profile, conversational initiator (user vs. NPC), and objective completion criteria.
 - **User Progress**: Represents a learner's mastery of a stage. Attributes: user identifier, stage identifier, highest stars earned (0–3), completion timestamp, best total score, and repeat count.
 - **Session Evaluation**: Represents the real-time record of a single stage attempt. Attributes: session identifier, stage identifier, grammar error count, hints used count, mission completed flag, and textual feedback in Persian.
 - **Access Tier**: Represents user entitlement status: Guest, Registered Free, or Premium Subscriber (with expiration date).

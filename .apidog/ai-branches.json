@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "updatedAt": "2026-09-24T09:10:47.983Z",
+  "projects": {
+    "955530": {
+      "branches": {
+        "939309": {
+          "projectId": 955530,
+          "branchId": 939309,
+          "name": "main",
+          "branchKind": "main",
+          "branchType": "SPRINT",
+          "isAiBranch": false,
+          "isAiWritableBranch": false,
+          "automationLifecycleStatus": null,
+          "isArchived": false,
+          "fetchedAt": "2026-09-24T08:58:16.780Z"
+        }
+      },
+      "lastGuardError": {
+        "type": "guard_error",
+        "projectId": 955530,
+        "message": "Automation caller branch required",
+        "createdAt": "2026-09-24T09:10:47.983Z"
+      },
+      "recentEvents": [
+        {
+          "type": "guard_error",
+          "projectId": 955530,
+          "message": "Automation caller branch required",
+          "createdAt": "2026-09-24T08:58:06.353Z"
+        },
+        {
+          "type": "branch_recorded",
+          "projectId": 955530,
+          "branchId": 939309,
+          "createdAt": "2026-09-24T08:58:16.780Z"
+        },
+        {
+          "type": "guard_error",
+          "projectId": 955530,
+          "message": "Automation caller branch required",
+          "createdAt": "2026-09-24T09:10:47.983Z"
+        }
+      ]
+    }
+  },
+  "recentEvents": [
+    {
+      "type": "guard_error",
+      "projectId": 955530,
+      "message": "Automation caller branch required",
+      "createdAt": "2026-09-24T08:58:06.353Z"
+    },
+    {
+      "type": "branch_recorded",
+      "projectId": 955530,
+      "branchId": 939309,
+      "createdAt": "2026-09-24T08:58:16.780Z"
+    },
+    {
+      "type": "guard_error",
+      "projectId": 955530,
+      "message": "Automation caller branch required",
+      "createdAt": "2026-09-24T09:10:47.983Z"
+    }
+  ]
+}

@@ -1,337 +1,181 @@
-# سند جامع شماتیک دیتابیس و روابط جداول (Database Schema & ERD - V2)
-## اپلیکیشن یادگیری مکالمه انگلیسی: AiSpeaking Plus
+# سند جامع ساختار پایگاه داده و ارتباطات جداول (Database Schema & ERD)
+## اپلیکیشن مکالمه هوشمند انگلیسی: AiSpeaking Plus
 
 ---
 
-## ۱. نمودار شماتیک ارتباطات پایگاه داده (Entity Relationship Diagram - ERD)
-
 > [!TIP]
-> 🎨 **دیاگرام گرافیکی و تعاملی کامل دیتابیس:**  
-> فایل گرافیکی و مستقل این شماتیک با طراحی استاندارد تحریریه مهندسی در فایل **[DATABASE_SCHEMA_DIAGRAM.html](file:///Users/mahdi/StudioProjects/AISpeakingPlus/DATABASE_SCHEMA_DIAGRAM.html)** ایجاد شده است که می‌توانید آن را مستقیماً در مرورگر باز کنید.
+> 🎨 **دیاگرام گرافیکی و تعاملی پایگاه داده:**
+> نسخه گرافیکی، برداری و تفصیلی این ارتباطات با طراحی مهندسی، انحنای استاندارد اتصالات، برچسب‌های ماسک‌شده و کارت‌های مشخصات در فایل **[DATABASE_SCHEMA_DIAGRAM.html](file:///Users/mahdi/StudioProjects/AISpeakingPlus/DATABASE_SCHEMA_DIAGRAM.html)** قرار دارد که می‌توانید آن را در هر مرورگری باز و مشاهده کنید.
 
-نمودار زیر ساختار نهایی، سبک و بدون فیلدهای اضافه پایگاه داده رابطه‌ای نسخه ۲ را نشان می‌دهد (شامل ادغام استریک در جدول کاربران و حذف کامل متغیرهای زائد):
+---
+
+## ۱. دیاگرام روابط موجودیت‌ها (Entity Relationship Diagram - ERD)
+
+این ساختار منطبق با پیاده‌سازی رسمی کدهای سرور (`server/src/main/kotlin/ir/speaking/core/Databases.kt`) و جداول فریم‌ورک **Exposed ORM** است:
 
 ```mermaid
 erDiagram
-    USERS ||--o{ LEVEL_PROGRESS : "دارد (پیشرفت مراحل)"
-    USERS ||--o{ PURCHASES : "انجام می‌دهد (تراکنش خرید)"
-    USERS ||--o{ USER_DEVICE_TOKENS : "دارد (توکن‌های نوتیفیکیشن)"
-    
-    LEVELS ||--o{ LEVEL_PROGRESS : "ثبت می‌شود برای"
-    
-    PLANS ||--o{ PURCHASES : "خریداری می‌شود در"
-    
-    DISCOUNT_CODES ||--o{ PURCHASES : "اعمال می‌شود روی"
+    users ||--o{ stage_progress : "ثبت پیشرفت و امتیازات (1:N)"
+    users ||--o{ subscriptions : "اشتراک‌های فعال و تاریخی (1:N)"
+    stages ||--o{ stage_progress : "سوابق انجام مرحله (1:N)"
 
-    USERS {
+    users {
         uuid id PK "شناسه یکتا کاربر"
-        varchar(11) phone_number UK "شماره موبایل (منحصربه‌فرد)"
-        varchar(50) first_name "نام (اختیاری)"
-        varchar(50) last_name "نام خانوادگی (اختیاری)"
-        int current_level "بالاترین مرحله آنلاک‌شده (پیش‌فرض: ۱)"
-        int total_stars "مجموع ستاره‌های کسب‌شده"
-        int streak_days "شمارنده روزهای متوالی تمرین"
-        date last_active_date "تاریخ آخرین روز تمرین کاربر"
-        boolean is_active "وضعیت فعال بودن اکانت"
-        timestamp created_at "تاریخ ایجاد حساب"
-        timestamp updated_at "تاریخ آخرین به‌روزرسانی"
+        varchar phone_number UK "شماره موبایل منحصر‌به‌فرد"
+        varchar nick_name "نام مستعار (پیش‌فرض: Learner)"
+        varchar first_name "نام کوچک (اختیاری)"
+        varchar last_name "نام خانوادگی (اختیاری)"
+        varchar gender "جنسیت (اختیاری)"
+        int score "مجموع امتیازات (پیش‌فرض: 0)"
+        varchar avatar "شناسه آواتار انتخابی"
+        timestamptz created_at "زمان ثبت‌نام"
+        timestamptz updated_at "زمان آخرین ویرایش"
     }
 
-    LEVELS {
-        uuid id PK "شناسه یکتا مرحله"
-        int level_number UK "شماره ترتیبی مرحله (۱، ۲، ۳...)"
-        varchar(255) title_en "عنوان انگلیسی مرحله"
-        varchar(255) title_fa "عنوان فارسی مرحله"
-        text briefing_en "متن داستان سناریو به انگلیسی"
-        text briefing_fa "متن داستان سناریو به فارسی (جهت نمایش در اپ)"
-        text mission_goal_en "شرط پیروزی ماموریت برای هوش مصنوعی"
-        text mission_goal_fa "هدف ماموریت برای کاربر"
-        varchar(10) starter "آغازگر گفتگو (USER یا NPC)"
-        varchar(100) npc_name "نام کاراکتر هوش مصنوعی"
-        varchar(100) npc_role "نقش کاراکتر در سناریو"
-        varchar(10) npc_gender "جنسیت کاراکتر (MALE یا FEMALE)"
-        int npc_voice_id "شناسه صدای کاراکتر در Kokoro"
-        boolean is_active "وضعیت فعال بودن مرحله"
-        timestamp created_at "تاریخ ایجاد"
-        timestamp updated_at "تاریخ به‌روزرسانی"
+    stages {
+        varchar id PK "شناسه متنی اسلاگ سناریو (طول: 64)"
+        int order_index UK "ترتیب قرارگیری در مسیر یادگیری"
+        varchar title "عنوان انگلیسی مرحله"
+        varchar title_fa "عنوان فارسی مرحله"
+        text briefing "سناریو و زمینه داستانی (انگلیسی)"
+        text briefing_fa "سناریو و زمینه داستانی (فارسی)"
+        text target_objective "هدف داستانی و چالش مأموریت (انگلیسی - نمایش به کاربر)"
+        text target_objective_fa "هدف داستانی و چالش مأموریت (فارسی - نمایش به کاربر)"
+        text character_behavior "رفتار، لحن، خط قرمزها و اصطکاک کاراکتر AI (اختیاری)"
+        varchar background_url "آدرس تصویر پس‌زمینه عمودی تمام‌صفحه موبایل (9:16)"
+        varchar character_name "نام کاراکتر هوش مصنوعی"
+        varchar character_avatar_url "آدرس آواتار کاراکتر (اختیاری)"
+        varchar character_gender "جنسیت کاراکتر (پیش‌فرض: Woman)"
+        varchar voice_id "شناسه صدای TTS کاراکتر (اختیاری)"
+        varchar initial_speaker "آغازگر گفتگو (پیش‌فرض: Model)"
+        int max_turns "حداکثر رفت‌وبرگشت‌های مکالمه (پیش‌فرض: 12)"
+        timestamptz created_at "تاریخ ایجاد مرحله"
     }
 
-    LEVEL_PROGRESS {
-        uuid id PK "شناسه یکتا سابقه پیشرفت"
-        uuid user_id FK "کلید خارجی به جدول USERS"
-        uuid level_id FK "کلید خارجی به جدول LEVELS"
-        int stars "بیشترین ستاره ثبت‌شده برای این مرحله (۱ تا ۳)"
-        int hints_used "تعداد دفعات استفاده از راهنما در بهترین تلاش"
-        int grammar_errors_count "تعداد خطاهای گرامری در بهترین تلاش"
-        timestamp completed_at "تاریخ اولین قبولی مرحله"
-        timestamp updated_at "تاریخ آخرین تلاش و ارتقای رکورد"
+    stage_progress {
+        uuid id PK "شناسه یکتا رکورد پیشرفت"
+        uuid user_id FK "کلید خارجی به users (حذف آبشاری)"
+        varchar stage_id FK "کلید خارجی به stages (حذف آبشاری)"
+        int stars "تعداد ستاره کسب‌شده (قید: 0 تا 3)"
+        int best_score "بالاترین امتیاز کسب‌شده در این مرحله"
+        int repeat_count "تعداد دفعات تمرین یا تکمیل این مرحله"
+        timestamptz completed_at "زمان اولین تکمیل موفق"
+        timestamptz updated_at "زمان ثبت آخرین رکورد یا تلاش"
     }
 
-    PLANS {
-        uuid id PK "شناسه یکتا پلن اشتراک"
-        varchar(50) name UK "شناسه سیستمی (1_MONTH, 3_MONTHS, 6_MONTHS)"
-        varchar(100) title "عنوان نمایشی پلن به فارسی"
-        int day_duration "طول مدت اشتراک به روز (۳۰، ۹۰، ۱۸۰)"
-        bigint original_price "قیمت پایه خط‌خورده به ریال"
-        bigint discounted_price "قیمت پرداختی با تخفیف به ریال"
-        varchar(100) cafe_bazaar_sku "شناسه محصول در کافه‌بازار"
-        varchar(50) badge_text "نشان تبلیغاتی (محبوب‌ترین، بیشترین تخفیف)"
-        boolean is_active "وضعیت فعال بودن پلن"
-        timestamp created_at "تاریخ ایجاد"
-    }
-
-    DISCOUNT_CODES {
-        uuid id PK "شناسه یکتا کد تخفیف"
-        varchar(30) code UK "متن کد تخفیف (یکتا)"
-        int percentage "درصد تخفیف (بین ۱ تا ۱۰۰)"
-        bigint max_discount_amount "سقف تخفیف به ریال (اختیاری)"
-        timestamp expires_at "تاریخ انقضای کد تخفیف"
-        int max_usage "حداکثر دفعات مجاز استفاده"
-        int used_count "تعداد دفعات استفاده‌شده"
-        boolean is_active "وضعیت فعال بودن کد"
-        timestamp created_at "تاریخ ایجاد"
-    }
-
-    PURCHASES {
-        uuid id PK "شناسه یکتا فاکتور خرید"
-        uuid user_id FK "کلید خارجی به جدول USERS"
-        uuid plan_id FK "کلید خارجی به جدول PLANS"
-        uuid discount_code_id FK "کلید خارجی کد تخفیف (اختیاری)"
-        varchar(20) gateway "درگاه پرداخت (CAFE_BAZAAR, ZARINPAL, GIFT)"
-        varchar(255) transaction_token "توکن رهگیری تراکنش یا توکن بازار"
-        bigint amount_paid "مبلغ نهایی پرداخت‌شده به ریال"
-        varchar(20) status "وضعیت (PENDING, SUCCESS, FAILED)"
-        timestamp starts_at "تاریخ شروع دوره اشتراک"
-        timestamp expires_at "تاریخ پایان اعتبار اشتراک"
-        timestamp created_at "تاریخ ایجاد تراکنش"
-    }
-
-    USER_DEVICE_TOKENS {
-        uuid id PK "شناسه یکتا توکن"
-        uuid user_id FK "کلید خارجی به جدول USERS"
-        varchar(255) fcm_token "توکن سرویس Firebase FCM"
-        varchar(20) platform "نوع دستگاه (ANDROID, IOS, WEB)"
-        timestamp updated_at "زمان آخرین ثبت یا تمدید"
+    subscriptions {
+        uuid id PK "شناسه یکتا رکورد اشتراک"
+        uuid user_id FK "کلید خارجی به users (حذف آبشاری)"
+        varchar plan_type "نوع پلن (مثلاً 1_MONTH, 3_MONTHS, 6_MONTHS)"
+        timestamptz started_at "تاریخ شروع دوره اشتراک"
+        timestamptz expires_at "تاریخ انقضای اشتراک (ایندکس‌شده)"
+        varchar status "وضعیت اشتراک (پیش‌فرض: ACTIVE)"
+        timestamptz created_at "زمان ایجاد رکورد اشتراک"
     }
 ```
 
 ---
 
-## ۲. مشخصات تفصیلی جداول پالایش‌شده (Refined Table Specifications)
-
----
+## ۲. مشخصات تفصیلی جداول (Table Specifications)
 
 ### ۲.۱. جدول کاربران (`users`)
-پروفایل کاربری، سطح پیشرفت در نقشه و وضعیت استریک روزانه در یک جدول واحد و سبک تجمیع شده است.
+نگهداری هویت، اطلاعات پروفایل کاربری، شماره تلفن احرازشده با OTP و جمع امتیازات کاربر.
 
-* **نام جدول:** `users`
-* **کلاس Exposed ORM:** `object UserTable : UUIDTable("users")`
+* **نام جدول در دیتابیس:** `users`
+* **کلاس در Exposed ORM:** [`UserTable`](file:///Users/mahdi/StudioProjects/AISpeakingPlus/server/src/main/kotlin/ir/speaking/feature/user/db/UserTable.kt) (ارث‌بری از `UUIDTable`)
 
-| نام ستون | نوع داده PostgreSQL | نوع در Exposed | Nullable | کلید / ایندکس | مقدار پیش‌فرض | توضیحات و منطق بیزنس |
+| نام ستون | نوع در PostgreSQL | نوع در Exposed | Nullable | کلید / ایندکس | مقدار پیش‌فرض | توضیحات بیزنس |
 | :--- | :--- | :--- | :---: | :---: | :--- | :--- |
-| `id` | `UUID` | `uuid("id")` | خیر | **PK** | `gen_random_uuid()` | شناسه یکتای کاربر |
-| `phone_number` | `VARCHAR(11)` | `varchar("phone_number", 11)` | خیر | **UK** | ندارد | شماره موبایل کاربر (فرمت: `09xxxxxxxxx`) |
-| `first_name` | `VARCHAR(50)` | `varchar("first_name", 50)` | بله | ندارد | `NULL` | نام کاربر (اختیاری) |
-| `last_name` | `VARCHAR(50)` | `varchar("last_name", 50)` | بله | ندارد | `NULL` | نام خانوادگی کاربر (اختیاری) |
-| `current_level` | `INT` | `integer("current_level")` | خیر | ندارد | `1` | شماره بالاترین مرحله در دسترس |
-| `total_stars` | `INT` | `integer("total_stars")` | خیر | **Index (DESC)** | `0` | مجموع کل ستاره‌های کسب‌شده (معیار اصلی رتبه‌بندی) |
-| `streak_days` | `INT` | `integer("streak_days")` | خیر | ندارد | `0` | تعداد روزهای متوالی تمرین روزانه (آیکون 🔥) |
-| `last_active_date` | `DATE` | `date("last_active_date")` | بله | ندارد | `NULL` | تاریخ آخرین روز تمرین جهت محاسبه استریک |
-| `is_active` | `BOOLEAN` | `bool("is_active")` | خیر | ندارد | `true` | وضعیت فعال بودن حساب کاربری |
-| `created_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("created_at")` | خیر | ندارد | `Clock.System.now()` | زمان ایجاد حساب |
-| `updated_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("updated_at")` | خیر | ندارد | `Clock.System.now()` | زمان آخرین ویرایش |
-
-> **نکات پالایش:**  
-> * فیلدهای منسوخ `gender`, `avatar_url`, `total_score` و `display_name` حذف شدند. اگر نام و نام‌خانوادگی خالی باشد، کد سرور نام نمایشی پیش‌فرض `Learner_` + ۴ رقم آخر شماره موبایل را بازمی‌گرداند.  
-> * جدول جداگانه `user_streaks` به دو ستون سبک `streak_days` و `last_active_date` تبدیل و مستقیماً داخل `users` ادغام شد (حذف یک جدول اضافی).
+| `id` | `UUID` | `UUIDTable.id` | خیر | **PK** | خودکار (UUIDv4) | شناسه یکتای اختصاصی کاربر |
+| `phone_number` | `VARCHAR(20)` | `varchar("phone_number", 20)` | خیر | **UK** | ندارد | شماره موبایل کاربر (کلید احراز هویت پیامکی) |
+| `nick_name` | `VARCHAR(100)` | `varchar("nick_name", 100)` | خیر | عادی | `'Learner'` | نام نمایشی کاربر در پروفایل و لیدربورد |
+| `first_name` | `VARCHAR(100)` | `varchar("first_name", 100)` | بله | عادی | `NULL` | نام واقعی کاربر (اختیاری) |
+| `last_name` | `VARCHAR(100)` | `varchar("last_name", 100)` | بله | عادی | `NULL` | نام خانوادگی کاربر (اختیاری) |
+| `gender` | `VARCHAR(16)` | `varchar("gender", 16)` | بله | عادی | `NULL` | جنسیت کاربر (`Male`, `Female` و...) |
+| `score` | `INT` | `integer("score")` | خیر | عادی | `0` | مجموع امتیازات کسب‌شده در چالش‌ها |
+| `avatar` | `VARCHAR(255)` | `varchar("avatar", 255)` | خیر | عادی | `'default_avatar'` | کلید یا نام آواتار انتخاب‌شده |
+| `created_at` | `TIMESTAMPTZ` | `timestamp("created_at")` | خیر | عادی | `CurrentTimestamp` | زمان ثبت نام و ساخت حساب |
+| `updated_at` | `TIMESTAMPTZ` | `timestamp("updated_at")` | خیر | عادی | `CurrentTimestamp` | زمان آخرین ویرایش پروفایل |
 
 ---
 
-### ۲.۲. جدول مراحل و سناریوها (`levels`)
-فقط متغیرهای حیاتی مرحله و ماموریت داستانی را نگهداری می‌کند و هیچ پرامپت تکراری یا داده‌های استاتیک کلاینت در آن ذخیره نمی‌شود.
+### ۲.۲. جدول مراحل و سناریوهای داستانی (`stages`)
+مراحل سناریومحور یادگیری مکالمه انگلیسی (سفر از فرودگاه، تاکسی، هتل و...). در هنگام راه‌اندازی سرور به صورت خودکار با اطلاعات اولیه (`StageSeedData`) مقداردهی می‌شود.
 
-* **نام جدول:** `levels`
-* **کلاس Exposed ORM:** `object LevelTable : UUIDTable("levels")`
+* **نام جدول در دیتابیس:** `stages`
+* **کلاس در Exposed ORM:** [`StageTable`](file:///Users/mahdi/StudioProjects/AISpeakingPlus/server/src/main/kotlin/ir/speaking/feature/stage/db/StageTable.kt) (ارث‌بری از `IdTable<String>`)
 
-| نام ستون | نوع داده PostgreSQL | نوع در Exposed | Nullable | کلید / ایندکس | مقدار پیش‌فرض | توضیحات و منطق بیزنس |
+| نام ستون | نوع در PostgreSQL | نوع در Exposed | Nullable | کلید / ایندکس | مقدار پیش‌فرض | توضیحات بیزنس |
 | :--- | :--- | :--- | :---: | :---: | :--- | :--- |
-| `id` | `UUID` | `uuid("id")` | خیر | **PK** | `gen_random_uuid()` | شناسه یکتای مرحله |
-| `level_number` | `INT` | `integer("level_number")` | خیر | **UK** | ندارد | شماره ترتیبی مرحله (۱، ۲، ۳، ...) |
-| `title_en` | `VARCHAR(255)` | `varchar("title_en", 255)` | خیر | ندارد | ندارد | عنوان مرحله به انگلیسی |
-| `title_fa` | `VARCHAR(255)` | `varchar("title_fa", 255)` | خیر | ندارد | ندارد | عنوان مرحله به فارسی |
-| `briefing_en` | `TEXT` | `text("briefing_en")` | خیر | ندارد | ندارد | شرح داستان ماموریت برای کاربر به انگلیسی |
-| `briefing_fa` | `TEXT` | `text("briefing_fa")` | خیر | ندارد | ندارد | شرح داستان ماموریت به فارسی |
-| `mission_goal_en` | `TEXT` | `text("mission_goal_en")` | خیر | ندارد | ندارد | شرط پیروزی مرحله برای ارزیابی هوش مصنوعی |
-| `mission_goal_fa` | `TEXT` | `text("mission_goal_fa")` | خیر | ندارد | ندارد | هدف ماموریت برای نمایش به کاربر |
-| `starter` | `VARCHAR(10)` | `varchar("starter", 10)` | خیر | ندارد | `'USER'` | چه کسی شروع می‌کند (`USER` یا `NPC`) |
-| `npc_name` | `VARCHAR(100)` | `varchar("npc_name", 100)` | خیر | ندارد | ندارد | نام کاراکتر هوش مصنوعی (مانند Mr. George) |
-| `npc_role` | `VARCHAR(100)` | `varchar("npc_role", 100)` | خیر | ندارد | ندارد | نقش کاراکتر (مانند Grocery Store Owner) |
-| `npc_gender` | `VARCHAR(10)` | `varchar("npc_gender", 10)` | خیر | ندارد | `'MALE'` | جنسیت کاراکتر (`MALE` یا `FEMALE`) |
-| `npc_voice_id` | `INT` | `integer("npc_voice_id")` | خیر | ندارد | `0` | شناسه دقیق صدا در موتور صوتی Kokoro-82M |
-| `is_active` | `BOOLEAN` | `bool("is_active")` | خیر | ندارد | `true` | وضعیت فعال بودن مرحله در نقشه بازی |
-| `created_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("created_at")` | خیر | ندارد | `Clock.System.now()` | زمان ایجاد مرحله |
-| `updated_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("updated_at")` | خیر | ندارد | `Clock.System.now()` | زمان آخرین ویرایش |
-
-> **نکات پالایش:**  
-> * فیلدهای `npc_avatar_url`, `npc_initial_message_en`, `npc_initial_message_fa`, `base_score`, `access_tier` و `system_prompt` به طور کامل حذف شدند. پرامپت‌ها از طریق قالب ثابت در کد با این متغیرها پر می‌شوند.
+| `id` | `VARCHAR(64)` | `varchar("id", 64).entityId()` | خیر | **PK** | ندارد | شناسه اسلاگ یکتای مرحله (مانند: `stage-01-tehran-departure`) |
+| `order_index` | `INT` | `integer("order_index")` | خیر | **UK** | ندارد | ترتیب مرحله در نقشه بازی (۱، ۲، ۳، ...) |
+| `title` | `VARCHAR(255)` | `varchar("title", 255)` | خیر | عادی | ندارد | عنوان انگلیسی مرحله |
+| `title_fa` | `VARCHAR(255)` | `varchar("title_fa", 255)` | خیر | عادی | ندارد | عنوان فارسی مرحله |
+| `briefing` | `TEXT` | `text("briefing")` | خیر | عادی | ندارد | شرح ماموریت و موقعیت به زبان انگلیسی |
+| `briefing_fa` | `TEXT` | `text("briefing_fa")` | خیر | عادی | ندارد | شرح ماموریت و موقعیت به زبان فارسی |
+| `target_objective` | `TEXT` | `text("target_objective")` | خیر | عادی | ندارد | هدف داستانی و چالش مأموریت به انگلیسی (نمایش در کلاینت) |
+| `target_objective_fa` | `TEXT` | `text("target_objective_fa")` | خیر | عادی | ندارد | هدف داستانی و چالش مأموریت به فارسی (نمایش در کلاینت) |
+| `character_behavior` | `TEXT` | `text("character_behavior")` | بله | عادی | `NULL` | پرامپت رفتار، موانع داستانی، راستی‌آزمایی و لحن کاراکتر هوش مصنوعی |
+| `background_url` | `VARCHAR(512)` | `varchar("background_url", 512)` | خیر | عادی | ندارد | آدرس تصویر پس‌زمینه عمودی تمام‌صفحه موبایل (نسبت ۹:۱۶ مناسب گوشی) |
+| `character_name` | `VARCHAR(128)` | `varchar("character_name", 128)` | خیر | عادی | ندارد | نام هوش مصنوعی هم‌صحبت (مانند Sara, Officer) |
+| `character_avatar_url` | `VARCHAR(512)` | `varchar("character_avatar_url", 512)` | بله | عادی | `NULL` | آدرس تصویر آواتار کاراکتر |
+| `character_gender` | `VARCHAR(16)` | `varchar("character_gender", 16)` | خیر | عادی | `'Woman'` | جنسیت کاراکتر (`Woman`, `Man`) |
+| `voice_id` | `VARCHAR(64)` | `varchar("voice_id", 64)` | بله | عادی | `NULL` | شناسه صدای TTS در موتور تولید صوت |
+| `initial_speaker` | `VARCHAR(16)` | `varchar("initial_speaker", 16)` | خیر | عادی | `'Model'` | گوینده آغازکننده مکالمه (`Model` یا `User`) |
+| `max_turns` | `INT` | `integer("max_turns")` | خیر | عادی | `12` | سقف تعداد نوبت‌های تبادل پیام در این سناریو |
+| `created_at` | `TIMESTAMPTZ` | `timestamp("created_at")` | خیر | عادی | `CurrentTimestamp` | زمان ایجاد رکورد مرحله |
 
 ---
 
-### ۲.۳. جدول پیشرفت و رکوردهای مراحل (`level_progress`)
-ثبت دستاوردهای هر کاربر به تفکیک مرحله با تضمین حفظ بالاترین ستاره کسب‌شده.
+### ۲.۳. جدول پیشرفت و رکوردهای مرحله (`stage_progress`)
+ثبت ستاره‌ها، بالاترین امتیاز و تعداد دفعات اجرای هر مرحله توسط کاربر.
 
-* **نام جدول:** `level_progress`
-* **کلاس Exposed ORM:** `object LevelProgressTable : UUIDTable("level_progress")`
+* **نام جدول در دیتابیس:** `stage_progress`
+* **کلاس در Exposed ORM:** [`StageProgressTable`](file:///Users/mahdi/StudioProjects/AISpeakingPlus/server/src/main/kotlin/ir/speaking/feature/stage_progress/db/StageProgressTable.kt) (ارث‌بری از `UUIDTable`)
 
-| نام ستون | نوع داده PostgreSQL | نوع در Exposed | Nullable | کلید / ایندکس | رفتار Cascade | توضیحات |
-| :--- | :--- | :--- | :---: | :---: | :--- | :--- |
-| `id` | `UUID` | `uuid("id")` | خیر | **PK** | ندارد | شناسه رکورد پیشرفت |
-| `user_id` | `UUID` | `uuid("user_id")` | خیر | **FK** | `ON DELETE CASCADE` | ارجاع به `users.id` |
-| `level_id` | `UUID` | `uuid("level_id")` | خیر | **FK** | `ON DELETE RESTRICT` | ارجاع به `levels.id` |
-| `stars` | `INT` | `integer("stars")` | خیر | ندارد | ندارد | **بیشترین ستاره ثبت‌شده برای این مرحله (۱ تا ۳)** |
-| `hints_used` | `INT` | `integer("hints_used")` | خیر | ندارد | ندارد | تعداد راهنماهای مصرف‌شده در بهترین تلاش |
-| `grammar_errors_count`| `INT` | `integer("grammar_errors_count")`| خیر | ندارد | ندارد | تعداد خطاهای گرامری در بهترین تلاش |
-| `completed_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("completed_at")` | خیر | ندارد | ندارد | تاریخ اولین اتمام موفق مرحله |
-| `updated_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("updated_at")` | خیر | ندارد | ندارد | تاریخ آخرین ارتقای ستاره |
+| نام ستون | نوع در PostgreSQL | نوع در Exposed | Nullable | کلید / ایندکس | رفتار Cascade | توضیحات بیزنس |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- |
+| `id` | `UUID` | `UUIDTable.id` | خیر | **PK** | — | شناسه یکتای رکورد پیشرفت |
+| `user_id` | `UUID` | `reference("user_id", UserTable)` | خیر | **FK** | `ON DELETE CASCADE` | ارجاع به کاربر (`users.id`) |
+| `stage_id` | `VARCHAR(64)` | `reference("stage_id", StageTable)` | خیر | **FK** | `ON DELETE CASCADE` | ارجاع به مرحله (`stages.id`) |
+| `stars` | `INT` | `integer("stars")` | خیر | **CHECK** | — | ستاره‌های کسب‌شده (قید: `0 <= stars <= 3`) |
+| `best_score` | `INT` | `integer("best_score")` | خیر | عادی | — | بیشترین امتیاز کسب‌شده در این مرحله (پیش‌فرض: `0`) |
+| `repeat_count` | `INT` | `integer("repeat_count")` | خیر | عادی | — | تعداد دفعات تمرین یا تکمیل (پیش‌فرض: `1`) |
+| `completed_at` | `TIMESTAMPTZ` | `timestamp("completed_at")` | خیر | عادی | — | زمان اتمام مرحله (پیش‌فرض: زمان جاری) |
+| `updated_at` | `TIMESTAMPTZ` | `timestamp("updated_at")` | خیر | عادی | — | زمان آخرین تلاش یا ثبت امتیاز جدید |
 
-#### قیدها و ایندکس‌ها:
-* `uk_user_level_progress`: قید یکتایی ترکیبی `UNIQUE(user_id, level_id)`.
-* `idx_level_progress_user`: ایندکس روی `user_id` برای بارگذاری فوری تاریخچه مراحل بازی‌شده.
-
-> **نکات پالایش:**  
-> * فیلدهای `score`, `best_score`, `best_stars` و `duration_seconds` حذف و ساده‌سازی شدند؛ ستون `stars` به تنهایی نماینده بالاترین رکورد کاربر است.
+#### قیدها و ایندکس‌های جدول `stage_progress`:
+1. **ایندکس یکتای ترکیبی:** `idx_stage_progress_user_stage` بر روی `(user_id, stage_id)`. هر کاربر برای هر مرحله حداکثر یک سطر سابقه پیشرفت دارد و با تکرار بازی، همان سطر به‌روزرسانی می‌شود.
+2. **قید اعتبارسنجی (Check Constraint):** قید `stars_range_check` تضمین می‌کند مقدار ستاره همواره بین ۰ تا ۳ باشد (`stars BETWEEN 0 AND 3`).
 
 ---
 
-### ۲.۴. جدول پلن‌های اشتراک (`plans`)
-تعریف پلن‌های استاندارد سه‌گانه خرید اشتراک حساب ویژه.
+### ۲.۴. جدول اشتراک‌های کاربر (`subscriptions`)
+نگهداری وضعیت دسترسی ویژه و اشتراک پریمیوم برای بازگشایی مراحل پیشرفته.
 
-* **نام جدول:** `plans`
-* **کلاس Exposed ORM:** `object PlanTable : UUIDTable("plans")`
+* **نام جدول در دیتابیس:** `subscriptions`
+* **کلاس در Exposed ORM:** [`SubscriptionTable`](file:///Users/mahdi/StudioProjects/AISpeakingPlus/server/src/main/kotlin/ir/speaking/feature/subscription/db/SubscriptionTable.kt) (ارث‌بری از `UUIDTable`)
 
-| نام ستون | نوع داده PostgreSQL | نوع در Exposed | Nullable | کلید / ایندکس | توضیحات |
-| :--- | :--- | :--- | :---: | :---: | :--- |
-| `id` | `UUID` | `uuid("id")` | خیر | **PK** | شناسه پلن |
-| `name` | `VARCHAR(50)` | `varchar("name", 50)` | خیر | **UK** | نام سیستمی (`1_MONTH`, `3_MONTHS`, `6_MONTHS`) |
-| `title` | `VARCHAR(100)` | `varchar("title", 100)` | خیر | ندارد | عنوان نمایشی فارسی (مثلاً: اشتراک ۳ ماهه) |
-| `day_duration` | `INT` | `integer("day_duration")` | خیر | ندارد | مدت اعتبار به روز (۳۰، ۹۰، ۱۸۰) |
-| `original_price` | `BIGINT` | `long("original_price")` | خیر | ندارد | قیمت خط‌خورده پایه به ریال (۹۹۰,۰۰۰ تا ۴,۹۰۰,۰۰۰) |
-| `discounted_price`| `BIGINT` | `long("discounted_price")` | خیر | ندارد | قیمت با تخفیف اولیه به ریال (۵۹۰,۰۰۰ تا ۲,۹۰۰,۰۰۰) |
-| `cafe_bazaar_sku` | `VARCHAR(100)` | `varchar("cafe_bazaar_sku", 100)` | خیر | ندارد | شناسه SKU در کنسول کافه‌بازار |
-| `badge_text` | `VARCHAR(50)` | `varchar("badge_text", 50)` | بله | ندارد | نشان تبلیغاتی («محبوب‌ترین»، «بیشترین تخفیف») |
-| `is_active` | `BOOLEAN` | `bool("is_active")` | خیر | ندارد | وضعیت فعال بودن پلن برای فروش |
-| `created_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("created_at")` | خیر | ندارد | تاریخ ایجاد پلن |
+| نام ستون | نوع در PostgreSQL | نوع در Exposed | Nullable | کلید / ایندکس | رفتار Cascade | توضیحات بیزنس |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- |
+| `id` | `UUID` | `UUIDTable.id` | خیر | **PK** | — | شناسه یکتای رکورد اشتراک |
+| `user_id` | `UUID` | `reference("user_id", UserTable)` | خیر | **FK** | `ON DELETE CASCADE` | ارجاع به کاربر (`users.id`) |
+| `plan_type` | `VARCHAR(32)` | `varchar("plan_type", 32)` | خیر | عادی | — | نوع اشتراک (مثلاً: `'1_MONTH'`, `'3_MONTHS'`, `'6_MONTHS'`) |
+| `started_at` | `TIMESTAMPTZ` | `timestamp("started_at")` | خیر | عادی | — | تاریخ و زمان آغاز اشتراک |
+| `expires_at` | `TIMESTAMPTZ` | `timestamp("expires_at")` | خیر | **Index** | — | تاریخ و زمان پایان اعتبار اشتراک (ایندکس‌شده برای کوئری‌های سریع) |
+| `status` | `VARCHAR(32)` | `varchar("status", 32)` | خیر | عادی | — | وضعیت اشتراک (پیش‌فرض: `'ACTIVE'`) |
+| `createdAt` | `TIMESTAMPTZ` | `timestamp("created_at")` | خیر | عادی | — | زمان درج رکورد در پایگاه داده |
 
 ---
 
-### ۲.۵. جدول کدهای تخفیف (`discount_codes`)
-مدیریت کوپن‌های تخفیف با درصد، سقف، انقضا و ظرفیت مصرف عمومی روی تمام بسته‌ها.
+## ۳. تحلیل صحت و یکپارچگی روابط (Relational Integrity)
 
-* **نام جدول:** `discount_codes`
-* **کلاس Exposed ORM:** `object DiscountCodeTable : UUIDTable("discount_codes")`
-
-| نام ستون | نوع داده PostgreSQL | نوع در Exposed | Nullable | کلید / ایندکس | مقدار پیش‌فرض | توضیحات |
-| :--- | :--- | :--- | :---: | :---: | :--- | :--- |
-| `id` | `UUID` | `uuid("id")` | خیر | **PK** | `gen_random_uuid()` | شناسه کد تخفیف |
-| `code` | `VARCHAR(30)` | `varchar("code", 30)` | خیر | **UK** | ندارد | متن کد تخفیف با حروف بزرگ |
-| `percentage` | `INT` | `integer("percentage")` | خیر | ندارد | ندارد | درصد تخفیف (بین ۱ تا ۱۰۰) |
-| `max_discount_amount`| `BIGINT`| `long("max_discount_amount")`| بله | ندارد | `NULL` | حداکثر سقف تخفیف به ریال (اختیاری) |
-| `expires_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("expires_at")` | خیر | ایندکس | ندارد | تاریخ پایان مهلت اعتبار کد تخفیف |
-| `max_usage` | `INT` | `integer("max_usage")` | خیر | ندارد | `1000` | سقف دفعات استفاده مجاز |
-| `used_count` | `INT` | `integer("used_count")` | خیر | ندارد | `0` | تعداد دفعات ثبت‌شده تاکنون |
-| `is_active` | `BOOLEAN` | `bool("is_active")` | خیر | ندارد | `true` | وضعیت فعال بودن عمومی کد |
-| `created_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("created_at")` | خیر | ندارد | `Clock.System.now()` | تاریخ ایجاد کد |
-
-> **نکات پالایش:**  
-> * ستون‌های اضافی `valid_from` (چون کد از لحظه ساخت معتبر است) و `applicable_plan_ids` (چون در اپ ۳ پلنی تخفیف‌ها سراسری هستند) حذف شدند.
-
----
-
-### ۲.۶. جدول فاکتورها و خریدهای اشتراک (`purchases`)
-ثبت سوابق خرید و فعال‌سازی اشتراک جهت کنترل دسترسی به Paywall مرحله ۳ به بعد.
-
-* **نام جدول:** `purchases`
-* **کلاس Exposed ORM:** `object PurchaseTable : UUIDTable("purchases")`
-
-| نام ستون | نوع داده PostgreSQL | نوع در Exposed | Nullable | کلید / ایندکس | رفتار Cascade | توضیحات |
-| :--- | :--- | :--- | :---: | :---: | :--- | :--- |
-| `id` | `UUID` | `uuid("id")` | خیر | **PK** | ندارد | شناسه فاکتور خرید |
-| `user_id` | `UUID` | `uuid("user_id")` | خیر | **FK** | `ON DELETE CASCADE` | شناسه کاربر خریدار |
-| `plan_id` | `UUID` | `uuid("plan_id")` | خیر | **FK** | `ON DELETE RESTRICT` | شناسه پلن خریداری‌شده |
-| `discount_code_id` | `UUID` | `uuid("discount_code_id")` | بله | **FK** | `ON DELETE SET NULL` | شناسه کد تخفیف مصرف‌شده |
-| `gateway` | `VARCHAR(20)` | `varchar("gateway", 20)` | خیر | ندارد | ندارد | درگاه (`CAFE_BAZAAR`, `ZARINPAL`, `GIFT`) |
-| `transaction_token`| `VARCHAR(255)`| `varchar("transaction_token", 255)`| خیر| **UK** | ندارد | توکن خرید کافه‌بازار یا شناسه درگاه |
-| `amount_paid` | `BIGINT` | `long("amount_paid")` | خیر | ندارد | ندارد | مبلغ نهایی پرداخت‌شده به ریال |
-| `status` | `VARCHAR(20)` | `varchar("status", 20)` | خیر | ایندکس | `'PENDING'` | وضعیت (`PENDING`, `SUCCESS`, `FAILED`) |
-| `starts_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("starts_at")` | بله | ندارد | `NULL` | تاریخ شروع اعتبار روزشمار |
-| `expires_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("expires_at")` | بله | **Index** | `NULL` | **تاریخ پایان اعتبار اشتراک جهت فیلتر Paywall** |
-| `created_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("created_at")` | خیر | ندارد | `Clock.System.now()` | تاریخ ایجاد تراکنش |
-
-#### ایندکس‌های حیاتی جدول `purchases`:
-* `idx_purchases_user_active_sub`: ایندکس ترکیبی روی `(user_id, status, expires_at DESC)` برای استعلام بلادرنگ وضعیت اشتراک کاربر.
-
-> **نکات پالایش:**  
-> * ستون‌های تکراری `reference_id` (در `transaction_token` ادغام شد) و `purchase_date` (در `created_at` ادغام شد) حذف شدند.
-
----
-
-### ۲.۷. جدول توکن‌های دستگاه کاربر (`user_device_tokens`)
-نگهداری توکن‌های FCM دستگاه‌های کاربر جهت ارسال نوتیفیکیشن‌های یادآوری روزانه.
-
-* **نام جدول:** `user_device_tokens`
-* **کلاس Exposed ORM:** `object UserDeviceTokenTable : UUIDTable("user_device_tokens")`
-
-| نام ستون | نوع داده PostgreSQL | نوع در Exposed | Nullable | کلید / ایندکس | توضیحات |
-| :--- | :--- | :--- | :---: | :---: | :--- |
-| `id` | `UUID` | `uuid("id")` | خیر | **PK** | شناسه رکورد |
-| `user_id` | `UUID` | `uuid("user_id")` | خیر | **FK** | ارجاع به `users.id` (ON DELETE CASCADE) |
-| `fcm_token` | `VARCHAR(255)` | `varchar("fcm_token", 255)` | خیر | **Index** | توکن پوش سرویس Firebase FCM |
-| `platform` | `VARCHAR(20)` | `varchar("platform", 20)` | خیر | ندارد | پلتفرم (`ANDROID`, `IOS`, `WEB`) |
-| `updated_at` | `TIMESTAMP WITH TIME ZONE` | `timestamp("updated_at")` | خیر | ندارد | تاریخ آخرین اتصال دستگاه |
-
----
-
-## ۳. ساختار داده‌های حافظه‌ای در Redis (Redis In-Memory Key Schema)
-
-```text
-+------------------------------------+---------------+---------------+-------------------------------+
-| کلید Redis (Key Pattern)           | ساختار داده   | طول عمر (TTL) | هدف کاربرد                   |
-+------------------------------------+---------------+---------------+-------------------------------+
-| auth:otp:{mobile}                  | Hash          | 120 ثانیه     | نگهداری کد ۵ رقمی و دفعات خطا |
-| auth:cooldown:{mobile}             | String        | 60 ثانیه      | جلوگیری از ارسال مکرر پیامک   |
-| auth:blocked:{mobile}              | String        | 300 ثانیه     | مسدودسازی پس از ۳ بار اشتباه   |
-| active_sub:{userId}                | String (Epoch)| 60 دقیقه      | کش سریع بررسی Paywall مرحله ۳+|
-| chat:{userId}:{levelId}            | Redis Stream  | 2 ساعت        | تاریخچه پیام‌های موقت نشست جاری|
-| leaderboard:top10_cache            | String (JSON) | 60 ثانیه      | پاسخ بدون تاخیر جدول برترین‌ها |
-| rate_limit:stt:{userId}            | Integer       | 60 ثانیه      | کنترل سقف باز کردن سوکت صدا    |
-| lock:purchase:{transactionToken}   | Redisson Lock | 30 ثانیه      | جلوگیری از اعتبارسنجی همزمان   |
-+------------------------------------+---------------+---------------+-------------------------------+
-```
-
----
-
-## ۴. اسکریپت بهینه‌سازی دیتابیس (DDL Migration Script)
-
-```sql
--- ۱. ایجاد اکستنشن UUID
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- ۲. ساختار تمیز جدول کاربران
-CREATE TABLE IF NOT EXISTS "users" (
-    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "phone_number" VARCHAR(11) NOT NULL UNIQUE,
-    "first_name" VARCHAR(50),
-    "last_name" VARCHAR(50),
-    "current_level" INT NOT NULL DEFAULT 1,
-    "total_stars" INT NOT NULL DEFAULT 0,
-    "streak_days" INT NOT NULL DEFAULT 0,
-    "last_active_date" DATE,
-    "is_active" BOOLEAN NOT NULL DEFAULT TRUE,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- ۳. ایندکس مرتب‌سازی لیدربورد بر اساس ستاره‌ها و مراحل
-CREATE INDEX IF NOT EXISTS "idx_users_leaderboard" 
-ON "users" ("total_stars" DESC, "current_level" DESC, "created_at" ASC);
-```
+1. **حذف آبشاری (`ON DELETE CASCADE`):**
+   با حذف حساب یک کاربر از جدول `users`، تمامی پیشرفت‌های ثبت‌شده در `stage_progress` و تمام اشتراک‌های خریداری‌شده در `subscriptions` به‌صورت خودکار پاک می‌شوند تا دیتای یتیم (Orphan Records) به جا نماند. همچنین با حذف یک مرحله، سوابق پیشرفت مربوط به آن مرحله نیز حذف آبشاری می‌گردد.
+2. **نوع کلیدها:**
+   - برای `users`، `stage_progress` و `subscriptions` از کلیدهای تصادفی و امن `UUIDv4` استفاده شده است.
+   - برای `stages` از کلید اسلاگ معنادار `VARCHAR(64)` (مثل `stage-01-tehran-departure`) استفاده شده تا در URLها، لاگ‌ها و کانفیگ کلاینت کاملاً خوانا و پایدار باشد.
+3. **بهینه‌سازی کوئری‌ها:**
+   - ایندکس روی `phone_number` جستجوی فوق‌سریع در ورود پیامکی را فراهم می‌کند.
+   - ایندکس ترکیبی روی `(user_id, stage_id)` استعلام آنی وضعیت یک مرحله برای یک کاربر خاص را با پیچیدگی زمانی $O(1)$ ممکن می‌سازد.
+   - ایندکس روی `expires_at` در جدول اشتراک، اعتبارسنجی Paywall را در هر درخواست کلاینت بسیار سبک و سریع می‌کند.

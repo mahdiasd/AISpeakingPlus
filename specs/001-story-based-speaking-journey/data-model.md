@@ -19,8 +19,10 @@ Represents an individual episodic story scenario along the journey from Tehran t
 | `title_fa` | `VARCHAR(255)` | No | | Persian title (e.g. "خروج از فرودگاه امام تهران") |
 | `briefing` | `TEXT` | No | | English scenario briefing and context |
 | `briefing_fa` | `TEXT` | No | | Persian scenario briefing explaining the learner's mission |
-| `target_objective` | `TEXT` | No | | Clear goal required for AI evaluation (e.g. "Obtain boarding pass and request window seat") |
-| `background_url` | `VARCHAR(512)` | No | | URL to 2D illustrated background image |
+| `target_objective` | `TEXT` | No | | Narrative motivation/goal in English (shown to user in UI) |
+| `target_objective_fa` | `TEXT` | No | | Narrative motivation/goal in Persian (shown to user in UI) |
+| `character_behavior` | `TEXT` | Yes | | AI Persona prompt instructions: tone, friction, verification rules, obstacles |
+| `background_url` | `VARCHAR(512)` | No | | URL to vertical portrait 2D background image (9:16, mobile full-screen) |
 | `character_name` | `VARCHAR(128)` | No | | Name of NPC roleplay partner (e.g. "Check-in Agent Sarah") |
 | `character_avatar_url`| `VARCHAR(512)` | Yes | | Avatar illustration for the NPC |
 | `character_gender` | `VARCHAR(16)` | No | DEFAULT `'Woman'` | Gender for TTS synthesis (`'Man'`, `'Woman'`) |
@@ -103,7 +105,9 @@ data class Stage(
     val briefing: String,
     val briefingFa: String,
     val targetObjective: String,
-    val backgroundUrl: String,
+    val targetObjectiveFa: String,
+    val characterBehavior: String? = null,
+    val backgroundUrl: String, // Vertical portrait 9:16 for full-screen mobile
     val characterName: String,
     val characterAvatarUrl: String?,
     val characterGender: String,
