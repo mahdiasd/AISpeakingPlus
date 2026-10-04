@@ -58,11 +58,11 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# 2. Free Ports 8080 and 8081 if previously occupied
+# 2. Free Ports 8080 and 8082 if previously occupied
 # ------------------------------------------------------------------------------
-echo -e "${CYAN}[2/4] Ensuring ports 8080 and 8081 are free...${NC}"
+echo -e "${CYAN}[2/4] Ensuring ports 8080 and 8082 are free...${NC}"
 lsof -ti:8080 | xargs kill -9 >/dev/null 2>&1 || true
-lsof -ti:8081 | xargs kill -9 >/dev/null 2>&1 || true
+lsof -ti:8082 | xargs kill -9 >/dev/null 2>&1 || true
 
 # ------------------------------------------------------------------------------
 # 3. Check Web Frontend Dependencies
@@ -88,9 +88,9 @@ cleanup() {
   if [ -n "$FRONTEND_PID" ]; then
     kill "$FRONTEND_PID" 2>/dev/null || true
   fi
-  # Kill any child Gradle/Java processes on port 8080/8081
+  # Kill any child Gradle/Java processes on port 8080/8082
   lsof -ti:8080 | xargs kill -9 >/dev/null 2>&1 || true
-  lsof -ti:8081 | xargs kill -9 >/dev/null 2>&1 || true
+  lsof -ti:8082 | xargs kill -9 >/dev/null 2>&1 || true
   echo -e "${GREEN}✓ All services stopped cleanly.${NC}"
   exit 0
 }
@@ -128,9 +128,9 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# 5. Start React Admin & Web Frontend (Port 8081)
+# 5. Start React Admin & Web Frontend (Port 8082)
 # ------------------------------------------------------------------------------
-echo -e "${CYAN}Starting React Web & Admin on port 8081...${NC}"
+echo -e "${CYAN}Starting React Admin on port 8082...${NC}"
 (cd admin-web && npm run dev) &
 FRONTEND_PID=$!
 
@@ -143,10 +143,10 @@ echo ""
 echo -e "${GREEN}${BOLD}==================================================================${NC}"
 echo -e "${GREEN}${BOLD} 🎉 ALL SERVICES ARE RUNNING SUCCESSFULLY!                       ${NC}"
 echo -e "${GREEN}${BOLD}==================================================================${NC}"
-echo -e "  📱 ${BOLD}صفحه اصلی اپلیکیشن:${NC}   ${CYAN}http://localhost:8081/${NC}"
-echo -e "  ⚙️  ${BOLD}پنل مدیریت ادمین:${NC}     ${CYAN}http://localhost:8081/admin${NC}"
-echo -e "  🔌 ${BOLD}سرور بک‌اند (Ktor):${NC}    ${CYAN}http://127.0.0.1:8080/${NC}"
-echo -e "  🩺 ${BOLD}بررسی سلامت (Health):${NC} ${CYAN}http://127.0.0.1:8080/health${NC}"
+echo -e "  🌐 ${BOLD}اپلیکیشن اصلی وب (Compose Wasm):${NC} ${CYAN}http://localhost:8081/${NC} (با دستور ./gradlew :webApp:wasmJsBrowserDevelopmentRun)"
+echo -e "  ⚙️  ${BOLD}پنل مدیریت ادمین (React):${NC}       ${CYAN}http://localhost:8082/admin${NC}"
+echo -e "  🔌 ${BOLD}سرور بک‌اند (Ktor):${NC}              ${CYAN}http://127.0.0.1:8080/${NC}"
+echo -e "  🩺 ${BOLD}بررسی سلامت (Health):${NC}           ${CYAN}http://127.0.0.1:8080/health${NC}"
 echo -e "------------------------------------------------------------------"
 echo -e "  🔑 ${BOLD}اطلاعات ورود ادمین (دیفالت):${NC}"
 echo -e "     نام کاربری: ${YELLOW}admin@aispeaking.ir${NC}"

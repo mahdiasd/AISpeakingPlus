@@ -1,11 +1,11 @@
-
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -20,37 +20,65 @@ import ir.aispeaking.navigation.AppNavigation
 import ir.aispeaking.navigation.di.initKoin
 import ir.aispeaking.sharedui.ui.them.AppTheme
 
+import ir.aispeaking.web.WebBrowserNavigation
+
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     initKoin()
     ComposeViewport {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.radialGradient(
-                        0.0f to Color(0xFF393B40), // مرکز: خاکستری ملایم (Spotlight)
-                        0.6f to Color(0xFF1E1F22), // میانه: تم تیره نیو یوآی
-                        1.0f to Color(0xFF18191B), // لبه‌ها: عمیق و تیره
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            BoxWithConstraints(
-                modifier = Modifier.fillMaxHeight()
+        AppTheme(false) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.radialGradient(
+                            0.0f to Color(0xFF283445), // Spotlight center
+                            0.5f to Color(0xFF161E28), // Dark sleek theme
+                            1.0f to Color(0xFF0D1117)  // Deep edges
+                        )
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                val responsiveWidth = min(maxWidth, maxHeight * (9f / 16f))
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .padding(vertical = 16.dp)
-                        .width(responsiveWidth)
-                        .shadow(24.dp, AppTheme.shapes.roundLarge) // اضافه کردن سایه برای عمق
-                        .clip(AppTheme.shapes.roundLarge)
+                BoxWithConstraints(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    AppTheme(false) {
-                        AppNavigation()
+                    val isWideScreen = maxWidth > 500.dp
+
+                    if (isWideScreen) {
+                        // Desktop / Laptop mode: Centered mobile device frame
+                        val phoneWidth = min(420.dp, maxWidth - 32.dp)
+                        val phoneHeight = min(880.dp, maxHeight - 32.dp)
+
+                        Box(
+                            modifier = Modifier
+                                .width(phoneWidth)
+                                .height(phoneHeight)
+                                .shadow(
+                                    elevation = 32.dp,
+                                    shape = RoundedCornerShape(36.dp),
+                                    spotColor = Color(0x66000000),
+                                    ambientColor = Color(0x33000000)
+                                )
+                                .border(
+                                    width = 1.5.dp,
+                                    color = Color(0x22FFFFFF),
+                                    shape = RoundedCornerShape(36.dp)
+                                )
+                                .clip(RoundedCornerShape(36.dp))
+                                .background(AppTheme.colors.surface)
+                        ) {
+                            AppNavigation(onBackStackCreated = { WebBrowserNavigation(it) })
+                        }
+                    } else {
+                        // Mobile browser mode: Full-screen seamless mobile experience
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(AppTheme.colors.surface)
+                        ) {
+                            AppNavigation(onBackStackCreated = { WebBrowserNavigation(it) })
+                        }
                     }
                 }
             }
