@@ -45,7 +45,7 @@ class LoginViewModel(
     }
 
     private fun onPhoneChanged(phone: String) {
-        val filtered = phone.filter { it.isDigit() }.take(11)
+        val filtered = phone.normalizeDigits().filter { it.isDigit() }.take(11)
         _uiState.update {
             it.copy(
                 phoneNumber = filtered,
@@ -56,7 +56,7 @@ class LoginViewModel(
     }
 
     private fun onOtpChanged(otp: String) {
-        val filtered = otp.filter { it.isDigit() }.take(6)
+        val filtered = otp.normalizeDigits().filter { it.isDigit() }.take(6)
         _uiState.update {
             it.copy(
                 otpCode = filtered,
@@ -64,6 +64,18 @@ class LoginViewModel(
                 generalError = null
             )
         }
+    }
+
+    private fun String.normalizeDigits(): String {
+        val builder = StringBuilder(length)
+        for (ch in this) {
+            when (ch) {
+                in '۰'..'۹' -> builder.append((ch.code - '۰'.code + '0'.code).toChar())
+                in '٠'..'٩' -> builder.append((ch.code - '٠'.code + '0'.code).toChar())
+                else -> builder.append(ch)
+            }
+        }
+        return builder.toString()
     }
 
     private fun isValidIranianPhone(phone: String): Boolean {
@@ -76,6 +88,23 @@ class LoginViewModel(
             _uiState.update {
                 it.copy(phoneError = "لطفاً شماره موبایل معتبر ۱۱ رقمی (مانند 09123456789) وارد کنید.")
             }
+            return
+        }
+
+        // Demo support for end-to-end testing of OTP step without backend
+        if (phone == "09000000000") {
+            val expiresIn = 60
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    step = LoginStep.ENTER_OTP,
+                    countdownSeconds = expiresIn,
+                    canResendOtp = false,
+                    otpCode = "",
+                    otpError = null
+                )
+            }
+            startCountdown(expiresIn)
             return
         }
 
@@ -124,6 +153,19 @@ class LoginViewModel(
         }
 
         viewModelScope.launch {
+            // Demo verification for testing
+            if (phone == "09000000000") {
+                if (otp == "12345") {
+                    timerJob?.cancel()
+                    _uiState.update { it.copy(isLoading = false) }
+                    _effect.send(LoginEffect.LoginSuccess(ir.aispeaking.domain.model.user.User(uid = "demo_user", nickName = "کاربر آزمایشی", mobile = phone)))
+                    _effect.send(LoginEffect.NavigateToMain)
+                } else {
+                    _uiState.update { it.copy(isLoading = false, otpError = "کد تایید اشتباه است (برای تست 12345 را وارد نمایید)") }
+                }
+                return@launch
+            }
+
             _uiState.update { it.copy(isLoading = true, otpError = null, generalError = null) }
             when (val result = verifyOtpUseCase(phone, otp)) {
                 is DataResult.Success -> {

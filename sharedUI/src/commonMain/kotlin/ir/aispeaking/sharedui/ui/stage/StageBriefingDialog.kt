@@ -20,6 +20,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil3.compose.AsyncImage
 import ir.aispeaking.domain.model.stage.Stage
+import ir.aispeaking.sharedui.Res
+import ir.aispeaking.sharedui.ic_user
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun StageBriefingDialog(
@@ -60,9 +63,11 @@ fun StageBriefingDialog(
                                 modifier = Modifier.fillMaxSize()
                             )
                         } else {
-                            Text(
-                                text = "👤",
-                                fontSize = 32.sp
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_user),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(36.dp)
                             )
                         }
                     }
@@ -123,7 +128,7 @@ fun StageBriefingDialog(
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Text(
-                                text = "🎯 هدف ماموریت:",
+                                text = "هدف ماموریت:",
                                 color = Color(0xFF81C784),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold

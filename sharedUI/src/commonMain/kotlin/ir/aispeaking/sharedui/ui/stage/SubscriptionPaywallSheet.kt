@@ -18,6 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.stage.Stage
 import ir.aispeaking.domain.model.stage.SubscriptionPlan
+import ir.aispeaking.sharedui.Res
+import ir.aispeaking.sharedui.ic_crown
+import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,10 +89,15 @@ fun SubscriptionPaywallSheet(
                             listOf(Color(0xFFF59E0B), Color(0xFFD97706))
                         )
                     ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("👑", fontSize = 28.sp)
-            }
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_crown),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
 
             Spacer(modifier = Modifier.height(16.dp))
 
