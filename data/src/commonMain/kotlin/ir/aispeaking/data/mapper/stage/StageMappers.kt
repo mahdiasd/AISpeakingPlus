@@ -6,6 +6,7 @@ import ir.aispeaking.domain.model.stage.StageProgress
 import ir.aispeaking.network.model.stage.dto.StageDetailDto
 import ir.aispeaking.network.model.stage.dto.StageProgressDto
 import ir.aispeaking.network.model.stage.dto.StageSummaryDto
+import ir.aispeaking.network.resolveMediaUrl
 
 fun StageSummaryDto.toDomain(): Stage {
     return Stage(
@@ -18,9 +19,9 @@ fun StageSummaryDto.toDomain(): Stage {
         targetObjective = "",
         targetObjectiveFa = targetObjectiveFa ?: "",
         characterBehavior = null,
-        backgroundUrl = backgroundUrl,
+        backgroundUrl = resolveMediaUrl(backgroundUrl),
         characterName = characterName,
-        characterAvatarUrl = characterAvatarUrl,
+        characterAvatarUrl = characterAvatarUrl?.let { resolveMediaUrl(it) },
         characterGender = characterGender,
         voiceId = null,
         initialSpeaker = initialSpeaker,
@@ -41,9 +42,9 @@ fun StageDetailDto.toDomain(): Stage {
         targetObjective = targetObjective,
         targetObjectiveFa = targetObjectiveFa,
         characterBehavior = characterBehavior,
-        backgroundUrl = backgroundUrl,
+        backgroundUrl = resolveMediaUrl(backgroundUrl),
         characterName = characterName,
-        characterAvatarUrl = characterAvatarUrl,
+        characterAvatarUrl = characterAvatarUrl?.let { resolveMediaUrl(it) },
         characterGender = characterGender,
         voiceId = voiceId,
         initialSpeaker = initialSpeaker,
