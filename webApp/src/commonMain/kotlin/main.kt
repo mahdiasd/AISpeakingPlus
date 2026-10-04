@@ -20,11 +20,21 @@ import ir.aispeaking.navigation.AppNavigation
 import ir.aispeaking.navigation.di.initKoin
 import ir.aispeaking.sharedui.ui.them.AppTheme
 
+import ir.aispeaking.sharedui.ui.stage.audio.DefaultStageAudioController
 import ir.aispeaking.web.WebBrowserNavigation
+import ir.aispeaking.web.setupWebAudioBridge
+import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     initKoin()
+    try {
+        val audioController = GlobalContext.get().getOrNull<DefaultStageAudioController>()
+        if (audioController != null) {
+            setupWebAudioBridge(audioController)
+        }
+    } catch (_: Throwable) {}
+
     ComposeViewport {
         AppTheme(false) {
             Box(

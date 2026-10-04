@@ -22,3 +22,8 @@ data object LoginRoute : AppRoute {
 data object MainRoute : AppRoute {
     override val screenName: String = "Main"
 }
+
+@Serializable
+data class StageChatRoute(val stageId: String) : AppRoute {
+    override val screenName: String = "StageChat"
+}

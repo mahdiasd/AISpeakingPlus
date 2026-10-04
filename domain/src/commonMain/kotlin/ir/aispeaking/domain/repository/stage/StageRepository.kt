@@ -13,4 +13,5 @@ interface StageRepository {
     suspend fun clearLocalGuestProgress(): DataResult<Unit>
     suspend fun requestHint(stageId: String, messages: List<Pair<String, String>>): DataResult<ir.aispeaking.domain.model.stage.HintSuggestion>
     suspend fun submitEvaluation(stageId: String, hintsUsedCount: Int, turnsCount: Int, transcript: List<Pair<String, String>>): DataResult<ir.aispeaking.domain.model.stage.EvaluationSession>
+    suspend fun sendStageChatMessage(stageId: String, userMessage: String?, history: List<Pair<String, String>>): DataResult<ir.aispeaking.domain.model.chat.StageChatTurnResult>
 }

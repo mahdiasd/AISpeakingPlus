@@ -41,4 +41,10 @@ class StageApi(
             setBody(request)
         }.body()
     }
+
+    suspend fun sendStageChatMessage(stageId: String, request: ir.aispeaking.network.model.stage.dto.StageChatRequestDto): NetworkResponse<ir.aispeaking.network.model.stage.dto.StageChatResponseDto> {
+        return client.post("$baseUrl/api/v2/stages/$stageId/chat") {
+            setBody(request)
+        }.body()
+    }
 }

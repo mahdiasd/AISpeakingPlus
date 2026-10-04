@@ -177,3 +177,19 @@ data class LeaderboardResponseDto(
     val pageSize: Int,
     val totalCount: Long
 )
+
+@Serializable
+data class StageChatRequestDto(
+    val message: String? = null,
+    val history: List<ChatMessageDto> = emptyList()
+)
+
+@Serializable
+data class StageChatResponseDto(
+    val message: String,
+    val translatedMessage: String? = null,
+    val audioUrl: String? = null,
+    val grammarFeedbackFa: String = "",
+    val objectiveCompleted: Boolean = false,
+    val finishTaskIndexes: List<Int> = emptyList()
+)

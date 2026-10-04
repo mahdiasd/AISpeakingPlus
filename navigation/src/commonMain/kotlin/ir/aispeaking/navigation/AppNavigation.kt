@@ -56,8 +56,16 @@ fun AppNavigation(
                 JourneyMapScreen(
                     viewModel = koinViewModel(),
                     onNavigateToChat = { stageId ->
-                        // Stage Chat entry point
+                        backStack.add(StageChatRoute(stageId))
                     }
+                )
+            }
+
+            entry<StageChatRoute> { route ->
+                ir.aispeaking.sharedui.ui.stage.ChatScreen(
+                    stageId = route.stageId,
+                    viewModel = koinViewModel(),
+                    onNavigateBack = { backStack.removeLastOrNull() }
                 )
             }
         }

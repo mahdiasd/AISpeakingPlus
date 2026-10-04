@@ -143,4 +143,28 @@ class StageRepositoryImpl(
             )
         )
     }
+
+    override suspend fun sendStageChatMessage(
+        stageId: String,
+        userMessage: String?,
+        history: List<Pair<String, String>>
+    ): DataResult<ir.aispeaking.domain.model.chat.StageChatTurnResult> {
+        val requestDto = ir.aispeaking.network.model.stage.dto.StageChatRequestDto(
+            message = userMessage,
+            history = history.map { ChatMessageDto(it.first, it.second) }
+        )
+        val result = safeCall { stageApi.sendStageChatMessage(stageId, requestDto) }
+        if (result !is DataResult.Success) return DataResult.Failure((result as DataResult.Failure).appError)
+        val d = result.data
+        return DataResult.Success(
+            ir.aispeaking.domain.model.chat.StageChatTurnResult(
+                message = d.message,
+                translatedMessage = d.translatedMessage,
+                audioUrl = d.audioUrl,
+                grammarFeedbackFa = d.grammarFeedbackFa,
+                objectiveCompleted = d.objectiveCompleted,
+                finishTaskIndexes = d.finishTaskIndexes
+            )
+        )
+    }
 }

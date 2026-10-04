@@ -5,6 +5,7 @@ import io.ktor.openapi.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.*
@@ -33,6 +34,7 @@ data class StageErrorResponse(
 @OptIn(ExperimentalKtorApi::class)
 fun Application.stageRouting() {
     val stageRepository by inject<StageRepository>()
+    val stageChatService by inject<ir.speaking.feature.stage.service.StageChatService>()
 
     routing {
         route("/api/v2/stages") {
@@ -218,6 +220,48 @@ fun Application.stageRouting() {
                         HttpStatusCode.InternalServerError {
                             description = "Internal server error"
                             schema = jsonSchema<FailureResponse>()
+                        }
+                    }
+                }
+
+                post("/{stageId}/chat") {
+                    val stageId = call.parameters["stageId"]
+                    if (stageId.isNullOrBlank()) {
+                        call.failureRespond(HttpStatusCode.BadRequest, "Stage ID is required")
+                        return@post
+                    }
+
+                    val principal = call.principal<JWTPrincipal>()
+                    val uidString = principal?.payload?.getClaim("uid")?.asString()
+                    val userId = uidString?.let { try { UUID.fromString(it) } catch (_: Exception) { null } }
+
+                    val request = try {
+                        call.receive<ir.speaking.feature.stage.dto.StageChatRequest>()
+                    } catch (_: Exception) {
+                        ir.speaking.feature.stage.dto.StageChatRequest()
+                    }
+
+                    val response = stageChatService.processChatTurn(stageId, userId, request)
+                    call.successRespond(response, message = "Chat turn processed successfully")
+                }.describe {
+                    tag("Stages")
+                    summary = "Stage Chat Turn"
+                    description = "Process interactive chat turn with AI character, including TTS voice synthesis and grammar feedback"
+                    parameters {
+                        path("stageId") {
+                            description = "Unique stage identifier"
+                            required = true
+                        }
+                    }
+                    requestBody {
+                        description = "Chat payload with optional user message and dialogue history"
+                        required = false
+                        schema = jsonSchema<ir.speaking.feature.stage.dto.StageChatRequest>()
+                    }
+                    responses {
+                        HttpStatusCode.OK {
+                            description = "Chat turn processed successfully"
+                            schema = jsonSchema<SuccessResponse<ir.speaking.feature.stage.dto.StageChatResponse>>()
                         }
                     }
                 }

@@ -1,5 +1,6 @@
 package ir.aispeaking.sharedui.ui.stage
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,12 +12,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ir.aispeaking.domain.model.chat.Chat
 import ir.aispeaking.sharedui.ui.component.AsyncStageBackground
+import ir.aispeaking.sharedui.ui.stage.component.*
+import ir.aispeaking.sharedui.ui.them.AppTheme
+import kotlinx.coroutines.delay
 
 @Composable
 fun ChatScreen(
@@ -26,16 +29,16 @@ fun ChatScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
     LaunchedEffect(stageId) {
         viewModel.initStage(stageId)
     }
 
-    LaunchedEffect(uiState.messages.size) {
-        if (uiState.messages.isNotEmpty()) {
-            listState.animateScrollToItem(uiState.messages.size - 1)
+    LaunchedEffect(uiState.chats.size) {
+        if (uiState.chats.isNotEmpty()) {
+            delay(150)
+            listState.animateScrollToItem(uiState.chats.size - 1)
         }
     }
 
@@ -50,193 +53,143 @@ fun ChatScreen(
                 .navigationBarsPadding()
         ) {
             // Header Bar
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B).copy(alpha = 0.9f))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    IconButton(onClick = onNavigateBack) {
-                        Text("←", color = Color.White, fontSize = 24.sp)
-                    }
+            ChatToolbar(
+                stage = uiState.stage,
+                onBackClick = onNavigateBack,
+                onFinishConversationClick = { viewModel.submitEvaluation() }
+            )
 
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = uiState.stage?.titleFa ?: "مرحله",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        val goalText = uiState.stage?.let { s ->
-                            if (s.targetObjectiveFa.isNotBlank()) s.targetObjectiveFa else s.targetObjective
-                        } ?: ""
-                        Text(
-                            text = "هدف: $goalText",
-                            color = Color(0xFFA5B4FC),
-                            fontSize = 11.sp,
-                            maxLines = 1
-                        )
-                    }
-
-                    // Complete / Evaluate Mission button
-                    Button(
-                        onClick = { viewModel.submitEvaluation() },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text("پایان مکالمه", fontSize = 12.sp)
-                    }
-                }
-            }
-
-            // Dialogue Messages
-            LazyColumn(
-                state = listState,
+            // Conversation Messages Area
+            Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                items(uiState.messages) { msg ->
-                    val isUser = msg.role == "User"
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
-                    ) {
-                        Card(
-                            shape = RoundedCornerShape(
-                                topStart = 16.dp,
-                                topEnd = 16.dp,
-                                bottomStart = if (isUser) 16.dp else 4.dp,
-                                bottomEnd = if (isUser) 4.dp else 16.dp
-                            ),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isUser) Color(0xFF6366F1) else Color(0xFF1E293B).copy(alpha = 0.95f)
-                            ),
-                            modifier = Modifier.widthIn(max = 300.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = if (isUser) "شما" else (uiState.stage?.characterName ?: "NPC"),
-                                    color = if (isUser) Color(0xFFE0E7FF) else Color(0xFF38BDF8),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = msg.content,
-                                    color = Color.White,
-                                    fontSize = 14.sp,
-                                    lineHeight = 20.sp
-                                )
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp, horizontal = 4.dp)
+                ) {
+                    items(
+                        items = uiState.chats,
+                        key = { it.uid }
+                    ) { chat ->
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            when (chat) {
+                                is Chat.User -> {
+                                    UserChatItem(
+                                        modifier = Modifier.align(Alignment.CenterEnd),
+                                        chat = chat,
+                                        onRetry = { viewModel.retrySendMessage() }
+                                    )
+                                }
+
+                                is Chat.Ai -> {
+                                    AiChatItem(
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.88f)
+                                            .align(Alignment.CenterStart),
+                                        chat = chat,
+                                        onPlayVoice = { viewModel.playAiVoice(chat.uid) },
+                                        onStopVoice = { viewModel.stopAiVoice(chat.uid) }
+                                    )
+                                }
+
+                                is Chat.WaitingForAi -> {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .align(Alignment.CenterStart)
+                                            .background(
+                                                color = AppTheme.colors.aiChatContainer.copy(alpha = 0.85f),
+                                                shape = RoundedCornerShape(16.dp)
+                                            )
+                                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(16.dp),
+                                            strokeWidth = 2.dp,
+                                            color = AppTheme.colors.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "${uiState.stage?.characterName ?: "AI"} در حال پاسخ...",
+                                            color = AppTheme.colors.onSurface.copy(alpha = 0.8f),
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
 
-                if (uiState.isModelSpeaking) {
-                    item {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp,
-                                color = Color(0xFF38BDF8)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "${uiState.stage?.characterName ?: "NPC"} در حال پاسخ...",
-                                color = Color(0xFF94A3B8),
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
+                // Live Transcribed Text Bubble (Tooltip pointing down to mic)
+                val showBubbleVoiceText = uiState.inputMode == ChatInputMode.VOICE && uiState.messageText.isNotBlank()
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = showBubbleVoiceText,
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f)
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 8.dp),
+                    enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+                    exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
+                ) {
+                    BubbleVoiceText(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = uiState.messageText,
+                        onEditClick = { viewModel.setInputMode(ChatInputMode.TEXT) },
+                        onClearClick = { viewModel.clearMessageText() }
+                    )
                 }
             }
 
-            // Hint Suggestion Cue Banner
+            // Hint Suggestion Cue Banner (if requested)
             HintSuggestionCue(
                 visible = uiState.currentHintSuggestion != null,
                 suggestionEn = uiState.currentHintSuggestion,
                 explanationFa = uiState.currentHintExplanation,
                 onApplySuggestion = { suggestion ->
-                    inputText = suggestion
+                    viewModel.onMessageTextChanged(suggestion)
+                    viewModel.setInputMode(ChatInputMode.TEXT)
                     viewModel.dismissHint()
                 },
                 onDismiss = { viewModel.dismissHint() }
             )
 
-            // Input Bar with 💡 Hint button
-            Card(
+            // Hint Button + Bottom Bar
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A).copy(alpha = 0.95f))
+                    .padding(horizontal = 12.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Hint Button
-                    OutlinedButton(
-                        onClick = { viewModel.requestHint() },
-                        shape = CircleShape,
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color(0xFFFBBF24)
-                        ),
-                        modifier = Modifier.padding(end = 4.dp)
-                    ) {
-                        Text("💡 ${uiState.hintsUsedCount}", fontSize = 12.sp)
-                    }
-
-                    TextField(
-                        value = inputText,
-                        onValueChange = { inputText = it },
-                        placeholder = { Text("پیام انگلیسی خود را بنویسید...", fontSize = 13.sp, color = Color(0xFF64748B)) },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        ),
-                        modifier = Modifier.weight(1f)
+                OutlinedButton(
+                    onClick = { viewModel.requestHint() },
+                    shape = CircleShape,
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFFFBBF24)
                     )
-
-                    IconButton(
-                        onClick = {
-                            if (inputText.isNotBlank()) {
-                                viewModel.sendMessage(inputText)
-                                inputText = ""
-                            }
-                        },
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF6366F1))
-                    ) {
-                        Text("➤", color = Color.White, fontSize = 16.sp)
-                    }
+                ) {
+                    Text("💡 راهنما ${uiState.hintsUsedCount}", fontSize = 12.sp)
                 }
             }
+
+            // Bottom Input Bar (Voice Recorder / Text Editor)
+            ChatBottomBar(
+                inputMode = uiState.inputMode,
+                text = uiState.messageText,
+                isRecording = uiState.isRecording,
+                onTextChange = { viewModel.onMessageTextChanged(it) },
+                onInputModeChange = { viewModel.setInputMode(it) },
+                onVoiceToggle = { start -> viewModel.toggleRecording(start) },
+                onSendClick = { viewModel.sendMessage() }
+            )
         }
 
         // Evaluation Result Dialog
