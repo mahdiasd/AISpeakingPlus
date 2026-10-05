@@ -9,7 +9,9 @@ import ir.speaking.feature.stage.dto.StageChatResponse
 import ir.speaking.feature.stage.repository.StageRepository
 import ir.speaking.feature.tts.model.KokoroVoices
 import ir.speaking.feature.tts.service.TtsService
+import ir.speaking.feature.stage.dto.StageDetailResponse
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.koin.core.annotation.Single
@@ -38,7 +40,7 @@ class StageChatService(
 
         // If userMessage is empty, this is the AI starter greeting turn
         if (userMessage.isEmpty()) {
-            val (initialGreeting, initialTranslation) = getInitialGreeting(stage?.orderIndex, stage?.characterName)
+            val (initialGreeting, initialTranslation) = generateAiStarterTurn(stage)
             val audioUrl = trySynthesize(initialGreeting, voiceSid)
 
             return StageChatResponse(
@@ -51,27 +53,22 @@ class StageChatService(
             )
         }
 
-        // Evaluate user's message grammar
-        val grammarFeedback = evaluateGrammar(userMessage)
-
-        // Generate character's next reply
-        val (nextReply, replyTranslation, isObjectiveDone) = generateNextTurn(
-            stageOrderIndex = stage?.orderIndex ?: 1,
-            characterName = stage?.characterName ?: "Character",
-            characterBehavior = stage?.characterBehavior ?: "",
+        // Generate response and evaluate grammar via AI (with resilient local fallback)
+        val turnResult = generateAiChatTurn(
+            stage = stage,
             userMessage = userMessage,
             history = history
         )
 
-        val audioUrl = trySynthesize(nextReply, voiceSid)
+        val audioUrl = trySynthesize(turnResult.reply, voiceSid)
 
         return StageChatResponse(
-            message = nextReply,
-            translatedMessage = replyTranslation,
+            message = turnResult.reply,
+            translatedMessage = turnResult.translation,
             audioUrl = audioUrl,
-            grammarFeedbackFa = grammarFeedback,
-            objectiveCompleted = isObjectiveDone,
-            finishTaskIndexes = if (isObjectiveDone) listOf(0, 1) else emptyList()
+            grammarFeedbackFa = turnResult.grammarFeedback,
+            objectiveCompleted = turnResult.isObjectiveDone,
+            finishTaskIndexes = if (turnResult.isObjectiveDone) listOf(0, 1) else emptyList()
         )
     }
 
@@ -82,6 +79,44 @@ class StageChatService(
         } catch (e: Exception) {
             logger.warn("TTS synthesis error: ${e.message}")
             null
+        }
+    }
+
+    private suspend fun generateAiStarterTurn(stage: StageDetailResponse?): Pair<String, String?> {
+        return try {
+            val systemPrompt = buildString {
+                appendLine("You are an interactive conversational English learning assistant acting as a character in an English speaking simulation scenario.")
+                appendLine("Current Stage: ${stage?.title ?: "English Speaking Stage"}")
+                appendLine("Character Name: ${stage?.characterName ?: "Character"}")
+                appendLine("Character Persona & Behavior: ${stage?.characterBehavior ?: "Friendly and helpful conversational partner"}")
+                appendLine("Stage Target Objective: ${stage?.targetObjective ?: "Practice natural English conversation"}")
+                appendLine()
+                appendLine("Task:")
+                appendLine("Generate the OPENING greeting message from '${stage?.characterName ?: "Character"}' to start the conversation with the user in this scenario.")
+                appendLine("Keep it natural, in-character, and concise (1 to 2 sentences max).")
+                appendLine("Also provide a natural Persian translation.")
+                appendLine("ALWAYS return valid JSON matching this schema:")
+                appendLine("{\n  \"reply\": \"Opening greeting in English\",\n  \"translation\": \"ترجمه فارسی پیام آغازین\"\n}")
+            }
+
+            val chatMessages = listOf(ChatMessage(role = ChatRole.System, content = systemPrompt))
+            val rawResult = aiApiService.requestRaw(chatMessages)
+            if (rawResult.isSuccess) {
+                val rawText = rawResult.getOrNull().orEmpty().trim()
+                val cleanJson = cleanJsonResponse(rawText)
+                val jsonObject = json.parseToJsonElement(cleanJson).jsonObject
+                val reply = jsonObject["reply"]?.jsonPrimitive?.content?.trim().orEmpty()
+                val translation = jsonObject["translation"]?.jsonPrimitive?.content?.trim().orEmpty()
+                if (reply.isNotEmpty()) {
+                    return Pair(reply, translation.ifEmpty { null })
+                }
+            } else {
+                logger.warn("AI starter request failed: ${rawResult.exceptionOrNull()?.message}")
+            }
+            getInitialGreeting(stage?.orderIndex, stage?.characterName)
+        } catch (e: Exception) {
+            logger.warn("Error in generateAiStarterTurn: ${e.message}, using fallback starter")
+            getInitialGreeting(stage?.orderIndex, stage?.characterName)
         }
     }
 
@@ -208,4 +243,114 @@ class StageChatService(
             userTurnCount >= 3
         )
     }
+
+    private suspend fun generateAiChatTurn(
+        stage: StageDetailResponse?,
+        userMessage: String,
+        history: List<StageChatMessageDto>
+    ): ChatTurnResult {
+        return try {
+            val systemPrompt = buildString {
+                appendLine("You are an interactive conversational English learning assistant acting as a character in an English speaking simulation scenario.")
+                appendLine("Current Stage: ${stage?.title ?: "English Speaking Stage"}")
+                appendLine("Character Name: ${stage?.characterName ?: "Character"}")
+                appendLine("Character Persona & Behavior: ${stage?.characterBehavior ?: "Friendly and helpful conversational partner"}")
+                appendLine("Stage Target Objective: ${stage?.targetObjective ?: "Practice natural English conversation"}")
+                appendLine()
+                appendLine("Instructions:")
+                appendLine("1. Reply in-character as '${stage?.characterName ?: "Character"}' in spoken-style English. Keep your character reply concise (1 to 2 sentences) and conversational.")
+                appendLine("2. Provide a fluent, natural Persian translation ('translation') for your English reply.")
+                appendLine("3. Critically examine the user's latest message for English grammar, vocabulary, preposition, or phrasing errors:")
+                appendLine("   - Pay close attention to word boundaries: never report words as glued or concatenated if standard spaces or punctuation separate them. Only report genuine spelling, grammar, preposition, or phrasing errors.")
+                appendLine("   - If the user made ANY mistake: provide a helpful, polite explanation in Persian ('grammar_feedback') explaining the issue and giving the correct sentence.")
+                appendLine("   - If the user's sentence is grammatically correct and natural: 'grammar_feedback' MUST be an empty string \"\".")
+                appendLine("4. Check if the user has completed or progressed towards the stage objective ('${stage?.targetObjective ?: ""}'). Set 'objective_completed' to true if achieved or at final step, else false.")
+                appendLine("5. ALWAYS return valid JSON matching this schema:")
+                appendLine("{\n  \"reply\": \"English reply here\",\n  \"translation\": \"ترجمه فارسی پاسخ\",\n  \"grammar_feedback\": \"توضیح فارسی اشکال گرامری یا رشته خالی در صورت صحت\",\n  \"objective_completed\": false\n}")
+            }
+
+            val chatMessages = mutableListOf<ChatMessage>()
+            chatMessages.add(ChatMessage(role = ChatRole.System, content = systemPrompt))
+
+            // Add recent history for context, ensuring we don't repeat the current user message
+            val sanitizedHistory = history.filterIndexed { index, item ->
+                !(index == history.lastIndex && item.role.equals("User", ignoreCase = true) && item.content.trim().equals(userMessage.trim(), ignoreCase = true))
+            }.takeLast(6)
+
+            for (item in sanitizedHistory) {
+                val role = if (item.role.equals("User", ignoreCase = true)) ChatRole.User else ChatRole.Assistant
+                chatMessages.add(ChatMessage(role = role, content = item.content))
+            }
+
+            chatMessages.add(ChatMessage(role = ChatRole.User, content = userMessage))
+
+            val rawResult = aiApiService.requestRaw(chatMessages)
+            if (rawResult.isSuccess) {
+                val rawText = rawResult.getOrNull().orEmpty().trim()
+                val cleanJson = cleanJsonResponse(rawText)
+                val jsonObject = json.parseToJsonElement(cleanJson).jsonObject
+
+                val reply = jsonObject["reply"]?.jsonPrimitive?.content?.trim().orEmpty()
+                val translation = jsonObject["translation"]?.jsonPrimitive?.content?.trim().orEmpty()
+                val grammarFeedback = jsonObject["grammar_feedback"]?.jsonPrimitive?.content?.trim().orEmpty()
+                val objectiveCompleted = jsonObject["objective_completed"]?.jsonPrimitive?.booleanOrNull ?: false
+
+                if (reply.isNotEmpty()) {
+                    return ChatTurnResult(
+                        reply = reply,
+                        translation = translation.ifEmpty { null },
+                        isObjectiveDone = objectiveCompleted,
+                        grammarFeedback = grammarFeedback
+                    )
+                }
+            } else {
+                logger.warn("AI API request failed: ${rawResult.exceptionOrNull()?.message}")
+            }
+            fallbackChatTurn(stage, userMessage, history)
+        } catch (e: Exception) {
+            logger.warn("Error in generateAiChatTurn: ${e.message}, falling back to rule-based engine")
+            fallbackChatTurn(stage, userMessage, history)
+        }
+    }
+
+    private fun cleanJsonResponse(raw: String): String {
+        var text = raw.trim()
+        if (text.startsWith("```json")) {
+            text = text.removePrefix("```json").trim()
+        } else if (text.startsWith("```")) {
+            text = text.removePrefix("```").trim()
+        }
+        if (text.endsWith("```")) {
+            text = text.removeSuffix("```").trim()
+        }
+        return text.trim()
+    }
+
+    private suspend fun fallbackChatTurn(
+        stage: StageDetailResponse?,
+        userMessage: String,
+        history: List<StageChatMessageDto>
+    ): ChatTurnResult {
+        val grammar = evaluateGrammar(userMessage)
+        val (reply, translation, isObjectiveDone) = generateNextTurn(
+            stageOrderIndex = stage?.orderIndex ?: 1,
+            characterName = stage?.characterName ?: "Character",
+            characterBehavior = stage?.characterBehavior ?: "",
+            userMessage = userMessage,
+            history = history
+        )
+        return ChatTurnResult(
+            reply = reply,
+            translation = translation,
+            isObjectiveDone = isObjectiveDone,
+            grammarFeedback = grammar
+        )
+    }
 }
+
+data class ChatTurnResult(
+    val reply: String,
+    val translation: String?,
+    val isObjectiveDone: Boolean,
+    val grammarFeedback: String
+)

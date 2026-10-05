@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import org.koin.core.annotation.Factory
@@ -105,43 +106,22 @@ class ChatViewModel(
                 is DataResult.Success -> {
                     val d = result.data
                     val aiUid = "ai_init_${Clock.System.now().toEpochMilliseconds()}"
-                    val aiChat = Chat.Ai(
-                        uid = aiUid,
-                        message = d.message,
+                    streamAiResponse(
+                        aiUid = aiUid,
+                        fullMessage = d.message,
                         translatedMessage = d.translatedMessage,
-                        voiceState = AiVoiceState.Playing,
                         audioUrl = d.audioUrl
                     )
-
-                    _uiState.update {
-                        it.copy(
-                            chats = (it.chats + aiChat).toImmutableList(),
-                            isModelSpeaking = false,
-                            currentlyPlayingUid = aiUid
-                        )
-                    }
-
-                    // Requirement 2: Play AI voice automatically once upon message arrival
-                    audioController.playVoice(d.audioUrl) {
-                        onVoicePlaybackEnded(aiUid)
-                    }
                 }
                 is DataResult.Failure -> {
                     // Fallback initial greeting
                     val aiUid = "ai_init_fallback"
-                    val aiChat = Chat.Ai(
-                        uid = aiUid,
-                        message = "Good evening! Welcome aboard. Would you like the grilled chicken with rice, or the vegetarian pasta tonight?",
+                    streamAiResponse(
+                        aiUid = aiUid,
+                        fullMessage = "Good evening! Welcome aboard. Would you like the grilled chicken with rice, or the vegetarian pasta tonight?",
                         translatedMessage = "عصر بخیر! به پرواز خوش آمدید. امشب مرغ گریل شده با برنج میل دارید یا پاستای گیاهی؟",
-                        voiceState = AiVoiceState.Stopped,
                         audioUrl = null
                     )
-                    _uiState.update {
-                        it.copy(
-                            chats = (it.chats + aiChat).toImmutableList(),
-                            isModelSpeaking = false
-                        )
-                    }
                 }
             }
         }
@@ -149,6 +129,10 @@ class ChatViewModel(
 
     fun playAiVoice(uid: String) {
         val targetChat = _uiState.value.chats.find { it.uid == uid } as? Chat.Ai ?: return
+
+        if (targetChat.audioUrl.isNullOrBlank()) {
+            return
+        }
 
         // Requirement 3: Toggle play / stop
         if (targetChat.voiceState == AiVoiceState.Playing) {
@@ -262,13 +246,15 @@ class ChatViewModel(
         }
 
         viewModelScope.launch {
-            val history = _uiState.value.chats.mapNotNull {
-                when (it) {
-                    is Chat.User -> "User" to it.message
-                    is Chat.Ai -> "Model" to it.message
-                    else -> null
+            val history = _uiState.value.chats
+                .filter { it.uid != userUid && it !is Chat.WaitingForAi }
+                .mapNotNull {
+                    when (it) {
+                        is Chat.User -> "User" to it.message
+                        is Chat.Ai -> "Model" to it.message
+                        else -> null
+                    }
                 }
-            }
 
             when (val result = sendStageChatMessageUseCase(currentStageId, content, history)) {
                 is DataResult.Success -> {
@@ -279,31 +265,20 @@ class ChatViewModel(
                         status = ChatStatus.Answered(grammar = turn.grammarFeedbackFa)
                     )
 
-                    val aiUid = "ai_${Clock.System.now().toEpochMilliseconds()}"
-                    val aiChat = Chat.Ai(
-                        uid = aiUid,
-                        message = turn.message,
-                        translatedMessage = turn.translatedMessage,
-                        voiceState = AiVoiceState.Playing,
-                        audioUrl = turn.audioUrl
-                    )
-
                     _uiState.update { state ->
-                        val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi }
-                        val updated = withoutWaiting.map {
+                        val updated = state.chats.map {
                             if (it.uid == userUid) answeredUserChat else it
                         }
-                        state.copy(
-                            chats = (updated + aiChat).toImmutableList(),
-                            isModelSpeaking = false,
-                            currentlyPlayingUid = aiUid
-                        )
+                        state.copy(chats = updated.toImmutableList())
                     }
 
-                    // Requirement 2: Play AI voice automatically once
-                    audioController.playVoice(turn.audioUrl) {
-                        onVoicePlaybackEnded(aiUid)
-                    }
+                    val aiUid = "ai_${Clock.System.now().toEpochMilliseconds()}"
+                    streamAiResponse(
+                        aiUid = aiUid,
+                        fullMessage = turn.message,
+                        translatedMessage = turn.translatedMessage,
+                        audioUrl = turn.audioUrl
+                    )
                 }
                 is DataResult.Failure -> {
                     // Mark as failed
@@ -320,6 +295,54 @@ class ChatViewModel(
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun streamAiResponse(
+        aiUid: String,
+        fullMessage: String,
+        translatedMessage: String?,
+        audioUrl: String?
+    ) {
+        val hasAudio = !audioUrl.isNullOrBlank()
+        val initialAiChat = Chat.Ai(
+            uid = aiUid,
+            message = "",
+            translatedMessage = translatedMessage,
+            voiceState = if (hasAudio) AiVoiceState.Playing else AiVoiceState.Stopped,
+            audioUrl = audioUrl
+        )
+
+        _uiState.update { state ->
+            val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi }
+            state.copy(
+                chats = (withoutWaiting + initialAiChat).toImmutableList(),
+                isModelSpeaking = false,
+                currentlyPlayingUid = if (hasAudio) aiUid else null
+            )
+        }
+
+        if (hasAudio) {
+            audioController.playVoice(audioUrl) {
+                onVoicePlaybackEnded(aiUid)
+            }
+        }
+
+        // Progressive word-by-word streaming effect
+        val words = fullMessage.split(" ")
+        var accumulated = ""
+        for (i in words.indices) {
+            accumulated += (if (i == 0) "" else " ") + words[i]
+            _uiState.update { state ->
+                state.copy(
+                    chats = state.chats.map { chat ->
+                        if (chat.uid == aiUid && chat is Chat.Ai) {
+                            chat.copy(message = accumulated)
+                        } else chat
+                    }.toImmutableList()
+                )
+            }
+            delay(40)
         }
     }
 

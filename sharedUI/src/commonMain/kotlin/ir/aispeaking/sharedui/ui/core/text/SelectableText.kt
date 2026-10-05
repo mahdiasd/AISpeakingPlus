@@ -46,6 +46,13 @@ fun SelectableText(
     val latestSelection = remember { mutableStateOf("") }
     val shouldDeselect = remember { mutableStateOf(false) }
 
+    // Synchronize textInput when text prop updates (e.g. streaming or new turns)
+    LaunchedEffect(text) {
+        if (textInput.text != text) {
+            textInput = textInput.copy(text = text)
+        }
+    }
+
     // Handle debouncing and API call
     LaunchedEffect(latestSelection.value) {
         if (latestSelection.value.isNotEmpty()) {
@@ -101,6 +108,13 @@ fun SelectableText(
     var textInput by remember { mutableStateOf(TextFieldValue(text)) }
     val latestSelection = remember { mutableStateOf("") }
     val shouldDeselect = remember { mutableStateOf(false) }
+
+    // Synchronize textInput when text prop updates (e.g. streaming or new turns)
+    LaunchedEffect(text) {
+        if (textInput.text != text) {
+            textInput = textInput.copy(text = text)
+        }
+    }
 
     // Handle debouncing and API call
     LaunchedEffect(latestSelection.value) {

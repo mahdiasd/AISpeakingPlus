@@ -28,36 +28,41 @@
     </svg>
     </body>
     <script>
+        window._isAudioPlaying = false;
         window.aiSpeakingAudio = {
             audio: null,
-            play: function(url, onEnded) {
+            isPlaying: function() {
+                return window._isAudioPlaying === true;
+            },
+            play: function(url) {
                 if (this.audio) {
                     try { this.audio.pause(); } catch(e){}
                     this.audio = null;
                 }
                 if (!url) {
-                    if (onEnded) setTimeout(onEnded, 1500);
+                    window._isAudioPlaying = false;
                     return;
                 }
                 var fullUrl = url.startsWith("http") ? url : (window.location.origin.replace(":8081", ":8080") + url);
+                window._isAudioPlaying = true;
                 this.audio = new Audio(fullUrl);
                 var self = this;
-                this.audio.onended = function() {
+                var finish = function() {
+                    window._isAudioPlaying = false;
                     self.audio = null;
-                    if (onEnded) onEnded();
                 };
+                this.audio.onended = finish;
                 this.audio.onerror = function(e) {
                     console.warn("Audio load error, falling back", e);
-                    self.audio = null;
-                    if (onEnded) onEnded();
+                    finish();
                 };
                 this.audio.play().catch(function(err) {
                     console.warn("Audio play prevented or error", err);
-                    self.audio = null;
-                    if (onEnded) onEnded();
+                    finish();
                 });
             },
             stop: function() {
+                window._isAudioPlaying = false;
                 if (this.audio) {
                     try { this.audio.pause(); } catch(e){}
                     this.audio = null;
@@ -68,7 +73,8 @@
         window.aiSpeakingSpeech = {
             recognition: null,
             isRecording: false,
-            start: function(onResult, onSilence) {
+            transcript: "",
+            start: function() {
                 var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (!SpeechRec) {
                     console.warn("SpeechRecognition not supported in browser");
@@ -77,6 +83,7 @@
                 if (this.recognition) {
                     try { this.recognition.stop(); } catch(e){}
                 }
+                this.transcript = "";
                 this.recognition = new SpeechRec();
                 this.recognition.lang = 'en-US';
                 this.recognition.continuous = true;
@@ -86,11 +93,14 @@
 
                 this.recognition.onresult = function(event) {
                     var text = '';
-                    for (var i = event.resultIndex; i < event.results.length; ++i) {
-                        text += event.results[i][0].transcript;
+                    for (var i = 0; i < event.results.length; ++i) {
+                        var chunk = (event.results[i][0].transcript || '').trim();
+                        if (chunk) {
+                            text += (text ? ' ' : '') + chunk;
+                        }
                     }
-                    if (text && onResult) {
-                        onResult(text);
+                    if (text) {
+                        self.transcript = text;
                     }
                 };
 
@@ -114,6 +124,9 @@
                     try { this.recognition.stop(); } catch(e){}
                     this.recognition = null;
                 }
+            },
+            getTranscript: function() {
+                return this.transcript || "";
             }
         };
     </script>

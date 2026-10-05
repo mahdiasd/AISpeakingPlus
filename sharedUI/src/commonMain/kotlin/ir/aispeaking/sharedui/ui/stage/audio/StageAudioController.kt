@@ -32,6 +32,12 @@ class DefaultStageAudioController : StageAudioController {
 
     override fun playVoice(url: String?, onEnded: () -> Unit) {
         stopVoice()
+        if (url.isNullOrBlank()) {
+            isPlayingState = false
+            currentOnEnded = null
+            onEnded()
+            return
+        }
         isPlayingState = true
         currentOnEnded = onEnded
 

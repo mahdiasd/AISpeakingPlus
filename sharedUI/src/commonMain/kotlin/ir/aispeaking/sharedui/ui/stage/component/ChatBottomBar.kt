@@ -20,6 +20,8 @@ import ir.aispeaking.sharedui.ui.core.icon.AppIcon
 import ir.aispeaking.sharedui.ui.core.input.AppTextField
 import ir.aispeaking.sharedui.ui.extension.animateClickable
 import ir.aispeaking.sharedui.ui.lottie.LottieLoader
+import androidx.compose.ui.graphics.Color
+import ir.aispeaking.sharedui.ui.core.input.textFieldColors
 import ir.aispeaking.sharedui.ui.them.AppTheme
 
 enum class ChatInputMode {
@@ -189,6 +191,16 @@ private fun TextBottomBarContent(
             shape = AppTheme.shapes.roundMedium,
             onValueChange = onTextChange,
             hint = "Type your response in English...",
+            textStyle = AppTheme.typography.bodyMedium.copy(color = Color.White),
+            placeholderTextStyle = AppTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.5f)),
+            colors = textFieldColors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedBorderColor = Color.White.copy(alpha = 0.8f),
+                unfocusedBorderColor = Color.White.copy(alpha = 0.4f),
+                focusedContainerColor = Color.Black.copy(alpha = 0.35f),
+                unfocusedContainerColor = Color.Black.copy(alpha = 0.25f)
+            ),
             leadingIcon = if (text.isNotEmpty()) {
                 {
                     AppIcon(

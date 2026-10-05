@@ -35,10 +35,23 @@ fun ChatScreen(
         viewModel.initStage(stageId)
     }
 
-    LaunchedEffect(uiState.chats.size) {
+    val lastChat = uiState.chats.lastOrNull()
+    val lastChatUid = lastChat?.uid
+    val lastChatMessageLength = when (lastChat) {
+        is Chat.Ai -> lastChat.message.length
+        is Chat.User -> lastChat.message.length
+        else -> 0
+    }
+
+    LaunchedEffect(uiState.chats.size, lastChatUid) {
         if (uiState.chats.isNotEmpty()) {
-            delay(150)
             listState.animateScrollToItem(uiState.chats.size - 1)
+        }
+    }
+
+    LaunchedEffect(lastChatMessageLength) {
+        if (uiState.chats.isNotEmpty()) {
+            listState.scrollToItem(uiState.chats.size - 1)
         }
     }
 

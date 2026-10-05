@@ -117,8 +117,7 @@ fun AppTextField(
             text = hint,
             modifier = Modifier.fillMaxWidth(),
             textAlign = textAlign,
-            style = placeholderTextStyle.copy(textAlign = textAlign, textDirection = textDirection),
-            color = AppTheme.colors.outline
+            style = placeholderTextStyle.copy(textAlign = textAlign, textDirection = textDirection)
         )
     },
     clearIcon: @Composable (() -> Unit)? = if (showClearIcon && value.isNotEmpty()) {
