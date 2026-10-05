@@ -146,6 +146,13 @@ private fun Route.registerTtsEndpoints(ttsService: () -> TtsService, tag: String
             call.respond(HttpStatusCode.InternalServerError, "TTS engine unavailable")
         }
     }
+
+    head("/speak") {
+        call.response.header(HttpHeaders.ContentType, "audio/wav")
+        call.response.header(HttpHeaders.AcceptRanges, "none")
+        call.respond(HttpStatusCode.OK)
+    }
+
     speakRoute.describe {
         tag(tag)
         summary = "Stream Speech Audio$suffix"
@@ -197,6 +204,26 @@ private fun Route.registerTtsEndpoints(ttsService: () -> TtsService, tag: String
             call.respond(HttpStatusCode.NotFound, "Audio file not found")
         }
     }
+
+    head("/audio/{filename}") {
+        val filename = call.parameters["filename"]
+        if (filename.isNullOrBlank() || !filename.endsWith(".wav")) {
+            call.respond(HttpStatusCode.BadRequest)
+            return@head
+        }
+        val file = ttsService().getAudioFile(filename)
+        if (file != null && file.exists()) {
+            call.response.header(HttpHeaders.ContentType, "audio/wav")
+            call.response.header(HttpHeaders.ContentLength, file.length().toString())
+            call.response.header(HttpHeaders.ContentDisposition, "inline; filename=\"$filename\"")
+            call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
+            call.response.header(HttpHeaders.AcceptRanges, "bytes")
+            call.respond(HttpStatusCode.OK)
+        } else {
+            call.respond(HttpStatusCode.NotFound)
+        }
+    }
+
     audioRoute.describe {
         tag(tag)
         summary = "Download Audio File$suffix"

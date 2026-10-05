@@ -166,3 +166,40 @@ export interface MediaUploadResponse {
   url: string;
   filename: string;
 }
+
+// TTS & STT Testing Models
+export interface TtsVoiceInfo {
+  id: number;
+  code: string;
+  name: string;
+  gender: 'FEMALE' | 'MALE' | 'Woman' | 'Man' | string;
+  accent: 'AMERICAN' | 'BRITISH' | 'US' | 'UK' | string;
+  language?: string;
+  description: string;
+}
+
+export interface TtsSynthesizePayload {
+  text: string;
+  voiceId?: number;
+  speed?: number;
+}
+
+export interface TtsSynthesizeResponse {
+  audioUrl: string;
+  durationMs: number;
+  sampleRate: number;
+  voiceId: number;
+  voiceName: string;
+}
+
+export interface SttTranscribeResponse {
+  text: string;
+  durationMs: number;
+}
+
+export type SttWsMessage =
+  | { type: 'ready'; message: string }
+  | { type: 'partial'; text: string }
+  | { type: 'final'; text: string }
+  | { type: 'error'; message: string };
+

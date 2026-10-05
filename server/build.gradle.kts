@@ -19,7 +19,18 @@ application {
     mainClass.set("io.ktor.server.netty.EngineMain")
 
     val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+    val nativePath = listOf(
+        System.getProperty("sherpa_onnx.native.path"),
+        File(projectDir, "native").takeIf { it.exists() }?.absolutePath,
+        File(rootDir, "native").takeIf { it.exists() }?.absolutePath,
+        File(System.getProperty("user.home"), "sherpa-native").takeIf { it.exists() }?.absolutePath,
+        "/app/native"
+    ).firstOrNull { it != null } ?: File(projectDir, "native").absolutePath
+
+    applicationDefaultJvmArgs = listOf(
+        "-Dio.ktor.development=$isDevelopment",
+        "-Dsherpa_onnx.native.path=$nativePath"
+    )
 
     tasks.withType<Test> {
         useJUnitPlatform()

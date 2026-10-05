@@ -6,6 +6,7 @@ import {
   Users,
   History,
   ShieldCheck,
+  AudioWaveform,
   X,
 } from 'lucide-react';
 
@@ -25,6 +26,11 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       to: '/admin/stages',
       label: 'مراحل مکالمه',
       icon: Layers,
+    },
+    {
+      to: '/admin/voice-lab',
+      label: 'آزمایشگاه صوت (TTS & STT)',
+      icon: AudioWaveform,
     },
     {
       to: '/admin/users',

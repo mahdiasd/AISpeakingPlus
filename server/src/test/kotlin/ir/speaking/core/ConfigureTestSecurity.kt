@@ -40,6 +40,16 @@ fun Application.configureTestSecurity() {
         }
         jwt(MyConstant.ADMIN_JWT_NAME) {
             realm = "admin-$jwtRealm"
+            authHeader { call ->
+                val authHeader = call.request.parseAuthorizationHeader()
+                if (authHeader != null) {
+                    authHeader
+                } else {
+                    call.request.queryParameters["token"]?.let { token ->
+                        io.ktor.http.auth.HttpAuthHeader.Single("Bearer", token)
+                    }
+                }
+            }
             verifier(
                 JWT
                     .require(Algorithm.HMAC256("admin-$jwtSecret"))

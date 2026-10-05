@@ -16,12 +16,16 @@ import org.koin.core.annotation.Single
 data class TtsConfig(
     val enabled: Boolean,
     val modelDir: String,
+    val modelUrl: String,
+    val autoDownload: Boolean,
     val numThreads: Int,
     val defaultSid: Int,
     val defaultSpeed: Float,
     val cacheDir: String
 ) {
     companion object {
+        const val DEFAULT_MODEL_URL =
+            "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2"
         fun fromEnv(): TtsConfig {
             fun envBool(name: String, default: Boolean): Boolean =
                 System.getenv(name)?.toBooleanStrictOrNull() ?: default
@@ -32,15 +36,30 @@ data class TtsConfig(
             fun envFloat(name: String, default: Float): Float =
                 System.getenv(name)?.toFloatOrNull() ?: default
 
+            val defaultModelDir = listOf(
+                System.getenv("TTS_MODEL_DIR"),
+                java.io.File("models/kokoro-en-v0_19").takeIf { it.exists() }?.absolutePath,
+                java.io.File("../models/kokoro-en-v0_19").takeIf { it.exists() }?.absolutePath,
+                java.io.File("server/models/kokoro-en-v0_19").takeIf { it.exists() }?.absolutePath,
+                java.io.File(System.getProperty("user.home"), "models/kokoro-en-v0_19").takeIf { it.exists() }?.absolutePath,
+                "/app/models/kokoro-en-v0_19"
+            ).firstOrNull { it != null } ?: "models/kokoro-en-v0_19"
+
+            val defaultCacheDir = listOf(
+                System.getenv("TTS_CACHE_DIR"),
+                java.io.File("audio_cache").absolutePath,
+                "/app/audio_cache"
+            ).firstOrNull { it != null } ?: java.io.File("audio_cache").absolutePath
+
             return TtsConfig(
                 enabled = envBool("TTS_ENABLED", true),
-                modelDir = System.getenv("TTS_MODEL_DIR")
-                    ?: "/app/models/kokoro-en-v0_19",
+                modelDir = defaultModelDir,
+                modelUrl = System.getenv("TTS_MODEL_URL") ?: DEFAULT_MODEL_URL,
+                autoDownload = envBool("TTS_AUTO_DOWNLOAD", true),
                 numThreads = envInt("TTS_NUM_THREADS", 2),
                 defaultSid = envInt("TTS_DEFAULT_SID", 0),
                 defaultSpeed = envFloat("TTS_DEFAULT_SPEED", 1.0f),
-                cacheDir = System.getenv("TTS_CACHE_DIR")
-                    ?: "/app/audio_cache"
+                cacheDir = defaultCacheDir
             )
         }
     }

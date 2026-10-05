@@ -18,7 +18,7 @@ import ir.aispeaking.utils.dLog
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
-private const val TIME_OUT = 6000L
+private const val TIME_OUT = 60_000L
 
 @Single
 fun provideKtor(tokenPreferences: TokenPreferences): HttpClient {

@@ -156,10 +156,33 @@ class SttService(
         stream.inputFinished()
     }
 
-    /** Runs a decode step if the stream has enough data. */
+    /** Runs decode steps while the stream has enough data ready. */
     fun decodeIfReady(stream: OnlineStream) {
-        if (recognizer.isReady(stream)) {
+        while (recognizer.isReady(stream)) {
             recognizer.decode(stream)
+        }
+    }
+
+    /** Transcribes a complete audio waveform (samples at 16kHz) and returns the recognized text. */
+    fun transcribeWaveform(samples: FloatArray): String? {
+        val stream = tryAcquireStream() ?: return null
+        return try {
+            val chunkSize = 3200 // 200ms chunks @ 16kHz
+            var offset = 0
+            while (offset < samples.size) {
+                val end = (offset + chunkSize).coerceAtMost(samples.size)
+                val chunk = samples.copyOfRange(offset, end)
+                acceptWaveform(stream, chunk)
+                decodeIfReady(stream)
+                offset = end
+            }
+            inputFinished(stream)
+            decodeIfReady(stream)
+            getText(stream)
+        } catch (_: Throwable) {
+            null
+        } finally {
+            releaseStream(stream)
         }
     }
 

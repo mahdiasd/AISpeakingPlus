@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -87,21 +89,52 @@ public class LibraryUtils {
         String libFileName = System.mapLibraryName(LIB_NAME);
         String nativePath = System.getProperty(NATIVE_PATH_PROP);
 
-        if (nativePath != null) {
-            File nativeDir = new File(nativePath);
+        List<File> candidateDirs = new ArrayList<>();
+        if (nativePath != null && !nativePath.trim().isEmpty()) {
+            candidateDirs.add(new File(nativePath.trim()));
+        }
+        candidateDirs.add(new File("server/native"));
+        candidateDirs.add(new File("native"));
+        candidateDirs.add(new File("../native"));
+        candidateDirs.add(new File(System.getProperty("user.home"), "sherpa-native"));
+        candidateDirs.add(new File("/app/native"));
+
+        for (File nativeDir : candidateDirs) {
             File libInDir = new File(nativeDir, libFileName);
             if (nativeDir.isDirectory() && libInDir.exists()) {
-                if (debug) {
-                    System.out.printf("Loading from: %s\n", libInDir.getAbsolutePath());
-                }
+                try {
+                    // Pre-load onnxruntime if present in the same directory
+                    File onnxruntime127 = new File(nativeDir, "libonnxruntime.1.27.0.dylib");
+                    if (onnxruntime127.exists()) {
+                        System.load(onnxruntime127.getAbsolutePath());
+                    } else {
+                        File onnxruntimeGeneric = new File(nativeDir, System.mapLibraryName("onnxruntime"));
+                        if (onnxruntimeGeneric.exists()) {
+                            System.load(onnxruntimeGeneric.getAbsolutePath());
+                        }
+                    }
 
-                System.load(libInDir.getAbsolutePath());
-                return true;
+                    File cApiLib = new File(nativeDir, System.mapLibraryName("sherpa-onnx-c-api"));
+                    if (cApiLib.exists()) {
+                        System.load(cApiLib.getAbsolutePath());
+                    }
+
+                    if (debug) {
+                        System.out.printf("Loading sherpa-onnx-jni from: %s\n", libInDir.getAbsolutePath());
+                    }
+
+                    System.load(libInDir.getAbsolutePath());
+                    return true;
+                } catch (Throwable t) {
+                    if (debug) {
+                        System.err.printf("Failed loading from %s: %s\n", nativeDir.getAbsolutePath(), t.getMessage());
+                    }
+                }
             }
         }
 
         if (debug) {
-            System.out.println("nativePath is null");
+            System.out.println("Could not find sherpa-onnx-jni in candidate native paths");
         }
 
         return false;

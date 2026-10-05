@@ -11,6 +11,7 @@ import { StagesListPage } from './pages/StagesListPage';
 import { StageEditorPage } from './pages/StageEditorPage';
 import { UsersPage } from './pages/UsersPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
+import { VoiceLabPage } from './pages/VoiceLabPage';
 
 export const App: React.FC = () => {
   return (
@@ -35,6 +36,7 @@ export const App: React.FC = () => {
               <Route path="stages" element={<StagesListPage />} />
               <Route path="stages/new" element={<StageEditorPage />} />
               <Route path="stages/:id" element={<StageEditorPage />} />
+              <Route path="voice-lab" element={<VoiceLabPage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="audit-logs" element={<AuditLogsPage />} />
             </Route>
@@ -42,6 +44,7 @@ export const App: React.FC = () => {
             {/* Legacy redirect /dashboard -> /admin/dashboard */}
             <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/stages" element={<Navigate to="/admin/stages" replace />} />
+            <Route path="/voice-lab" element={<Navigate to="/admin/voice-lab" replace />} />
             <Route path="/users" element={<Navigate to="/admin/users" replace />} />
             <Route path="/audit-logs" element={<Navigate to="/admin/audit-logs" replace />} />
 

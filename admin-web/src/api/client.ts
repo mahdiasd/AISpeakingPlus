@@ -12,6 +12,11 @@ import {
   UserDetail,
   UserItem,
   UserStatus,
+  TtsVoiceInfo,
+  TtsSynthesizePayload,
+  TtsSynthesizeResponse,
+  SttTranscribeResponse,
+  KOKORO_VOICES,
 } from '../types';
 
 const BASE_URL = '';
@@ -244,6 +249,69 @@ class ApiClient {
       body: formData,
     });
     return res.data;
+  }
+
+  // --- Voice & AI Testing APIs ---
+  async getTtsVoices(): Promise<TtsVoiceInfo[]> {
+    try {
+      const res = await this.request<TtsVoiceInfo[]>('/api/v2/tts/voices');
+      if (res.data && res.data.length > 0) {
+        return res.data;
+      }
+    } catch {
+      // Fallback to static list if offline or error
+    }
+    return KOKORO_VOICES.map((v, idx) => ({
+      id: idx,
+      code: v.id,
+      name: v.name,
+      gender: v.gender === 'Woman' ? 'FEMALE' : 'MALE',
+      accent: v.accent === 'US' ? 'AMERICAN' : 'BRITISH',
+      description: v.description,
+    }));
+  }
+
+  async synthesizeTts(payload: TtsSynthesizePayload): Promise<TtsSynthesizeResponse> {
+    const res = await this.request<TtsSynthesizeResponse>('/api/v2/tts/synthesize', {
+      method: 'POST',
+      body: JSON.stringify({
+        text: payload.text,
+        voiceId: payload.voiceId ?? 0,
+        speed: payload.speed ?? 1.0,
+      }),
+    });
+    return res.data;
+  }
+
+  async transcribeAudio(audioData: Blob | File | ArrayBuffer): Promise<SttTranscribeResponse> {
+    let body: BodyInit;
+    const headers: Record<string, string> = {};
+
+    if (audioData instanceof File) {
+      const formData = new FormData();
+      formData.append('file', audioData);
+      body = formData;
+    } else if (audioData instanceof Blob) {
+      body = audioData;
+      headers['Content-Type'] = 'audio/wav';
+    } else {
+      body = new Blob([audioData], { type: 'audio/wav' });
+      headers['Content-Type'] = 'audio/wav';
+    }
+
+    const res = await this.request<SttTranscribeResponse>('/api/admin/stt/transcribe', {
+      method: 'POST',
+      body,
+      headers,
+    });
+    return res.data;
+  }
+
+  getSttWebSocketUrl(): string {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    const token = this.getToken() || '';
+    return `${protocol}//${host}/api/admin/stt/live?token=${encodeURIComponent(token)}`;
   }
 }
 

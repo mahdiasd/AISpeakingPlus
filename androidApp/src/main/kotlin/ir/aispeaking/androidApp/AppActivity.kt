@@ -13,16 +13,37 @@ import ir.aispeaking.navigation.AppNavigation
 import ir.aispeaking.navigation.di.initKoin
 import ir.aispeaking.sharedui.ui.them.AppTheme
 
+import ir.aispeaking.sharedui.ui.stage.audio.DefaultStageAudioController
+import ir.aispeaking.sharedui.ui.stage.audio.StageAudioController
+import org.koin.core.context.GlobalContext
+
 class AppActivity : ComponentActivity() {
+    private var audioBridge: AndroidAudioBridge? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initKoin()
+        try {
+            val audioController = GlobalContext.get().getOrNull<DefaultStageAudioController>()
+                ?: (GlobalContext.get().getOrNull<StageAudioController>() as? DefaultStageAudioController)
+            if (audioController != null) {
+                audioBridge = AndroidAudioBridge(this, audioController).apply {
+                    attach()
+                }
+            }
+        } catch (_: Throwable) {}
+
         enableEdgeToEdge()
         setContent {
             AppTheme {
                 AppNavigation()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        audioBridge?.stopAudio()
     }
 }
 

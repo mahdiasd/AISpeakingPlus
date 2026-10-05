@@ -52,3 +52,16 @@ server.log
 # Uploads
 uploads/
 **/uploads/
+
+# AI Models & Audio Cache (large binary files)
+models/
+**/models/
+native/
+**/native/
+audio_cache/
+**/audio_cache/
+*.onnx
+*.bin
+*.tar.bz2
+*.part
+*.download

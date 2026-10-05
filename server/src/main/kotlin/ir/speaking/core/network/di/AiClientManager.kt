@@ -22,7 +22,7 @@ class AiClientManager(
     private var lastConfigHash: Int? = null
 
     private val fallbackConfig = AiPlatformConfig(
-        baseUrl = System.getenv("AI_BASE_URL") ?: "http://host.docker.internal:20128/v1/",
+        baseUrl = System.getenv("AI_BASE_URL") ?: "http://127.0.0.1:20128/v1/",
         apiKey = System.getenv("AI_API_KEY") ?: "sk-3c185114b476049c-z4geo6-d954b610",
         primaryModel = System.getenv("AI_PRIMARY_MODEL") ?: "MyCombo",
         fallbackModel = System.getenv("AI_FALLBACK_MODEL") ?: "MyCombo"
