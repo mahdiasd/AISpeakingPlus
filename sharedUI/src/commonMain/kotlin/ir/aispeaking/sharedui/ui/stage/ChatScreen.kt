@@ -30,6 +30,7 @@ fun ChatScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+    var showHintConfirmDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(stageId) {
         viewModel.initStage(stageId)
@@ -129,7 +130,7 @@ fun ChatScreen(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = "${uiState.stage?.characterName ?: "AI"} در حال پاسخ...",
+                                            text = "${uiState.stage?.characterName ?: "AI"} is typing...",
                                             color = AppTheme.colors.onSurface.copy(alpha = 0.8f),
                                             fontSize = 12.sp
                                         )
@@ -182,14 +183,25 @@ fun ChatScreen(
                 horizontalArrangement = Arrangement.End
             ) {
                 OutlinedButton(
-                    onClick = { viewModel.requestHint() },
+                    onClick = { showHintConfirmDialog = true },
+                    enabled = !uiState.isRequestingHint,
                     shape = CircleShape,
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Color(0xFFFBBF24)
                     )
                 ) {
-                    Text("💡 راهنما ${uiState.hintsUsedCount}", fontSize = 12.sp)
+                    if (uiState.isRequestingHint) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(14.dp),
+                            strokeWidth = 2.dp,
+                            color = Color(0xFFFBBF24)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("دریافت راهنما...", fontSize = 12.sp)
+                    } else {
+                        Text("💡 راهنما ${uiState.hintsUsedCount}", fontSize = 12.sp)
+                    }
                 }
             }
 
@@ -202,6 +214,20 @@ fun ChatScreen(
                 onInputModeChange = { viewModel.setInputMode(it) },
                 onVoiceToggle = { start -> viewModel.toggleRecording(start) },
                 onSendClick = { viewModel.sendMessage() }
+            )
+        }
+
+        // Hint Confirmation & Score Calculation Dialog
+        if (showHintConfirmDialog) {
+            HintConfirmDialog(
+                hintsUsedCount = uiState.hintsUsedCount,
+                onConfirm = {
+                    showHintConfirmDialog = false
+                    viewModel.requestHint()
+                },
+                onDismiss = {
+                    showHintConfirmDialog = false
+                }
             )
         }
 

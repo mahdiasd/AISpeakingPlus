@@ -3,6 +3,8 @@ package ir.speaking.feature.stage.service
 import com.aallam.openai.api.chat.ChatMessage
 import com.aallam.openai.api.chat.ChatRole
 import ir.speaking.core.network.api.AiApiService
+import ir.speaking.feature.stage.dto.HintMessageRequest
+import ir.speaking.feature.stage.dto.HintResponse
 import ir.speaking.feature.stage.dto.StageChatMessageDto
 import ir.speaking.feature.stage.dto.StageChatRequest
 import ir.speaking.feature.stage.dto.StageChatResponse
@@ -345,6 +347,110 @@ class StageChatService(
             isObjectiveDone = isObjectiveDone,
             grammarFeedback = grammar
         )
+    }
+
+    suspend fun generateHint(
+        stageId: String,
+        userId: UUID?,
+        messages: List<HintMessageRequest>
+    ): HintResponse {
+        val stage = stageRepository.getStageDetail(stageId, userId)
+        return try {
+            val systemPrompt = buildString {
+                appendLine("You are an expert English conversation tutor assisting a learner in an interactive English speaking simulation scenario.")
+                appendLine("Current Scenario / Stage: ${stage?.title ?: "English Speaking Stage"}")
+                appendLine("Character Interacting With User: ${stage?.characterName ?: "Character"}")
+                appendLine("Target Objective for the User: ${stage?.targetObjective ?: "Practice natural English conversation"}")
+                appendLine()
+                appendLine("Task:")
+                appendLine("Analyze the ongoing conversation between the user and the character.")
+                appendLine("Generate a natural, polite, and helpful English sentence ('suggestion_en') that the USER can say right now to respond to the character and make progress towards the objective.")
+                appendLine("Also provide a brief, clear Persian explanation ('explanation_fa') explaining why this phrase is appropriate or how it helps.")
+                appendLine("Keep suggestion_en concise (1 sentence, conversational, spoken English).")
+                appendLine("ALWAYS return valid JSON matching this schema:")
+                appendLine("{\n  \"suggestion_en\": \"English response suggestion\",\n  \"explanation_fa\": \"توضیح کوتاه فارسی برای زبان‌آموز\"\n}")
+            }
+
+            val chatMessages = mutableListOf<ChatMessage>()
+            chatMessages.add(ChatMessage(role = ChatRole.System, content = systemPrompt))
+
+            // Add conversation messages
+            for (msg in messages.takeLast(6)) {
+                val role = if (msg.role.equals("User", ignoreCase = true)) ChatRole.User else ChatRole.Assistant
+                chatMessages.add(ChatMessage(role = role, content = msg.content))
+            }
+
+            val rawResult = aiApiService.requestRaw(chatMessages)
+            if (rawResult.isSuccess) {
+                val rawText = rawResult.getOrNull().orEmpty().trim()
+                val cleanJson = cleanJsonResponse(rawText)
+                val jsonObject = json.parseToJsonElement(cleanJson).jsonObject
+                val suggestion = jsonObject["suggestion_en"]?.jsonPrimitive?.content?.trim().orEmpty()
+                val explanation = jsonObject["explanation_fa"]?.jsonPrimitive?.content?.trim().orEmpty()
+                if (suggestion.isNotEmpty() && explanation.isNotEmpty()) {
+                    return HintResponse(suggestionEn = suggestion, explanationFa = explanation)
+                }
+            } else {
+                logger.warn("AI Hint request failed: ${rawResult.exceptionOrNull()?.message}")
+            }
+            fallbackHint(stage, messages)
+        } catch (e: Exception) {
+            logger.warn("Error in generateHint: ${e.message}, using fallback hint")
+            fallbackHint(stage, messages)
+        }
+    }
+
+    private fun fallbackHint(stage: StageDetailResponse?, messages: List<HintMessageRequest>): HintResponse {
+        val lastAssistantMessage = messages.lastOrNull {
+            it.role.equals("Model", ignoreCase = true) || it.role.equals("Assistant", ignoreCase = true)
+        }?.content?.lowercase().orEmpty()
+
+        return when (stage?.orderIndex) {
+            1 -> {
+                when {
+                    lastAssistantMessage.contains("drink") || lastAssistantMessage.contains("tea") || lastAssistantMessage.contains("juice") -> {
+                        HintResponse(
+                            suggestionEn = "Could I please have a hot tea and a glass of water?",
+                            explanationFa = "می‌توانید برای سفارش نوشیدنی از عبارت مؤدبانه «Could I please have...» استفاده کنید."
+                        )
+                    }
+                    lastAssistantMessage.contains("holiday") || lastAssistantMessage.contains("study") || lastAssistantMessage.contains("traveling") -> {
+                        HintResponse(
+                            suggestionEn = "I am traveling to London for my university studies.",
+                            explanationFa = "می‌توانید هدف سفر خود (تحصیل در دانشگاه یا تعطیلات) را با جمله‌ای ساده و واضح بیان کنید."
+                        )
+                    }
+                    else -> {
+                        HintResponse(
+                            suggestionEn = "I would like the grilled chicken with rice, please.",
+                            explanationFa = "می‌توانید غذای مورد نظرتان را به شکل مؤدبانه با عبارت «I would like...» درخواست کنید."
+                        )
+                    }
+                }
+            }
+            2 -> {
+                when {
+                    lastAssistantMessage.contains("staying") || lastAssistantMessage.contains("long") -> {
+                        HintResponse(
+                            suggestionEn = "I will be staying in central London and my course lasts for one year.",
+                            explanationFa = "محل اقامت در لندن و طول دوره تحصیلی‌تان را توضیح دهید."
+                        )
+                    }
+                    else -> {
+                        HintResponse(
+                            suggestionEn = "I am here to study computer science at the university.",
+                            explanationFa = "هدف از سفر و رشته تحصیلی‌تان را به افسر مرزی اعلام کنید."
+                        )
+                    }
+                }
+            }
+            else -> {
+                HintResponse(
+                    suggestionEn = "Could you please explain what I should do next?",
+                    explanationFa = "می‌توانید مؤدبانه از هم‌صحبت خود بخواهید مرحله بعدی را برایتان توضیح دهد."
+                )
+            }
+        }
     }
 }
 

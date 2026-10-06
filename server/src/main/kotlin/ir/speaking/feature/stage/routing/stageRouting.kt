@@ -168,21 +168,17 @@ fun Application.stageRouting() {
                         return@post
                     }
 
-                    val stage = stageRepository.getStageDetail(stageId, null)
-                    val hint = when (stage?.orderIndex) {
-                        1 -> ir.speaking.feature.stage.dto.HintResponse(
-                            suggestionEn = "I would like to check in my bags and request a window seat, please.",
-                            explanationFa = "می‌خواهم بارم را تحویل دهم و یک صندلی کنار پنجره درخواست کنم."
-                        )
-                        2 -> ir.speaking.feature.stage.dto.HintResponse(
-                            suggestionEn = "I will have the chicken with rice, and could you help me with the landing card?",
-                            explanationFa = "من مرغ با برنج می‌خواهم، و آیا می‌توانید در مورد کارت ورود کمکم کنید؟"
-                        )
-                        else -> ir.speaking.feature.stage.dto.HintResponse(
-                            suggestionEn = "Could you please explain what I need to do next?",
-                            explanationFa = "می‌شود لطفاً توضیح دهید کار بعدی که باید انجام دهم چیست؟"
-                        )
+                    val request = try {
+                        call.receiveNullable<HintRequest>()
+                    } catch (e: Exception) {
+                        null
                     }
+
+                    val hint = stageChatService.generateHint(
+                        stageId = stageId,
+                        userId = null,
+                        messages = request?.messages ?: emptyList()
+                    )
 
                     call.successRespond(hint, message = "Hint generated successfully")
                 }.describe {

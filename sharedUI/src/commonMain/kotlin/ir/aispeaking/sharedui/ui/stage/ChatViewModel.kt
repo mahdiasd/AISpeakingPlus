@@ -100,7 +100,12 @@ class ChatViewModel(
 
     private fun requestInitialAiGreeting(stageId: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isModelSpeaking = true) }
+            _uiState.update {
+                it.copy(
+                    chats = kotlinx.collections.immutable.persistentListOf(Chat.WaitingForAi),
+                    isModelSpeaking = true
+                )
+            }
 
             when (val result = sendStageChatMessageUseCase(stageId, userMessage = null, history = emptyList())) {
                 is DataResult.Success -> {
