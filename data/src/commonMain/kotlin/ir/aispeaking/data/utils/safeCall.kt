@@ -1,5 +1,6 @@
 package ir.aispeaking.data.utils
 
+import io.ktor.client.plugins.ResponseException
 import ir.aispeaking.data.mapper.paginate.toDomain
 import ir.aispeaking.domain.model.data_result.DataResult
 import ir.aispeaking.domain.model.error.AppError
@@ -34,6 +35,10 @@ suspend fun <T> safeCall(execute: suspend () -> NetworkResponse<T>): DataResult<
                 )
             }
         }
+    } catch (e: ResponseException) {
+        val statusCode = e.response.status.value
+        e.message.dLog(tag = "ktor", plusTag = "safeCall ResponseException ($statusCode): ")
+        DataResult.Failure(getApiError(statusCode, e.message ?: ""))
     } catch (e: Throwable) {
         e.message.dLog(tag = "ktor", plusTag = "safeCall: ")
 
@@ -52,6 +57,7 @@ fun getApiError(statusCode: Int, message: String): AppError {
     return when (statusCode) {
         400 -> NetworkError.BadRequest(httpStatus = statusCode, message = message)
         401 -> NetworkError.Unauthorized(httpStatus = statusCode, message = message)
+        402 -> NetworkError.PaymentRequired(httpStatus = statusCode, message = message)
         403 -> NetworkError.Forbidden(httpStatus = statusCode, message = message)
         404 -> NetworkError.NotFound(httpStatus = statusCode, message = message)
         409 -> NetworkError.Conflict(httpStatus = statusCode, message = message)

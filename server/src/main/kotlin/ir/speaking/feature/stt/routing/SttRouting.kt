@@ -1,19 +1,32 @@
 package ir.speaking.feature.stt.routing
 
+import io.ktor.http.*
+import io.ktor.http.content.*
+import io.ktor.openapi.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.request.*
 import io.ktor.server.routing.*
+import io.ktor.server.routing.openapi.*
 import io.ktor.server.websocket.*
+import io.ktor.utils.io.*
 import io.ktor.websocket.*
+import ir.speaking.core.response.FailureResponse
+import ir.speaking.core.response.SuccessResponse
+import ir.speaking.core.response.failureRespond
+import ir.speaking.core.response.successRespond
 import ir.speaking.core.utils.MyConstant
-import ir.speaking.core.utils.getUserUid
+import ir.speaking.core.utils.getUserUidOrNull
+import ir.speaking.feature.admin.auth.AdminPrincipal
 import ir.speaking.feature.stt.dto.SttMessage
+import ir.speaking.feature.stt.dto.SttTranscribeResponse
 import ir.speaking.feature.stt.service.SttService
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
+import java.util.UUID
 
 private val sttLogger = LoggerFactory.getLogger("ir.speaking.feature.stt")
 private val sttJson = Json {
@@ -26,86 +39,130 @@ private const val ARG_MAX_FRAME_SAMPLES = 16_000 // 1s @ 16 kHz — generous upp
 /**
  * WebSocket endpoint for streaming English speech-to-text.
  *
- * Route: `/api/v1/stt` (authenticated via user JWT).
- *
- * The `/api/` prefix is proxied by nginx (with WebSocket upgrade headers +
- * 24 h read timeout), so this route is reachable through the reverse proxy
- * without an extra nginx block.
- *
- * Protocol:
- *  - The client streams **mono 16 kHz PCM16** audio as binary frames
- *    (chunks of roughly 100–300 ms, i.e. 3,200–9,600 samples per frame).
- *  - The server sends [SttMessage] instances as text frames (JSON):
- *      * {"type":"ready","message":"..."}        — once, after the stream is acquired
- *      * {"type":"partial","text":"..."}          — interim result after each decode step
- *      * {"type":"final","text":"..."}            — result after an endpoint (utterance boundary)
- *      * {"type":"error","message":"server_busy"}— capacity reached; connection is closed
- *
- * Resource safety: the [OnlineStream] is always released in a `finally`
- * block so that native memory is freed even if the client disconnects
- * abruptly (TCP reset, crash, or WebSocket timeout).
+ * Route: `/api/v2/stt/live` and `/api/v1/stt` (authenticated via user or admin JWT).
  */
+@OptIn(ExperimentalKtorApi::class)
 fun Application.sttRouting() {
     val sttService by inject<SttService>()
 
     routing {
-        route("/api/v1/stt") {
-            authenticate(MyConstant.USER_JWT_NAME) {
-                webSocket {
-                    val userId = call.getUserUid()
-                    sttLogger.info("STT WebSocket connected from {} (user={})",
-                        call.request.local.remoteHost, userId)
-
-                    // Try to acquire one of the limited concurrent stream slots.
-                    val stream = sttService.tryAcquireStream()
-                    if (stream == null) {
-                        sttLogger.warn("STT server busy ({}/{} streams in use); rejecting connection",
-                            sttService.activeStreams, sttService.maxConcurrentStreams)
-                        sendText(SttMessage.ErrorMessage("server_busy"))
-                        close(CloseReason(CloseReason.Codes.TRY_AGAIN_LATER, "server_busy"))
-                        return@webSocket
-                    }
-
-                    sttLogger.info("STT stream acquired ({}/{} active)",
-                        sttService.activeStreams, sttService.maxConcurrentStreams)
-
-                    try {
-                        // Signal readiness so the client knows it can start sending audio.
-                        sendText(SttMessage.ReadyMessage())
-
-                        var lastPartialText = ""
-
-                        for (frame in incoming) {
-                            when (frame) {
-                                is Frame.Binary -> handleBinaryFrame(sttService, stream, frame,
-                                    send = { msg -> sendText(msg) },
-                                    onPartial = { newText ->
-                                        if (newText != lastPartialText) {
-                                            lastPartialText = newText
-                                        }
-                                    },
-                                )
-                                is Frame.Text -> {
-                                    // A text frame could be used as a control message in the future
-                                    // (e.g. "stop"). For now we simply ignore it.
-                                }
-                                is Frame.Close -> {
-                                    sttLogger.info("STT client closed the connection")
-                                    break
-                                }
-                                else -> { /* Ping/Pong are handled by the WebSocket plugin */ }
-                            }
+        // v2 Route with OpenAPI describe
+        route("/api/v2/stt") {
+            authenticate(MyConstant.USER_JWT_NAME, MyConstant.ADMIN_JWT_NAME) {
+                webSocket("/live") {
+                    handleSttSession(sttService)
+                }.describe {
+                    tag("STT")
+                    summary = "Live STT Stream"
+                    description = "Bidirectional WebSocket connection for real-time streaming speech-to-text (mono 16kHz PCM16)"
+                    responses {
+                        HttpStatusCode.SwitchingProtocols {
+                            description = "برقراری موفقیت‌آمیز اتصال وب‌سوکت استریم صوت"
                         }
-                    } catch (e: Throwable) {
-                        sttLogger.error("STT WebSocket error from {}", call.request.local.remoteHost, e)
-                    } finally {
-                        sttService.releaseStream(stream)
-                        sttLogger.info("STT stream released ({}/{} active)",
-                            sttService.activeStreams, sttService.maxConcurrentStreams)
+                        HttpStatusCode.Unauthorized {
+                            description = "توکن کاربر نامعتبر یا منقضی است"
+                            schema = jsonSchema<FailureResponse>()
+                        }
+                        HttpStatusCode.ServiceUnavailable {
+                            description = "ظرفیت پردازش همزمان صوت تکمیل است (server_busy)"
+                        }
+                    }
+                }
+
+                post("/transcribe") {
+                    handleSttTranscribe(sttService)
+                }.describe {
+                    tag("STT")
+                    summary = "Transcribe Audio"
+                    description = "Transcribe audio file or raw PCM/WAV 16kHz to text"
+                    responses {
+                        HttpStatusCode.OK {
+                            description = "متن پیاده‌سازی شده با موفقیت دریافت شد"
+                            schema = jsonSchema<SuccessResponse<SttTranscribeResponse>>()
+                        }
+                        HttpStatusCode.BadRequest {
+                            description = "داده صوتی نامعتبر است"
+                            schema = jsonSchema<FailureResponse>()
+                        }
                     }
                 }
             }
         }
+
+        // Dedicated Admin STT endpoints
+        route("/api/admin/stt") {
+            authenticate(MyConstant.ADMIN_JWT_NAME) {
+                webSocket("/live") {
+                    handleSttSession(sttService)
+                }
+                post("/transcribe") {
+                    handleSttTranscribe(sttService)
+                }
+            }
+        }
+
+        // v1 Legacy route preserved for backward compatibility
+        route("/api/v1/stt") {
+            authenticate(MyConstant.USER_JWT_NAME, MyConstant.ADMIN_JWT_NAME) {
+                webSocket {
+                    handleSttSession(sttService)
+                }
+            }
+        }
+    }
+}
+
+private suspend fun DefaultWebSocketServerSession.handleSttSession(sttService: SttService) {
+    val userId = call.getUserUidOrNull() ?: call.principal<AdminPrincipal>()?.id ?: UUID.randomUUID()
+    sttLogger.info("STT WebSocket connected from {} (user={})",
+        call.request.local.remoteHost, userId)
+
+    // Try to acquire one of the limited concurrent stream slots.
+    val stream = sttService.tryAcquireStream()
+    if (stream == null) {
+        sttLogger.warn("STT server busy ({}/{} streams in use); rejecting connection",
+            sttService.activeStreams, sttService.maxConcurrentStreams)
+        sendText(SttMessage.ErrorMessage("server_busy"))
+        close(CloseReason(CloseReason.Codes.TRY_AGAIN_LATER, "server_busy"))
+        return
+    }
+
+    sttLogger.info("STT stream acquired ({}/{} active)",
+        sttService.activeStreams, sttService.maxConcurrentStreams)
+
+    try {
+        // Signal readiness so the client knows it can start sending audio.
+        sendText(SttMessage.ReadyMessage())
+
+        var lastPartialText = ""
+
+        for (frame in incoming) {
+            when (frame) {
+                is Frame.Binary -> handleBinaryFrame(sttService, stream, frame,
+                    send = { msg -> sendText(msg) },
+                    onPartial = { newText ->
+                        if (newText != lastPartialText) {
+                            lastPartialText = newText
+                        }
+                    },
+                )
+                is Frame.Text -> {
+                    // A text frame could be used as a control message in the future
+                    // (e.g. "stop"). For now we simply ignore it.
+                }
+                is Frame.Close -> {
+                    sttLogger.info("STT client closed the connection")
+                    break
+                }
+                else -> { /* Ping/Pong are handled by the WebSocket plugin */ }
+            }
+        }
+    } catch (e: Throwable) {
+        sttLogger.error("STT WebSocket error from {}", call.request.local.remoteHost, e)
+    } finally {
+        sttService.releaseStream(stream)
+        sttLogger.info("STT stream released ({}/{} active)",
+            sttService.activeStreams, sttService.maxConcurrentStreams)
     }
 }
 
@@ -175,3 +232,91 @@ private fun ByteArray.toShortArraySamples(): FloatArray {
 private suspend fun DefaultWebSocketSession.sendText(msg: SttMessage) {
     send(sttJson.encodeToString(msg))
 }
+
+private suspend fun io.ktor.server.routing.RoutingContext.handleSttTranscribe(sttService: SttService) {
+    val audioBytes = try {
+        if (call.request.contentType().match(ContentType.MultiPart.FormData)) {
+            var bytes: ByteArray? = null
+            val multipart = call.receiveMultipart()
+            multipart.forEachPart { part ->
+                if (part is PartData.FileItem && bytes == null) {
+                    bytes = part.streamProvider().readBytes()
+                }
+                part.dispose()
+            }
+            bytes
+        } else {
+            call.receive<ByteArray>()
+        }
+    } catch (_: Exception) {
+        null
+    }
+
+    if (audioBytes == null || audioBytes.isEmpty()) {
+        call.failureRespond(HttpStatusCode.BadRequest, "داده‌های صوتی دریافت نشد")
+        return
+    }
+
+    val samples = audioBytes.extractPcm16Samples()
+    if (samples.isEmpty()) {
+        call.failureRespond(HttpStatusCode.BadRequest, "قالب فایل صوتی نامعتبر است (صوت باید 16kHz PCM16 باشد)")
+        return
+    }
+
+    val text = sttService.transcribeWaveform(samples)
+    if (text == null) {
+        call.failureRespond(HttpStatusCode.ServiceUnavailable, "موتور پردازش گفتار در دسترس نیست یا ظرفیت آن تکمیل است")
+        return
+    }
+
+    val durationMs = (samples.size * 1000L) / 16000L
+    call.successRespond(
+        SttTranscribeResponse(
+            text = text,
+            durationMs = durationMs
+        )
+    )
+}
+
+/**
+ * Extracts PCM16 audio samples from either a WAV container or raw PCM16 byte array.
+ */
+private fun ByteArray.extractPcm16Samples(): FloatArray {
+    val pcmBytes = if (size >= 44 && this[0] == 'R'.code.toByte() && this[1] == 'I'.code.toByte() && this[2] == 'F'.code.toByte() && this[3] == 'F'.code.toByte()) {
+        var dataOffset = 12
+        var foundData: ByteArray? = null
+        while (dataOffset + 8 <= size) {
+            val chunkId = String(this, dataOffset, 4, Charsets.US_ASCII)
+            val chunkSize = (this[dataOffset + 4].toInt() and 0xFF) or
+                    ((this[dataOffset + 5].toInt() and 0xFF) shl 8) or
+                    ((this[dataOffset + 6].toInt() and 0xFF) shl 16) or
+                    ((this[dataOffset + 7].toInt() and 0xFF) shl 24)
+            if (chunkId == "data") {
+                val start = dataOffset + 8
+                val end = (start + chunkSize).coerceAtMost(size)
+                foundData = this.copyOfRange(start, end)
+                break
+            }
+            dataOffset += 8 + chunkSize
+        }
+        foundData ?: this.copyOfRange(44.coerceAtMost(size), size)
+    } else {
+        this
+    }
+
+    val sampleCount = pcmBytes.size ushr 1
+    if (sampleCount == 0) return FloatArray(0)
+    val out = FloatArray(sampleCount)
+    var j = 0
+    var i = 0
+    while (i + 1 < pcmBytes.size) {
+        val lo = pcmBytes[i].toInt() and 0xFF
+        val hi = pcmBytes[i + 1].toInt()
+        val sample = (lo or (hi shl 8)).toShort().toInt()
+        out[j] = sample / 32768.0f
+        i += 2
+        j++
+    }
+    return out
+}
+

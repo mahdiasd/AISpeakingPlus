@@ -3,16 +3,23 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import java.awt.Dimension
-import ir.aispeaking.sharedui.App
+import ir.aispeaking.navigation.AppNavigation
+import ir.aispeaking.navigation.di.initKoin
+import ir.aispeaking.sharedui.ui.them.AppTheme
 
-fun main() = application {
-    Window(
-        title = "AiSpeakingMultiplatform",
-        state = rememberWindowState(width = 800.dp, height = 600.dp),
-        onCloseRequest = ::exitApplication,
-    ) {
-        window.minimumSize = Dimension(350, 600)
-        App()
+fun main() {
+    initKoin()
+    application {
+        Window(
+            title = "AiSpeakingMultiplatform",
+            state = rememberWindowState(width = 800.dp, height = 600.dp),
+            onCloseRequest = ::exitApplication,
+        ) {
+            window.minimumSize = Dimension(350, 600)
+            AppTheme(false) {
+                AppNavigation()
+            }
+        }
     }
 }
 

@@ -37,5 +37,31 @@ deploy_dist/
 deploy_files/
 **/deploy/
 **/deploy_dist/
-**/deploy_files/
+# Xcode user data
+xcuserdata/
+*.xcuserdata
 
+# Web Admin / Node.js
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.env*
+server.log
+
+# Uploads
+uploads/
+**/uploads/
+
+# AI Models & Audio Cache (large binary files)
+models/
+**/models/
+native/
+**/native/
+audio_cache/
+**/audio_cache/
+*.onnx
+*.bin
+*.tar.bz2
+*.part
+*.download

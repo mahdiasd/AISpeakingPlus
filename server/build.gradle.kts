@@ -19,7 +19,18 @@ application {
     mainClass.set("io.ktor.server.netty.EngineMain")
 
     val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+    val nativePath = listOf(
+        System.getProperty("sherpa_onnx.native.path"),
+        File(projectDir, "native").takeIf { it.exists() }?.absolutePath,
+        File(rootDir, "native").takeIf { it.exists() }?.absolutePath,
+        File(System.getProperty("user.home"), "sherpa-native").takeIf { it.exists() }?.absolutePath,
+        "/app/native"
+    ).firstOrNull { it != null } ?: File(projectDir, "native").absolutePath
+
+    applicationDefaultJvmArgs = listOf(
+        "-Dio.ktor.development=$isDevelopment",
+        "-Dsherpa_onnx.native.path=$nativePath"
+    )
 
     tasks.withType<Test> {
         useJUnitPlatform()
@@ -47,6 +58,9 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
+    implementation(libs.ktor.server.openapi)
+    implementation(libs.ktor.server.swagger)
+    implementation(libs.ktor.server.routing.openapi)
 
     implementation(libs.exposed.core)
     implementation(libs.exposed.crypt)
@@ -78,5 +92,6 @@ dependencies {
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(kotlin("test-junit5"))
+    testImplementation("com.h2database:h2:2.3.232")
 }
 

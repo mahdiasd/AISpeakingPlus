@@ -107,13 +107,39 @@ fun AppTheme(
 
     val typography = rememberAppTypography()
 
+    val baseStyle = androidx.compose.ui.text.TextStyle(fontFamily = typography.persianRegular)
+    val boldStyle = androidx.compose.ui.text.TextStyle(fontFamily = typography.persianBold)
+
+    val m3Typography = androidx.compose.material3.Typography(
+        displayLarge = boldStyle,
+        displayMedium = boldStyle,
+        displaySmall = boldStyle,
+        headlineLarge = boldStyle,
+        headlineMedium = boldStyle,
+        headlineSmall = boldStyle,
+        titleLarge = boldStyle,
+        titleMedium = boldStyle,
+        titleSmall = boldStyle,
+        bodyLarge = baseStyle,
+        bodyMedium = baseStyle,
+        bodySmall = baseStyle,
+        labelLarge = boldStyle,
+        labelMedium = baseStyle,
+        labelSmall = baseStyle
+    )
+
     CompositionLocalProvider(
         LocalColor provides colorScheme,
         LocalDimensions provides AppDimensions(),
         LocalShapes provides AppShapes(),
-        LocalTypography provides typography
+        LocalTypography provides typography,
+        androidx.compose.material3.LocalTextStyle provides baseStyle
     ) {
-        content()
+        androidx.compose.material3.MaterialTheme(
+            typography = m3Typography
+        ) {
+            content()
+        }
     }
 
 }

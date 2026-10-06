@@ -1,31 +1,28 @@
 package ir.aispeaking.domain.model.chat
 
 import kotlinx.collections.immutable.ImmutableList
-import kotlin.uuid.Uuid
-
 
 sealed class Chat(
-    open val uid: Uuid,
+    open val uid: String,
 ) {
     data class Ai(
-        override val uid: Uuid = Uuid.random(),
+        override val uid: String,
         val message: String,
         val translatedMessage: String? = null,
-        val voiceState: AiVoiceState,
-        val grammar: String = "",
-        val finishTaskIndexes: ImmutableList<Int>,
+        val voiceState: AiVoiceState = AiVoiceState.Stopped,
+        val audioUrl: String? = null,
+        val finishTaskIndexes: ImmutableList<Int>? = null,
         val suggests: ImmutableList<String>? = null,
         val fetchingSuggest: Boolean = false,
-        val audioUrl: String? = null,
     ) : Chat(uid = uid)
 
     data class User(
-        override val uid: Uuid = Uuid.random(),
+        override val uid: String,
         val message: String,
         val status: ChatStatus = ChatStatus.Sending,
     ) : Chat(uid = uid)
 
-    data object WaitingForAi : Chat(Uuid.random())
+    data object WaitingForAi : Chat("waiting_for_ai")
 }
 
 sealed class AiVoiceState {
@@ -33,3 +30,18 @@ sealed class AiVoiceState {
     data object PendingToPlay : AiVoiceState()
     data object Playing : AiVoiceState()
 }
+
+sealed class ChatStatus {
+    data object Failed : ChatStatus()
+    data object Sending : ChatStatus()
+    data class Answered(val grammar: String) : ChatStatus()
+}
+
+data class StageChatTurnResult(
+    val message: String,
+    val translatedMessage: String? = null,
+    val audioUrl: String? = null,
+    val grammarFeedbackFa: String = "",
+    val objectiveCompleted: Boolean = false,
+    val finishTaskIndexes: List<Int> = emptyList()
+)

@@ -3,7 +3,7 @@ package ir.aispeaking.data.mapper.paginate
 import ir.aispeaking.domain.model.paging.DefaultPageIndex
 import ir.aispeaking.domain.model.paging.Paging
 import ir.aispeaking.domain.model.paging.PagingMeta
-import ir.aispeaking.network.dto.paginate.PagingMetaResponse
+import ir.aispeaking.network.model.PagingMetaResponse
 import kotlinx.collections.immutable.toImmutableList
 
 fun PagingMetaResponse.toDomain(): PagingMeta {
@@ -26,4 +26,3 @@ fun <T> PagingMeta.toPaging(content: List<T>): Paging<T> {
         apiErrorHappened = false
     )
 }
-

@@ -6,8 +6,6 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.*
 import ir.speaking.core.exeptions.AppException
-import ir.speaking.feature.challenge.challenge.model.Challenge
-import ir.speaking.feature.scenario.scenario.model.Scenario
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDate
@@ -29,6 +27,8 @@ val jsonForConvert = Json {
     ignoreUnknownKeys = true
     isLenient = true
     allowTrailingComma = true
+    encodeDefaults = true
+    explicitNulls = false
 }
 
 inline fun <reified T> T?.toJson(): String? {
@@ -119,43 +119,6 @@ fun ApplicationCall.getUserUidOrNull(): UUID? {
         null
     }
 }
-
-fun Scenario.getPrompt(): String {
-    val tasksFormatted = this.tasks.mapIndexed { index, task ->
-        "${index}. ${task.description}"
-    }.joinToString(separator = "\n")
-
-    val prompt = MyConstant.BASE_PROMPT
-        .replace("[AI_NAME]", this.aiName.ifEmpty { "Assistant" })
-        .replace("[AI_ROLE]", this.aiRole.ifEmpty { "Conversation Partner" })
-        .replace("[SCENARIO_DESCRIPTION]", this.description)
-        .replace("[STARTER_ROLE]", this.starter.name)
-        .replace("[USER_TASKS]", tasksFormatted.ifEmpty { "No tasks defined" })
-        .trimIndent()
-
-    logInfo("Generated System Prompt:\n$prompt")
-    return prompt
-}
-
-
-fun Challenge.getPrompt(): String {
-    val tasksFormatted = this.tasks.mapIndexed { index, task ->
-        "${index}. ${task.description}"
-    }.joinToString(separator = "\n")
-
-    val prompt = MyConstant.BASE_PROMPT
-        .replace("[AI_NAME]", this.aiName.ifEmpty { "Assistant" })
-        .replace("[AI_ROLE]", this.aiRole.ifEmpty { "Conversation Partner" })
-        .replace("[SCENARIO_DESCRIPTION]", this.description)
-        .replace("[STARTER_ROLE]", this.starter.name)
-        .replace("[USER_TASKS]", tasksFormatted.ifEmpty { "No tasks defined" })
-        .trimIndent()
-
-
-    logInfo("Generated System Prompt:\n$prompt")
-    return prompt
-}
-
 
 fun LocalDateTime.Companion.now(): LocalDateTime {
     return java.time.LocalDateTime.now().toKotlinLocalDateTime()

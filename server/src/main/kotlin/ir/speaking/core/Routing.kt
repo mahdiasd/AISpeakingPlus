@@ -1,71 +1,153 @@
 package ir.speaking.core
 
 import io.ktor.http.*
+import io.ktor.openapi.*
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
+import io.ktor.server.plugins.openapi.*
+import io.ktor.server.plugins.swagger.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import ir.speaking.admin.admin.firebase.routing.adminNotificationRouting
-import ir.speaking.admin.admin.routing.adminRouting
-import ir.speaking.admin.category.routing.adminCategoryRouting
-import ir.speaking.admin.challenge.routing.adminChallengeRouting
-import ir.speaking.admin.message.adminMessageRouting
-import ir.speaking.admin.report.reportRouting
-import ir.speaking.admin.scenario.scenario.routing.adminScenarioRouting
-import ir.speaking.feature.category.routing.categoryRouting
-import ir.speaking.feature.challenge.challenge.routing.challengeRouting
-import ir.speaking.feature.challenge.progress.routing.challengeProgressRouting
-import ir.speaking.feature.chat.routing.chatRouting
-import ir.speaking.feature.config.configRouting
-import ir.speaking.feature.discount.routing.discountCodeRouting
-import ir.speaking.feature.home.routing.homeRouting
-import ir.speaking.feature.lightener.routing.configureTranslationRouting
-import ir.speaking.feature.plan.routing.planRouting
-import ir.speaking.feature.purchase.routing.purchaseRouting
-import ir.speaking.feature.scenario.progress.routing.scenarioProgressRouting
-import ir.speaking.feature.scenario.scenario.routing.scenarioRouting
-import ir.speaking.feature.scenario.task.routing.scenarioTaskRouting
+import io.ktor.server.routing.openapi.*
+import io.ktor.utils.io.*
+import ir.speaking.feature.admin.routing.adminRouting
+import ir.speaking.feature.leaderboard.routing.leaderboardRouting
+import ir.speaking.feature.stage.routing.stageRouting
+import ir.speaking.feature.stage_progress.routing.progressRouting
 import ir.speaking.feature.stt.routing.sttRouting
+import ir.speaking.feature.subscription.routing.subscriptionRouting
 import ir.speaking.feature.tts.routing.ttsRouting
+import ir.speaking.feature.user.routing.authRouting
 import ir.speaking.feature.user.routing.userRouting
-import ir.speaking.feature.word.progress.routing.wordProgressRouting
-import ir.speaking.feature.word.word.routing.wordRouting
 
+@OptIn(ExperimentalKtorApi::class)
 fun Application.configureRouting() {
+    // Feature routings registered first so OpenApiDocSource.Routing discovers all endpoints
+    authRouting()
+    userRouting()
+    sttRouting()
+    ttsRouting()
+    stageRouting()
+    progressRouting()
+    subscriptionRouting()
+    leaderboardRouting()
+    adminRouting()
+
     routing {
+        staticResources("/resources/stages", "static/stages") {
+            modify { _, call ->
+                call.response.headers.append(HttpHeaders.CacheControl, "public, max-age=2592000, immutable")
+            }
+        }
         staticResources("/resources", "static")
 
         // Unauthenticated health endpoint for Docker healthcheck and load balancers.
-        // Returns 200 OK with a simple JSON body once the app has started.
         get("/health") {
             call.respond(HttpStatusCode.OK, mapOf("status" to "UP"))
+        }.describe {
+            tag("System")
+            summary = "Health Check"
+            description = "Health check endpoint for Docker, load balancers, and monitoring"
+            responses {
+                HttpStatusCode.OK {
+                    description = "Server is healthy and responsive"
+                }
+            }
+        }
+
+        val openApiSource = OpenApiDocSource.Routing(ContentType.Application.Json) {
+            routingRoot.descendants()
+        }
+        val apiInfo = OpenApiInfo("AI Speaking Plus API", "2.0.0")
+
+        // Live OpenAPI 3.0 JSON specification for Apidog Live Sync and API clients
+        get("/openapi") {
+            val docText = openApiSource.read(call.application, OpenApiDoc(info = apiInfo))
+            val apidogJson = sanitizeOpenApiForApidog(docText.content)
+            call.respondText(apidogJson, ContentType.Application.Json)
+        }.describe {
+            tag("System")
+            summary = "Get OpenAPI Spec"
+            description = "Live OpenAPI 3.0 JSON specification for API documentation and Apidog Live Sync"
+            responses {
+                HttpStatusCode.OK {
+                    description = "OpenAPI 3.0 JSON specification"
+                }
+            }
+        }
+
+        get("/openapi.json") {
+            val docText = openApiSource.read(call.application, OpenApiDoc(info = apiInfo))
+            val apidogJson = sanitizeOpenApiForApidog(docText.content)
+            call.respondText(apidogJson, ContentType.Application.Json)
+        }.describe {
+            tag("System")
+            summary = "Get OpenAPI JSON"
+            description = "Live OpenAPI 3.0 JSON specification for API clients"
+            responses {
+                HttpStatusCode.OK {
+                    description = "OpenAPI 3.0 JSON specification"
+                }
+            }
+        }
+
+        // OpenAPI HTML documentation
+        openAPI(path = "openapi/docs") {
+            info = apiInfo
+            source = openApiSource
+        }
+
+        // Swagger UI interactive documentation in browser
+        swaggerUI(path = "swagger") {
+            info = apiInfo
+            source = openApiSource
         }
     }
-    reportRouting()
-    adminRouting()
-    adminCategoryRouting()
-    adminScenarioRouting()
-    adminChallengeRouting()
-    adminNotificationRouting()
-    adminMessageRouting()
+}
 
-    configRouting()
-    userRouting()
-    categoryRouting()
-    scenarioRouting()
-    scenarioTaskRouting()
-    scenarioProgressRouting()
-    homeRouting()
-    planRouting()
-    purchaseRouting()
-    discountCodeRouting()
-    configureTranslationRouting()
-    chatRouting()
-    wordRouting()
-    wordProgressRouting()
-    challengeRouting()
-    challengeProgressRouting()
+/**
+ * Sanitizes OpenAPI 3.1 JSON generated by Ktor into pure OpenAPI 3.0.3 format.
+ * - Changes openapi version to "3.0.3" for 100% compatibility with Apidog, Postman, and Swagger tools.
+ * - Converts OpenAPI 3.1 nullable arrays ("type": ["string", "null"]) into OpenAPI 3.0 ("type": "string", "nullable": true).
+ * - Enriches schemas and request bodies with valid Iranian mobile and test payload examples for immediate testing in Apidog.
+ */
+fun sanitizeOpenApiForApidog(rawJson: String): String {
+    var sanitized = rawJson
+        .replace("\"openapi\":\"3.1.1\"", "\"openapi\":\"3.0.3\"")
+        .replace("\"openapi\": \"3.1.1\"", "\"openapi\": \"3.0.3\"")
 
-    sttRouting()
-    ttsRouting()
+    // 1. Convert nullable type arrays
+    sanitized = sanitized.replace(Regex(""""type"\s*:\s*\[\s*"(\w+)"\s*,\s*"null"\s*\]""")) { match ->
+        val typeName = match.groupValues[1]
+        """"type":"$typeName","nullable":true"""
+    }.replace(Regex(""""type"\s*:\s*\[\s*"null"\s*,\s*"(\w+)"\s*\]""")) { match ->
+        val typeName = match.groupValues[1]
+        """"type":"$typeName","nullable":true"""
+    }
+
+    // 2. Add example payload for SendOtpRequest
+    sanitized = sanitized.replace(
+        """"schema":{"${'$'}ref":"#/components/schemas/SendOtpRequest"}""",
+        """"schema":{"${'$'}ref":"#/components/schemas/SendOtpRequest"},"example":{"mobile":"09152413498"}"""
+    )
+
+    // 3. Add example payload for VerifyOtpRequest
+    sanitized = sanitized.replace(
+        """"schema":{"${'$'}ref":"#/components/schemas/VerifyOtpRequest"}""",
+        """"schema":{"${'$'}ref":"#/components/schemas/VerifyOtpRequest"},"example":{"mobile":"09152413498","otpCode":"87799"}"""
+    )
+
+    // 4. Enrich SendOtpRequest schema properties with examples
+    sanitized = sanitized.replace(
+        """"properties":{"mobile":{"type":"string"}}""",
+        """"properties":{"mobile":{"type":"string","example":"09152413498"}}"""
+    )
+
+    // 5. Enrich VerifyOtpRequest schema properties with examples
+    sanitized = sanitized.replace(
+        """"properties":{"mobile":{"type":"string"},"otpCode":{"type":"string"}}""",
+        """"properties":{"mobile":{"type":"string","example":"09152413498"},"otpCode":{"type":"string","example":"87799"}}"""
+    )
+
+    return sanitized
 }

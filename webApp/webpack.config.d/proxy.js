@@ -4,10 +4,12 @@
 // browser sees the requests as same-origin (localhost:8080).
 (function (config) {
     config.devServer = config.devServer || {};
+    config.devServer.port = 8081;
+    const backendTarget = process.env.BACKEND_TARGET || "http://127.0.0.1:8080";
     config.devServer.proxy = [
         {
             context: ["/v1/**"],
-            target: "https://staging.aispeaking.ir",
+            target: backendTarget,
             secure: false,
             changeOrigin: true,
             logLevel: "debug"
@@ -18,11 +20,18 @@
             // during local development. WebSocket upgrades are forwarded by
             // webpack-dev-server by default for proxied targets.
             context: ["/api/**"],
-            target: "https://staging.aispeaking.ir",
+            target: backendTarget,
             secure: false,
             changeOrigin: true,
             logLevel: "debug",
             ws: true
+        },
+        {
+            context: ["/resources/**", "/uploads/**"],
+            target: backendTarget,
+            secure: false,
+            changeOrigin: true,
+            logLevel: "debug"
         }
     ];
 })(config);

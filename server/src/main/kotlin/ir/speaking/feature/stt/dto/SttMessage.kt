@@ -38,3 +38,10 @@ sealed interface SttMessage {
         val message: String = "Stream ready. Send mono PCM16 audio as binary frames."
     ) : SttMessage
 }
+
+@Serializable
+data class SttTranscribeResponse(
+    val text: String,
+    val durationMs: Long
+)
+

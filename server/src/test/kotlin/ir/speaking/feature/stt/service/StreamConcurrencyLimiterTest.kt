@@ -89,12 +89,13 @@ class StreamConcurrencyLimiterTest {
             val jobs = (1..8).map {
                 async(Dispatchers.IO) {
                     repeat(iterations) {
-                        if (limiter.tryAcquire()) {
-                            try {
-                                successCount.incrementAndGet()
-                            } finally {
-                                limiter.release()
-                            }
+                        while (!limiter.tryAcquire()) {
+                            Thread.yield()
+                        }
+                        try {
+                            successCount.incrementAndGet()
+                        } finally {
+                            limiter.release()
                         }
                     }
                 }

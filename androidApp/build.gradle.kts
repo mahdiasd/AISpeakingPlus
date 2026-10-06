@@ -34,7 +34,7 @@ dependencies {
     implementation(project(":sharedUI"))
     implementation(project(":utils"))
     implementation(project(":navigation"))
-    implementation(project(":feature:chat"))
+    implementation(project(":network"))
     implementation(libs.androidx.activityCompose)
     implementation(libs.koin.core)
     implementation(libs.koin.annotations)

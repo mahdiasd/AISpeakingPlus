@@ -359,4 +359,32 @@
     <!-- Search -->
     <string name="search_toolbar_search_box_hint">Scenario name</string>
     <string name="search_toolbar_select_category">Category</string>
+
+    <!-- User Profile -->
+    <string name="profile_screen_title">حساب کاربری</string>
+    <string name="profile_guest_learner">زبان‌آموز مهمان</string>
+    <string name="profile_stat_stars">ستاره‌ها</string>
+    <string name="profile_stat_score">امتیاز کل</string>
+    <string name="profile_stat_stages">مراحل تکمیل‌شده</string>
+    <string name="profile_stat_level">سطح زبان</string>
+    <string name="profile_sub_active">اشتراک فعال</string>
+    <string name="profile_sub_free">طرح رایگان</string>
+    <string name="profile_sub_expires">انقضا: %1$s</string>
+    <string name="profile_sub_remaining_days">%1$d روز باقیمانده</string>
+    <string name="profile_sub_expiring_soon">اشتراک شما رو به پایان است!</string>
+    <string name="profile_sub_renew">تمدید اشتراک</string>
+    <string name="profile_sub_upgrade">خرید اشتراک ویژه</string>
+    <string name="profile_guest_banner_title">ذخیره دائمی پیشرفت</string>
+    <string name="profile_guest_banner_desc">با ثبت‌نام در برنامه، ستاره‌ها و سوابق مکالمه شما برای همیشه ذخیره خواهند شد.</string>
+    <string name="profile_guest_login_btn">ورود یا ثبت‌نام</string>
+    <string name="profile_edit_title">ویرایش نام مستعار</string>
+    <string name="profile_edit_hint">نام مستعار خود را وارد کنید</string>
+    <string name="profile_avatar_picker_title">انتخاب آواتار</string>
+    <string name="profile_save">ذخیره</string>
+    <string name="profile_cancel">انصراف</string>
+    <string name="profile_sign_out_title">خروج از حساب</string>
+    <string name="profile_sign_out_desc">آیا مطمئن هستید که می‌خواهید از حساب کاربری خود خارج شوید؟</string>
+    <string name="profile_sign_out_confirm">خروج از حساب</string>
+    <string name="profile_load_failed">خطا در بارگذاری اطلاعات پروفایل</string>
+    <string name="profile_retry">تلاش مجدد</string>
 </resources>
