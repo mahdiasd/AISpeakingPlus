@@ -69,6 +69,7 @@ fun ChatScreen(
             // Header Bar
             ChatToolbar(
                 stage = uiState.stage,
+                isFinishing = uiState.isSubmittingEvaluation,
                 onBackClick = onNavigateBack,
                 onFinishConversationClick = { viewModel.submitEvaluation() }
             )
@@ -231,19 +232,17 @@ fun ChatScreen(
             )
         }
 
-        // Evaluation Result Dialog
-        if (uiState.showEvaluationDialog && uiState.evaluationSession != null) {
-            EvaluationResultCard(
+        // Finish Conversation Dialog with Stars & Calculation Breakdown
+        if (uiState.showFinishConfirmDialog && uiState.evaluationSession != null) {
+            FinishConversationDialog(
                 evaluation = uiState.evaluationSession!!,
-                onReplay = {
-                    viewModel.dismissEvaluationDialog()
-                    viewModel.initStage(stageId)
-                },
-                onContinue = {
-                    viewModel.dismissEvaluationDialog()
+                onContinueChatting = { viewModel.dismissFinishConfirmDialog() },
+                onReplayStage = { viewModel.replayStage() },
+                onConfirmAndNext = {
+                    viewModel.dismissFinishConfirmDialog()
                     onNavigateBack()
                 },
-                onDismiss = { viewModel.dismissEvaluationDialog() }
+                onDismissRequest = { viewModel.dismissFinishConfirmDialog() }
             )
         }
     }

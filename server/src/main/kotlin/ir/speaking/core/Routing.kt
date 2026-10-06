@@ -18,11 +18,13 @@ import ir.speaking.feature.stt.routing.sttRouting
 import ir.speaking.feature.subscription.routing.subscriptionRouting
 import ir.speaking.feature.tts.routing.ttsRouting
 import ir.speaking.feature.user.routing.authRouting
+import ir.speaking.feature.user.routing.userRouting
 
 @OptIn(ExperimentalKtorApi::class)
 fun Application.configureRouting() {
     // Feature routings registered first so OpenApiDocSource.Routing discovers all endpoints
     authRouting()
+    userRouting()
     sttRouting()
     ttsRouting()
     stageRouting()

@@ -891,6 +891,25 @@
     "completedStages" : { }
   }
 };
+            defs["DetailedUserProfileResponse"] = {
+  "title" : "DetailedUserProfileResponse",
+  "required" : [ "id", "phoneNumber" ],
+  "properties" : {
+    "id" : { },
+    "phoneNumber" : { },
+    "nickName" : { },
+    "firstName" : { },
+    "lastName" : { },
+    "avatar" : { },
+    "score" : { },
+    "totalStars" : { },
+    "completedStagesCount" : { },
+    "languageLevel" : { },
+    "subscription" : {
+      "$ref" : "#/components/schemas/SubscriptionSummaryDto"
+    }
+  }
+};
             defs["EvaluationRequest"] = {
   "title" : "EvaluationRequest",
   "properties" : {
@@ -1179,6 +1198,17 @@
     "remainingDays" : { }
   }
 };
+            defs["SubscriptionSummaryDto"] = {
+  "title" : "SubscriptionSummaryDto",
+  "properties" : {
+    "isSubscriber" : { },
+    "planType" : { },
+    "planTitleFa" : { },
+    "startedAt" : { },
+    "expiresAt" : { },
+    "remainingDays" : { }
+  }
+};
             defs["SyncProgressItem"] = {
   "title" : "SyncProgressItem",
   "required" : [ "bestScore", "completedAt", "stageId", "stars" ],
@@ -1257,6 +1287,15 @@
     },
     "language" : { },
     "description" : { }
+  }
+};
+            defs["UpdateProfileRequest"] = {
+  "title" : "UpdateProfileRequest",
+  "properties" : {
+    "nickName" : { },
+    "avatar" : { },
+    "firstName" : { },
+    "lastName" : { }
   }
 };
             defs["UserProfileResponse"] = {
@@ -1452,6 +1491,13 @@
                     </li>
                     <li data-group="TTS" data-name="apiV2TtsVoicesGet" class="">
                       <a href="#api-TTS-apiV2TtsVoicesGet">apiV2TtsVoicesGet</a>
+                    </li>
+                  <li class="nav-header" data-group="UserProfile"><a href="#api-UserProfile">API Methods - UserProfile</a></li>
+                    <li data-group="UserProfile" data-name="apiV2UserProfileGet" class="">
+                      <a href="#api-UserProfile-apiV2UserProfileGet">apiV2UserProfileGet</a>
+                    </li>
+                    <li data-group="UserProfile" data-name="apiV2UserProfilePut" class="">
+                      <a href="#api-UserProfile-apiV2UserProfilePut">apiV2UserProfilePut</a>
                     </li>
           </ul>
         </nav>
@@ -17440,6 +17486,817 @@ except ApiException as e:
                                     </script>
                                   </div>
                                   <input id='responses-apiV2TtsVoicesGet-500-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                  </section>
+                <section id="api-UserProfile">
+                  <h1>UserProfile</h1>
+                    <div id="api-UserProfile-apiV2UserProfileGet">
+                      <article id="api-UserProfile-apiV2UserProfileGet-0" data-group="User" data-name="apiV2UserProfileGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2UserProfileGet</h1>
+                          <p>Get User Profile</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Get detailed profile information, stars, and subscription status for authenticated user</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v2/user/profile</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-UserProfile-apiV2UserProfileGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfileGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfileGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-UserProfile-apiV2UserProfileGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfileGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfileGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-UserProfile-apiV2UserProfileGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfileGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfileGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfileGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfileGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-UserProfile-apiV2UserProfileGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+"//api/v2/user/profile"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-UserProfile-apiV2UserProfileGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.UserProfileApi;
+
+import java.io.File;
+import java.util.*;
+
+public class UserProfileApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        UserProfileApi apiInstance = new UserProfileApi();
+        try {
+            Object result = apiInstance.apiV2UserProfileGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling UserProfileApi#apiV2UserProfileGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-UserProfile-apiV2UserProfileGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.UserProfileApi;
+
+public class UserProfileApiExample {
+
+    public static void main(String[] args) {
+        UserProfileApi apiInstance = new UserProfileApi();
+        try {
+            Object result = apiInstance.apiV2UserProfileGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling UserProfileApi#apiV2UserProfileGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-UserProfile-apiV2UserProfileGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-UserProfile-apiV2UserProfileGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+
+UserProfileApi *apiInstance = [[UserProfileApi alloc] init];
+
+// Get User Profile
+[apiInstance apiV2UserProfileGetWithCompletionHandler: 
+              ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-UserProfile-apiV2UserProfileGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.UserProfileApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiV2UserProfileGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-UserProfile-apiV2UserProfileGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-UserProfile-apiV2UserProfileGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2UserProfileGetExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new UserProfileApi();
+
+            try
+            {
+                // Get User Profile
+                Object result = apiInstance.apiV2UserProfileGet();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling UserProfileApi.apiV2UserProfileGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-UserProfile-apiV2UserProfileGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiUserProfileApi();
+
+try {
+    $result = $api_instance->apiV2UserProfileGet();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling UserProfileApi->apiV2UserProfileGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-UserProfile-apiV2UserProfileGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::UserProfileApi;
+
+
+my $api_instance = WWW::SwaggerClient::UserProfileApi->new();
+
+eval { 
+    my $result = $api_instance->apiV2UserProfileGet();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling UserProfileApi->apiV2UserProfileGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-UserProfile-apiV2UserProfileGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.UserProfileApi()
+
+try: 
+    # Get User Profile
+    api_response = api_instance.api_v2_user_profile_get()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling UserProfileApi->apiV2UserProfileGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - User profile retrieved successfully </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2UserProfileGet-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2UserProfileGet-200-schema">
+                                  <div id='responses-apiV2UserProfileGet-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "User profile retrieved successfully",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/DetailedUserProfileResponse"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2UserProfileGet-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2UserProfileGet-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2UserProfileGet-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 401 - Authentication required or invalid token </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2UserProfileGet-401-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2UserProfileGet-401-schema">
+                                  <div id='responses-apiV2UserProfileGet-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Authentication required or invalid token",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2UserProfileGet-401-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2UserProfileGet-401-schema-401');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2UserProfileGet-401-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 404 - User not found </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2UserProfileGet-404-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2UserProfileGet-404-schema">
+                                  <div id='responses-apiV2UserProfileGet-404-schema-404' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "User not found",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2UserProfileGet-404-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2UserProfileGet-404-schema-404');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2UserProfileGet-404-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-UserProfile-apiV2UserProfilePut">
+                      <article id="api-UserProfile-apiV2UserProfilePut-0" data-group="User" data-name="apiV2UserProfilePut" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2UserProfilePut</h1>
+                          <p>Update User Profile</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Update nickname, avatar, or name for authenticated user</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="put"><code><span class="pln">/api/v2/user/profile</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-UserProfile-apiV2UserProfilePut-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfilePut-0-java">Java</a></li>
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfilePut-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-UserProfile-apiV2UserProfilePut-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfilePut-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfilePut-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-UserProfile-apiV2UserProfilePut-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfilePut-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfilePut-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfilePut-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-UserProfile-apiV2UserProfilePut-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-UserProfile-apiV2UserProfilePut-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X PUT\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/v2/user/profile"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-UserProfile-apiV2UserProfilePut-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.UserProfileApi;
+
+import java.io.File;
+import java.util.*;
+
+public class UserProfileApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        UserProfileApi apiInstance = new UserProfileApi();
+        UpdateProfileRequest body = ; // UpdateProfileRequest | Profile update payload (e.g. {"nickName": "Reza", "avatar": "avatar_g5"})
+        try {
+            Object result = apiInstance.apiV2UserProfilePut(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling UserProfileApi#apiV2UserProfilePut");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-UserProfile-apiV2UserProfilePut-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.UserProfileApi;
+
+public class UserProfileApiExample {
+
+    public static void main(String[] args) {
+        UserProfileApi apiInstance = new UserProfileApi();
+        UpdateProfileRequest body = ; // UpdateProfileRequest | Profile update payload (e.g. {"nickName": "Reza", "avatar": "avatar_g5"})
+        try {
+            Object result = apiInstance.apiV2UserProfilePut(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling UserProfileApi#apiV2UserProfilePut");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-UserProfile-apiV2UserProfilePut-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-UserProfile-apiV2UserProfilePut-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+UpdateProfileRequest *body = ; // Profile update payload (e.g. {"nickName": "Reza", "avatar": "avatar_g5"})
+
+UserProfileApi *apiInstance = [[UserProfileApi alloc] init];
+
+// Update User Profile
+[apiInstance apiV2UserProfilePutWith:body
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-UserProfile-apiV2UserProfilePut-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.UserProfileApi()
+var body = ; // {{UpdateProfileRequest}} Profile update payload (e.g. {"nickName": "Reza", "avatar": "avatar_g5"})
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiV2UserProfilePut(body, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-UserProfile-apiV2UserProfilePut-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-UserProfile-apiV2UserProfilePut-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2UserProfilePutExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new UserProfileApi();
+            var body = new UpdateProfileRequest(); // UpdateProfileRequest | Profile update payload (e.g. {"nickName": "Reza", "avatar": "avatar_g5"})
+
+            try
+            {
+                // Update User Profile
+                Object result = apiInstance.apiV2UserProfilePut(body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling UserProfileApi.apiV2UserProfilePut: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-UserProfile-apiV2UserProfilePut-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiUserProfileApi();
+$body = ; // UpdateProfileRequest | Profile update payload (e.g. {"nickName": "Reza", "avatar": "avatar_g5"})
+
+try {
+    $result = $api_instance->apiV2UserProfilePut($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling UserProfileApi->apiV2UserProfilePut: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-UserProfile-apiV2UserProfilePut-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::UserProfileApi;
+
+
+my $api_instance = WWW::SwaggerClient::UserProfileApi->new();
+my $body = WWW::SwaggerClient::Object::UpdateProfileRequest->new(); # UpdateProfileRequest | Profile update payload (e.g. {"nickName": "Reza", "avatar": "avatar_g5"})
+
+eval { 
+    my $result = $api_instance->apiV2UserProfilePut(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling UserProfileApi->apiV2UserProfilePut: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-UserProfile-apiV2UserProfilePut-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.UserProfileApi()
+body =  # UpdateProfileRequest | Profile update payload (e.g. {"nickName": "Reza", "avatar": "avatar_g5"})
+
+try: 
+    # Update User Profile
+    api_response = api_instance.api_v2_user_profile_put(body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling UserProfileApi->apiV2UserProfilePut: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Profile update payload (e.g. {\"nickName\": \"Reza\", \"avatar\": \"avatar_g5\"})",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/UpdateProfileRequest"
+      }
+    }
+  },
+  "required" : true
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiV2UserProfilePut_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiV2UserProfilePut_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Profile updated successfully </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2UserProfilePut-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2UserProfilePut-200-schema">
+                                  <div id='responses-apiV2UserProfilePut-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Profile updated successfully",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/DetailedUserProfileResponse"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2UserProfilePut-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2UserProfilePut-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2UserProfilePut-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 400 - Validation failed </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2UserProfilePut-400-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2UserProfilePut-400-schema">
+                                  <div id='responses-apiV2UserProfilePut-400-schema-400' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Validation failed",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2UserProfilePut-400-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2UserProfilePut-400-schema-400');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2UserProfilePut-400-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 401 - Authentication required </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2UserProfilePut-401-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2UserProfilePut-401-schema">
+                                  <div id='responses-apiV2UserProfilePut-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Authentication required",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2UserProfilePut-401-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2UserProfilePut-401-schema-401');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2UserProfilePut-401-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 

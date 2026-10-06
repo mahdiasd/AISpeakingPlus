@@ -44,6 +44,9 @@ data class ChatUiState(
     val currentHintSuggestion: String? = null,
     val currentHintExplanation: String? = null,
     val showEvaluationDialog: Boolean = false,
+    val isObjectiveCompleted: Boolean = false,
+    val showFinishConfirmDialog: Boolean = false,
+    val isSubmittingEvaluation: Boolean = false,
     val evaluationSession: EvaluationSession? = null,
     val earnedStars: Int = 0,
     val earnedScore: Int = 0,
@@ -80,6 +83,9 @@ class ChatViewModel(
                             turnsCount = 0,
                             hintsUsedCount = 0,
                             showEvaluationDialog = false,
+                            isObjectiveCompleted = false,
+                            showFinishConfirmDialog = false,
+                            isSubmittingEvaluation = false,
                             evaluationSession = null,
                             currentHintSuggestion = null,
                             currentHintExplanation = null
@@ -284,6 +290,10 @@ class ChatViewModel(
                         translatedMessage = turn.translatedMessage,
                         audioUrl = turn.audioUrl
                     )
+
+                    if (turn.objectiveCompleted) {
+                        submitEvaluation()
+                    }
                 }
                 is DataResult.Failure -> {
                     // Mark as failed
@@ -414,16 +424,9 @@ class ChatViewModel(
             val hintsCount = _uiState.value.hintsUsedCount
             val turnsCount = _uiState.value.turnsCount
 
-            when (val result = submitStageEvaluationUseCase(stageId, hintsCount, turnsCount, dialogue)) {
+            val session = when (val result = submitStageEvaluationUseCase(stageId, hintsCount, turnsCount, dialogue)) {
                 is DataResult.Success -> {
-                    val session = result.data
-                    saveGuestProgress(stageId, session.calculatedStars, session.score)
-                    _uiState.update {
-                        it.copy(
-                            evaluationSession = session,
-                            showEvaluationDialog = true
-                        )
-                    }
+                    result.data
                 }
                 is DataResult.Failure -> {
                     val penalties = hintsCount
@@ -433,7 +436,7 @@ class ChatViewModel(
                         2 -> 1
                         else -> 0
                     }
-                    val session = EvaluationSession(
+                    EvaluationSession(
                         stageId = stageId,
                         hintsUsedCount = hintsCount,
                         grammarErrorsCount = 0,
@@ -443,14 +446,19 @@ class ChatViewModel(
                         score = if (stars == 3) 100 else if (stars == 2) 85 else if (stars == 1) 70 else 40,
                         feedbackFa = "مکالمه به پایان رسید و پیشرفت شما ثبت شد."
                     )
-                    saveGuestProgress(stageId, session.calculatedStars, session.score)
-                    _uiState.update {
-                        it.copy(
-                            evaluationSession = session,
-                            showEvaluationDialog = true
-                        )
-                    }
                 }
+            }
+
+            saveGuestProgress(stageId, session.calculatedStars, session.score)
+
+            _uiState.update {
+                it.copy(
+                    isSubmittingEvaluation = false,
+                    evaluationSession = session,
+                    showFinishConfirmDialog = true,
+                    earnedStars = session.calculatedStars,
+                    earnedScore = session.score
+                )
             }
         }
     }
@@ -473,8 +481,21 @@ class ChatViewModel(
         }
     }
 
-    fun dismissEvaluationDialog() {
-        _uiState.update { it.copy(showEvaluationDialog = false) }
+    fun dismissFinishConfirmDialog() {
+        _uiState.update { it.copy(showFinishConfirmDialog = false) }
+    }
+
+    fun replayStage() {
+        val stageId = _uiState.value.stage?.id ?: return
+        _uiState.update {
+            it.copy(
+                showFinishConfirmDialog = false,
+                evaluationSession = null,
+                chats = persistentListOf()
+            )
+        }
+        currentStageId = ""
+        initStage(stageId)
     }
 
     override fun onCleared() {

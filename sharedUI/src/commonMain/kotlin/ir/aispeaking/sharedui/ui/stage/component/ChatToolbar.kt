@@ -28,6 +28,7 @@ import ir.aispeaking.sharedui.ui.them.AppTheme
 fun ChatToolbar(
     modifier: Modifier = Modifier,
     stage: Stage?,
+    isFinishing: Boolean = false,
     onBackClick: () -> Unit,
     onFinishConversationClick: () -> Unit
 ) {
@@ -85,16 +86,32 @@ fun ChatToolbar(
             // Finish Conversation Button
             Button(
                 onClick = onFinishConversationClick,
+                enabled = !isFinishing,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.primary),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
             ) {
-                Text(
-                    text = "پایان مکالمه",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = AppTheme.colors.onPrimary
-                )
+                if (isFinishing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(14.dp),
+                        strokeWidth = 2.dp,
+                        color = AppTheme.colors.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "محاسبه...",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppTheme.colors.onPrimary
+                    )
+                } else {
+                    Text(
+                        text = "پایان مکالمه",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppTheme.colors.onPrimary
+                    )
+                }
             }
         }
     }

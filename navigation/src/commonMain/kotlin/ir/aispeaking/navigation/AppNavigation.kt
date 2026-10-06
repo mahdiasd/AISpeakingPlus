@@ -57,7 +57,19 @@ fun AppNavigation(
                     viewModel = koinViewModel(),
                     onNavigateToChat = { stageId ->
                         backStack.add(StageChatRoute(stageId))
+                    },
+                    onNavigateToProfile = {
+                        backStack.add(ProfileRoute)
                     }
+                )
+            }
+
+            entry<ProfileRoute> {
+                ir.aispeaking.sharedui.ui.profile.ProfileScreen(
+                    viewModel = koinViewModel(),
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                    onNavigateToLogin = { backStack.add(LoginRoute) },
+                    onNavigateToSubscription = {}
                 )
             }
 

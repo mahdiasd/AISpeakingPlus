@@ -1,15 +1,24 @@
 package ir.speaking.feature.user.repository
 
 import ir.speaking.core.utils.suspendTransaction
+import ir.speaking.feature.stage_progress.db.StageProgressTable
+import ir.speaking.feature.subscription.repository.SubscriptionRepo
 import ir.speaking.feature.user.db.UserTable
+import ir.speaking.feature.user.dto.DetailedUserProfileResponse
+import ir.speaking.feature.user.dto.SubscriptionSummaryDto
+import ir.speaking.feature.user.dto.UpdateProfileRequest
 import ir.speaking.feature.user.dto.UserProfileResponse
+import kotlinx.datetime.Clock
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
 import org.koin.core.annotation.Single
 import java.util.*
 
 @Single
-class UserRepo {
+class UserRepo(
+    private val subscriptionRepo: SubscriptionRepo = SubscriptionRepo()
+) {
 
     suspend fun findOrCreateUserByMobile(mobile: String): UserProfileResponse = suspendTransaction {
         val existing = UserTable.selectAll()
@@ -55,5 +64,63 @@ class UserRepo {
                     score = row[UserTable.score]
                 )
             }
+    }
+
+    suspend fun getDetailedUserProfile(userId: UUID): DetailedUserProfileResponse? {
+        val userRow = suspendTransaction {
+            UserTable.selectAll()
+                .where { UserTable.id eq userId }
+                .firstOrNull()
+        } ?: return null
+
+        val progressStats = suspendTransaction {
+            val progressRows = StageProgressTable.selectAll()
+                .where { StageProgressTable.userId eq userId }
+                .toList()
+            val totalStars = progressRows.sumOf { it[StageProgressTable.stars] }
+            val completedCount = progressRows.count { it[StageProgressTable.stars] > 0 }
+            Pair(totalStars, completedCount)
+        }
+
+        val subInfo = subscriptionRepo.getSubscriptionInfo(userId)
+        val planTitleFa = when (subInfo.planType) {
+            "1_MONTH" -> "اشتراک ۱ ماهه"
+            "3_MONTHS" -> "اشتراک ۳ ماهه"
+            "6_MONTHS" -> "اشتراک ۶ ماهه"
+            else -> subInfo.planType
+        }
+
+        return DetailedUserProfileResponse(
+            id = userRow[UserTable.id].value.toString(),
+            phoneNumber = userRow[UserTable.mobile],
+            nickName = userRow[UserTable.nickName],
+            firstName = userRow[UserTable.firstName],
+            lastName = userRow[UserTable.lastName],
+            avatar = userRow[UserTable.avatar],
+            score = userRow[UserTable.score],
+            totalStars = progressStats.first,
+            completedStagesCount = progressStats.second,
+            languageLevel = "A1",
+            subscription = SubscriptionSummaryDto(
+                isSubscriber = subInfo.isSubscriber,
+                planType = subInfo.planType,
+                planTitleFa = planTitleFa,
+                expiresAt = subInfo.expiresAt,
+                remainingDays = subInfo.remainingDays
+            )
+        )
+    }
+
+    suspend fun updateUserProfile(userId: UUID, request: UpdateProfileRequest): DetailedUserProfileResponse? {
+        suspendTransaction {
+            UserTable.update({ UserTable.id eq userId }) { row ->
+                request.nickName?.trim()?.takeIf { it.isNotBlank() }?.let { row[nickName] = it }
+                request.avatar?.trim()?.takeIf { it.isNotBlank() }?.let { row[avatar] = it }
+                request.firstName?.trim()?.let { row[firstName] = it }
+                request.lastName?.trim()?.let { row[lastName] = it }
+                row[updatedAt] = Clock.System.now()
+            }
+        }
+        return getDetailedUserProfile(userId)
     }
 }

@@ -66,6 +66,12 @@ class GetStagesUseCaseTest {
             override suspend fun clearLocalGuestProgress(): DataResult<Unit> = DataResult.Success(Unit)
             override suspend fun requestHint(stageId: String, messages: List<Pair<String, String>>): DataResult<ir.aispeaking.domain.model.stage.HintSuggestion> =
                 DataResult.Success(ir.aispeaking.domain.model.stage.HintSuggestion("Hello", "سلام"))
+            override suspend fun sendStageChatMessage(
+                stageId: String,
+                userMessage: String?,
+                history: List<Pair<String, String>>
+            ): DataResult<ir.aispeaking.domain.model.chat.StageChatTurnResult> =
+                DataResult.Failure(ir.aispeaking.domain.model.error.NetworkError.Unknown())
             override suspend fun submitEvaluation(
                 stageId: String,
                 hintsUsedCount: Int,

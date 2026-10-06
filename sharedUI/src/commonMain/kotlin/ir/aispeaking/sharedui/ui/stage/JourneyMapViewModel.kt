@@ -29,13 +29,12 @@ data class JourneyMapUiState(
     val snackbarMessage: String? = null
 ) {
     /**
-     * The stage to display on screen: either a previewed stage or the user's active unlocked stage.
+     * The stage to display on screen: either a previewed stage or the user's active stage in the story journey.
      */
     val currentStage: Stage?
         get() = viewingStage
-            ?: stages.firstOrNull { it.lockStatus == StageLockStatus.UNLOCKED && (it.userProgress?.stars ?: 0) == 0 }
-            ?: stages.lastOrNull { it.lockStatus == StageLockStatus.UNLOCKED }
-            ?: stages.firstOrNull()
+            ?: stages.firstOrNull { (it.userProgress?.stars ?: 0) == 0 }
+            ?: stages.lastOrNull()
 
     /**
      * Total stars earned by the user across all stages.
@@ -48,9 +47,8 @@ data class JourneyMapUiState(
      */
     val pastStages: List<Stage>
         get() {
-            val activeOrder = stages.firstOrNull { it.lockStatus == StageLockStatus.UNLOCKED && (it.userProgress?.stars ?: 0) == 0 }?.orderIndex
-                ?: stages.lastOrNull { it.lockStatus == StageLockStatus.UNLOCKED }?.orderIndex
-                ?: 1
+            val activeOrder = stages.firstOrNull { (it.userProgress?.stars ?: 0) == 0 }?.orderIndex
+                ?: ((stages.lastOrNull()?.orderIndex ?: 1) + 1)
             return stages.filter { it.orderIndex < activeOrder || (it.userProgress?.stars ?: 0) > 0 }
         }
 
@@ -91,6 +89,14 @@ class JourneyMapViewModel(
             val tier = getCurrentAccessTierUseCase()
             loadStages(tier)
             _uiState.update { it.copy(snackbarMessage = "اشتراک شما فعال شد! تمام مراحل باز شدند.") }
+        }
+    }
+
+    fun refreshStages() {
+        viewModelScope.launch {
+            val tier = getCurrentAccessTierUseCase()
+            _uiState.update { it.copy(viewingStage = null) }
+            loadStages(tier)
         }
     }
 

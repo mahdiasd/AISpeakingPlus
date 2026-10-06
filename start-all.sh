@@ -2,7 +2,8 @@
 
 # ==============================================================================
 # AISpeakingPlus - All-in-One Local Development Launcher
-# Starts Docker (PostgreSQL & Redis), Ktor Backend (8080), and React Web (8081)
+# Starts Docker (PostgreSQL & Redis), 9router AI Gateway (20128),
+# Ktor Backend (8080), and React Web (8082)
 # ==============================================================================
 
 set -e
@@ -18,6 +19,8 @@ NC='\033[0m' # No Color
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
+export PATH="$HOME/.local/bin:$PATH"
+
 echo -e "${CYAN}${BOLD}"
 echo "=================================================================="
 echo "    🚀 AISpeakingPlus - Starting All Development Services"
@@ -27,7 +30,7 @@ echo -e "${NC}"
 # ------------------------------------------------------------------------------
 # 1. Check and Start Containers (PostgreSQL & Redis via Docker / OrbStack)
 # ------------------------------------------------------------------------------
-echo -e "${CYAN}[1/4] Checking Database & Redis containers...${NC}"
+echo -e "${CYAN}[1/5] Checking Database & Redis containers...${NC}"
 
 # If Docker daemon is not running, try starting OrbStack if available
 if ! docker info >/dev/null 2>&1; then
@@ -58,20 +61,58 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# 2. Free Ports 8080 and 8082 if previously occupied
+# 2. Check and Start 9router (AI Gateway on port 20128)
 # ------------------------------------------------------------------------------
-echo -e "${CYAN}[2/4] Ensuring ports 8080 and 8082 are free...${NC}"
+echo -e "${CYAN}[2/5] Checking 9router (AI Gateway on port 20128)...${NC}"
+
+if lsof -i :20128 >/dev/null 2>&1 || curl -s --connect-timeout 1 http://127.0.0.1:20128/ >/dev/null 2>&1; then
+  echo -e "${GREEN}✓ 9router is already running on http://127.0.0.1:20128${NC}"
+else
+  ROUTER_BIN=""
+  if command -v 9router >/dev/null 2>&1; then
+    ROUTER_BIN="9router"
+  elif [ -f "$HOME/.local/bin/9router" ]; then
+    ROUTER_BIN="$HOME/.local/bin/9router"
+  fi
+
+  if [ -n "$ROUTER_BIN" ]; then
+    echo -e "${YELLOW}Starting 9router in background...${NC}"
+    "$ROUTER_BIN" --tray --skip-update >/dev/null 2>&1 &
+
+    ROUTER_READY=false
+    for i in {1..20}; do
+      if lsof -i :20128 >/dev/null 2>&1 || curl -s --connect-timeout 1 http://127.0.0.1:20128/ >/dev/null 2>&1; then
+        ROUTER_READY=true
+        break
+      fi
+      sleep 1
+    done
+
+    if [ "$ROUTER_READY" = true ]; then
+      echo -e "${GREEN}✓ 9router started successfully on http://127.0.0.1:20128${NC}"
+    else
+      echo -e "${YELLOW}⚠ 9router did not respond on port 20128 within timeout. Continuing...${NC}"
+    fi
+  else
+    echo -e "${YELLOW}⚠ 9router CLI was not found. If you need AI features, please run or install 9router.${NC}"
+  fi
+fi
+
+# ------------------------------------------------------------------------------
+# 3. Free Ports 8080 and 8082 if previously occupied
+# ------------------------------------------------------------------------------
+echo -e "${CYAN}[3/5] Ensuring ports 8080 and 8082 are free...${NC}"
 lsof -ti:8080 | xargs kill -9 >/dev/null 2>&1 || true
 lsof -ti:8082 | xargs kill -9 >/dev/null 2>&1 || true
 
 # ------------------------------------------------------------------------------
-# 3. Check Web Frontend Dependencies
+# 4. Check Web Frontend Dependencies
 # ------------------------------------------------------------------------------
 if [ ! -d "admin-web/node_modules" ]; then
-  echo -e "${YELLOW}[3/4] Installing web dependencies in admin-web...${NC}"
+  echo -e "${YELLOW}[4/5] Installing web dependencies in admin-web...${NC}"
   (cd admin-web && npm install --cache /tmp/npm-cache)
 else
-  echo -e "${GREEN}[3/4] Web dependencies already installed.${NC}"
+  echo -e "${GREEN}[4/5] Web dependencies already installed.${NC}"
 fi
 
 # ------------------------------------------------------------------------------
@@ -98,9 +139,9 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 # ------------------------------------------------------------------------------
-# 4. Start Ktor Backend Server (Port 8080)
+# 5. Start Ktor Backend Server (Port 8080)
 # ------------------------------------------------------------------------------
-echo -e "${CYAN}[4/4] Starting Ktor Backend Server on port 8080...${NC}"
+echo -e "${CYAN}[5/5] Starting Ktor Backend Server on port 8080...${NC}"
 ./gradlew :server:run --quiet > server.log 2>&1 &
 BACKEND_PID=$!
 
@@ -128,7 +169,7 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# 5. Start React Admin & Web Frontend (Port 8082)
+# 6. Start React Admin & Web Frontend (Port 8082)
 # ------------------------------------------------------------------------------
 echo -e "${CYAN}Starting React Admin on port 8082...${NC}"
 (cd admin-web && npm run dev) &
@@ -146,6 +187,7 @@ echo -e "${GREEN}${BOLD}========================================================
 echo -e "  🌐 ${BOLD}اپلیکیشن اصلی وب (Compose Wasm):${NC} ${CYAN}http://localhost:8081/${NC} (با دستور ./gradlew :webApp:wasmJsBrowserDevelopmentRun)"
 echo -e "  ⚙️  ${BOLD}پنل مدیریت ادمین (React):${NC}       ${CYAN}http://localhost:8082/admin${NC}"
 echo -e "  🔌 ${BOLD}سرور بک‌اند (Ktor):${NC}              ${CYAN}http://127.0.0.1:8080/${NC}"
+echo -e "  🤖 ${BOLD}گیت‌وی هوش مصنوعی (9router):${NC}   ${CYAN}http://127.0.0.1:20128/dashboard${NC}"
 echo -e "  🩺 ${BOLD}بررسی سلامت (Health):${NC}           ${CYAN}http://127.0.0.1:8080/health${NC}"
 echo -e "------------------------------------------------------------------"
 echo -e "  🔑 ${BOLD}اطلاعات ورود ادمین (دیفالت):${NC}"

@@ -65,17 +65,29 @@ import ir.aispeaking.sharedui.ic_crown
 import ir.aispeaking.sharedui.ic_history
 import ir.aispeaking.sharedui.ic_play
 import ir.aispeaking.sharedui.ic_points
+import ir.aispeaking.sharedui.ic_profile
 import ir.aispeaking.sharedui.ic_star
 import ir.aispeaking.sharedui.ic_star_outline
 import ir.aispeaking.sharedui.ui.component.AsyncStageBackground
+import ir.aispeaking.sharedui.utils.lifecycle.OnResume
+import androidx.compose.runtime.LaunchedEffect
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun JourneyMapScreen(
     viewModel: JourneyMapViewModel,
     onNavigateToChat: (String) -> Unit,
+    onNavigateToProfile: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.refreshStages()
+    }
+
+    OnResume {
+        viewModel.refreshStages()
+    }
+
     val uiState by viewModel.uiState.collectAsState()
     val currentStage = uiState.currentStage
 
@@ -210,83 +222,110 @@ fun JourneyMapScreen(
                             }
                         }
 
-                        // Subscription Badge or Clickable CTA
-                        if (uiState.currentTier == AccessTier.SUBSCRIBER) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(22.dp))
-                                    .background(
-                                        Brush.horizontalGradient(
-                                            listOf(Color(0xFF7C3AED), Color(0xFF4F46E5))
+                        // Subscription Badge and Profile Action Button
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (uiState.currentTier == AccessTier.SUBSCRIBER) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(22.dp))
+                                        .background(
+                                            Brush.horizontalGradient(
+                                                listOf(Color(0xFF7C3AED), Color(0xFF4F46E5))
+                                            )
                                         )
-                                    )
-                                    .border(
-                                        width = 1.5.dp,
-                                        brush = Brush.horizontalGradient(
-                                            listOf(Color(0xFFFFD700), Color(0xFFF59E0B))
-                                        ),
-                                        shape = RoundedCornerShape(22.dp)
-                                    )
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        .border(
+                                            width = 1.5.dp,
+                                            brush = Brush.horizontalGradient(
+                                                listOf(Color(0xFFFFD700), Color(0xFFF59E0B))
+                                            ),
+                                            shape = RoundedCornerShape(22.dp)
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
                                 ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.ic_crown),
-                                        contentDescription = null,
-                                        tint = Color(0xFFFFD700),
-                                        modifier = Modifier.size(15.dp)
-                                    )
-                                    Text(
-                                        text = "اشتراک ویژه",
-                                        color = Color.White,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(Res.drawable.ic_crown),
+                                            contentDescription = null,
+                                            tint = Color(0xFFFFD700),
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                        Text(
+                                            text = "اشتراک ویژه",
+                                            color = Color.White,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            } else {
+                                // Clickable CTA leading to Subscription Paywall
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(22.dp))
+                                        .shadow(
+                                            elevation = 8.dp,
+                                            shape = RoundedCornerShape(22.dp),
+                                            spotColor = Color(0xFFFF5252)
+                                        )
+                                        .background(
+                                            Brush.horizontalGradient(
+                                                listOf(Color(0xFFFF9F43), Color(0xFFFF5252))
+                                            )
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = Color(0x66FFFFFF),
+                                            shape = RoundedCornerShape(22.dp)
+                                        )
+                                        .clickable { viewModel.onSubscriptionCtaClicked() }
+                                        .padding(horizontal = 14.dp, vertical = 7.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(Res.drawable.ic_crown),
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                        Text(
+                                            text = "خرید اشتراک",
+                                            color = Color.White,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
-                        } else {
-                            // Clickable CTA leading to Subscription Paywall
+
+                            // Profile Action Button
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(22.dp))
-                                    .shadow(
-                                        elevation = 8.dp,
-                                        shape = RoundedCornerShape(22.dp),
-                                        spotColor = Color(0xFFFF5252)
-                                    )
-                                    .background(
-                                        Brush.horizontalGradient(
-                                            listOf(Color(0xFFFF9F43), Color(0xFFFF5252))
-                                        )
-                                    )
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xCC0F172A))
                                     .border(
-                                        width = 1.dp,
-                                        color = Color(0x66FFFFFF),
-                                        shape = RoundedCornerShape(22.dp)
+                                        width = 1.5.dp,
+                                        color = Color(0x446366F1),
+                                        shape = CircleShape
                                     )
-                                    .clickable { viewModel.onSubscriptionCtaClicked() }
-                                    .padding(horizontal = 14.dp, vertical = 7.dp)
+                                    .clickable { onNavigateToProfile() },
+                                contentAlignment = Alignment.Center
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.ic_crown),
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(15.dp)
-                                    )
-                                    Text(
-                                        text = "خرید اشتراک",
-                                        color = Color.White,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
+                                Icon(
+                                    painter = painterResource(Res.drawable.ic_profile),
+                                    contentDescription = "Profile",
+                                    tint = Color(0xFFA5B4FC),
+                                    modifier = Modifier.size(20.dp)
+                                )
                             }
                         }
                     }

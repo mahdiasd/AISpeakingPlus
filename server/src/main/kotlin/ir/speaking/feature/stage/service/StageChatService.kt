@@ -203,8 +203,8 @@ class StageChatService(
                 }
                 else -> {
                     Triple(
-                        "That's wonderful! London is an amazing city for students. Best of luck with your studies, enjoy your meal, and let me know if you need anything else!",
-                        "فوق‌العاده است! لندن شهری بی‌نظیر برای دانشجویان است. با آرزوی موفقیت در تحصیلات، از غذایتان لذت ببرید و اگر چیز دیگری لازم داشتید به من بفرمایید!",
+                        "That's wonderful! London is an amazing city for students. Best of luck with your studies and enjoy your meal! We have accomplished our mission for this flight.",
+                        "فوق‌العاده است! لندن شهری بی‌نظیر برای دانشجویان است. با آرزوی موفقیت در تحصیلات و نوش جان! هدف این مرحله از مکالمه با موفقیت به پایان رسید.",
                         true
                     )
                 }
@@ -230,8 +230,8 @@ class StageChatService(
                 }
                 else -> {
                     Triple(
-                        "Everything is in order. Welcome to the United Kingdom, and all the best with your academic studies.",
-                        "همه مدارک کامل و مرتب است. به پادشاهی متحده خوش آمدید و با آرزوی موفقیت در تحصیلات دانشگاهی‌تان.",
+                        "Everything is in order. Welcome to the United Kingdom, and all the best with your academic studies! Your border clearance is complete.",
+                        "همه مدارک کامل و مرتب است. به پادشاهی متحده خوش آمدید و با آرزوی موفقیت در تحصیلات دانشگاهی‌تان! بررسی مدارک با موفقیت انجام شد.",
                         true
                     )
                 }
@@ -240,8 +240,8 @@ class StageChatService(
 
         // Generic fallback turn
         return Triple(
-            "Thank you for sharing that. Is there anything else I can help you with regarding this?",
-            "ممنون از توضیحتان. آیا مورد دیگری هست که در این زمینه بتوانم کمکتان کنم؟",
+            "Thank you for sharing that! We have accomplished the conversation goal for this stage. You can finish or continue practicing.",
+            "ممنون از همراهی شما! هدف مکالمه در این مرحله با موفقیت محقق شد. می‌توانید مرحله را به پایان برسانید یا به تمرین ادامه دهید.",
             userTurnCount >= 3
         )
     }
@@ -266,7 +266,13 @@ class StageChatService(
                 appendLine("   - Pay close attention to word boundaries: never report words as glued or concatenated if standard spaces or punctuation separate them. Only report genuine spelling, grammar, preposition, or phrasing errors.")
                 appendLine("   - If the user made ANY mistake: provide a helpful, polite explanation in Persian ('grammar_feedback') explaining the issue and giving the correct sentence.")
                 appendLine("   - If the user's sentence is grammatically correct and natural: 'grammar_feedback' MUST be an empty string \"\".")
-                appendLine("4. Check if the user has completed or progressed towards the stage objective ('${stage?.targetObjective ?: ""}'). Set 'objective_completed' to true if achieved or at final step, else false.")
+                appendLine("4. Stage Objective Completion & Wrap-up:")
+                appendLine("   - Assess whether the user's latest response has completed the stage target objective ('${stage?.targetObjective ?: ""}').")
+                appendLine("   - If the goal is met or the scenario has reached its natural conclusion:")
+                appendLine("     * Wrap up the conversation in-character in English (e.g. warmly state that everything is sorted/completed for this stage and congratulate or wish them well).")
+                appendLine("     * Provide the corresponding natural Persian translation in 'translation'.")
+                appendLine("     * Set 'objective_completed': true.")
+                appendLine("   - If the conversation is still ongoing and the objective is not yet reached, set 'objective_completed': false.")
                 appendLine("5. ALWAYS return valid JSON matching this schema:")
                 appendLine("{\n  \"reply\": \"English reply here\",\n  \"translation\": \"ترجمه فارسی پاسخ\",\n  \"grammar_feedback\": \"توضیح فارسی اشکال گرامری یا رشته خالی در صورت صحت\",\n  \"objective_completed\": false\n}")
             }
