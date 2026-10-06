@@ -150,6 +150,21 @@ data class SubscriptionStatusDto(
 )
 
 @Serializable
+data class SubscribeRequestDto(
+    val planId: String,
+    val promoCode: String? = null
+)
+
+@Serializable
+data class SubscribeResponseDto(
+    val isSubscriber: Boolean,
+    val planType: String,
+    val expiresAt: String,
+    val remainingDays: Int,
+    val message: String
+)
+
+@Serializable
 data class LeaderboardItemDto(
     val rank: Int,
     val userId: String,

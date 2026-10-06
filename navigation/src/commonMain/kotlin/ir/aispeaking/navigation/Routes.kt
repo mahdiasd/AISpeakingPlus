@@ -32,3 +32,9 @@ data class StageChatRoute(val stageId: String) : AppRoute {
 data object ProfileRoute : AppRoute {
     override val screenName: String = "Profile"
 }
+
+@Serializable
+data object SubscriptionRoute : AppRoute {
+    override val screenName: String = "Subscription"
+}
+

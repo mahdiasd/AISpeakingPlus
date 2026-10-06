@@ -106,22 +106,43 @@ fun SubscriptionCard(
                         }
                     }
 
-                    // Remaining days badge
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(Color(0x33000000))
-                            .border(1.dp, Color(0xFFFFD700), RoundedCornerShape(14.dp))
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                    // Remaining days badge and extend action
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text(
-                            text = "${subscription.remainingDays} روز باقیمانده",
-                            color = Color(0xFFFFD700),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(Color(0x33000000))
+                                .border(1.dp, Color(0xFFFFD700), RoundedCornerShape(14.dp))
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "${subscription.remainingDays} روز باقیمانده",
+                                color = Color(0xFFFFD700),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(Color(0x33FFFFFF))
+                                .clickable { onUpgradeClick() }
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "تمدید",
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
+
 
                 // If expiring soon (<= 7 days)
                 if (subscription.isExpiringSoon) {

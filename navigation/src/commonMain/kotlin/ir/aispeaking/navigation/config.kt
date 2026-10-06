@@ -12,6 +12,8 @@ val navigationConfig = SavedStateConfiguration {
             subclass(LoginRoute::class, LoginRoute.serializer())
             subclass(MainRoute::class, MainRoute.serializer())
             subclass(StageChatRoute::class, StageChatRoute.serializer())
+            subclass(ProfileRoute::class, ProfileRoute.serializer())
+            subclass(SubscriptionRoute::class, SubscriptionRoute.serializer())
         }
     }
 }

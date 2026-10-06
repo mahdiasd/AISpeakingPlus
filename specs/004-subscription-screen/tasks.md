@@ -10,9 +10,9 @@
 
 **Purpose**: Shared resources, color tokens, and network DTO models for the subscription feature.
 
-- [ ] T001 Add Persian string resources and color tokens for subscription screen in `sharedUI/src/commonMain/composeResources/values/strings.xml` and `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/them/Color.kt`
-- [ ] T002 Create client DTO models `SubscribeRequestDto` and `SubscribeResponseDto` in `network/src/commonMain/kotlin/ir/aispeaking/network/model/stage/dto/StageDtos.kt`
-- [ ] T003 [P] Create server DTO models `SubscribeRequestDto` and `SubscribeResponseDto` in `server/src/main/kotlin/ir/speaking/feature/subscription/routing/subscriptionRouting.kt`
+- [X] T001 Add Persian string resources and color tokens for subscription screen in `sharedUI/src/commonMain/composeResources/values/strings.xml` and `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/them/Color.kt`
+- [X] T002 Create client DTO models `SubscribeRequestDto` and `SubscribeResponseDto` in `network/src/commonMain/kotlin/ir/aispeaking/network/model/stage/dto/StageDtos.kt`
+- [X] T003 [P] Create server DTO models `SubscribeRequestDto` and `SubscribeResponseDto` in `server/src/main/kotlin/ir/speaking/feature/subscription/routing/subscriptionRouting.kt`
 
 ---
 
@@ -22,12 +22,12 @@
 
 **⚠️ CRITICAL**: No user story UI work can begin until this phase is complete.
 
-- [ ] T004 Define `subscribe(planId: String, promoCode: String?): DataResult<SubscriptionStatus>` in `domain/src/commonMain/kotlin/ir/aispeaking/domain/repository/stage/SubscriptionRepository.kt`
-- [ ] T005 [P] Implement `SubscribePlanUseCase` in `domain/src/commonMain/kotlin/ir/aispeaking/domain/usecase/stage/SubscriptionUseCases.kt`
-- [ ] T006 [P] Add `subscribe(request: SubscribeRequestDto): NetworkResponse<SubscribeResponseDto>` call in `network/src/commonMain/kotlin/ir/aispeaking/network/api/stage/SubscriptionApi.kt`
-- [ ] T007 Implement `subscribe` in `data/src/commonMain/kotlin/ir/aispeaking/data/repository/stage/SubscriptionRepositoryImpl.kt` invoking `SubscriptionApi.subscribe`
-- [ ] T008 Implement `POST /api/v2/subscriptions/subscribe` route with OpenAPI 3.0.3 `.describe { ... }` metadata in `server/src/main/kotlin/ir/speaking/feature/subscription/routing/subscriptionRouting.kt` and add `activateSubscription` in `server/src/main/kotlin/ir/speaking/feature/subscription/repository/SubscriptionRepo.kt`
-- [ ] T009 Register `SubscribePlanUseCase` in Koin DI module in `domain/src/commonMain/kotlin/ir/aispeaking/domain/di/DomainKoinModule.kt`
+- [X] T004 Define `subscribe(planId: String, promoCode: String?): DataResult<SubscriptionStatus>` in `domain/src/commonMain/kotlin/ir/aispeaking/domain/repository/stage/SubscriptionRepository.kt`
+- [X] T005 [P] Implement `SubscribePlanUseCase` in `domain/src/commonMain/kotlin/ir/aispeaking/domain/usecase/stage/SubscriptionUseCases.kt`
+- [X] T006 [P] Add `subscribe(request: SubscribeRequestDto): NetworkResponse<SubscribeResponseDto>` call in `network/src/commonMain/kotlin/ir/aispeaking/network/api/stage/SubscriptionApi.kt`
+- [X] T007 Implement `subscribe` in `data/src/commonMain/kotlin/ir/aispeaking/data/repository/stage/SubscriptionRepositoryImpl.kt` invoking `SubscriptionApi.subscribe`
+- [X] T008 Implement `POST /api/v2/subscriptions/subscribe` route with OpenAPI 3.0.3 `.describe { ... }` metadata in `server/src/main/kotlin/ir/speaking/feature/subscription/routing/subscriptionRouting.kt` and add `activateSubscription` in `server/src/main/kotlin/ir/speaking/feature/subscription/repository/SubscriptionRepo.kt`
+- [X] T009 Register `SubscribePlanUseCase` in Koin DI module in `domain/src/commonMain/kotlin/ir/aispeaking/domain/di/DomainKoinModule.kt`
 
 **Checkpoint**: Foundation ready - User Story implementation can begin.
 
@@ -39,12 +39,12 @@
 
 **Independent Test**: Launch the app, navigate to `SubscriptionRoute`, verify all 3 plans render with titles, prices, duration days, and badges. Tap each plan to verify selection highlight updates. Tap the back button to verify smooth return to previous screen.
 
-- [ ] T010 [US1] Define `SubscriptionRoute : AppRoute` with `screenName = "Subscription"` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/Routes.kt` and register serializer in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/config.kt`
-- [ ] T011 [P] [US1] Create MVI contract `SubscriptionState`, `SubscriptionIntent`, `SubscriptionEffect` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionContract.kt`
-- [ ] T012 [US1] Implement `SubscriptionViewModel` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionViewModel.kt` handling `GetSubscriptionPlansUseCase`, `CheckSubscriptionStatusUseCase`, and plan selection state
-- [ ] T013 [P] [US1] Build `PlanSelectionCard` composable in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/component/PlanSelectionCard.kt` displaying title, duration, total price in Tomans, discount percentage, badges ("محبوب‌ترین", "بهترین ارزش"), and daily price breakdown with active selection border
-- [ ] T014 [US1] Build base `SubscriptionScreen` composable in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionScreen.kt` with RTL layout, top app bar with back button, scrollable plans list, and purchase button
-- [ ] T015 [US1] Register `entry<SubscriptionRoute>` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/AppNavigation.kt` with back navigation handler
+- [X] T010 [US1] Define `SubscriptionRoute : AppRoute` with `screenName = "Subscription"` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/Routes.kt` and register serializer in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/config.kt`
+- [X] T011 [P] [US1] Create MVI contract `SubscriptionState`, `SubscriptionIntent`, `SubscriptionEffect` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionContract.kt`
+- [X] T012 [US1] Implement `SubscriptionViewModel` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionViewModel.kt` handling `GetSubscriptionPlansUseCase`, `CheckSubscriptionStatusUseCase`, and plan selection state
+- [X] T013 [P] [US1] Build `PlanSelectionCard` composable in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/component/PlanSelectionCard.kt` displaying title, duration, total price in Tomans, discount percentage, badges ("محبوب‌ترین", "بهترین ارزش"), and daily price breakdown with active selection border
+- [X] T014 [US1] Build base `SubscriptionScreen` composable in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionScreen.kt` with RTL layout, top app bar with back button, scrollable plans list, and purchase button
+- [X] T015 [US1] Register `entry<SubscriptionRoute>` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/AppNavigation.kt` with back navigation handler
 
 **Checkpoint**: User Story 1 (MVP) is fully functional and testable independently.
 
@@ -56,11 +56,11 @@
 
 **Independent Test**: Open Journey Map screen, tap the header "خرید اشتراک" button and verify it opens `SubscriptionScreen`. Return and tap Stage 3 (locked stage); verify it also opens `SubscriptionScreen` instead of `SubscriptionPaywallSheet`.
 
-- [ ] T016 [US2] Add `onNavigateToSubscription: () -> Unit` parameter to `JourneyMapScreen` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapScreen.kt`
-- [ ] T017 [US2] Update top bar "خرید اشتراک" button in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapScreen.kt` to trigger `onNavigateToSubscription()`
-- [ ] T018 [US2] Update stage click interaction in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapScreen.kt` and `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapViewModel.kt` so clicking stages with `StageLockStatus.LOCKED_SUBSCRIPTION` invokes `onNavigateToSubscription()`
-- [ ] T019 [US2] Remove `SubscriptionPaywallSheet` invocation and dead code from `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapScreen.kt`
-- [ ] T020 [US2] Wire `onNavigateToSubscription = { backStack.add(SubscriptionRoute) }` in `entry<MainRoute>` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/AppNavigation.kt`
+- [X] T016 [US2] Add `onNavigateToSubscription: () -> Unit` parameter to `JourneyMapScreen` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapScreen.kt`
+- [X] T017 [US2] Update top bar "خرید اشتراک" button in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapScreen.kt` to trigger `onNavigateToSubscription()`
+- [X] T018 [US2] Update stage click interaction in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapScreen.kt` and `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapViewModel.kt` so clicking stages with `StageLockStatus.LOCKED_SUBSCRIPTION` invokes `onNavigateToSubscription()`
+- [X] T019 [US2] Remove `SubscriptionPaywallSheet` invocation and dead code from `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapScreen.kt`
+- [X] T020 [US2] Wire `onNavigateToSubscription = { backStack.add(SubscriptionRoute) }` in `entry<MainRoute>` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/AppNavigation.kt`
 
 **Checkpoint**: User Stories 1 AND 2 work together seamlessly.
 
@@ -72,9 +72,9 @@
 
 **Independent Test**: Navigate to Profile screen, tap "خرید اشتراک" or "تمدید اشتراک" on `SubscriptionCard`, verify `SubscriptionScreen` opens. If user already has active days, verify remaining days count is displayed with an extension banner.
 
-- [ ] T021 [US3] Wire `onNavigateToSubscription = { backStack.add(SubscriptionRoute) }` in `entry<ProfileRoute>` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/AppNavigation.kt` (replacing empty lambda `{}`)
-- [ ] T022 [US3] Ensure `SubscriptionCard` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/profile/component/SubscriptionCard.kt` triggers `onUpgradeClick` callback for both free tier and active expiring tier
-- [ ] T023 [US3] Display current active subscription banner and remaining days extension notice in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionScreen.kt` when `currentStatus.isSubscriber` is true
+- [X] T021 [US3] Wire `onNavigateToSubscription = { backStack.add(SubscriptionRoute) }` in `entry<ProfileRoute>` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/AppNavigation.kt` (replacing empty lambda `{}`)
+- [X] T022 [US3] Ensure `SubscriptionCard` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/profile/component/SubscriptionCard.kt` triggers `onUpgradeClick` callback for both free tier and active expiring tier
+- [X] T023 [US3] Display current active subscription banner and remaining days extension notice in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionScreen.kt` when `currentStatus.isSubscriber` is true
 
 **Checkpoint**: User Stories 1, 2, and 3 work together independently.
 
@@ -86,9 +86,9 @@
 
 **Independent Test**: On `SubscriptionScreen`, enter a valid promo code and tap "اعمال"; verify green success message and discounted prices. Enter an invalid code; verify error message and base prices remain.
 
-- [ ] T024 [P] [US4] Build `PromoCodeInputRow` composable in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/component/PromoCodeInputRow.kt` with text input, Apply button, and status/error feedback message
-- [ ] T025 [US4] Implement promo code validation and discount calculation logic in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionViewModel.kt` updating `appliedPromo` and effective prices
-- [ ] T026 [US4] Integrate `PromoCodeInputRow` into `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionScreen.kt` with reactive state binding to `SubscriptionViewModel`
+- [X] T024 [P] [US4] Build `PromoCodeInputRow` composable in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/component/PromoCodeInputRow.kt` with text input, Apply button, and status/error feedback message
+- [X] T025 [US4] Implement promo code validation and discount calculation logic in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionViewModel.kt` updating `appliedPromo` and effective prices
+- [X] T026 [US4] Integrate `PromoCodeInputRow` into `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionScreen.kt` with reactive state binding to `SubscriptionViewModel`
 
 **Checkpoint**: User Story 4 works with instant discount feedback.
 
@@ -100,12 +100,12 @@
 
 **Independent Test**: Inspect visual design on `SubscriptionScreen` (glowing gradients, benefit icons, trust badges). Tap "خرید اشتراک و شروع یادگیری", verify loading spinner, successful activation, and return to Journey Map with Stage 3 unlocked and golden subscription badge active.
 
-- [ ] T027 [P] [US5] Build `SubscriptionHeader` composable in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/component/SubscriptionHeader.kt` featuring glowing crown icon, gradient text, and value proposition
-- [ ] T028 [P] [US5] Build `SubscriptionBenefitsList` composable in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/component/SubscriptionBenefitsList.kt` with colorful tinted icons (unlimited stages, AI conversation, pronunciation feedback, priority access)
-- [ ] T029 [P] [US5] Build `TrustBadgesRow` composable in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/component/TrustBadgesRow.kt` displaying 24/7 support, instant activation, and secure transaction badges
-- [ ] T030 [US5] Implement `purchaseSelectedPlan` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionViewModel.kt` invoking `SubscribePlanUseCase`, managing loading state, and emitting `SubscriptionEffect.SubscriptionActivatedSuccessfully`
-- [ ] T031 [US5] Assemble hero header, benefits list, plan cards, promo row, trust badges, and purchase CTA into `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionScreen.kt`
-- [ ] T032 [US5] Handle `SubscriptionActivatedSuccessfully` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/AppNavigation.kt` to pop backstack and trigger refresh of home/profile screens
+- [X] T027 [P] [US5] Build `SubscriptionHeader` composable in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/component/SubscriptionHeader.kt` featuring glowing crown icon, gradient text, and value proposition
+- [X] T028 [P] [US5] Build `SubscriptionBenefitsList` composable in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/component/SubscriptionBenefitsList.kt` with colorful tinted icons (unlimited stages, AI conversation, pronunciation feedback, priority access)
+- [X] T029 [P] [US5] Build `TrustBadgesRow` composable in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/component/TrustBadgesRow.kt` displaying 24/7 support, instant activation, and secure transaction badges
+- [X] T030 [US5] Implement `purchaseSelectedPlan` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionViewModel.kt` invoking `SubscribePlanUseCase`, managing loading state, and emitting `SubscriptionEffect.SubscriptionActivatedSuccessfully`
+- [X] T031 [US5] Assemble hero header, benefits list, plan cards, promo row, trust badges, and purchase CTA into `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/SubscriptionScreen.kt`
+- [X] T032 [US5] Handle `SubscriptionActivatedSuccessfully` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/AppNavigation.kt` to pop backstack and trigger refresh of home/profile screens
 
 **Checkpoint**: End-to-end premium subscription experience is fully active.
 
@@ -115,10 +115,10 @@
 
 **Purpose**: Automated test validation, Persian RTL text verification, and end-to-end quickstart walk-through.
 
-- [ ] T033 [P] Add unit test for `SubscribePlanUseCase` in `domain/src/commonTest/kotlin/ir/aispeaking/domain/usecase/stage/SubscribePlanUseCaseTest.kt`
-- [ ] T034 [P] Add integration test for `POST /api/v2/subscriptions/subscribe` in `server/src/test/kotlin/ir/speaking/feature/subscription/SubscriptionRoutingTest.kt`
-- [ ] T035 Verify Persian typography, Persian numerals for prices/days, and RTL layout compliance across all subscription components in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/`
-- [ ] T036 Execute full quickstart manual validation scenarios defined in `specs/004-subscription-screen/quickstart.md`
+- [X] T033 [P] Add unit test for `SubscribePlanUseCase` in `domain/src/commonTest/kotlin/ir/aispeaking/domain/usecase/stage/SubscribePlanUseCaseTest.kt`
+- [X] T034 [P] Add integration test for `POST /api/v2/subscriptions/subscribe` in `server/src/test/kotlin/ir/speaking/feature/subscription/SubscriptionRoutingTest.kt`
+- [X] T035 Verify Persian typography, Persian numerals for prices/days, and RTL layout compliance across all subscription components in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/subscription/`
+- [X] T036 Execute full quickstart manual validation scenarios defined in `specs/004-subscription-screen/quickstart.md`
 
 ---
 

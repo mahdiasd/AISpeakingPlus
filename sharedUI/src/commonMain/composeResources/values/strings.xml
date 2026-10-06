@@ -387,4 +387,33 @@
     <string name="profile_sign_out_confirm">خروج از حساب</string>
     <string name="profile_load_failed">خطا در بارگذاری اطلاعات پروفایل</string>
     <string name="profile_retry">تلاش مجدد</string>
+
+    <!-- Subscription Screen -->
+    <string name="sub_screen_title">اشتراک ویژه</string>
+    <string name="sub_hero_title">دسترسی نامحدود به سفر داستانی</string>
+    <string name="sub_hero_subtitle">تمامی مراحل، سناریوهای پیشرفته و هوش مصنوعی بدون وقفه را آنلاک کنید</string>
+    <string name="sub_popular_badge">محبوب‌ترین</string>
+    <string name="sub_best_value_badge">بهترین ارزش</string>
+    <string name="sub_days_access">%1$d روز دسترسی کامل به تمام مراحل</string>
+    <string name="sub_daily_price">تنها روزی %1$s تومان</string>
+    <string name="sub_discount_badge">%1$d٪ تخفیف</string>
+    <string name="sub_price_unit">%1$s تومان</string>
+    <string name="sub_promo_label">کد تخفیف</string>
+    <string name="sub_promo_hint">کد تخفیف خود را وارد کنید</string>
+    <string name="sub_promo_apply">اعمال</string>
+    <string name="sub_promo_applied">کد تخفیف اعمال شد ✓</string>
+    <string name="sub_promo_invalid">کد تخفیف واردشده نامعتبر است</string>
+    <string name="sub_cta_button">خرید اشتراک و شروع یادگیری</string>
+    <string name="sub_active_title">شما دارای اشتراک فعال هستید</string>
+    <string name="sub_active_desc">با خرید پلن جدید، مدت اعتبار به انتهای روزهای باقیمانده شما افزوده می‌شود.</string>
+    <string name="sub_remaining_days">%1$d روز باقیمانده</string>
+    <string name="sub_benefit_unlimited_stages">دسترسی به تمام مراحل داستانی بدون قفل</string>
+    <string name="sub_benefit_ai_tutor">مکالمه بدون مرز با هوش مصنوعی</string>
+    <string name="sub_benefit_pronunciation">تحلیل هوشمند و تصحیح تلفظ</string>
+    <string name="sub_benefit_priority_speed">پاسخ‌دهی فوق‌سریع و سرور اختصاصی</string>
+    <string name="sub_trust_instant">فعال‌سازی آنی</string>
+    <string name="sub_trust_secure">تراکنش امن</string>
+    <string name="sub_trust_support">پشتیبانی ۲۴ ساعته</string>
+    <string name="sub_load_error">خطا در دریافت پلن‌های اشتراک</string>
+    <string name="sub_success_title">اشتراک شما با موفقیت فعال شد!</string>
 </resources>

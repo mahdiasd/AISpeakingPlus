@@ -19,3 +19,11 @@ class CheckSubscriptionStatusUseCase(
 ) {
     suspend operator fun invoke(): DataResult<SubscriptionStatus> = repository.getSubscriptionStatus()
 }
+
+@Factory
+class SubscribePlanUseCase(
+    private val repository: SubscriptionRepository
+) {
+    suspend operator fun invoke(planId: String, promoCode: String? = null): DataResult<SubscriptionStatus> =
+        repository.subscribe(planId = planId, promoCode = promoCode)
+}

@@ -87,3 +87,14 @@ val UserChatContainerDark = Color(0xFF26383E)
  * */
 
 val PointsColor = Color(0xFFFFCC00)
+
+val GoldGradientStart = Color(0xFFFFD700)
+val GoldGradientEnd = Color(0xFFF59E0B)
+val VipPurpleStart = Color(0xFF7C3AED)
+val VipPurpleEnd = Color(0xFF4F46E5)
+val DiscountGreen = Color(0xFF10B981)
+val SubDarkBg = Color(0xFF0A0F1D)
+val SubCardBg = Color(0xFF1E293B)
+val SubCardSelectedBg = Color(0xFF1E1B4B)
+val SubBorderNormal = Color(0xFF334155)
+val SubBorderSelected = Color(0xFF6366F1)

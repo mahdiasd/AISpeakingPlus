@@ -60,6 +60,9 @@ fun AppNavigation(
                     },
                     onNavigateToProfile = {
                         backStack.add(ProfileRoute)
+                    },
+                    onNavigateToSubscription = {
+                        backStack.add(SubscriptionRoute)
                     }
                 )
             }
@@ -69,7 +72,9 @@ fun AppNavigation(
                     viewModel = koinViewModel(),
                     onNavigateBack = { backStack.removeLastOrNull() },
                     onNavigateToLogin = { backStack.add(LoginRoute) },
-                    onNavigateToSubscription = {}
+                    onNavigateToSubscription = {
+                        backStack.add(SubscriptionRoute)
+                    }
                 )
             }
 
@@ -80,6 +85,17 @@ fun AppNavigation(
                     onNavigateBack = { backStack.removeLastOrNull() }
                 )
             }
+
+            entry<SubscriptionRoute> {
+                ir.aispeaking.sharedui.ui.subscription.SubscriptionScreen(
+                    viewModel = koinViewModel(),
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                    onSubscriptionSuccess = {
+                        backStack.removeLastOrNull()
+                    }
+                )
+            }
         }
     )
 }
+
