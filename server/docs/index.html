@@ -1175,6 +1175,25 @@
     "durationMs" : { }
   }
 };
+            defs["SubscribeRequestDto"] = {
+  "title" : "SubscribeRequestDto",
+  "required" : [ "planId" ],
+  "properties" : {
+    "planId" : { },
+    "promoCode" : { }
+  }
+};
+            defs["SubscribeResponseDto"] = {
+  "title" : "SubscribeResponseDto",
+  "required" : [ "expiresAt", "isSubscriber", "message", "planType", "remainingDays" ],
+  "properties" : {
+    "isSubscriber" : { },
+    "planType" : { },
+    "expiresAt" : { },
+    "remainingDays" : { },
+    "message" : { }
+  }
+};
             defs["SubscriptionPlanItem"] = {
   "title" : "SubscriptionPlanItem",
   "required" : [ "durationDays", "id", "priceTomans", "titleFa", "type" ],
@@ -1468,6 +1487,9 @@
                     </li>
                     <li data-group="Subscriptions" data-name="apiV2SubscriptionsStatusGet" class="">
                       <a href="#api-Subscriptions-apiV2SubscriptionsStatusGet">apiV2SubscriptionsStatusGet</a>
+                    </li>
+                    <li data-group="Subscriptions" data-name="apiV2SubscriptionsSubscribePost" class="">
+                      <a href="#api-Subscriptions-apiV2SubscriptionsSubscribePost">apiV2SubscriptionsSubscribePost</a>
                     </li>
                   <li class="nav-header" data-group="System"><a href="#api-System">API Methods - System</a></li>
                     <li data-group="System" data-name="healthGet" class="">
@@ -15373,6 +15395,485 @@ except ApiException as e:
                                     </script>
                                   </div>
                                   <input id='responses-apiV2SubscriptionsStatusGet-500-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Subscriptions-apiV2SubscriptionsSubscribePost">
+                      <article id="api-Subscriptions-apiV2SubscriptionsSubscribePost-0" data-group="User" data-name="apiV2SubscriptionsSubscribePost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2SubscriptionsSubscribePost</h1>
+                          <p>Subscribe or Extend Plan</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Purchase or activate a subscription plan for authenticated user</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v2/subscriptions/subscribe</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/v2/subscriptions/subscribe"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.SubscriptionsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class SubscriptionsApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        SubscriptionsApi apiInstance = new SubscriptionsApi();
+        SubscribeRequestDto body = ; // SubscribeRequestDto | Plan selection and optional promo code
+        try {
+            Object result = apiInstance.apiV2SubscriptionsSubscribePost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling SubscriptionsApi#apiV2SubscriptionsSubscribePost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.SubscriptionsApi;
+
+public class SubscriptionsApiExample {
+
+    public static void main(String[] args) {
+        SubscriptionsApi apiInstance = new SubscriptionsApi();
+        SubscribeRequestDto body = ; // SubscribeRequestDto | Plan selection and optional promo code
+        try {
+            Object result = apiInstance.apiV2SubscriptionsSubscribePost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling SubscriptionsApi#apiV2SubscriptionsSubscribePost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+SubscribeRequestDto *body = ; // Plan selection and optional promo code (optional)
+
+SubscriptionsApi *apiInstance = [[SubscriptionsApi alloc] init];
+
+// Subscribe or Extend Plan
+[apiInstance apiV2SubscriptionsSubscribePostWith:body
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.SubscriptionsApi()
+var opts = { 
+  'body':  // {{SubscribeRequestDto}} Plan selection and optional promo code
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiV2SubscriptionsSubscribePost(opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2SubscriptionsSubscribePostExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new SubscriptionsApi();
+            var body = new SubscribeRequestDto(); // SubscribeRequestDto | Plan selection and optional promo code (optional) 
+
+            try
+            {
+                // Subscribe or Extend Plan
+                Object result = apiInstance.apiV2SubscriptionsSubscribePost(body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling SubscriptionsApi.apiV2SubscriptionsSubscribePost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiSubscriptionsApi();
+$body = ; // SubscribeRequestDto | Plan selection and optional promo code
+
+try {
+    $result = $api_instance->apiV2SubscriptionsSubscribePost($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling SubscriptionsApi->apiV2SubscriptionsSubscribePost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::SubscriptionsApi;
+
+
+my $api_instance = WWW::SwaggerClient::SubscriptionsApi->new();
+my $body = WWW::SwaggerClient::Object::SubscribeRequestDto->new(); # SubscribeRequestDto | Plan selection and optional promo code
+
+eval { 
+    my $result = $api_instance->apiV2SubscriptionsSubscribePost(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling SubscriptionsApi->apiV2SubscriptionsSubscribePost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsSubscribePost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.SubscriptionsApi()
+body =  # SubscribeRequestDto | Plan selection and optional promo code (optional)
+
+try: 
+    # Subscribe or Extend Plan
+    api_response = api_instance.api_v2_subscriptions_subscribe_post(body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling SubscriptionsApi->apiV2SubscriptionsSubscribePost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Plan selection and optional promo code",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/SubscribeRequestDto"
+      }
+    }
+  }
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiV2SubscriptionsSubscribePost_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiV2SubscriptionsSubscribePost_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Subscription activated successfully </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsSubscribePost-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsSubscribePost-200-schema">
+                                  <div id='responses-apiV2SubscriptionsSubscribePost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Subscription activated successfully",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SubscribeResponseDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsSubscribePost-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsSubscribePost-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsSubscribePost-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 400 - Invalid plan ID or payload </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsSubscribePost-400-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsSubscribePost-400-schema">
+                                  <div id='responses-apiV2SubscriptionsSubscribePost-400-schema-400' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Invalid plan ID or payload",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsSubscribePost-400-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsSubscribePost-400-schema-400');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsSubscribePost-400-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 401 - Authentication required or invalid token </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsSubscribePost-401-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsSubscribePost-401-schema">
+                                  <div id='responses-apiV2SubscriptionsSubscribePost-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Authentication required or invalid token",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsSubscribePost-401-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsSubscribePost-401-schema-401');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsSubscribePost-401-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 500 - Server error </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsSubscribePost-500-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsSubscribePost-500-schema">
+                                  <div id='responses-apiV2SubscriptionsSubscribePost-500-schema-500' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Server error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsSubscribePost-500-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsSubscribePost-500-schema-500');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsSubscribePost-500-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 

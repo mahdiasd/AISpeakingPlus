@@ -7,4 +7,5 @@ import ir.aispeaking.domain.model.stage.SubscriptionStatus
 interface SubscriptionRepository {
     suspend fun getSubscriptionPlans(): DataResult<List<SubscriptionPlan>>
     suspend fun getSubscriptionStatus(): DataResult<SubscriptionStatus>
+    suspend fun subscribe(planId: String, promoCode: String? = null): DataResult<SubscriptionStatus>
 }

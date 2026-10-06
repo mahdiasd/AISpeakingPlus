@@ -78,6 +78,7 @@ fun JourneyMapScreen(
     viewModel: JourneyMapViewModel,
     onNavigateToChat: (String) -> Unit,
     onNavigateToProfile: () -> Unit = {},
+    onNavigateToSubscription: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LaunchedEffect(Unit) {
@@ -89,6 +90,13 @@ fun JourneyMapScreen(
     }
 
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.selectedStageForPaywall) {
+        if (uiState.selectedStageForPaywall != null) {
+            viewModel.dismissPaywall()
+            onNavigateToSubscription()
+        }
+    }
     val currentStage = uiState.currentStage
 
     val infiniteTransition = rememberInfiniteTransition(label = "screen_animations")
@@ -283,7 +291,7 @@ fun JourneyMapScreen(
                                             color = Color(0x66FFFFFF),
                                             shape = RoundedCornerShape(22.dp)
                                         )
-                                        .clickable { viewModel.onSubscriptionCtaClicked() }
+                                        .clickable { onNavigateToSubscription() }
                                         .padding(horizontal = 14.dp, vertical = 7.dp)
                                 ) {
                                     Row(
@@ -534,15 +542,6 @@ fun JourneyMapScreen(
                     stage = stage,
                     onDismiss = { viewModel.dismissRegister() },
                     onRegisterSuccess = { viewModel.onRegisterSuccess() }
-                )
-            }
-
-            // Subscription Paywall Sheet
-            uiState.selectedStageForPaywall?.let { stage ->
-                SubscriptionPaywallSheet(
-                    stage = stage,
-                    onDismiss = { viewModel.dismissPaywall() },
-                    onSubscriptionSuccess = { viewModel.onSubscriptionSuccess() }
                 )
             }
 

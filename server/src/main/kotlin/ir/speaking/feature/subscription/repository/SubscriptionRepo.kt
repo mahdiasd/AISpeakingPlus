@@ -3,7 +3,10 @@ package ir.speaking.feature.subscription.repository
 import ir.speaking.core.utils.suspendTransaction
 import ir.speaking.feature.subscription.db.SubscriptionTable
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.plus
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.koin.core.annotation.Single
 import java.util.*
@@ -55,4 +58,50 @@ class SubscriptionRepo {
             UserSubscriptionInfo(isSubscriber = false)
         }
     }
+
+    suspend fun activateSubscription(
+        userId: UUID,
+        planType: String,
+        durationDays: Int,
+        grantSource: String = "USER_PURCHASE",
+        reason: String? = null
+    ): UserSubscriptionInfo = suspendTransaction {
+        val now = Clock.System.now()
+        val activeRow = SubscriptionTable.selectAll()
+            .where {
+                (SubscriptionTable.userId eq userId) and
+                (SubscriptionTable.status eq "ACTIVE") and
+                (SubscriptionTable.expiresAt greater now)
+            }
+            .orderBy(SubscriptionTable.expiresAt to org.jetbrains.exposed.sql.SortOrder.DESC)
+            .firstOrNull()
+
+        val baseTime = if (activeRow != null) {
+            activeRow[SubscriptionTable.expiresAt]
+        } else {
+            now
+        }
+
+        val effectiveDays = if (durationDays <= 0) 30 else durationDays
+        val newExpiresAt = baseTime.plus(effectiveDays, kotlinx.datetime.DateTimeUnit.DAY, kotlinx.datetime.TimeZone.UTC)
+
+        SubscriptionTable.insertAndGetId {
+            it[SubscriptionTable.userId] = userId
+            it[SubscriptionTable.planType] = planType.uppercase()
+            it[SubscriptionTable.startedAt] = now
+            it[SubscriptionTable.expiresAt] = newExpiresAt
+            it[SubscriptionTable.status] = "ACTIVE"
+            it[SubscriptionTable.grantSource] = grantSource
+            it[SubscriptionTable.grantReason] = reason
+        }
+
+        val remainingDays = maxOf(0, (newExpiresAt.epochSeconds - now.epochSeconds) / (24 * 3600)).toInt()
+        UserSubscriptionInfo(
+            isSubscriber = true,
+            planType = planType.uppercase(),
+            expiresAt = newExpiresAt.toString(),
+            remainingDays = remainingDays
+        )
+    }
 }
+

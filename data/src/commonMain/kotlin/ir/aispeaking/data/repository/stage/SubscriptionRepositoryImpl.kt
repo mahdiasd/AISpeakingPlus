@@ -6,6 +6,7 @@ import ir.aispeaking.domain.model.stage.SubscriptionPlan
 import ir.aispeaking.domain.model.stage.SubscriptionStatus
 import ir.aispeaking.domain.repository.stage.SubscriptionRepository
 import ir.aispeaking.network.api.stage.SubscriptionApi
+import ir.aispeaking.network.model.stage.dto.SubscribeRequestDto
 import org.koin.core.annotation.Single
 
 @Single
@@ -47,4 +48,27 @@ class SubscriptionRepositoryImpl(
         )
         return DataResult.Success(status)
     }
+
+    override suspend fun subscribe(planId: String, promoCode: String?): DataResult<SubscriptionStatus> {
+        val result = safeCall {
+            subscriptionApi.subscribe(
+                SubscribeRequestDto(
+                    planId = planId,
+                    promoCode = promoCode
+                )
+            )
+        }
+        if (result !is DataResult.Success) {
+            return DataResult.Failure((result as DataResult.Failure).appError)
+        }
+
+        val status = SubscriptionStatus(
+            isSubscriber = result.data.isSubscriber,
+            planType = result.data.planType,
+            expiresAt = result.data.expiresAt,
+            remainingDays = result.data.remainingDays
+        )
+        return DataResult.Success(status)
+    }
 }
+
