@@ -68,13 +68,15 @@ class UserProfileMappersTest {
             nickName = "  رضا تستی  ",
             avatar = " avatar_g9 ",
             firstName = "  Ali  ",
-            lastName = null
+            lastName = null,
+            languageLevel = " B2 "
         )
         val dto = input.toDto()
         assertEquals("رضا تستی", dto.nickName)
         assertEquals("avatar_g9", dto.avatar)
         assertEquals("Ali", dto.firstName)
         assertNull(dto.lastName)
+        assertEquals("B2", dto.languageLevel)
     }
 
     @Test

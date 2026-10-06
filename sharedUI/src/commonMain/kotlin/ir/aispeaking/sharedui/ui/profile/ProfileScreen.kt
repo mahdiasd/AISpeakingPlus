@@ -37,12 +37,14 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
-import ir.aispeaking.sharedui.ic_back
 import ir.aispeaking.sharedui.ic_exit
+import ir.aispeaking.sharedui.ui.core.button.AppBackButton
+import ir.aispeaking.sharedui.ui.core.button.AppTopBarIconButton
 import ir.aispeaking.sharedui.ui.profile.component.AchievementStatsCard
 import ir.aispeaking.sharedui.ui.profile.component.AvatarPickerDialog
 import ir.aispeaking.sharedui.ui.profile.component.EditNickNameDialog
 import ir.aispeaking.sharedui.ui.profile.component.GuestBannerCard
+import ir.aispeaking.sharedui.ui.profile.component.LevelPickerBottomSheet
 import ir.aispeaking.sharedui.ui.profile.component.ProfileHeaderCard
 import ir.aispeaking.sharedui.ui.profile.component.SignOutConfirmDialog
 import ir.aispeaking.sharedui.ui.profile.component.SubscriptionCard
@@ -82,14 +84,7 @@ fun ProfileScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_back),
-                            contentDescription = "Back",
-                            tint = Color.White,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+                    AppBackButton(onClick = onNavigateBack)
 
                     Text(
                         text = "حساب کاربری",
@@ -100,16 +95,15 @@ fun ProfileScreen(
 
                     // Right action: Sign out or spacer
                     if (!uiState.isGuest) {
-                        IconButton(onClick = { viewModel.onSignOutClicked() }) {
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_exit),
-                                contentDescription = "Sign Out",
-                                tint = Color(0xFFEF4444),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                        AppTopBarIconButton(
+                            icon = Res.drawable.ic_exit,
+                            onClick = { viewModel.onSignOutClicked() },
+                            contentDescription = "Sign Out",
+                            tint = Color(0xFFEF4444),
+                            borderColor = Color(0x44EF4444)
+                        )
                     } else {
-                        Spacer(modifier = Modifier.size(48.dp))
+                        Spacer(modifier = Modifier.size(38.dp))
                     }
                 }
 
@@ -167,7 +161,8 @@ fun ProfileScreen(
 
                         // 4. Learning Achievements
                         AchievementStatsCard(
-                            user = user
+                            user = user,
+                            onLevelClick = { viewModel.onLevelPickerClicked() }
                         )
 
                         // 5. Sign Out Button for Logged-In Users
@@ -277,6 +272,16 @@ fun ProfileScreen(
                 SignOutConfirmDialog(
                     onConfirm = {
                         viewModel.onConfirmSignOut(onComplete = onNavigateToLogin)
+                    },
+                    onDismiss = { viewModel.onDismissDialogs() }
+                )
+            }
+
+            if (uiState.showLevelPicker) {
+                LevelPickerBottomSheet(
+                    currentLevel = uiState.user?.languageLevel,
+                    onLevelSelected = { level ->
+                        viewModel.onSelectLanguageLevel(level)
                     },
                     onDismiss = { viewModel.onDismissDialogs() }
                 )

@@ -100,7 +100,7 @@ class UserRepo(
             score = userRow[UserTable.score],
             totalStars = progressStats.first,
             completedStagesCount = progressStats.second,
-            languageLevel = "A1",
+            languageLevel = userRow[UserTable.languageLevel],
             subscription = SubscriptionSummaryDto(
                 isSubscriber = subInfo.isSubscriber,
                 planType = subInfo.planType,
@@ -118,6 +118,7 @@ class UserRepo(
                 request.avatar?.trim()?.takeIf { it.isNotBlank() }?.let { row[avatar] = it }
                 request.firstName?.trim()?.let { row[firstName] = it }
                 request.lastName?.trim()?.let { row[lastName] = it }
+                request.languageLevel?.trim()?.takeIf { it.isNotBlank() }?.let { row[languageLevel] = it.uppercase() }
                 row[updatedAt] = Clock.System.now()
             }
         }

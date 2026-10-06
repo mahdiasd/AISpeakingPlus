@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
-import ir.aispeaking.sharedui.ic_back
+import ir.aispeaking.sharedui.ui.core.button.AppBackButton
 import ir.aispeaking.sharedui.ui.subscription.component.*
 import org.jetbrains.compose.resources.painterResource
 
@@ -62,22 +62,7 @@ fun SubscriptionScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x22FFFFFF))
-                            .border(1.dp, Color(0x33FFFFFF), CircleShape)
-                            .clickable { onNavigateBack() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_back),
-                            contentDescription = "بازگشت",
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    AppBackButton(onClick = onNavigateBack)
 
                     Text(
                         text = "اشتراک ویژه",

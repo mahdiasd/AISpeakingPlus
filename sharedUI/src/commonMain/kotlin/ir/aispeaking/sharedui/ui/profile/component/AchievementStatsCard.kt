@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.user.UserProfile
+import androidx.compose.foundation.clickable
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_points
 import ir.aispeaking.sharedui.ic_roadmap
@@ -34,7 +35,8 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun AchievementStatsCard(
     user: UserProfile,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLevelClick: (() -> Unit)? = null
 ) {
     Column(
         modifier = modifier.fillMaxWidth()
@@ -87,6 +89,8 @@ fun AchievementStatsCard(
                 value = user.languageLevel.ifBlank { "A1" },
                 icon = Res.drawable.ic_voice_model,
                 iconTint = Color(0xFFA78BFA),
+                onClick = onLevelClick,
+                badgeText = if (onLevelClick != null) "تغییر" else null,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -99,46 +103,78 @@ private fun StatItem(
     value: String,
     icon: DrawableResource,
     iconTint: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    badgeText: String? = null
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(18.dp))
             .background(Color(0xFF1E293B))
-            .border(1.dp, Color(0x226366F1), RoundedCornerShape(18.dp))
+            .border(
+                width = 1.dp,
+                color = if (onClick != null) Color(0x55A78BFA) else Color(0x226366F1),
+                shape = RoundedCornerShape(18.dp)
+            )
+            .then(
+                if (onClick != null) Modifier.clickable(onClick = onClick)
+                else Modifier
+            )
             .padding(14.dp)
     ) {
         Row(
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(iconTint.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(18.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(iconTint.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Column {
+                    Text(
+                        text = value,
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = title,
+                        color = Color(0xFF94A3B8),
+                        fontSize = 11.sp
+                    )
+                }
             }
 
-            Column {
-                Text(
-                    text = value,
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = title,
-                    color = Color(0xFF94A3B8),
-                    fontSize = 11.sp
-                )
+            badgeText?.let { badge ->
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0x22A78BFA))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = badge,
+                        color = Color(0xFFA78BFA),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

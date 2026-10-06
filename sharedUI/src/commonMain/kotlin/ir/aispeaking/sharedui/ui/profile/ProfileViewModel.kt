@@ -22,6 +22,7 @@ data class ProfileUiState(
     val showAvatarPicker: Boolean = false,
     val showEditNameDialog: Boolean = false,
     val showSignOutDialog: Boolean = false,
+    val showLevelPicker: Boolean = false,
     val isSaving: Boolean = false
 ) {
     val isGuest: Boolean
@@ -109,12 +110,22 @@ class ProfileViewModel(
         }
     }
 
+    fun onLevelPickerClicked() {
+        _uiState.update { it.copy(showLevelPicker = true) }
+    }
+
+    fun onSelectLanguageLevel(level: String) {
+        _uiState.update { it.copy(showLevelPicker = false) }
+        updateProfile(UpdateProfileInput(languageLevel = level))
+    }
+
     fun onDismissDialogs() {
         _uiState.update {
             it.copy(
                 showAvatarPicker = false,
                 showEditNameDialog = false,
-                showSignOutDialog = false
+                showSignOutDialog = false,
+                showLevelPicker = false
             )
         }
     }

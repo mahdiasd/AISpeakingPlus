@@ -78,7 +78,8 @@ class UserProfileRepositoryImpl(
             val currentGuest = userPreferences.read() ?: defaultSharedPrefUser()
             val updated = currentGuest.copy(
                 nickName = input.nickName ?: currentGuest.nickName,
-                avatar = input.avatar ?: currentGuest.avatar
+                avatar = input.avatar ?: currentGuest.avatar,
+                languageLevel = input.languageLevel ?: currentGuest.languageLevel
             )
             userPreferences.save(updated)
             return DataResult.Success(getGuestProfile())
@@ -94,7 +95,8 @@ class UserProfileRepositoryImpl(
                         nickName = profile.nickName,
                         avatar = profile.avatar,
                         firstName = profile.firstName ?: "",
-                        lastName = profile.lastName ?: ""
+                        lastName = profile.lastName ?: "",
+                        languageLevel = profile.languageLevel
                     )
                 )
                 DataResult.Success(profile)
