@@ -7,8 +7,8 @@
 
 **Purpose**: Navigation route registration and configuration
 
-- [ ] T001 Define `StagesListRoute` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/Routes.kt`
-- [ ] T002 Register `StagesListRoute` polymorphic serializer in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/config.kt`
+- [X] T001 Define `StagesListRoute` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/Routes.kt`
+- [X] T002 Register `StagesListRoute` polymorphic serializer in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/config.kt`
 
 ---
 
@@ -16,8 +16,8 @@
 
 **Purpose**: ViewModel and state definition for stages listing and progress tracking
 
-- [ ] T003 Create `StagesListContract` and `StagesListUiState` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/stageslist/StagesListContract.kt`
-- [ ] T004 Implement `StagesListViewModel` injecting `GetStagesUseCase` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/stageslist/StagesListViewModel.kt`
+- [X] T003 Create `StagesListContract` and `StagesListUiState` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/stageslist/StagesListContract.kt`
+- [X] T004 Implement `StagesListViewModel` injecting `GetStagesUseCase` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/stageslist/StagesListViewModel.kt`
 
 ---
 
@@ -27,10 +27,10 @@
 
 **Independent Test**: Navigate to `StagesListRoute`, observe header summary with total stars, all stages listed in order, active stage highlighted, and back navigation working.
 
-- [ ] T005 [P] [US1] Create `StagesHeaderStatsCard` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/stageslist/component/StagesHeaderStatsCard.kt` displaying total earned stars and completion progress
-- [ ] T006 [P] [US1] Create `StageListItemCard` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/stageslist/component/StageListItemCard.kt` with order badge, Persian & English titles, active glowing border, and star rating (0-3 stars)
-- [ ] T007 [US1] Build `StagesListScreen` with `LazyColumn`, top app bar (`AppBackButton`), and auto-scroll to active stage in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/stageslist/StagesListScreen.kt`
-- [ ] T008 [US1] Register `entry<StagesListRoute>` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/AppNavigation.kt`
+- [X] T005 [P] [US1] Create `StagesHeaderStatsCard` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/stageslist/component/StagesHeaderStatsCard.kt` displaying total earned stars and completion progress
+- [X] T006 [P] [US1] Create `StageListItemCard` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/stageslist/component/StageListItemCard.kt` with order badge, Persian & English titles, active glowing border, and star rating (0-3 stars)
+- [X] T007 [US1] Build `StagesListScreen` with `LazyColumn`, top app bar (`AppBackButton`), and auto-scroll to active stage in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/stageslist/StagesListScreen.kt`
+- [X] T008 [US1] Register `entry<StagesListRoute>` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/AppNavigation.kt`
 
 ---
 
@@ -40,9 +40,9 @@
 
 **Independent Test**: Click "مرحله‌های گذشته" on `JourneyMapScreen` to open `StagesListScreen`; clicking on a stage triggers direct navigation to chat or subscription.
 
-- [ ] T009 [US2] Update `JourneyMapScreen` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapScreen.kt` to replace `PastStagesDialog` modal trigger with `onNavigateToStagesList: () -> Unit`
-- [ ] T010 [US2] Wire `onNavigateToStagesList = { backStack.add(StagesListRoute) }` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/AppNavigation.kt`
-- [ ] T011 [US3] Connect item click handling in `StagesListScreen` to `onNavigateToStageChat` and `onNavigateToSubscription`
+- [X] T009 [US2] Update `JourneyMapScreen` in `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapScreen.kt` to replace `PastStagesDialog` modal trigger with `onNavigateToStagesList: () -> Unit`
+- [X] T010 [US2] Wire `onNavigateToStagesList = { backStack.add(StagesListRoute) }` in `navigation/src/commonMain/kotlin/ir/aispeaking/navigation/AppNavigation.kt`
+- [X] T011 [US3] Connect item click handling in `StagesListScreen` to `onNavigateToStageChat` and `onNavigateToSubscription`
 
 ---
 
@@ -50,5 +50,5 @@
 
 **Purpose**: Cleanup obsolete dialog and verify multiplatform compilation
 
-- [ ] T012 Remove obsolete `PastStagesDialog` and dead sheet states from `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapScreen.kt`
-- [ ] T013 Verify project compilation across commonMain and run Gradle checks
+- [X] T012 Remove obsolete `PastStagesDialog` and dead sheet states from `sharedUI/src/commonMain/kotlin/ir/aispeaking/sharedui/ui/stage/JourneyMapScreen.kt`
+- [X] T013 Verify project compilation across commonMain and run Gradle checks

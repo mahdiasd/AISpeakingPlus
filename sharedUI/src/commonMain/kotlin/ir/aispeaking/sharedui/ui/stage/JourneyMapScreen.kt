@@ -79,6 +79,7 @@ fun JourneyMapScreen(
     onNavigateToChat: (String) -> Unit,
     onNavigateToProfile: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
+    onNavigateToStagesList: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LaunchedEffect(Unit) {
@@ -470,9 +471,9 @@ fun JourneyMapScreen(
 
                             Spacer(modifier = Modifier.height(4.dp))
 
-                            // Secondary Link: "مرحله‌های گذشته" (Subtle & compact)
+                            // Secondary Link: "لیست و سوابق مراحل" (Full screen navigation)
                             TextButton(
-                                onClick = { viewModel.showPastStages() },
+                                onClick = { onNavigateToStagesList() },
                                 modifier = Modifier.height(36.dp),
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
                             ) {
@@ -487,7 +488,7 @@ fun JourneyMapScreen(
                                         modifier = Modifier.size(15.dp)
                                     )
                                     Text(
-                                        text = "مرحله‌های گذشته",
+                                        text = "لیست و سوابق مراحل",
                                         color = Color(0xFFA5B4FC),
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Medium
@@ -512,16 +513,6 @@ fun JourneyMapScreen(
                         }
                     }
                 }
-            }
-
-            // Past Stages Bottom Sheet / Dialog
-            if (uiState.showPastStagesSheet) {
-                PastStagesDialog(
-                    pastStages = uiState.pastStages,
-                    currentViewingStage = currentStage,
-                    onSelectStage = { stage -> viewModel.selectStageToView(stage) },
-                    onDismiss = { viewModel.dismissPastStages() }
-                )
             }
 
             // Briefing Dialog
@@ -564,240 +555,3 @@ fun JourneyMapScreen(
     }
 }
 
-/**
- * Disney-inspired Past Stages Dialog displaying previous completed / accessible stages.
- */
-@Composable
-fun PastStagesDialog(
-    pastStages: List<Stage>,
-    currentViewingStage: Stage?,
-    onSelectStage: (Stage) -> Unit,
-    onDismiss: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_history),
-                            contentDescription = null,
-                            tint = Color(0xFFFFD700),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Text(
-                            text = "مرحله‌های گذشته",
-                            color = Color.White,
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x22FFFFFF))
-                            .clickable { onDismiss() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_close),
-                            contentDescription = "Close",
-                            tint = Color.White,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "مراحل گذشته را مرور کرده و مهارت مکالمه خود را تقویت کنید",
-                    color = Color(0xFFA5B4FC),
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (pastStages.isEmpty()) {
-                    // Empty state
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0x330F172A))
-                            .padding(24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_points),
-                                contentDescription = null,
-                                tint = Color(0xFFFFD700),
-                                modifier = Modifier.size(32.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "شما در ابتدای مسیر جادویی خود هستید!",
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "با تکمیل مرحله اول، سوابق و ستاره‌های شما در اینجا ذخیره خواهند شد.",
-                                color = Color(0xFF94A3B8),
-                                fontSize = 12.sp,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                } else {
-                    // List of past stages
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(280.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(pastStages) { stage ->
-                            val isSelected = stage.id == currentViewingStage?.id
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onSelectStage(stage) },
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = if (isSelected) Color(0xFF334155) else Color(0xFF0F172A)
-                                ),
-                                border = if (isSelected) {
-                                    androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFFFD700))
-                                } else {
-                                    androidx.compose.foundation.BorderStroke(1.dp, Color(0x22FFFFFF))
-                                }
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        // Number badge
-                                        Box(
-                                            modifier = Modifier
-                                                .size(34.dp)
-                                                .clip(CircleShape)
-                                                .background(Color(0xFF6366F1)),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = "${stage.orderIndex}",
-                                                color = Color.White,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-
-                                        Spacer(modifier = Modifier.width(10.dp))
-
-                                        Column {
-                                            Text(
-                                                text = stage.titleFa,
-                                                color = Color.White,
-                                                fontSize = 13.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                            Text(
-                                                text = stage.title,
-                                                color = Color(0xFFA5B4FC),
-                                                fontSize = 11.sp,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-
-                                            // Stars row with vector icons
-                                            stage.userProgress?.let { progress ->
-                                                Row(
-                                                    modifier = Modifier.padding(top = 2.dp),
-                                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                                                ) {
-                                                    repeat(3) { starIndex ->
-                                                        val isFilled = starIndex < progress.stars
-                                                        Icon(
-                                                            painter = painterResource(
-                                                                if (isFilled) Res.drawable.ic_star else Res.drawable.ic_star_outline
-                                                            ),
-                                                            contentDescription = null,
-                                                            tint = if (isFilled) Color(0xFFFFD700) else Color(0x44FFFFFF),
-                                                            modifier = Modifier.size(13.dp)
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    Button(
-                                        onClick = { onSelectStage(stage) },
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (isSelected) Color(0xFF10B981) else Color(0xFF475569)
-                                        ),
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 5.dp)
-                                    ) {
-                                        Text(
-                                            text = if (isSelected) "مشاهده‌شده" else "انتخاب",
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Button(
-                    onClick = onDismiss,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF475569)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("بستن", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-    }
-}
