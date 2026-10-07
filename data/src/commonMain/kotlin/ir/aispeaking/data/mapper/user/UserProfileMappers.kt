@@ -41,7 +41,8 @@ fun UpdateProfileInput.toDto(): UpdateProfileRequestDto {
         nickName = nickName?.trim()?.takeIf { it.isNotBlank() },
         avatar = avatar?.trim()?.takeIf { it.isNotBlank() },
         firstName = firstName?.trim()?.takeIf { it.isNotBlank() },
-        lastName = lastName?.trim()?.takeIf { it.isNotBlank() }
+        lastName = lastName?.trim()?.takeIf { it.isNotBlank() },
+        languageLevel = languageLevel?.trim()?.takeIf { it.isNotBlank() }
     )
 }
 

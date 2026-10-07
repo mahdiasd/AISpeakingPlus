@@ -18,8 +18,7 @@ import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.stage.Stage
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_arrow_right
-import ir.aispeaking.sharedui.ic_back
-import ir.aispeaking.sharedui.ic_user
+import ir.aispeaking.sharedui.ui.core.button.AppBackButton
 import ir.aispeaking.sharedui.ui.core.icon.AppIcon
 import ir.aispeaking.sharedui.ui.extension.animateClickable
 import ir.aispeaking.sharedui.ui.them.AppTheme
@@ -48,15 +47,7 @@ fun ChatToolbar(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             // Back button
-            AppIcon(
-                modifier = Modifier
-                    .background(AppTheme.colors.surfaceContainerHighest, CircleShape)
-                    .padding(8.dp),
-                icon = Res.drawable.ic_back,
-                size = 20.dp,
-                tint = AppTheme.colors.onSurface,
-                onClick = onBackClick
-            )
+            AppBackButton(onClick = onBackClick)
 
             // Stage Title & Character info
             Column(

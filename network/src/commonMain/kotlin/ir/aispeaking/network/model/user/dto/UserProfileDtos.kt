@@ -32,5 +32,6 @@ data class UpdateProfileRequestDto(
     val nickName: String? = null,
     val avatar: String? = null,
     val firstName: String? = null,
-    val lastName: String? = null
+    val lastName: String? = null,
+    val languageLevel: String? = null
 )

@@ -108,6 +108,17 @@ class UserProfileRoutingTest {
         assertEquals("کاربر تستی", updatedProfileData["nickName"]?.jsonPrimitive?.content)
         assertEquals("avatar_g7", updatedProfileData["avatar"]?.jsonPrimitive?.content)
 
+        // 5.1 Authenticated PUT /api/v2/user/profile with languageLevel -> 200 OK
+        val updateLevelRes = client.put("/api/v2/user/profile") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+            contentType(ContentType.Application.Json)
+            setBody("""{"languageLevel": "B2"}""")
+        }
+        assertEquals(HttpStatusCode.OK, updateLevelRes.status)
+        val levelProfileData = json.parseToJsonElement(updateLevelRes.bodyAsText()).jsonObject["data"]?.jsonObject
+        assertNotNull(levelProfileData)
+        assertEquals("B2", levelProfileData["languageLevel"]?.jsonPrimitive?.content)
+
         // 6. Validation error: nickname too short (< 2 characters) -> 400 Bad Request
         val invalidShortRes = client.put("/api/v2/user/profile") {
             header(HttpHeaders.Authorization, "Bearer $token")
