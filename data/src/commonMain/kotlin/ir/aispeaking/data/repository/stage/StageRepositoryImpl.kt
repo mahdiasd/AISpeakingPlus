@@ -15,6 +15,7 @@ import ir.aispeaking.domain.repository.stage.StageRepository
 import ir.aispeaking.network.api.stage.StageApi
 import ir.aispeaking.network.model.stage.dto.ChatMessageDto
 import ir.aispeaking.network.model.stage.dto.EvaluationRequestDto
+import ir.aispeaking.network.model.stage.dto.GrammarErrorDto
 import ir.aispeaking.network.model.stage.dto.HintRequestDto
 import org.koin.core.annotation.Single
 
@@ -116,11 +117,17 @@ class StageRepositoryImpl(
         stageId: String,
         hintsUsedCount: Int,
         turnsCount: Int,
-        transcript: List<Pair<String, String>>
+        transcript: List<Pair<String, String>>,
+        grammarErrorsCount: Int,
+        grammarErrors: List<GrammarErrorDetail>
     ): DataResult<EvaluationSession> {
         val requestDto = EvaluationRequestDto(
             hintsUsedCount = hintsUsedCount,
             turnsCount = turnsCount,
+            grammarErrorsCount = grammarErrorsCount,
+            grammarErrors = grammarErrors.map {
+                GrammarErrorDto(it.original, it.correction, it.explanationFa)
+            },
             transcript = transcript.map { ChatMessageDto(it.first, it.second) }
         )
         val result = safeCall { stageApi.submitEvaluation(stageId, requestDto) }

@@ -10,6 +10,7 @@ import ir.aispeaking.domain.model.chat.ChatStatus
 import ir.aispeaking.domain.model.data_result.DataResult
 import ir.aispeaking.domain.model.stage.AccessTier
 import ir.aispeaking.domain.model.stage.EvaluationSession
+import ir.aispeaking.domain.model.stage.GrammarErrorDetail
 import ir.aispeaking.domain.model.stage.LocalGuestProgress
 import ir.aispeaking.domain.model.stage.Stage
 import ir.aispeaking.domain.repository.stage.StageRepository
@@ -414,6 +415,8 @@ class ChatViewModel(
     fun submitEvaluation() {
         val stageId = _uiState.value.stage?.id ?: return
         viewModelScope.launch {
+            _uiState.update { it.copy(isSubmittingEvaluation = true) }
+
             val dialogue = _uiState.value.chats.mapNotNull {
                 when (it) {
                     is Chat.User -> "User" to it.message
@@ -424,12 +427,67 @@ class ChatViewModel(
             val hintsCount = _uiState.value.hintsUsedCount
             val turnsCount = _uiState.value.turnsCount
 
-            val session = when (val result = submitStageEvaluationUseCase(stageId, hintsCount, turnsCount, dialogue)) {
+            val localGrammarErrors = _uiState.value.chats
+                .filterIsInstance<Chat.User>()
+                .mapNotNull { userChat ->
+                    val grammar = (userChat.status as? ChatStatus.Answered)?.grammar
+                    if (!grammar.isNullOrBlank()) {
+                        GrammarErrorDetail(
+                            original = userChat.message,
+                            correction = extractCorrection(userChat.message, grammar),
+                            explanationFa = grammar
+                        )
+                    } else null
+                }
+            val localGrammarErrorsCount = localGrammarErrors.size
+
+            val session = when (val result = submitStageEvaluationUseCase(
+                stageId = stageId,
+                hintsUsedCount = hintsCount,
+                turnsCount = turnsCount,
+                transcript = dialogue,
+                grammarErrorsCount = localGrammarErrorsCount,
+                grammarErrors = localGrammarErrors
+            )) {
                 is DataResult.Success -> {
-                    result.data
+                    val serverSession = result.data
+                    val finalGrammarErrorsCount = maxOf(serverSession.grammarErrorsCount, localGrammarErrorsCount)
+                    val finalGrammarErrors = if (serverSession.grammarErrors.size >= localGrammarErrors.size && serverSession.grammarErrors.isNotEmpty()) {
+                        serverSession.grammarErrors
+                    } else {
+                        localGrammarErrors
+                    }
+
+                    if (finalGrammarErrorsCount > serverSession.grammarErrorsCount) {
+                        val totalPenalties = hintsCount + finalGrammarErrorsCount
+                        val stars = when {
+                            !serverSession.objectiveCompleted -> 0
+                            totalPenalties == 0 -> 3
+                            totalPenalties == 1 -> 2
+                            totalPenalties == 2 -> 1
+                            else -> 0
+                        }
+                        val score = when (stars) {
+                            3 -> 100
+                            2 -> 85
+                            1 -> 70
+                            else -> if (serverSession.objectiveCompleted) 50 else 25
+                        }
+                        serverSession.copy(
+                            grammarErrorsCount = finalGrammarErrorsCount,
+                            grammarErrors = finalGrammarErrors,
+                            calculatedStars = stars,
+                            score = score
+                        )
+                    } else {
+                        serverSession.copy(
+                            grammarErrorsCount = finalGrammarErrorsCount,
+                            grammarErrors = if (serverSession.grammarErrors.isEmpty() && localGrammarErrors.isNotEmpty()) localGrammarErrors else serverSession.grammarErrors
+                        )
+                    }
                 }
                 is DataResult.Failure -> {
-                    val penalties = hintsCount
+                    val penalties = hintsCount + localGrammarErrorsCount
                     val stars = when (penalties) {
                         0 -> 3
                         1 -> 2
@@ -439,11 +497,16 @@ class ChatViewModel(
                     EvaluationSession(
                         stageId = stageId,
                         hintsUsedCount = hintsCount,
-                        grammarErrorsCount = 0,
+                        grammarErrorsCount = localGrammarErrorsCount,
                         objectiveCompleted = true,
-                        grammarErrors = emptyList(),
+                        grammarErrors = localGrammarErrors,
                         calculatedStars = stars,
-                        score = if (stars == 3) 100 else if (stars == 2) 85 else if (stars == 1) 70 else 40,
+                        score = when (stars) {
+                            3 -> 100
+                            2 -> 85
+                            1 -> 70
+                            else -> 40
+                        },
                         feedbackFa = "مکالمه به پایان رسید و پیشرفت شما ثبت شد."
                     )
                 }
@@ -461,6 +524,32 @@ class ChatViewModel(
                 )
             }
         }
+    }
+
+    private fun extractCorrection(message: String, explanation: String): String {
+        val lower = message.lowercase()
+        val ruleCorrected = when {
+            lower.contains("i wants") -> message.replace("i wants", "I want", ignoreCase = true)
+            lower.contains("i flying") -> message.replace("i flying", "I am flying", ignoreCase = true)
+            lower.contains("i going") -> message.replace("i going", "I am going", ignoreCase = true)
+            lower.contains("i travelling") -> message.replace("i travelling", "I am travelling", ignoreCase = true)
+            lower.contains("i studying") -> message.replace("i studying", "I am studying", ignoreCase = true)
+            lower.contains("he want ") -> message.replace("he want ", "He wants ", ignoreCase = true)
+            lower.contains("she want ") -> message.replace("she want ", "She wants ", ignoreCase = true)
+            lower.contains("they is") -> message.replace("they is", "They are", ignoreCase = true)
+            lower.contains("we is") -> message.replace("we is", "We are", ignoreCase = true)
+            lower.contains("i would to") -> message.replace("i would to", "I would like to", ignoreCase = true)
+            lower.contains("would like to order of") -> message.replace("would like to order of", "would like to order", ignoreCase = true)
+            else -> null
+        }
+        if (ruleCorrected != null) return ruleCorrected
+
+        val colonIndex = explanation.lastIndexOf(':')
+        if (colonIndex != -1 && colonIndex < explanation.length - 1) {
+            val candidate = explanation.substring(colonIndex + 1).trim()
+            if (candidate.isNotEmpty()) return candidate
+        }
+        return message
     }
 
     private fun saveGuestProgress(stageId: String, stars: Int, score: Int) {

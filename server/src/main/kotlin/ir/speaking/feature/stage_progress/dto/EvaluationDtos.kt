@@ -9,17 +9,19 @@ data class EvaluationTranscriptItem(
 )
 
 @Serializable
-data class EvaluationRequest(
-    val hintsUsedCount: Int = 0,
-    val turnsCount: Int = 0,
-    val transcript: List<EvaluationTranscriptItem> = emptyList()
-)
-
-@Serializable
 data class GrammarErrorItem(
     val original: String,
     val correction: String,
     val explanationFa: String
+)
+
+@Serializable
+data class EvaluationRequest(
+    val hintsUsedCount: Int = 0,
+    val turnsCount: Int = 0,
+    val grammarErrorsCount: Int = 0,
+    val grammarErrors: List<GrammarErrorItem> = emptyList(),
+    val transcript: List<EvaluationTranscriptItem> = emptyList()
 )
 
 @Serializable

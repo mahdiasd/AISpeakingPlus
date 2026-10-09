@@ -13,8 +13,17 @@ class SubmitStageEvaluationUseCase(
         stageId: String,
         hintsUsedCount: Int,
         turnsCount: Int,
-        transcript: List<Pair<String, String>>
+        transcript: List<Pair<String, String>>,
+        grammarErrorsCount: Int = 0,
+        grammarErrors: List<ir.aispeaking.domain.model.stage.GrammarErrorDetail> = emptyList()
     ): DataResult<EvaluationSession> {
-        return repository.submitEvaluation(stageId, hintsUsedCount, turnsCount, transcript)
+        return repository.submitEvaluation(
+            stageId = stageId,
+            hintsUsedCount = hintsUsedCount,
+            turnsCount = turnsCount,
+            transcript = transcript,
+            grammarErrorsCount = grammarErrorsCount,
+            grammarErrors = grammarErrors
+        )
     }
 }

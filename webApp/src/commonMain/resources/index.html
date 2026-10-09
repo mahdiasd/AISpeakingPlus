@@ -72,61 +72,339 @@
 
         window.aiSpeakingSpeech = {
             recognition: null,
+            mediaRecorder: null,
+            mediaStream: null,
+            _recordedChunks: [],
             isRecording: false,
+            _userWantsRecording: false,
+            _micPermissionGranted: false,
+            _restartTimeout: null,
+            _accumulatedTranscript: "",
+            _currentSessionTranscript: "",
             transcript: "",
-            start: function() {
-                var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SpeechRec) {
-                    console.warn("SpeechRecognition not supported in browser");
+            _consecutiveErrors: 0,
+            _isMobile: false,
+            _isIOS: false,
+
+            _initDevice: function() {
+                var ua = navigator.userAgent || '';
+                this._isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
+                                 (navigator.userAgentData && navigator.userAgentData.mobile) ||
+                                 (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
+                this._isIOS = /iPhone|iPad|iPod/i.test(ua) ||
+                              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            },
+
+            _checkSecureContext: function() {
+                var isLocal = window.location.hostname === 'localhost' ||
+                              window.location.hostname === '127.0.0.1' ||
+                              window.location.hostname === '0.0.0.0' ||
+                              window.location.hostname === '[::1]' ||
+                              window.location.hostname.endsWith('.localhost');
+                var isSecure = window.isSecureContext || window.location.protocol === 'https:' || isLocal;
+                if (!isSecure) {
+                    console.warn("[aiSpeakingSpeech] Insecure origin detected (" + window.location.origin + "). " +
+                        "Microphone and Web Speech API will be blocked by browsers on non-localhost HTTP. " +
+                        "Use HTTPS (or localhost) to enable audio recording.");
+                }
+                return isSecure;
+            },
+
+            _requestMicPermission: function(onSuccess, onError) {
+                var self = this;
+                if (this._micPermissionGranted) {
+                    if (onSuccess) onSuccess();
                     return;
                 }
-                if (this.recognition) {
-                    try { this.recognition.stop(); } catch(e){}
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    console.warn("[aiSpeakingSpeech] navigator.mediaDevices.getUserMedia is not available");
+                    if (onSuccess) onSuccess();
+                    return;
                 }
-                this.transcript = "";
-                this.recognition = new SpeechRec();
-                this.recognition.lang = 'en-US';
-                this.recognition.continuous = true;
-                this.recognition.interimResults = true;
+
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(function(stream) {
+                        self._micPermissionGranted = true;
+                        // Release mic tracks immediately so Web Speech API can claim the microphone hardware
+                        try {
+                            stream.getTracks().forEach(function(track) { track.stop(); });
+                        } catch(e) {}
+                        if (onSuccess) onSuccess();
+                    })
+                    .catch(function(err) {
+                        console.error("[aiSpeakingSpeech] getUserMedia failed:", err);
+                        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                            self._userWantsRecording = false;
+                            self.isRecording = false;
+                            var msg = "دسترسی به میکروفون رد شد. لطفاً دسترسی به میکروفون را در تنظیمات مرورگر فعال کنید.";
+                            if (!self._checkSecureContext()) {
+                                msg += "\n\n(نکته: در مرورگرهای موبایل و شبکه محلی، دسترسی به میکروفون نیازمند HTTPS است.)";
+                            }
+                            alert(msg);
+                            if (onError) onError(err);
+                        } else {
+                            if (onSuccess) onSuccess();
+                        }
+                    });
+            },
+
+            start: function() {
+                this._initDevice();
+                this._checkSecureContext();
+
+                if (this._restartTimeout) {
+                    clearTimeout(this._restartTimeout);
+                    this._restartTimeout = null;
+                }
+
+                this._userWantsRecording = true;
                 this.isRecording = true;
+                this.transcript = "";
+                this._accumulatedTranscript = "";
+                this._currentSessionTranscript = "";
+                this._consecutiveErrors = 0;
+
+                var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
                 var self = this;
 
-                this.recognition.onresult = function(event) {
-                    var text = '';
+                if (!SpeechRec) {
+                    console.warn("[aiSpeakingSpeech] Web Speech API not available. Trying MediaRecorder fallback.");
+                    this._startMediaRecorderFallback();
+                    return;
+                }
+
+                this._requestMicPermission(
+                    function() {
+                        if (self._userWantsRecording) {
+                            self._startRecognitionInstance();
+                        }
+                    },
+                    function(err) {
+                        self.isRecording = false;
+                        self._userWantsRecording = false;
+                    }
+                );
+            },
+
+            _startRecognitionInstance: function() {
+                if (!this._userWantsRecording) {
+                    return;
+                }
+
+                var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) return;
+
+                if (this.recognition) {
+                    try {
+                        this.recognition.onend = null;
+                        this.recognition.onerror = null;
+                        this.recognition.onresult = null;
+                        this.recognition.abort();
+                    } catch(e) {}
+                    this.recognition = null;
+                }
+
+                var self = this;
+                var recognition = new SpeechRec();
+                this.recognition = recognition;
+
+                recognition.lang = 'en-US';
+                // On iOS, continuous mode can throw InvalidStateError or fail silently.
+                recognition.continuous = !this._isIOS;
+                recognition.interimResults = true;
+                recognition.maxAlternatives = 1;
+
+                recognition.onresult = function(event) {
+                    self._consecutiveErrors = 0;
+                    var sessionText = '';
                     for (var i = 0; i < event.results.length; ++i) {
                         var chunk = (event.results[i][0].transcript || '').trim();
                         if (chunk) {
-                            text += (text ? ' ' : '') + chunk;
+                            sessionText += (sessionText ? ' ' : '') + chunk;
                         }
                     }
-                    if (text) {
-                        self.transcript = text;
+                    self._currentSessionTranscript = sessionText;
+                    var full = self._accumulatedTranscript;
+                    if (sessionText) {
+                        full = (full ? full + ' ' : '') + sessionText;
+                    }
+                    self.transcript = full.trim();
+                };
+
+                recognition.onerror = function(event) {
+                    var err = event.error || (event.message || 'unknown');
+                    console.warn("[aiSpeakingSpeech] STT error:", err);
+
+                    // Benign errors: ignore
+                    if (err === 'no-speech' || err === 'audio-capture' || err === 'aborted') {
+                        return;
+                    }
+
+                    if (err === 'not-allowed' || err === 'service-not-allowed') {
+                        self._userWantsRecording = false;
+                        self.isRecording = false;
+                        var msg = "دسترسی به تشخیص گفتار داده نشد. لطفاً دسترسی به میکروفون را بررسی کنید.";
+                        if (!self._checkSecureContext()) {
+                            msg += "\n\n(نکته: مرورگرها در بستر غیرامن HTTP دسترسی به تشخیص گفتار را مسدود می‌کنند. لطفاً از HTTPS یا localhost استفاده کنید.)";
+                        }
+                        alert(msg);
+                        return;
+                    }
+
+                    self._consecutiveErrors++;
+                    if (self._consecutiveErrors > 5) {
+                        console.error("[aiSpeakingSpeech] Too many consecutive STT errors, stopping recording.");
+                        self.stop();
                     }
                 };
 
-                this.recognition.onerror = function(err) {
-                    console.warn("STT error", err);
-                };
+                recognition.onend = function() {
+                    // Fold this session's transcript into accumulated transcript
+                    if (self._currentSessionTranscript) {
+                        self._accumulatedTranscript = (self._accumulatedTranscript ? self._accumulatedTranscript + ' ' : '') + self._currentSessionTranscript;
+                        self._currentSessionTranscript = "";
+                        self.transcript = self._accumulatedTranscript.trim();
+                    }
 
-                this.recognition.onend = function() {
-                    self.isRecording = false;
+                    if (self._userWantsRecording) {
+                        // User still wants recording -> auto restart!
+                        self._restartTimeout = setTimeout(function() {
+                            if (self._userWantsRecording) {
+                                self._startRecognitionInstance();
+                            }
+                        }, 150);
+                    } else {
+                        self.isRecording = false;
+                    }
                 };
 
                 try {
-                    this.recognition.start();
-                } catch(e) {
-                    console.warn("Failed to start speech recognition", e);
+                    recognition.start();
+                    this.isRecording = true;
+                } catch(err) {
+                    console.warn("[aiSpeakingSpeech] recognition.start() error:", err);
+                    // If continuous = true failed on this browser, retry with continuous = false
+                    if (recognition.continuous) {
+                        try {
+                            recognition.continuous = false;
+                            recognition.start();
+                            this.isRecording = true;
+                            return;
+                        } catch(e) {}
+                    }
+
+                    if (this._userWantsRecording) {
+                        this._restartTimeout = setTimeout(function() {
+                            if (self._userWantsRecording) {
+                                self._startRecognitionInstance();
+                            }
+                        }, 500);
+                    } else {
+                        this.isRecording = false;
+                    }
                 }
             },
+
             stop: function() {
+                this._userWantsRecording = false;
                 this.isRecording = false;
+
+                if (this._restartTimeout) {
+                    clearTimeout(this._restartTimeout);
+                    this._restartTimeout = null;
+                }
+
                 if (this.recognition) {
-                    try { this.recognition.stop(); } catch(e){}
+                    try {
+                        this.recognition.onend = null;
+                        this.recognition.onerror = null;
+                        this.recognition.stop();
+                    } catch(e) {}
                     this.recognition = null;
                 }
+
+                this._stopMediaRecorderFallback();
+
+                if (this._currentSessionTranscript) {
+                    this._accumulatedTranscript = (this._accumulatedTranscript ? this._accumulatedTranscript + ' ' : '') + this._currentSessionTranscript;
+                    this._currentSessionTranscript = "";
+                    this.transcript = this._accumulatedTranscript.trim();
+                }
             },
+
             getTranscript: function() {
                 return this.transcript || "";
+            },
+
+            _startMediaRecorderFallback: function() {
+                var self = this;
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    this.isRecording = false;
+                    this._userWantsRecording = false;
+                    var msg = "مرورگر شما از قابلیت ضبط صدا پشتیبانی نمی‌کند.";
+                    if (!this._checkSecureContext()) {
+                        msg += "\n(به دلیل استفاده از HTTP، دسترسی به میکروفون مسدود است.)";
+                    }
+                    alert(msg);
+                    return;
+                }
+
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(function(stream) {
+                        self.mediaStream = stream;
+                        self._recordedChunks = [];
+                        try {
+                            var mimeType = '';
+                            if (typeof MediaRecorder !== 'undefined') {
+                                if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm')) {
+                                    mimeType = 'audio/webm';
+                                } else if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/mp4')) {
+                                    mimeType = 'audio/mp4';
+                                }
+                                self.mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream);
+                            }
+                        } catch(e) {
+                            console.warn("[aiSpeakingSpeech] MediaRecorder creation failed", e);
+                        }
+
+                        if (self.mediaRecorder) {
+                            self.mediaRecorder.ondataavailable = function(e) {
+                                if (e.data && e.data.size > 0) {
+                                    self._recordedChunks.push(e.data);
+                                }
+                            };
+                            self.mediaRecorder.onstop = function() {
+                                self.isRecording = false;
+                            };
+                            self.mediaRecorder.start(500);
+                        }
+                        self.isRecording = true;
+                    })
+                    .catch(function(err) {
+                        console.error("[aiSpeakingSpeech] MediaRecorder getUserMedia failed:", err);
+                        self.isRecording = false;
+                        self._userWantsRecording = false;
+                        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                            alert("دسترسی به میکروفون داده نشد. لطفاً در تنظیمات مرورگر اجازه دسترسی به میکروفون را فعال کنید.");
+                        }
+                    });
+            },
+
+            _stopMediaRecorderFallback: function() {
+                if (this.mediaRecorder) {
+                    try {
+                        if (this.mediaRecorder.state !== 'inactive') {
+                            this.mediaRecorder.stop();
+                        }
+                    } catch(e) {}
+                    this.mediaRecorder = null;
+                }
+                if (this.mediaStream) {
+                    try {
+                        this.mediaStream.getTracks().forEach(function(track) { track.stop(); });
+                    } catch(e) {}
+                    this.mediaStream = null;
+                }
             }
         };
     </script>

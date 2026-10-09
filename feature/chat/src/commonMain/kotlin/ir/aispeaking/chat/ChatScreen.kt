@@ -44,17 +44,20 @@ fun ChatScreen(
         else -> 0
     }
 
+    val bottomAnchorIndex = uiState.chats.size
+
     LaunchedEffect(uiState.chats.size, lastChatUid) {
         if (uiState.chats.isNotEmpty()) {
-            listState.animateScrollToItem(uiState.chats.size - 1)
+            listState.animateScrollToItem(bottomAnchorIndex)
         }
     }
 
     LaunchedEffect(lastChatMessageLength) {
         if (uiState.chats.isNotEmpty()) {
-            listState.scrollToItem(uiState.chats.size - 1)
+            listState.scrollToItem(bottomAnchorIndex, scrollOffset = 10000)
         }
     }
+
 
     AsyncStageBackground(
         backgroundUrl = uiState.stage?.backgroundUrl,
@@ -139,6 +142,11 @@ fun ChatScreen(
                                 }
                             }
                         }
+                    }
+
+                    // Bottom anchor spacer to ensure scrolling reaches the very end of messages
+                    item(key = "bottom_anchor") {
+                        Spacer(modifier = Modifier.height(20.dp))
                     }
                 }
 

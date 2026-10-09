@@ -102,17 +102,19 @@ data class HintResponseDto(
 )
 
 @Serializable
-data class EvaluationRequestDto(
-    val hintsUsedCount: Int,
-    val turnsCount: Int,
-    val transcript: List<ChatMessageDto>
-)
-
-@Serializable
 data class GrammarErrorDto(
     val original: String,
     val correction: String,
     val explanationFa: String
+)
+
+@Serializable
+data class EvaluationRequestDto(
+    val hintsUsedCount: Int,
+    val turnsCount: Int,
+    val grammarErrorsCount: Int = 0,
+    val grammarErrors: List<GrammarErrorDto> = emptyList(),
+    val transcript: List<ChatMessageDto>
 )
 
 @Serializable

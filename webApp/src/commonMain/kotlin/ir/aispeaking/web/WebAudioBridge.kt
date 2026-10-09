@@ -56,29 +56,67 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
         }
 
         var recordJob: Job? = null
+        var currentOnSpeech: ((String) -> Unit)? = null
+
         controller.onPlatformStartRecording = { onSpeech, onSilence ->
             recordJob?.cancel()
+            currentOnSpeech = onSpeech
             jsStartSpeech()
             recordJob = bridgeScope.launch {
                 var lastText = ""
-                while (jsIsSpeechRecording()) {
-                    delay(200)
+
+                // 1. Initialization grace period: wait for recording to start (e.g. during mic permission prompt or initialization)
+                var graceElapsedMs = 0
+                val maxGraceMs = 3000
+                while (!jsIsSpeechRecording() && graceElapsedMs < maxGraceMs && isActive) {
+                    delay(100)
+                    graceElapsedMs += 100
+                }
+
+                // If recording failed to start (e.g. permission denied or unsupported), notify controller and exit
+                if (!jsIsSpeechRecording()) {
+                    onSilence()
+                    return@launch
+                }
+
+                // 2. Active recording loop: poll transcript while recording is active
+                while (isActive) {
+                    if (!jsIsSpeechRecording()) {
+                        // Short grace check to absorb momentary restarts between utterances
+                        delay(250)
+                        if (!jsIsSpeechRecording()) {
+                            break
+                        }
+                    }
+
+                    delay(150)
                     val currentText = jsGetSpeechTranscript()
                     if (currentText.isNotEmpty() && currentText != lastText) {
                         lastText = currentText
                         onSpeech(currentText)
                     }
                 }
+
+                // 3. Flush any final transcript accumulated
                 val finalText = jsGetSpeechTranscript()
                 if (finalText.isNotEmpty() && finalText != lastText) {
                     onSpeech(finalText)
                 }
+
+                // 4. Notify silence / stop if recording finished naturally or by browser
+                onSilence()
             }
         }
 
         controller.onPlatformStopRecording = {
-            recordJob?.cancel()
             jsStopSpeech()
+            val finalText = jsGetSpeechTranscript()
+            if (finalText.isNotEmpty()) {
+                currentOnSpeech?.invoke(finalText)
+            }
+            recordJob?.cancel()
+            recordJob = null
+            currentOnSpeech = null
         }
     } catch (_: Throwable) {
         // Fallback gracefully on non-browser / test runs

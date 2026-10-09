@@ -75,6 +75,63 @@ class EvaluationRoutingTest {
             val body = evalResponse.bodyAsText()
             assertTrue(body.contains("starsEarned"))
             assertTrue(body.contains("feedbackFa"))
+            val parsed = Json.decodeFromString<ir.speaking.core.response.SuccessResponse<ir.speaking.feature.stage_progress.dto.EvaluationResponse>>(body)
+            assertEquals(3, parsed.data?.starsEarned)
+            assertEquals(0, parsed.data?.grammarErrorsCount)
         }
+
+        // 3. Test POST evaluate with client-provided grammar errors
+        val evalReqWithErrors = EvaluationRequest(
+            hintsUsedCount = 0,
+            turnsCount = 4,
+            grammarErrorsCount = 2,
+            grammarErrors = listOf(
+                ir.speaking.feature.stage_progress.dto.GrammarErrorItem(
+                    original = "I wants pasta",
+                    correction = "I want pasta",
+                    explanationFa = "اشکال در فاعل و فعل"
+                ),
+                ir.speaking.feature.stage_progress.dto.GrammarErrorItem(
+                    original = "I flying tomorrow",
+                    correction = "I am flying tomorrow",
+                    explanationFa = "اشکال در زمان استمراری"
+                )
+            ),
+            transcript = listOf(
+                EvaluationTranscriptItem("Model", "Hello!"),
+                EvaluationTranscriptItem("User", "I wants pasta")
+            )
+        )
+        val evalResponseErrors = client.post("/api/v2/stages/stage-01-inflight-london/evaluate") {
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(evalReqWithErrors))
+        }
+        assertEquals(HttpStatusCode.OK, evalResponseErrors.status)
+        val bodyErrors = evalResponseErrors.bodyAsText()
+        val parsedErrors = Json.decodeFromString<ir.speaking.core.response.SuccessResponse<ir.speaking.feature.stage_progress.dto.EvaluationResponse>>(bodyErrors)
+        assertEquals(2, parsedErrors.data?.grammarErrorsCount)
+        assertEquals(1, parsedErrors.data?.starsEarned) // 2 penalties = 1 star
+        assertEquals(2, parsedErrors.data?.totalPenalties)
+        assertEquals(2, parsedErrors.data?.grammarErrors?.size)
+
+        // 4. Test POST evaluate with transcript ESL error fallback ("i would to")
+        val evalReqEsl = EvaluationRequest(
+            hintsUsedCount = 0,
+            turnsCount = 2,
+            transcript = listOf(
+                EvaluationTranscriptItem("Model", "Welcome!"),
+                EvaluationTranscriptItem("User", "I would to order chicken")
+            )
+        )
+        val evalResponseEsl = client.post("/api/v2/stages/stage-01-inflight-london/evaluate") {
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(evalReqEsl))
+        }
+        assertEquals(HttpStatusCode.OK, evalResponseEsl.status)
+        val bodyEsl = evalResponseEsl.bodyAsText()
+        val parsedEsl = Json.decodeFromString<ir.speaking.core.response.SuccessResponse<ir.speaking.feature.stage_progress.dto.EvaluationResponse>>(bodyEsl)
+        assertEquals(1, parsedEsl.data?.grammarErrorsCount)
+        assertEquals(2, parsedEsl.data?.starsEarned) // 1 penalty = 2 stars
+        assertTrue(parsedEsl.data?.grammarErrors?.isNotEmpty() == true)
     }
 }

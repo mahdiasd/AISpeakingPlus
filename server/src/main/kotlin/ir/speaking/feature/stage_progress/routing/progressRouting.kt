@@ -52,27 +52,71 @@ fun Application.progressRouting() {
                         EvaluationRequest()
                     }
 
-                    // Heuristic grammar check on transcript if present
+                    // Heuristic grammar check on transcript if present, combined with client detected errors
                     val grammarErrors = mutableListOf<GrammarErrorItem>()
+                    grammarErrors.addAll(request.grammarErrors)
+
                     for (item in request.transcript) {
                         if (item.role.equals("User", ignoreCase = true)) {
+                            if (grammarErrors.any { it.original.equals(item.content, ignoreCase = true) }) {
+                                continue
+                            }
                             val text = item.content.lowercase()
-                            if (text.contains("i wants") || text.contains("i flying")) {
-                                grammarErrors.add(
-                                    GrammarErrorItem(
-                                        original = item.content,
-                                        correction = item.content.replace("i wants", "I want", ignoreCase = true)
-                                            .replace("i flying", "I am flying", ignoreCase = true),
-                                        explanationFa = "برای زمان حال استمراری فعل کمکی am و برای فاعل I فعل بدون s نیاز است."
-                                    )
+                            val errorItem = when {
+                                text.contains("i wants") -> GrammarErrorItem(
+                                    original = item.content,
+                                    correction = item.content.replace("i wants", "I want", ignoreCase = true),
+                                    explanationFa = "اشکال در فاعل و فعل: برای ضمیر «I» از فعل ساده بدون s استفاده کنید: I want"
                                 )
+                                text.contains("i flying") || text.contains("i going") || text.contains("i travelling") || text.contains("i studying") -> GrammarErrorItem(
+                                    original = item.content,
+                                    correction = item.content
+                                        .replace("i flying", "I am flying", ignoreCase = true)
+                                        .replace("i going", "I am going", ignoreCase = true)
+                                        .replace("i travelling", "I am travelling", ignoreCase = true)
+                                        .replace("i studying", "I am studying", ignoreCase = true),
+                                    explanationFa = "اشکال در زمان استمراری: بعد از «I» باید فعل کمکی «am» قرار گیرد: I am flying / I am going"
+                                )
+                                text.contains("he want ") || text.contains("she want ") -> GrammarErrorItem(
+                                    original = item.content,
+                                    correction = item.content
+                                        .replace("he want ", "He wants ", ignoreCase = true)
+                                        .replace("she want ", "She wants ", ignoreCase = true),
+                                    explanationFa = "اشکال در سوم‌شخص: برای «he / she» فعل باید با s بیاید: He wants / She wants"
+                                )
+                                text.contains("they is") || text.contains("we is") -> GrammarErrorItem(
+                                    original = item.content,
+                                    correction = item.content
+                                        .replace("they is", "They are", ignoreCase = true)
+                                        .replace("we is", "We are", ignoreCase = true),
+                                    explanationFa = "اشکال در تطابق فاعل و فعل: برای فاعل جمع از «are» استفاده کنید: They are / We are"
+                                )
+                                text.contains("i would to") || text.contains("would like to order of") -> GrammarErrorItem(
+                                    original = item.content,
+                                    correction = item.content
+                                        .replace("i would to", "I would like to", ignoreCase = true)
+                                        .replace("would like to order of", "would like to order", ignoreCase = true),
+                                    explanationFa = "اشکال ساختار: بعد از «would like» شکل ساده فعل می‌آید: I would like to order"
+                                )
+                                text.contains("give me food") || text.contains("give me chicken") -> GrammarErrorItem(
+                                    original = item.content,
+                                    correction = item.content
+                                        .replace("give me food", "I would like to have the food", ignoreCase = true)
+                                        .replace("give me chicken", "I would like the chicken", ignoreCase = true),
+                                    explanationFa = "نکته کاربردی: در زبان انگلیسی برای سفارش غذا بهتر است از عبارات مودبانه مثل «I would like...» یا «Could I please have...» استفاده کنید."
+                                )
+                                else -> null
+                            }
+                            if (errorItem != null) {
+                                grammarErrors.add(errorItem)
                             }
                         }
                     }
 
+                    val totalGrammarErrors = maxOf(grammarErrors.size, request.grammarErrorsCount)
                     val objectiveCompleted = request.turnsCount >= 2 || request.transcript.size >= 2
                     val rubricResult = rubricService.calculateRubric(
-                        grammarErrorsCount = grammarErrors.size,
+                        grammarErrorsCount = totalGrammarErrors,
                         hintsUsedCount = request.hintsUsedCount,
                         objectiveCompleted = objectiveCompleted
                     )
@@ -99,7 +143,7 @@ fun Application.progressRouting() {
                     val response = EvaluationResponse(
                         stageId = stageId,
                         objectiveCompleted = objectiveCompleted,
-                        grammarErrorsCount = grammarErrors.size,
+                        grammarErrorsCount = totalGrammarErrors,
                         hintsUsedCount = request.hintsUsedCount,
                         totalPenalties = rubricResult.totalPenalties,
                         starsEarned = rubricResult.starsEarned,

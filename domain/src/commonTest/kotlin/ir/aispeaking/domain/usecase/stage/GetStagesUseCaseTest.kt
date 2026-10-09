@@ -76,7 +76,9 @@ class GetStagesUseCaseTest {
                 stageId: String,
                 hintsUsedCount: Int,
                 turnsCount: Int,
-                transcript: List<Pair<String, String>>
+                transcript: List<Pair<String, String>>,
+                grammarErrorsCount: Int,
+                grammarErrors: List<ir.aispeaking.domain.model.stage.GrammarErrorDetail>
             ): DataResult<ir.aispeaking.domain.model.stage.EvaluationSession> =
                 DataResult.Failure(ir.aispeaking.domain.model.error.NetworkError.Unknown())
         }
