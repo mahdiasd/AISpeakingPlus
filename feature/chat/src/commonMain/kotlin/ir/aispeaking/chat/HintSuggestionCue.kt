@@ -1,22 +1,36 @@
 package ir.aispeaking.chat
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ir.aispeaking.sharedui.Res
+import ir.aispeaking.sharedui.ic_close
+import ir.aispeaking.sharedui.ic_done
+import ir.aispeaking.sharedui.ic_lamp
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameChip
+import ir.aispeaking.sharedui.ui.game.GameText
 
+/** Suggestion card that slides in above the input after the learner asks for a hint. */
 @Composable
 fun HintSuggestionCue(
     visible: Boolean,
@@ -28,71 +42,68 @@ fun HintSuggestionCue(
 ) {
     AnimatedVisibility(
         visible = visible && !suggestionEn.isNullOrBlank(),
-        enter = slideInVertically(initialOffsetY = { it }),
-        exit = slideOutVertically(targetOffsetY = { it }),
+        enter = slideInVertically(tween(240)) { it / 2 } + fadeIn(tween(200)),
+        exit = slideOutVertically(tween(180)) { it / 2 } + fadeOut(tween(150)),
         modifier = modifier
     ) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-            Card(
+            val shape = RoundedCornerShape(22.dp)
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                    .padding(horizontal = 12.dp)
+                    .background(Game.PanelSolid, shape)
+                    .border(1.dp, Game.Gold.copy(alpha = 0.6f), shape)
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "💡 راهنمای مکالمه:",
-                            color = Color(0xFFFBBF24),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        IconButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        Text(
-                            text = "\"${suggestionEn ?: ""}\"",
-                            color = Color(0xFF38BDF8),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = explanationFa ?: "",
-                        color = Color(0xFFCBD5E1),
-                        fontSize = 12.sp,
-                        lineHeight = 18.sp
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    GameChip(
+                        text = "جمله پیشنهادی",
+                        icon = Res.drawable.ic_lamp,
+                        accent = Game.Gold,
+                        active = true
                     )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Button(
-                        onClick = { suggestionEn?.let { onApplySuggestion(it) } },
-                        modifier = Modifier.align(Alignment.End),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1)),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                    ) {
-                        Text("قرار دادن در متن", fontSize = 12.sp)
-                    }
+                    GameChip(
+                        text = "بستن",
+                        icon = Res.drawable.ic_close,
+                        accent = Game.TextSecondary,
+                        onClick = onDismiss
+                    )
                 }
+
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    GameText(
+                        text = suggestionEn ?: "",
+                        size = 17.sp,
+                        lineHeight = 25.sp,
+                        latin = true,
+                        bold = true,
+                        color = Game.Sky,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                if (!explanationFa.isNullOrBlank()) {
+                    GameText(
+                        text = explanationFa,
+                        size = 13.sp,
+                        lineHeight = 21.sp,
+                        color = Game.TextSecondary
+                    )
+                }
+
+                GameChip(
+                    text = "استفاده از این جمله",
+                    icon = Res.drawable.ic_done,
+                    accent = Game.Mint,
+                    active = true,
+                    onClick = { suggestionEn?.let { onApplySuggestion(it) } }
+                )
             }
         }
     }

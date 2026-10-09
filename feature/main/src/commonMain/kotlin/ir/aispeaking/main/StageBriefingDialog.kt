@@ -1,191 +1,139 @@
 package ir.aispeaking.main
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import coil3.compose.AsyncImage
 import ir.aispeaking.domain.model.stage.Stage
 import ir.aispeaking.sharedui.Res
-import ir.aispeaking.sharedui.ic_user
-import org.jetbrains.compose.resources.painterResource
+import ir.aispeaking.sharedui.ic_play
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameAvatar
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
+import ir.aispeaking.sharedui.ui.game.GameModal
+import ir.aispeaking.sharedui.ui.game.GameText
 
+/** Mission briefing shown before a conversation starts: who, what happens, what to achieve. */
 @Composable
 fun StageBriefingDialog(
+    visible: Boolean = true,
     stage: Stage,
     onDismiss: () -> Unit,
     onStartMission: (Stage) -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1E2230)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Character Avatar & Name
-                    Box(
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF2C3248)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (!stage.characterAvatarUrl.isNullOrBlank()) {
-                            AsyncImage(
-                                model = stage.characterAvatarUrl,
-                                contentDescription = stage.characterName,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        } else {
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_user),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-                    }
+    GameModal(visible = visible, onDismiss = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState())
+                .padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            GameAvatar(
+                name = stage.characterName,
+                imageUrl = stage.characterAvatarUrl,
+                size = 72.dp,
+                ring = Game.Violet
+            )
+            GameText(
+                text = stage.titleFa,
+                size = 19.sp,
+                lineHeight = 28.sp,
+                bold = true,
+                align = TextAlign.Center
+            )
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                GameText(
+                    text = "با ${stage.characterName} صحبت می‌کنی",
+                    size = 13.sp,
+                    color = Game.TextSecondary,
+                    align = TextAlign.Center
+                )
+            }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+            InfoBlock(
+                title = "هدف تو",
+                accent = Game.Mint,
+                body = stage.targetObjectiveFa.ifBlank { stage.targetObjective },
+                latinHint = stage.targetObjective.takeIf { stage.targetObjectiveFa.isNotBlank() && it.isNotBlank() }
+            )
+            InfoBlock(
+                title = "ماجرا چیست؟",
+                accent = Game.Gold,
+                body = stage.briefingFa
+            )
+        }
 
-                    Text(
-                        text = stage.titleFa,
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
+        // Actions stay pinned below the scrolling story so they are always reachable.
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            GameButton(
+                text = "شروع گفتگو",
+                onClick = { onStartMission(stage) },
+                modifier = Modifier.fillMaxWidth(),
+                icon = Res.drawable.ic_play
+            )
+            GameButton(
+                text = "فعلاً نه",
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                style = GameButtonStyle.Glass,
+                height = 46.dp,
+                textSize = 14.sp
+            )
+        }
+    }
+}
 
-                    Text(
-                        text = "هم‌صحبت: ${stage.characterName}",
-                        color = Color(0xFF9FA8DA),
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Persian Scenario Briefing
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF272C3E)
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Text(
-                                text = "سناریو:",
-                                color = Color(0xFFFFD54F),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = stage.briefingFa,
-                                color = Color(0xFFE0E0E0),
-                                fontSize = 13.sp,
-                                lineHeight = 20.sp
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Target Mission Objective
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF1B3B2B)
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Text(
-                                text = "هدف ماموریت:",
-                                color = Color(0xFF81C784),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            if (stage.targetObjectiveFa.isNotBlank()) {
-                                Text(
-                                    text = stage.targetObjectiveFa,
-                                    color = Color(0xFFE8F5E9),
-                                    fontSize = 13.sp,
-                                    lineHeight = 19.sp
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                            }
-                            Text(
-                                text = stage.targetObjective,
-                                color = Color(0xFFC8E6C9),
-                                fontSize = 12.sp,
-                                lineHeight = 17.sp
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Actions
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color(0xFFB0BEC5)
-                            )
-                        ) {
-                            Text("انصراف", fontSize = 14.sp)
-                        }
-
-                        Button(
-                            onClick = { onStartMission(stage) },
-                            modifier = Modifier.weight(1.5f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF4CAF50),
-                                contentColor = Color.White
-                            )
-                        ) {
-                            Text("شروع مکالمه", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
+@Composable
+private fun InfoBlock(
+    title: String,
+    accent: androidx.compose.ui.graphics.Color,
+    body: String,
+    latinHint: String? = null
+) {
+    val shape = RoundedCornerShape(18.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(accent.copy(alpha = 0.1f), shape)
+            .border(1.dp, accent.copy(alpha = 0.35f), shape)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        GameText(text = title, size = 13.sp, bold = true, color = accent)
+        GameText(text = body, size = 13.sp, lineHeight = 22.sp)
+        if (latinHint != null) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                GameText(
+                    text = latinHint,
+                    size = 12.sp,
+                    lineHeight = 19.sp,
+                    latin = true,
+                    color = Game.TextSecondary,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }

@@ -1,18 +1,15 @@
 package ir.aispeaking.main
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -24,54 +21,49 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import ir.aispeaking.domain.model.stage.AccessTier
 import ir.aispeaking.domain.model.stage.Stage
+import ir.aispeaking.domain.model.stage.StageLockStatus
 import ir.aispeaking.sharedui.Res
-import ir.aispeaking.sharedui.ic_close
 import ir.aispeaking.sharedui.ic_crown
 import ir.aispeaking.sharedui.ic_history
 import ir.aispeaking.sharedui.ic_play
-import ir.aispeaking.sharedui.ic_points
 import ir.aispeaking.sharedui.ic_profile
 import ir.aispeaking.sharedui.ic_star
-import ir.aispeaking.sharedui.ic_star_outline
 import ir.aispeaking.sharedui.ui.component.AsyncStageBackground
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameAvatar
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
+import ir.aispeaking.sharedui.ui.game.GameChip
+import ir.aispeaking.sharedui.ui.game.GameIconButton
+import ir.aispeaking.sharedui.ui.game.GameStars
+import ir.aispeaking.sharedui.ui.game.GameStatPill
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.GlassPanel
+import ir.aispeaking.sharedui.ui.game.fa
 import ir.aispeaking.sharedui.utils.lifecycle.OnResume
-import androidx.compose.runtime.LaunchedEffect
-import org.jetbrains.compose.resources.painterResource
+import kotlinx.coroutines.delay
 
 @Composable
 fun JourneyMapScreen(
@@ -98,426 +90,146 @@ fun JourneyMapScreen(
             onNavigateToSubscription()
         }
     }
-    val currentStage = uiState.currentStage
 
-    val infiniteTransition = rememberInfiniteTransition(label = "screen_animations")
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.03f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "hero_pulse"
-    )
-    val starPulseScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.12f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(900, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "star_pulse"
-    )
+    // Keep the last stage around so overlays can animate out instead of disappearing.
+    var briefingStage by remember { mutableStateOf<Stage?>(null) }
+    LaunchedEffect(uiState.selectedStageForBriefing) {
+        uiState.selectedStageForBriefing?.let { briefingStage = it }
+    }
+    var registerStage by remember { mutableStateOf<Stage?>(null) }
+    LaunchedEffect(uiState.selectedStageForRegister) {
+        uiState.selectedStageForRegister?.let { registerStage = it }
+    }
+
+    LaunchedEffect(uiState.snackbarMessage) {
+        if (uiState.snackbarMessage != null) {
+            delay(3500)
+            viewModel.clearSnackbar()
+        }
+    }
+
+    val currentStage = uiState.currentStage
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(Color(0xFF070B19))
+                .background(Game.Ink)
         ) {
-            if (uiState.isLoading && currentStage == null) {
-                // Loading indicator
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator(
-                        color = Color(0xFFFFD700),
-                        strokeWidth = 3.dp,
-                        modifier = Modifier.size(44.dp)
-                    )
-                    Spacer(modifier = Modifier.height(14.dp))
-                    Text(
-                        text = "در حال بارگذاری مرحله...",
-                        color = Color(0xFFA5B4FC),
-                        fontSize = 14.sp
+            when {
+                uiState.isLoading && currentStage == null -> {
+                    CenterMessage(loading = true, text = "در حال بارگذاری ماجراجویی…")
+                }
+
+                currentStage == null -> {
+                    CenterMessage(
+                        loading = false,
+                        text = "مرحله‌ها بارگذاری نشدند. اتصال اینترنت را بررسی کن.",
+                        actionText = "تلاش دوباره",
+                        onAction = { viewModel.refreshStages() }
                     )
                 }
-            } else {
-                // 1. Fullscreen Stage Artwork Background
-                AsyncStageBackground(
-                    backgroundUrl = currentStage?.backgroundUrl,
-                    modifier = Modifier.fillMaxSize(),
-                    enableFrostedGlass = false
-                ) {
-                    // Soft Top Gradient (contrast for top header bar)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp)
-                            .align(Alignment.TopCenter)
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color(0xCC070B19),
-                                        Color(0x55070B19),
-                                        Color.Transparent
-                                    )
-                                )
-                            )
-                    )
 
-                    // Soft Bottom Scrim (subtle contrast for bottom controls, leaves center 100% visible)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(0.45f)
-                            .align(Alignment.BottomCenter)
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        Color(0x55070B19),
-                                        Color(0xCC070B19),
-                                        Color(0xEE070B19)
-                                    )
-                                )
-                            )
-                    )
-
-                    // 2. Top Header Bar (Stars & Subscription)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .statusBarsPadding()
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
-                            .align(Alignment.TopCenter),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                else -> {
+                    AsyncStageBackground(
+                        backgroundUrl = currentStage.backgroundUrl,
+                        modifier = Modifier.fillMaxSize(),
+                        enableFrostedGlass = false
                     ) {
-                        // Total Stars Badge
+                        // Top and bottom scrims keep the HUD readable; the artwork stays the hero.
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(22.dp))
-                                .background(Color(0xCC0F172A))
-                                .border(
-                                    width = 1.5.dp,
-                                    brush = Brush.horizontalGradient(
-                                        listOf(Color(0xFFFFD700), Color(0xFFF59E0B))
-                                    ),
-                                    shape = RoundedCornerShape(22.dp)
+                                .fillMaxWidth()
+                                .height(150.dp)
+                                .align(Alignment.TopCenter)
+                                .background(
+                                    Brush.verticalGradient(listOf(Game.ScrimTop, Color.Transparent))
                                 )
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.ic_star),
-                                    contentDescription = null,
-                                    tint = Color(0xFFFFD700),
-                                    modifier = Modifier
-                                        .size(16.dp)
-                                        .scale(starPulseScale)
-                                )
-                                Text(
-                                    text = "${uiState.totalStarsEarned} ستاره",
-                                    color = Color(0xFFFFD700),
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-
-                        // Subscription Badge and Profile Action Button
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            if (uiState.currentTier == AccessTier.SUBSCRIBER) {
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(22.dp))
-                                        .background(
-                                            Brush.horizontalGradient(
-                                                listOf(Color(0xFF7C3AED), Color(0xFF4F46E5))
-                                            )
-                                        )
-                                        .border(
-                                            width = 1.5.dp,
-                                            brush = Brush.horizontalGradient(
-                                                listOf(Color(0xFFFFD700), Color(0xFFF59E0B))
-                                            ),
-                                            shape = RoundedCornerShape(22.dp)
-                                        )
-                                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(Res.drawable.ic_crown),
-                                            contentDescription = null,
-                                            tint = Color(0xFFFFD700),
-                                            modifier = Modifier.size(15.dp)
-                                        )
-                                        Text(
-                                            text = "اشتراک ویژه",
-                                            color = Color.White,
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                            } else {
-                                // Clickable CTA leading to Subscription Paywall
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(22.dp))
-                                        .shadow(
-                                            elevation = 8.dp,
-                                            shape = RoundedCornerShape(22.dp),
-                                            spotColor = Color(0xFFFF5252)
-                                        )
-                                        .background(
-                                            Brush.horizontalGradient(
-                                                listOf(Color(0xFFFF9F43), Color(0xFFFF5252))
-                                            )
-                                        )
-                                        .border(
-                                            width = 1.dp,
-                                            color = Color(0x66FFFFFF),
-                                            shape = RoundedCornerShape(22.dp)
-                                        )
-                                        .clickable { onNavigateToSubscription() }
-                                        .padding(horizontal = 14.dp, vertical = 7.dp)
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(Res.drawable.ic_crown),
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(15.dp)
-                                        )
-                                        Text(
-                                            text = "خرید اشتراک",
-                                            color = Color.White,
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Profile Action Button
-                            Box(
-                                modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xCC0F172A))
-                                    .border(
-                                        width = 1.5.dp,
-                                        color = Color(0x446366F1),
-                                        shape = CircleShape
-                                    )
-                                    .clickable { onNavigateToProfile() },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.ic_profile),
-                                    contentDescription = "Profile",
-                                    tint = Color(0xFFA5B4FC),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    // Indicator if inspecting a past stage
-                    if (uiState.isViewingPastStage) {
+                        )
                         Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(0.5f)
+                                .align(Alignment.BottomCenter)
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(Color.Transparent, Color(0x99050816), Game.ScrimBottom)
+                                    )
+                                )
+                        )
+
+                        TopHud(
+                            totalStars = uiState.totalStarsEarned,
+                            isSubscriber = uiState.currentTier == AccessTier.SUBSCRIBER,
+                            onProfile = onNavigateToProfile,
+                            onSubscribe = onNavigateToSubscription,
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
                                 .statusBarsPadding()
-                                .padding(top = 58.dp)
-                                .clip(RoundedCornerShape(18.dp))
-                                .background(Color(0xEE1E293B))
-                                .border(1.dp, Color(0xFF6366F1), RoundedCornerShape(18.dp))
-                                .clickable { viewModel.resetToActiveStage() }
-                                .padding(horizontal = 14.dp, vertical = 5.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.ic_history),
-                                    contentDescription = null,
-                                    tint = Color(0xFFA5B4FC),
-                                    modifier = Modifier.size(13.dp)
-                                )
-                                Text(
-                                    text = "مرور مرحله گذشته",
-                                    color = Color(0xFFA5B4FC),
-                                    fontSize = 11.sp
-                                )
-                                Text(
-                                    text = "✕ بازگشت",
-                                    color = Color(0xFFFFD700),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
+                        )
 
-                    // 3. Bottom Controls Area (Clean Title Card + Action Buttons)
-                    if (currentStage != null) {
-                        Column(
+                        AnimatedVisibility(
+                            visible = uiState.isViewingPastStage,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .statusBarsPadding()
+                                .padding(top = 64.dp),
+                            enter = fadeIn() + slideInVertically { -it / 2 },
+                            exit = fadeOut() + slideOutVertically { -it / 2 }
+                        ) {
+                            GameChip(
+                                text = "در حال مرور مرحله قبلی · بازگشت به مرحله فعلی",
+                                icon = Res.drawable.ic_history,
+                                accent = Game.Sky,
+                                container = Game.Panel,
+                                active = true,
+                                onClick = { viewModel.resetToActiveStage() }
+                            )
+                        }
+
+                        StageCard(
+                            stage = currentStage,
+                            stageNumber = currentStage.orderIndex,
+                            totalStages = uiState.stages.size,
+                            isReplay = uiState.isViewingPastStage,
+                            pastCount = uiState.pastStages.size,
+                            onStart = { viewModel.onStartCurrentStage() },
+                            onOpenList = onNavigateToStagesList,
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
                                 .navigationBarsPadding()
-                                .padding(horizontal = 24.dp)
-                                .padding(bottom = 18.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            // Stage Persian Title Card (Clean & frosted, does not obstruct artwork)
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(Color(0xB30F172A))
-                                    .border(
-                                        width = 1.dp,
-                                        color = Color(0x33FFFFFF),
-                                        shape = RoundedCornerShape(18.dp)
-                                    )
-                                    .padding(horizontal = 20.dp, vertical = 10.dp)
-                            ) {
-                                Text(
-                                    text = currentStage.titleFa,
-                                    color = Color.White,
-                                    fontSize = 17.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(14.dp))
-
-                            // Hero Button: "شروع مرحله" (Eye-catching, 2D game-button style, well-proportioned)
-                            Button(
-                                onClick = { viewModel.onStartCurrentStage() },
-                                modifier = Modifier
-                                    .widthIn(max = 320.dp)
-                                    .fillMaxWidth(0.88f)
-                                    .height(50.dp)
-                                    .scale(pulseScale)
-                                    .shadow(
-                                        elevation = 12.dp,
-                                        shape = RoundedCornerShape(25.dp),
-                                        spotColor = Color(0xFF00C896),
-                                        ambientColor = Color(0xFF00C896)
-                                    ),
-                                shape = RoundedCornerShape(25.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Transparent
-                                ),
-                                contentPadding = PaddingValues(0.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(
-                                            Brush.verticalGradient(
-                                                listOf(
-                                                    Color(0xFF00E5A3),
-                                                    Color(0xFF00A86B)
-                                                )
-                                            )
-                                        )
-                                        .border(
-                                            width = 1.5.dp,
-                                            color = Color(0x66FFFFFF),
-                                            shape = RoundedCornerShape(25.dp)
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(Res.drawable.ic_play),
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                        Text(
-                                            text = if (uiState.isViewingPastStage) "تکرار مرحله" else "شروع مرحله",
-                                            color = Color.White,
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.ExtraBold
-                                        )
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            // Secondary Link: "لیست و سوابق مراحل" (Full screen navigation)
-                            TextButton(
-                                onClick = { onNavigateToStagesList() },
-                                modifier = Modifier.height(36.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.ic_history),
-                                        contentDescription = null,
-                                        tint = Color(0xFFA5B4FC),
-                                        modifier = Modifier.size(15.dp)
-                                    )
-                                    Text(
-                                        text = "لیست و سوابق مراحل",
-                                        color = Color(0xFFA5B4FC),
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    if (uiState.pastStages.isNotEmpty()) {
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(CircleShape)
-                                                .background(Color(0x556366F1))
-                                                .padding(horizontal = 6.dp, vertical = 1.dp)
-                                        ) {
-                                            Text(
-                                                text = "${uiState.pastStages.size}",
-                                                color = Color.White,
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        )
                     }
                 }
             }
 
-            // Briefing Dialog
-            uiState.selectedStageForBriefing?.let { stage ->
+            // Toast
+            AnimatedVisibility(
+                visible = uiState.snackbarMessage != null,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 66.dp, start = 16.dp, end = 16.dp),
+                enter = fadeIn() + slideInVertically { -it },
+                exit = fadeOut() + slideOutVertically { -it }
+            ) {
+                GlassPanel(
+                    shape = RoundedCornerShape(18.dp),
+                    color = Game.PanelSolid,
+                    border = Game.Sky.copy(alpha = 0.6f)
+                ) {
+                    GameText(
+                        text = uiState.snackbarMessage ?: "",
+                        size = 13.sp,
+                        lineHeight = 20.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
+                }
+            }
+
+            briefingStage?.let { stage ->
                 StageBriefingDialog(
+                    visible = uiState.selectedStageForBriefing != null,
                     stage = stage,
                     onDismiss = { viewModel.dismissBriefing() },
                     onStartMission = {
@@ -527,29 +239,176 @@ fun JourneyMapScreen(
                 )
             }
 
-            // Register BottomSheet
-            uiState.selectedStageForRegister?.let { stage ->
+            registerStage?.let { stage ->
                 RegisterBottomSheet(
+                    visible = uiState.selectedStageForRegister != null,
                     stage = stage,
                     onDismiss = { viewModel.dismissRegister() },
                     onRegisterSuccess = { viewModel.onRegisterSuccess() }
                 )
             }
+        }
+    }
+}
 
-            // Snackbar
-            uiState.snackbarMessage?.let { message ->
-                Snackbar(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp),
-                    action = {
-                        TextButton(onClick = { viewModel.clearSnackbar() }) {
-                            Text("متوجه شدم", color = Color.White)
-                        }
-                    }
-                ) {
-                    Text(message)
+@Composable
+private fun TopHud(
+    totalStars: Int,
+    isSubscriber: Boolean,
+    onProfile: () -> Unit,
+    onSubscribe: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        GameIconButton(
+            icon = Res.drawable.ic_profile,
+            onClick = onProfile,
+            contentDescription = "پروفایل من"
+        )
+        GameStatPill(
+            text = "${totalStars.fa()} ستاره",
+            icon = Res.drawable.ic_star,
+            accent = Game.Gold
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        if (isSubscriber) {
+            GameStatPill(
+                text = "اشتراک ویژه",
+                icon = Res.drawable.ic_crown,
+                accent = Game.Violet
+            )
+        } else {
+            GameButton(
+                text = "اشتراک ویژه",
+                onClick = onSubscribe,
+                modifier = Modifier.width(140.dp),
+                style = GameButtonStyle.Gold,
+                icon = Res.drawable.ic_crown,
+                height = 40.dp,
+                textSize = 13.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun StageCard(
+    stage: Stage,
+    stageNumber: Int,
+    totalStages: Int,
+    isReplay: Boolean,
+    pastCount: Int,
+    onStart: () -> Unit,
+    onOpenList: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val stars = stage.userProgress?.stars ?: 0
+    val (ctaText, ctaStyle) = when (stage.lockStatus) {
+        StageLockStatus.UNLOCKED -> (if (isReplay || stars > 0) "تکرار مرحله" else "شروع مرحله") to GameButtonStyle.Primary
+        StageLockStatus.LOCKED_REGISTRATION -> "ورود و باز کردن مرحله" to GameButtonStyle.Violet
+        StageLockStatus.LOCKED_SUBSCRIPTION -> "باز کردن با اشتراک" to GameButtonStyle.Gold
+        StageLockStatus.LOCKED_PREVIOUS_STAGE -> "ابتدا مرحله قبل را تمام کن" to GameButtonStyle.Glass
+    }
+
+    GlassPanel(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 12.dp),
+        shape = RoundedCornerShape(30.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                GameText(
+                    text = "مرحله ${stageNumber.fa()} از ${totalStages.fa()}",
+                    size = 12.sp,
+                    bold = true,
+                    color = Game.Mint
+                )
+                GameStars(stars = stars, size = 22.dp, spacing = 2.dp)
+            }
+
+            GameText(
+                text = stage.titleFa,
+                size = 19.sp,
+                lineHeight = 28.sp,
+                bold = true,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                GameAvatar(
+                    name = stage.characterName,
+                    imageUrl = stage.characterAvatarUrl,
+                    size = 28.dp
+                )
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    GameText(
+                        text = stage.characterName,
+                        size = 13.sp,
+                        latin = true,
+                        color = Game.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
+            }
+
+            GameButton(
+                text = ctaText,
+                onClick = onStart,
+                modifier = Modifier.fillMaxWidth(),
+                style = ctaStyle,
+                icon = if (stage.lockStatus == StageLockStatus.UNLOCKED) Res.drawable.ic_play else null
+            )
+
+            GameButton(
+                text = if (pastCount > 0) "همه مرحله‌ها و پیشرفت (${pastCount.fa()} انجام شده)" else "همه مرحله‌ها و پیشرفت",
+                onClick = onOpenList,
+                modifier = Modifier.fillMaxWidth(),
+                style = GameButtonStyle.Glass,
+                height = 44.dp,
+                textSize = 13.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun CenterMessage(
+    loading: Boolean,
+    text: String,
+    actionText: String? = null,
+    onAction: () -> Unit = {}
+) {
+    Box(modifier = Modifier.fillMaxSize().background(Game.FallbackBackground), contentAlignment = Alignment.Center) {
+        Column(
+            modifier = Modifier.padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            if (loading) {
+                CircularProgressIndicator(color = Game.Gold, strokeWidth = 3.dp, modifier = Modifier.size(44.dp))
+            }
+            GameText(text = text, size = 15.sp, lineHeight = 24.sp, color = Game.TextSecondary, align = TextAlign.Center)
+            if (actionText != null) {
+                GameButton(text = actionText, onClick = onAction, modifier = Modifier.width(200.dp))
             }
         }
     }
@@ -559,21 +418,25 @@ fun JourneyMapScreen(
 
 @androidx.compose.ui.tooling.preview.Preview
 @Composable
-private fun JourneyMapScreenPreview() {
+private fun JourneyMapPreview() {
     ir.aispeaking.sharedui.ui.them.AppTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF0F172A)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "پیش‌نمایش نقشه سفر ماجراجویی",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
+        Box(modifier = Modifier.fillMaxSize().background(Game.Ink)) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                StageCard(
+                    stage = Stage(
+                        id = "1", orderIndex = 1, title = "In-flight", titleFa = "پرواز به سوی آینده",
+                        briefing = "", briefingFa = "", targetObjective = "", backgroundUrl = "",
+                        characterName = "Flight Attendant Emily"
+                    ),
+                    stageNumber = 1,
+                    totalStages = 15,
+                    isReplay = false,
+                    pastCount = 0,
+                    onStart = {},
+                    onOpenList = {},
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
+            }
         }
     }
 }
-

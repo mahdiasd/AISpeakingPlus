@@ -1,25 +1,61 @@
 package ir.aispeaking.chat
 
-import androidx.compose.animation.*
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ir.aispeaking.chat.component.AiChatItem
+import ir.aispeaking.chat.component.ChatBottomBar
+import ir.aispeaking.chat.component.ChatInputMode
+import ir.aispeaking.chat.component.ChatToolbar
+import ir.aispeaking.chat.component.UserChatItem
 import ir.aispeaking.domain.model.chat.Chat
+import ir.aispeaking.domain.model.stage.EvaluationSession
 import ir.aispeaking.sharedui.ui.component.AsyncStageBackground
-import ir.aispeaking.chat.component.*
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameAvatar
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.GlassPanel
 import ir.aispeaking.sharedui.ui.them.AppTheme
-import kotlinx.coroutines.delay
 
 @Composable
 fun ChatScreen(
@@ -31,6 +67,12 @@ fun ChatScreen(
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     var showHintConfirmDialog by remember { mutableStateOf(false) }
+    var showObjectiveSheet by remember { mutableStateOf(false) }
+    // Keep the last evaluation so the result card can animate out instead of vanishing.
+    var lastEvaluation by remember { mutableStateOf<EvaluationSession?>(null) }
+    LaunchedEffect(uiState.evaluationSession) {
+        uiState.evaluationSession?.let { lastEvaluation = it }
+    }
 
     LaunchedEffect(stageId) {
         viewModel.initStage(stageId)
@@ -58,201 +100,254 @@ fun ChatScreen(
         }
     }
 
+    val stage = uiState.stage
 
-    AsyncStageBackground(
-        backgroundUrl = uiState.stage?.backgroundUrl,
-        modifier = modifier
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        AsyncStageBackground(
+            backgroundUrl = stage?.backgroundUrl,
+            modifier = modifier,
+            enableFrostedGlass = false
         ) {
-            // Header Bar
-            ChatToolbar(
-                stage = uiState.stage,
-                isFinishing = uiState.isSubmittingEvaluation,
-                onBackClick = onNavigateBack,
-                onFinishConversationClick = { viewModel.submitEvaluation() }
-            )
-
-            // Conversation Messages Area
+            // Readability scrims; the middle of the artwork stays visible.
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            ) {
-                LazyColumn(
-                    state = listState,
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Game.ScrimTop,
+                            0.22f to Color(0x33050816),
+                            0.55f to Color(0x55050816),
+                            1f to Game.ScrimBottom
+                        )
+                    )
+            )
+
+            Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+                ChatToolbar(
+                    stage = stage,
+                    turnsCount = uiState.turnsCount,
+                    isFinishing = uiState.isSubmittingEvaluation,
+                    onBackClick = onNavigateBack,
+                    onObjectiveClick = { showObjectiveSheet = true },
+                    onFinishConversationClick = { viewModel.submitEvaluation() }
+                )
+
+                Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(vertical = 12.dp, horizontal = 4.dp)
+                        .weight(1f)
+                        .fillMaxWidth()
                 ) {
-                    items(
-                        items = uiState.chats,
-                        key = { it.uid }
-                    ) { chat ->
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            when (chat) {
-                                is Chat.User -> {
-                                    UserChatItem(
-                                        modifier = Modifier.align(Alignment.CenterEnd),
-                                        chat = chat,
-                                        onRetry = { viewModel.retrySendMessage() }
-                                    )
-                                }
+                    if (stage == null) {
+                        LoadingState(modifier = Modifier.align(Alignment.Center))
+                    } else {
+                        if (uiState.chats.isEmpty() && stage.initialSpeaker != "Model") {
+                            YourTurnState(
+                                characterName = stage.characterName,
+                                avatarUrl = stage.characterAvatarUrl,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
 
-                                is Chat.Ai -> {
-                                    AiChatItem(
-                                        modifier = Modifier
-                                            .fillMaxWidth(0.88f)
-                                            .align(Alignment.CenterStart),
-                                        chat = chat,
-                                        onPlayVoice = { viewModel.playAiVoice(chat.uid) },
-                                        onStopVoice = { viewModel.stopAiVoice(chat.uid) }
-                                    )
-                                }
-
-                                is Chat.WaitingForAi -> {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .align(Alignment.CenterStart)
-                                            .background(
-                                                color = AppTheme.colors.aiChatContainer.copy(alpha = 0.85f),
-                                                shape = RoundedCornerShape(16.dp)
+                        // Conversation reads left-to-right (English); the HUD around it is RTL.
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            LazyColumn(
+                                state = listState,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 12.dp),
+                                verticalArrangement = Arrangement.spacedBy(14.dp),
+                                contentPadding = PaddingValues(vertical = 12.dp)
+                            ) {
+                                items(
+                                    items = uiState.chats,
+                                    key = { it.uid }
+                                ) { chat ->
+                                    Box(modifier = Modifier.fillMaxWidth()) {
+                                        when (chat) {
+                                            is Chat.User -> UserChatItem(
+                                                modifier = Modifier.align(Alignment.CenterEnd),
+                                                chat = chat,
+                                                onRetry = { viewModel.retrySendMessage() }
                                             )
-                                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                                    ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(16.dp),
-                                            strokeWidth = 2.dp,
-                                            color = AppTheme.colors.primary
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "${uiState.stage?.characterName ?: "AI"} is typing...",
-                                            color = AppTheme.colors.onSurface.copy(alpha = 0.8f),
-                                            fontSize = 12.sp
-                                        )
+
+                                            is Chat.Ai -> AiChatItem(
+                                                modifier = Modifier
+                                                    .fillMaxWidth(0.94f)
+                                                    .align(Alignment.CenterStart),
+                                                chat = chat,
+                                                characterName = stage.characterName,
+                                                characterAvatarUrl = stage.characterAvatarUrl,
+                                                onPlayVoice = { viewModel.playAiVoice(chat.uid) },
+                                                onStopVoice = { viewModel.stopAiVoice(chat.uid) }
+                                            )
+
+                                            is Chat.WaitingForAi -> TypingBubble(
+                                                characterName = stage.characterName,
+                                                avatarUrl = stage.characterAvatarUrl,
+                                                modifier = Modifier.align(Alignment.CenterStart)
+                                            )
+                                        }
                                     }
+                                }
+
+                                // Bottom anchor to ensure scrolling reaches the very end of messages
+                                item(key = "bottom_anchor") {
+                                    Box(modifier = Modifier.height(8.dp))
                                 }
                             }
                         }
                     }
-
-                    // Bottom anchor spacer to ensure scrolling reaches the very end of messages
-                    item(key = "bottom_anchor") {
-                        Spacer(modifier = Modifier.height(20.dp))
-                    }
                 }
 
-                // Live Transcribed Text Bubble (Tooltip pointing down to mic)
-                val showBubbleVoiceText = uiState.inputMode == ChatInputMode.VOICE && uiState.messageText.isNotBlank()
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = showBubbleVoiceText,
-                    modifier = Modifier
-                        .fillMaxWidth(0.9f)
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 8.dp),
-                    enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
-                    exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
-                ) {
-                    BubbleVoiceText(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = uiState.messageText,
-                        onEditClick = { viewModel.setInputMode(ChatInputMode.TEXT) },
-                        onClearClick = { viewModel.clearMessageText() }
-                    )
-                }
+                HintSuggestionCue(
+                    visible = uiState.currentHintSuggestion != null,
+                    suggestionEn = uiState.currentHintSuggestion,
+                    explanationFa = uiState.currentHintExplanation,
+                    onApplySuggestion = { suggestion ->
+                        viewModel.onMessageTextChanged(suggestion)
+                        viewModel.setInputMode(ChatInputMode.TEXT)
+                        viewModel.dismissHint()
+                    },
+                    onDismiss = { viewModel.dismissHint() }
+                )
+
+                ChatBottomBar(
+                    inputMode = uiState.inputMode,
+                    text = uiState.messageText,
+                    isRecording = uiState.isRecording,
+                    hintsUsedCount = uiState.hintsUsedCount,
+                    isRequestingHint = uiState.isRequestingHint,
+                    onTextChange = { viewModel.onMessageTextChanged(it) },
+                    onInputModeChange = { viewModel.setInputMode(it) },
+                    onVoiceToggle = { start -> viewModel.toggleRecording(start) },
+                    onSendClick = { viewModel.sendMessage() },
+                    onHintClick = { showHintConfirmDialog = true }
+                )
             }
 
-            // Hint Suggestion Cue Banner (if requested)
-            HintSuggestionCue(
-                visible = uiState.currentHintSuggestion != null,
-                suggestionEn = uiState.currentHintSuggestion,
-                explanationFa = uiState.currentHintExplanation,
-                onApplySuggestion = { suggestion ->
-                    viewModel.onMessageTextChanged(suggestion)
-                    viewModel.setInputMode(ChatInputMode.TEXT)
-                    viewModel.dismissHint()
-                },
-                onDismiss = { viewModel.dismissHint() }
+            ObjectiveSheet(
+                visible = showObjectiveSheet,
+                stage = stage,
+                onDismiss = { showObjectiveSheet = false }
             )
 
-            // Hint Button + Bottom Bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
-            ) {
-                OutlinedButton(
-                    onClick = { showHintConfirmDialog = true },
-                    enabled = !uiState.isRequestingHint,
-                    shape = CircleShape,
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color(0xFFFBBF24)
-                    )
-                ) {
-                    if (uiState.isRequestingHint) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(14.dp),
-                            strokeWidth = 2.dp,
-                            color = Color(0xFFFBBF24)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("دریافت راهنما...", fontSize = 12.sp)
-                    } else {
-                        Text("💡 راهنما ${uiState.hintsUsedCount}", fontSize = 12.sp)
-                    }
-                }
-            }
-
-            // Bottom Input Bar (Voice Recorder / Text Editor)
-            ChatBottomBar(
-                inputMode = uiState.inputMode,
-                text = uiState.messageText,
-                isRecording = uiState.isRecording,
-                onTextChange = { viewModel.onMessageTextChanged(it) },
-                onInputModeChange = { viewModel.setInputMode(it) },
-                onVoiceToggle = { start -> viewModel.toggleRecording(start) },
-                onSendClick = { viewModel.sendMessage() }
-            )
-        }
-
-        // Hint Confirmation & Score Calculation Dialog
-        if (showHintConfirmDialog) {
             HintConfirmDialog(
+                visible = showHintConfirmDialog,
                 hintsUsedCount = uiState.hintsUsedCount,
                 onConfirm = {
                     showHintConfirmDialog = false
                     viewModel.requestHint()
                 },
-                onDismiss = {
-                    showHintConfirmDialog = false
-                }
+                onDismiss = { showHintConfirmDialog = false }
             )
-        }
 
-        // Finish Conversation Dialog with Stars & Calculation Breakdown
-        if (uiState.showFinishConfirmDialog && uiState.evaluationSession != null) {
-            FinishConversationDialog(
-                evaluation = uiState.evaluationSession!!,
-                onContinueChatting = { viewModel.dismissFinishConfirmDialog() },
-                onReplayStage = { viewModel.replayStage() },
-                onConfirmAndNext = {
-                    viewModel.dismissFinishConfirmDialog()
-                    onNavigateBack()
-                },
-                onDismissRequest = { viewModel.dismissFinishConfirmDialog() }
+            lastEvaluation?.let { evaluation ->
+                FinishConversationDialog(
+                    visible = uiState.showFinishConfirmDialog && uiState.evaluationSession != null,
+                    evaluation = evaluation,
+                    onContinueChatting = { viewModel.dismissFinishConfirmDialog() },
+                    onReplayStage = { viewModel.replayStage() },
+                    onConfirmAndNext = {
+                        viewModel.dismissFinishConfirmDialog()
+                        onNavigateBack()
+                    },
+                    onDismissRequest = { viewModel.dismissFinishConfirmDialog() }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LoadingState(modifier: Modifier = Modifier) {
+    GlassPanel(modifier = modifier) {
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
+                color = Game.Mint
+            )
+            GameText(text = "در حال آماده‌سازی گفتگو…", size = 14.sp, color = Game.TextSecondary)
+        }
+    }
+}
+
+/** Shown when the learner is the one who has to open the conversation. */
+@Composable
+private fun YourTurnState(
+    characterName: String,
+    avatarUrl: String?,
+    modifier: Modifier = Modifier
+) {
+    GlassPanel(modifier = modifier.padding(horizontal = 32.dp)) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            GameAvatar(name = characterName, imageUrl = avatarUrl, size = 56.dp)
+            GameText(text = "نوبت توست!", size = 18.sp, bold = true)
+            GameText(
+                text = "$characterName منتظر توست. اولین جمله را به انگلیسی بگو.",
+                size = 13.sp,
+                lineHeight = 21.sp,
+                color = Game.TextSecondary,
+                align = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
+    }
+}
+
+@Composable
+private fun TypingBubble(
+    characterName: String,
+    avatarUrl: String?,
+    modifier: Modifier = Modifier
+) {
+    val transition = rememberInfiniteTransition(label = "typing")
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        GameAvatar(name = characterName, imageUrl = avatarUrl, size = 34.dp)
+        val shape = RoundedCornerShape(topStart = 6.dp, topEnd = 20.dp, bottomEnd = 20.dp, bottomStart = 20.dp)
+        Row(
+            modifier = Modifier
+                .background(Game.BubbleAi, shape)
+                .border(1.dp, Game.Stroke, shape)
+                .padding(horizontal = 16.dp, vertical = 15.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            repeat(3) { index ->
+                val alpha by transition.animateFloat(
+                    initialValue = 0.3f,
+                    targetValue = 0.3f,
+                    animationSpec = infiniteRepeatable(
+                        animation = keyframes {
+                            durationMillis = 1200
+                            0.3f at index * 160 using LinearEasing
+                            1f at index * 160 + 260 using LinearEasing
+                            0.3f at index * 160 + 520 using LinearEasing
+                        },
+                        repeatMode = RepeatMode.Restart
+                    ),
+                    label = "dot_$index"
+                )
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .alpha(alpha)
+                        .background(Game.TextPrimary, CircleShape)
+                )
+            }
+        }
+        GameText(text = "در حال نوشتن…", size = 11.sp, color = Game.TextSecondary)
     }
 }
 
@@ -261,18 +356,15 @@ fun ChatScreen(
 @androidx.compose.ui.tooling.preview.Preview
 @Composable
 private fun ChatScreenPreview() {
-    ir.aispeaking.sharedui.ui.them.AppTheme {
+    AppTheme {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF0F172A)),
+                .fillMaxHeight()
+                .background(Game.Ink),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "پیش‌نمایش صفحه مکالمه مرحله",
-                color = Color.White,
-                fontSize = 16.sp
-            )
+            TypingBubble(characterName = "Emily", avatarUrl = null)
         }
     }
 }

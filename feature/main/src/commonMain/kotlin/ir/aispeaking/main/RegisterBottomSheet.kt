@@ -1,24 +1,32 @@
 package ir.aispeaking.main
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.stage.Stage
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
+import ir.aispeaking.sharedui.ui.game.GameSheet
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.GameTextField
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterBottomSheet(
+    visible: Boolean = true,
     stage: Stage,
     onDismiss: () -> Unit,
     onRegisterSuccess: () -> Unit,
@@ -30,69 +38,65 @@ fun RegisterBottomSheet(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Color(0xFF1E293B),
-        modifier = modifier
-    ) {
+    GameSheet(visible = visible, onDismiss = onDismiss, modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .imePadding()
+                .padding(horizontal = 22.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text(
-                text = "📱 ورود / ثبت‌نام برای ادامه سفر",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+            GameText(
+                text = if (step == 1) "برای ادامه ماجراجویی وارد شو" else "کد تایید را وارد کن",
+                size = 19.sp,
+                bold = true,
+                align = TextAlign.Center
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "برای باز کردن مرحله ۲ (${stage.titleFa}) و ذخیره پیشرفت مرحله اول روی حساب ابری، لطفاً شماره موبایل خود را وارد نمایید.",
-                color = Color(0xFFCBD5E1),
-                fontSize = 14.sp,
-                lineHeight = 22.sp,
-                textAlign = TextAlign.Center
+            GameText(
+                text = if (step == 1) {
+                    "با ورود، مرحله «${stage.titleFa}» باز می‌شود و پیشرفتت روی حسابت ذخیره می‌ماند."
+                } else {
+                    "کدی که برای شماره $phoneNumber پیامک شد را وارد کن."
+                },
+                size = 13.sp,
+                lineHeight = 21.sp,
+                color = Game.TextSecondary,
+                align = TextAlign.Center
             )
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             if (step == 1) {
-                OutlinedTextField(
+                GameTextField(
                     value = phoneNumber,
-                    onValueChange = {
-                        if (it.length <= 11) phoneNumber = it
-                    },
-                    label = { Text("شماره موبایل (مانند 09123456789)") },
-                    placeholder = { Text("09123456789") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFF6366F1),
-                        unfocusedBorderColor = Color(0xFF475569)
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+                    onValueChange = { if (it.length <= 11) phoneNumber = it.filter { c -> c.isDigit() } },
+                    label = "شماره موبایل",
+                    placeholder = "09123456789",
+                    keyboardType = KeyboardType.Phone,
+                    ltr = true,
+                    isError = errorMessage != null,
+                    onImeAction = {}
                 )
+            } else {
+                GameTextField(
+                    value = otpCode,
+                    onValueChange = { if (it.length <= 6) otpCode = it.filter { c -> c.isDigit() } },
+                    label = "کد تایید",
+                    placeholder = "••••",
+                    keyboardType = KeyboardType.Number,
+                    ltr = true,
+                    centered = true,
+                    isError = errorMessage != null,
+                    accent = Game.Gold
+                )
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            errorMessage?.let { msg ->
+                GameText(text = msg, size = 12.sp, color = Game.Coral, align = TextAlign.Center)
+            }
 
-                errorMessage?.let { msg ->
-                    Text(
-                        text = msg,
-                        color = Color(0xFFEF4444),
-                        fontSize = 13.sp,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-
-                Button(
+            if (step == 1) {
+                GameButton(
+                    text = "ارسال کد تایید",
                     onClick = {
                         if (phoneNumber.length >= 10) {
                             isLoading = true
@@ -101,53 +105,16 @@ fun RegisterBottomSheet(
                             step = 2
                             isLoading = false
                         } else {
-                            errorMessage = "لطفاً یک شماره موبایل معتبر ۱۱ رقمی وارد کنید."
+                            errorMessage = "شماره موبایل باید ۱۱ رقم باشد."
                         }
                     },
+                    modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading && phoneNumber.isNotBlank(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                    } else {
-                        Text("ارسال کد تایید پیامکی", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                }
-            } else {
-                OutlinedTextField(
-                    value = otpCode,
-                    onValueChange = {
-                        if (it.length <= 6) otpCode = it
-                    },
-                    label = { Text("کد ۴ یا ۶ رقمی پیامک شده") },
-                    placeholder = { Text("1234") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFF10B981),
-                        unfocusedBorderColor = Color(0xFF475569)
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+                    loading = isLoading
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                errorMessage?.let { msg ->
-                    Text(
-                        text = msg,
-                        color = Color(0xFFEF4444),
-                        fontSize = 13.sp,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-
-                Button(
+            } else {
+                GameButton(
+                    text = "تایید و باز کردن مرحله",
                     onClick = {
                         if (otpCode.length >= 4) {
                             isLoading = true
@@ -155,32 +122,24 @@ fun RegisterBottomSheet(
                             // Registration verified & synced
                             onRegisterSuccess()
                         } else {
-                            errorMessage = "لطفاً کد تایید را کامل وارد کنید."
+                            errorMessage = "کد تایید را کامل وارد کن."
                         }
                     },
+                    modifier = Modifier.fillMaxWidth(),
+                    style = GameButtonStyle.Gold,
                     enabled = !isLoading && otpCode.isNotBlank(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                    } else {
-                        Text("تایید و باز کردن مرحله ۲", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                }
-
-                TextButton(
-                    onClick = { step = 1 },
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    Text("ویرایش شماره موبایل", color = Color(0xFFA5B4FC), fontSize = 13.sp)
-                }
+                    loading = isLoading
+                )
+                GameButton(
+                    text = "ویرایش شماره موبایل",
+                    onClick = { step = 1; errorMessage = null },
+                    modifier = Modifier.fillMaxWidth(),
+                    style = GameButtonStyle.Glass,
+                    height = 44.dp,
+                    textSize = 13.sp
+                )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            androidx.compose.foundation.layout.Spacer(Modifier.padding(bottom = 6.dp))
         }
     }
 }
