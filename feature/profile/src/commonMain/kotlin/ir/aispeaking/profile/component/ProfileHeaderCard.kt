@@ -58,14 +58,14 @@ fun ProfileHeaderCard(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF1E293B),
-                        Color(0xFF0F172A)
+                        Color(0xFF1B2550),
+                        Color(0xFF111833)
                     )
                 )
             )
             .border(
                 width = 1.dp,
-                color = Color(0x336366F1),
+                color = Color(0x338C6CFF),
                 shape = RoundedCornerShape(24.dp)
             )
             .padding(20.dp)
@@ -87,7 +87,7 @@ fun ProfileHeaderCard(
                     modifier = Modifier
                         .size(76.dp)
                         .clip(CircleShape)
-                        .border(2.dp, Color(0xFF6366F1), CircleShape)
+                        .border(2.dp, Color(0xFF8C6CFF), CircleShape)
                 )
 
                 // Small edit badge over avatar
@@ -97,8 +97,8 @@ fun ProfileHeaderCard(
                         .offset(x = 2.dp, y = 2.dp)
                         .size(26.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF6366F1))
-                        .border(1.5.dp, Color(0xFF0F172A), CircleShape),
+                        .background(Color(0xFF8C6CFF))
+                        .border(1.5.dp, Color(0xFF111833), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -137,7 +137,7 @@ fun ProfileHeaderCard(
                         Icon(
                             painter = painterResource(Res.drawable.ic_edit),
                             contentDescription = "Edit Nickname",
-                            tint = Color(0xFFA5B4FC),
+                            tint = Color(0xFFB7C0E0),
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -153,12 +153,12 @@ fun ProfileHeaderCard(
                         Icon(
                             painter = painterResource(Res.drawable.ic_phone),
                             contentDescription = null,
-                            tint = Color(0xFF94A3B8),
+                            tint = Color(0xFFB7C0E0),
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
                             text = user.phoneNumber,
-                            color = Color(0xFF94A3B8),
+                            color = Color(0xFFB7C0E0),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Normal
                         )

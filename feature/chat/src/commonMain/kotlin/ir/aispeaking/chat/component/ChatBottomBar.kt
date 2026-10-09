@@ -459,7 +459,7 @@ private fun TextDock(
                     ) {
                         if (text.isEmpty()) {
                             GameText(
-                                text = "Type your reply in English…",
+                                text = "Type in English…",
                                 size = 16.sp,
                                 latin = true,
                                 color = Game.TextMuted

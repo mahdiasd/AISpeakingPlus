@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_done
 import org.jetbrains.compose.resources.painterResource
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameSheet
+import ir.aispeaking.sharedui.ui.game.GameText
 
 data class CefrLevelInfo(
     val code: String,
@@ -58,19 +61,19 @@ private val CEFR_LEVELS = listOf(
         code = "C1",
         titleFa = "پیشرفته (Advanced)",
         descriptionFa = "درک آسان مفاهیم پیچیده و کاربرد منعطف و خلاقانه زبان",
-        accentColor = Color(0xFFF59E0B)
+        accentColor = Color(0xFFFFC83D)
     ),
     CefrLevelInfo(
         code = "C2",
         titleFa = "مسلط / بومی (Mastery)",
         descriptionFa = "تسلط کامل، دقیق، سریع و بی‌وقفه در تمامی ابعاد زبان",
-        accentColor = Color(0xFFFFD700)
+        accentColor = Color(0xFFFFC83D)
     )
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LevelPickerBottomSheet(
+    visible: Boolean = true,
     currentLevel: String?,
     onLevelSelected: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -78,42 +81,24 @@ fun LevelPickerBottomSheet(
 ) {
     val activeLevelCode = (currentLevel?.takeIf { it.isNotBlank() } ?: "A1").uppercase()
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Color(0xFF0F172A),
-        dragHandle = {
-            BottomSheetDefaults.DragHandle(
-                color = Color(0xFF475569)
-            )
-        },
-        modifier = modifier
-    ) {
+    GameSheet(visible = visible, onDismiss = onDismiss, modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
-                .padding(bottom = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(bottom = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Text(
-                text = "انتخاب سطح زبان",
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+            GameText(text = "سطح زبانت چیست؟", size = 18.sp, bold = true, align = TextAlign.Center)
+            GameText(
+                text = "سطح انگلیسی خودت را انتخاب کن؛ بعداً هم می‌توانی تغییرش بدهی.",
+                size = 12.sp,
+                color = Game.TextSecondary,
+                align = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = "سطح تسلط خود به زبان انگلیسی را مشخص کنید",
-                color = Color(0xFF94A3B8),
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
@@ -124,9 +109,7 @@ fun LevelPickerBottomSheet(
                     LevelOptionCard(
                         levelInfo = levelInfo,
                         isSelected = isSelected,
-                        onClick = {
-                            onLevelSelected(levelInfo.code)
-                        }
+                        onClick = { onLevelSelected(levelInfo.code) }
                     )
                 }
             }
@@ -140,8 +123,8 @@ private fun LevelOptionCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val cardBg = if (isSelected) Color(0xFF1E293B) else Color(0xFF131D33)
-    val cardBorder = if (isSelected) levelInfo.accentColor else Color(0x226366F1)
+    val cardBg = if (isSelected) Color(0xFF1B2550) else Color(0xFF131B3B)
+    val cardBorder = if (isSelected) levelInfo.accentColor else Color(0x228C6CFF)
 
     Box(
         modifier = Modifier
@@ -195,7 +178,7 @@ private fun LevelOptionCard(
                 )
                 Text(
                     text = levelInfo.descriptionFa,
-                    color = Color(0xFF94A3B8),
+                    color = Color(0xFFB7C0E0),
                     fontSize = 11.sp,
                     lineHeight = 16.sp
                 )
@@ -222,7 +205,7 @@ private fun LevelOptionCard(
                     modifier = Modifier
                         .size(24.dp)
                         .clip(CircleShape)
-                        .border(1.5.dp, Color(0xFF475569), CircleShape)
+                        .border(1.5.dp, Color(0xFF40497A), CircleShape)
                 )
             }
         }

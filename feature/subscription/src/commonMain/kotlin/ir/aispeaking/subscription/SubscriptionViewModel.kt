@@ -146,7 +146,7 @@ class SubscriptionViewModel(
             _uiState.update {
                 it.copy(
                     appliedDiscountPercent = discountPercent,
-                    promoFeedbackMessage = "کد تخفیف $discountPercent٪ با موفقیت اعمال شد ✓",
+                    promoFeedbackMessage = "کد تخفیف $discountPercent٪ با موفقیت اعمال شد",
                     isPromoError = false
                 )
             }

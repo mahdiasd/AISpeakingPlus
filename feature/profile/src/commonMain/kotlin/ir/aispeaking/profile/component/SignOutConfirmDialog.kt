@@ -23,80 +23,58 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_exit
 import org.jetbrains.compose.resources.painterResource
 
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
+import ir.aispeaking.sharedui.ui.game.GameModal
+import ir.aispeaking.sharedui.ui.game.GameText
+import androidx.compose.ui.text.style.TextAlign
 @Composable
 fun SignOutConfirmDialog(
+    visible: Boolean = true,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(22.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33EF4444)),
+    GameModal(visible = visible, onDismiss = onDismiss) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp)
+                .padding(22.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(22.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_exit),
-                    contentDescription = null,
-                    tint = Color(0xFFEF4444),
-                    modifier = Modifier.size(36.dp)
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Text(
-                    text = "خروج از حساب کاربری",
-                    color = Color.White,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "آیا مطمئن هستید که می‌خواهید از حساب خود خارج شوید؟ برای دسترسی دوباره باید با شماره موبایل وارد شوید.",
-                    color = Color(0xFF94A3B8),
-                    fontSize = 13.sp,
-                    lineHeight = 20.sp
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(text = "انصراف", color = Color(0xFF94A3B8), fontSize = 13.sp)
-                    }
-
-                    Button(
-                        onClick = onConfirm,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(text = "خروج", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
+            Icon(
+                painter = painterResource(Res.drawable.ic_exit),
+                contentDescription = null,
+                tint = Game.Coral,
+                modifier = Modifier.size(40.dp)
+            )
+            GameText(text = "از حسابت خارج می‌شوی؟", size = 18.sp, bold = true, align = TextAlign.Center)
+            GameText(
+                text = "برای ورود دوباره، باید با شماره موبایل وارد شوی.",
+                size = 13.sp,
+                lineHeight = 21.sp,
+                color = Game.TextSecondary,
+                align = TextAlign.Center
+            )
+            GameButton(
+                text = "بله، خارج شو",
+                onClick = onConfirm,
+                modifier = Modifier.fillMaxWidth(),
+                style = GameButtonStyle.Danger
+            )
+            GameButton(
+                text = "انصراف",
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                style = GameButtonStyle.Glass,
+                height = 46.dp,
+                textSize = 14.sp
+            )
         }
     }
 }

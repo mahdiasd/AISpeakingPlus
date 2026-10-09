@@ -32,92 +32,79 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_close
 import ir.aispeaking.sharedui.ui.utils.avatar.AvatarUtils
 import org.jetbrains.compose.resources.painterResource
 
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameModal
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.GameIconButton
 @Composable
 fun AvatarPickerDialog(
+    visible: Boolean = true,
     currentAvatar: String,
     onAvatarSelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     val avatars = AvatarUtils.provideProfileAvatars()
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x336366F1)),
+    GameModal(visible = visible, onDismiss = onDismiss) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                GameText(text = "انتخاب آواتار", size = 18.sp, bold = true)
+                GameIconButton(
+                    icon = Res.drawable.ic_close,
+                    onClick = onDismiss,
+                    contentDescription = "بستن",
+                    size = 36.dp,
+                    iconSize = 16.dp
+                )
+            }
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(4),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .height(280.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(4.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "انتخاب آواتار جدید",
-                        color = Color.White,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                items(avatars) { profileAvatar ->
+                    val isSelected = profileAvatar.name.equals(currentAvatar, ignoreCase = true) ||
+                        currentAvatar.contains(profileAvatar.name.replace("-", "").lowercase())
 
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_close),
-                            contentDescription = "Close",
-                            tint = Color(0xFF94A3B8),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(260.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(4.dp)
-                ) {
-                    items(avatars) { profileAvatar ->
-                        val isSelected = profileAvatar.name.equals(currentAvatar, ignoreCase = true) ||
-                            currentAvatar.contains(profileAvatar.name.replace("-", "").lowercase())
-
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                                .background(if (isSelected) Color(0x336366F1) else Color(0x11FFFFFF))
-                                .border(
-                                    width = if (isSelected) 2.5.dp else 1.dp,
-                                    color = if (isSelected) Color(0xFF6366F1) else Color(0x22FFFFFF),
-                                    shape = CircleShape
-                                )
-                                .clickable { onAvatarSelected(profileAvatar.name) },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(profileAvatar.drawable),
-                                contentDescription = profileAvatar.name,
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(CircleShape)
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(if (isSelected) Game.Violet.copy(alpha = 0.3f) else Color(0x11FFFFFF))
+                            .border(
+                                width = if (isSelected) 3.dp else 1.dp,
+                                color = if (isSelected) Game.Mint else Color(0x22FFFFFF),
+                                shape = CircleShape
                             )
-                        }
+                            .clickable { onAvatarSelected(profileAvatar.name) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(profileAvatar.drawable),
+                            contentDescription = profileAvatar.name,
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(CircleShape)
+                        )
                     }
                 }
             }

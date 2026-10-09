@@ -15,7 +15,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,31 +26,31 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.user.User
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_logo
 import ir.aispeaking.sharedui.ui.core.loading.DotLoading
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.GlassPanel
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -106,7 +105,8 @@ fun SplashScreen(
 }
 
 /**
- * Pure stateless Composable for Splash Screen with Disney-inspired playful styling.
+ * Pure stateless splash: brand mark floating over the dark game backdrop, with either a calm
+ * loading state or a clear retry card.
  */
 @Composable
 fun SplashScreen(
@@ -114,7 +114,6 @@ fun SplashScreen(
     uiState: SplashUiState,
     onRetry: () -> Unit
 ) {
-    // Gentle floating/breathing animation for Disney-style brand icon
     val infiniteTransition = rememberInfiniteTransition(label = "SplashFloat")
     val floatAnim by infiniteTransition.animateFloat(
         initialValue = -6f,
@@ -126,223 +125,134 @@ fun SplashScreen(
         label = "FloatY"
     )
 
-    // Outer background with subtle Disney sky gradient
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        AppTheme.colors.surface,
-                        AppTheme.colors.surfaceContainerLowest,
-                        AppTheme.colors.surface
-                    )
-                )
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        // Enforce mobile-sized width when rendered on wide screens (desktop/laptop/tablet)
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .widthIn(max = 440.dp)
-                .fillMaxWidth()
-                .padding(horizontal = 28.dp),
+            modifier = modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(listOf(Color(0xFF1B1F4B), Color(0xFF0E1433), Game.Ink))
+                ),
             contentAlignment = Alignment.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .widthIn(max = 440.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 28.dp),
+                contentAlignment = Alignment.Center
             ) {
-                // Floating Disney-styled Brand Logo Card
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.offset(y = floatAnim.dp)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Soft glowing aura behind the logo
                     Box(
-                        modifier = Modifier
-                            .size(136.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(
-                                        AppTheme.colors.primary.copy(alpha = 0.25f),
-                                        Color.Transparent
-                                    )
-                                )
-                            )
-                    )
-
-                    // Logo Card Container
-                    Card(
-                        modifier = Modifier
-                            .size(112.dp)
-                            .shadow(
-                                elevation = 16.dp,
-                                shape = RoundedCornerShape(32.dp),
-                                spotColor = AppTheme.colors.primary.copy(alpha = 0.35f)
-                            )
-                            .border(
-                                width = 2.dp,
-                                color = AppTheme.colors.primaryContainer.copy(alpha = 0.8f),
-                                shape = RoundedCornerShape(32.dp)
-                            ),
-                        shape = RoundedCornerShape(32.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = AppTheme.colors.surfaceContainerLowest
-                        )
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.offset(y = floatAnim.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxSize()
+                                .size(190.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.radialGradient(
+                                        listOf(Game.Violet.copy(alpha = 0.45f), Color.Transparent)
+                                    )
+                                )
+                        )
+                        val shape = RoundedCornerShape(34.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(116.dp)
+                                .clip(shape)
+                                .background(Color.White)
+                                .border(2.dp, Game.StrokeStrong, shape)
                                 .padding(16.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Image(
                                 painter = painterResource(Res.drawable.ic_logo),
-                                contentDescription = "AI Speaking Logo",
-                                modifier = Modifier.size(76.dp)
+                                contentDescription = "AI Speaking Plus",
+                                modifier = Modifier.size(80.dp)
                             )
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
 
-                // App Title
-                Text(
-                    text = "AI Speaking Plus",
-                    style = AppTheme.typography.headingLargeBold,
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = AppTheme.colors.onSurface,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Persian Subtitle
-                Text(
-                    text = "یادگیری هوشمند مکالمه زبان انگلیسی",
-                    style = AppTheme.typography.bodyLargeBold.copy(
-                        fontFamily = AppTheme.typography.persianBold
-                    ),
-                    fontSize = 16.sp,
-                    color = AppTheme.colors.primary,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Playful Disney-style Tag
-                Row(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(AppTheme.colors.primaryContainer.copy(alpha = 0.6f))
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "✨ ماجراجویی تعاملی با هوش مصنوعی",
-                        style = AppTheme.typography.labelMedium.copy(
-                            fontFamily = AppTheme.typography.persianRegular
-                        ),
-                        fontSize = 12.sp,
-                        color = AppTheme.colors.onPrimaryContainer,
-                        textAlign = TextAlign.Center
+                    GameText(
+                        text = "AI Speaking Plus",
+                        size = 30.sp,
+                        bold = true,
+                        latin = true,
+                        align = TextAlign.Center
                     )
-                }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    GameText(
+                        text = "مکالمه انگلیسی، مثل یک ماجراجویی",
+                        size = 16.sp,
+                        bold = true,
+                        color = Game.Mint,
+                        align = TextAlign.Center
+                    )
 
-                Spacer(modifier = Modifier.height(56.dp))
+                    Spacer(modifier = Modifier.height(52.dp))
 
-                // Loading State Indicator
-                AnimatedVisibility(
-                    visible = uiState.isLoading,
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        DotLoading(
-                            dotColor = AppTheme.colors.primary,
-                            dotSize = 12.dp
-                        )
-                        Text(
-                            text = "در حال ورود به دنیای مکالمه...",
-                            style = AppTheme.typography.labelMedium.copy(
-                                fontFamily = AppTheme.typography.persianRegular
-                            ),
-                            fontSize = 13.sp,
-                            color = AppTheme.colors.outline,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-
-                // Error and Retry State
-                AnimatedVisibility(
-                    visible = uiState.errorMessage != null,
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = AppTheme.colors.surfaceContainerLowest
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    AnimatedVisibility(
+                        visible = uiState.isLoading,
+                        enter = fadeIn(),
+                        exit = fadeOut()
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(20.dp)
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
-                            Text(
-                                text = "⚠️ مشکلی در برقراری ارتباط رخ داد",
-                                style = AppTheme.typography.titleBold.copy(
-                                    fontFamily = AppTheme.typography.persianBold
-                                ),
-                                fontSize = 15.sp,
-                                color = AppTheme.colors.error,
-                                textAlign = TextAlign.Center
+                            DotLoading(dotColor = Game.Gold, dotSize = 12.dp)
+                            GameText(
+                                text = "در حال آماده‌سازی…",
+                                size = 13.sp,
+                                color = Game.TextSecondary,
+                                align = TextAlign.Center
                             )
+                        }
+                    }
 
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text(
-                                text = uiState.errorMessage ?: "",
-                                style = AppTheme.typography.bodyMedium.copy(
-                                    fontFamily = AppTheme.typography.persianRegular
-                                ),
-                                color = AppTheme.colors.outline,
-                                fontSize = 13.sp,
-                                textAlign = TextAlign.Center
-                            )
-
-                            Spacer(modifier = Modifier.height(18.dp))
-
-                            Button(
-                                onClick = onRetry,
-                                shape = RoundedCornerShape(14.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = AppTheme.colors.primary
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(46.dp)
+                    AnimatedVisibility(
+                        visible = uiState.errorMessage != null,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        GlassPanel(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(24.dp),
+                            color = Game.PanelSolid,
+                            border = Game.Coral.copy(alpha = 0.5f)
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Text(
-                                    text = "تلاش مجدد",
-                                    style = AppTheme.typography.bodyMediumBold.copy(
-                                        fontFamily = AppTheme.typography.persianBold
-                                    ),
-                                    color = AppTheme.colors.onPrimary
+                                GameText(
+                                    text = "اتصال برقرار نشد",
+                                    size = 16.sp,
+                                    bold = true,
+                                    color = Game.Coral,
+                                    align = TextAlign.Center
+                                )
+                                GameText(
+                                    text = uiState.errorMessage ?: "",
+                                    size = 13.sp,
+                                    lineHeight = 21.sp,
+                                    color = Game.TextSecondary,
+                                    align = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                GameButton(
+                                    text = "تلاش دوباره",
+                                    onClick = onRetry,
+                                    modifier = Modifier.fillMaxWidth()
                                 )
                             }
                         }

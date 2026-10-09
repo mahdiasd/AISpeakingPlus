@@ -38,12 +38,12 @@ fun SubscriptionHeader(
                 .shadow(
                     elevation = 16.dp,
                     shape = RoundedCornerShape(22.dp),
-                    spotColor = Color(0xFFFFD700)
+                    spotColor = Color(0xFFFFC83D)
                 )
                 .clip(RoundedCornerShape(22.dp))
                 .background(
                     Brush.linearGradient(
-                        listOf(Color(0xFFFFD700), Color(0xFFF59E0B), Color(0xFFD97706))
+                        listOf(Color(0xFFFFC83D), Color(0xFFFFC83D), Color(0xFFD97706))
                     )
                 )
                 .border(
@@ -77,7 +77,7 @@ fun SubscriptionHeader(
         // Subtitle
         Text(
             text = "تمامی مراحل، سناریوهای پیشرفته و هوش مصنوعی بدون وقفه را آنلاک کنید",
-            color = Color(0xFF94A3B8),
+            color = Color(0xFFB7C0E0),
             fontSize = 13.sp,
             lineHeight = 22.sp,
             textAlign = TextAlign.Center,
@@ -93,13 +93,13 @@ fun SubscriptionHeader(
                     .clip(RoundedCornerShape(16.dp))
                     .background(
                         Brush.horizontalGradient(
-                            listOf(Color(0xFF2E1065), Color(0xFF1E1B4B))
+                            listOf(Color(0xFF2E1065), Color(0xFF1B2550))
                         )
                     )
                     .border(
                         width = 1.dp,
                         brush = Brush.horizontalGradient(
-                            listOf(Color(0xFFFFD700), Color(0xFF7C3AED))
+                            listOf(Color(0xFFFFC83D), Color(0xFF7C3AED))
                         ),
                         shape = RoundedCornerShape(16.dp)
                     )
@@ -116,7 +116,7 @@ fun SubscriptionHeader(
                     ) {
                         Text(
                             text = "شما دارای اشتراک فعال هستید",
-                            color = Color(0xFFFFD700),
+                            color = Color(0xFFFFC83D),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -135,7 +135,7 @@ fun SubscriptionHeader(
                     ) {
                         Text(
                             text = "${formatToPersian(currentStatus.remainingDays)} روز باقیمانده",
-                            color = Color(0xFFFFD700),
+                            color = Color(0xFFFFC83D),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )

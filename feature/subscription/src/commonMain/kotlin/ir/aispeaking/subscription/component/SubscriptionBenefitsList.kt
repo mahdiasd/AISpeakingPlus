@@ -37,7 +37,7 @@ fun SubscriptionBenefitsList(
         BenefitItem(
             title = "دسترسی نامحدود به تمامی مراحل سفر داستانی",
             icon = Res.drawable.ic_crown,
-            iconTint = Color(0xFFFFD700),
+            iconTint = Color(0xFFFFC83D),
             containerBg = Color(0x33FFD700)
         ),
         BenefitItem(
@@ -64,7 +64,7 @@ fun SubscriptionBenefitsList(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFF0F172A))
+            .background(Color(0xFF111833))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {

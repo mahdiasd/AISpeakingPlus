@@ -43,7 +43,7 @@ fun AchievementStatsCard(
     ) {
         Text(
             text = "آمار و دستاوردهای یادگیری",
-            color = Color(0xFFA5B4FC),
+            color = Color(0xFFB7C0E0),
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
@@ -57,7 +57,7 @@ fun AchievementStatsCard(
                 title = "ستاره‌ها",
                 value = "${user.totalStars}",
                 icon = Res.drawable.ic_star,
-                iconTint = Color(0xFFFFD700),
+                iconTint = Color(0xFFFFC83D),
                 modifier = Modifier.weight(1f)
             )
 
@@ -110,10 +110,10 @@ private fun StatItem(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFF1E293B))
+            .background(Color(0xFF1B2550))
             .border(
                 width = 1.dp,
-                color = if (onClick != null) Color(0x55A78BFA) else Color(0x226366F1),
+                color = if (onClick != null) Color(0x55A78BFA) else Color(0x228C6CFF),
                 shape = RoundedCornerShape(18.dp)
             )
             .then(
@@ -155,7 +155,7 @@ private fun StatItem(
                     )
                     Text(
                         text = title,
-                        color = Color(0xFF94A3B8),
+                        color = Color(0xFFB7C0E0),
                         fontSize = 11.sp
                     )
                 }

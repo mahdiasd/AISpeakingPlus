@@ -35,7 +35,7 @@ fun PromoCodeInputRow(
                 placeholder = {
                     Text(
                         text = "کد تخفیف دارید؟",
-                        color = Color(0xFF64748B),
+                        color = Color(0xFF7F8AB3),
                         fontSize = 13.sp
                     )
                 },
@@ -44,10 +44,10 @@ fun PromoCodeInputRow(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
-                    focusedContainerColor = Color(0xFF1E293B),
-                    unfocusedContainerColor = Color(0xFF1E293B),
+                    focusedContainerColor = Color(0xFF1B2550),
+                    unfocusedContainerColor = Color(0xFF1B2550),
                     focusedBorderColor = Color(0xFF818CF8),
-                    unfocusedBorderColor = Color(0xFF334155),
+                    unfocusedBorderColor = Color(0xFF2A3262),
                     cursorColor = Color(0xFF818CF8)
                 ),
                 modifier = Modifier.weight(1f)
@@ -57,7 +57,7 @@ fun PromoCodeInputRow(
                 onClick = onApplyClicked,
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF334155)
+                    containerColor = Color(0xFF2A3262)
                 ),
                 contentPadding = PaddingValues(horizontal = 20.dp),
                 modifier = Modifier.height(54.dp)

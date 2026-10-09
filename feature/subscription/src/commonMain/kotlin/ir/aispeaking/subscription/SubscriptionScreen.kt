@@ -2,29 +2,53 @@ package ir.aispeaking.subscription
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
-import ir.aispeaking.sharedui.ui.core.button.AppBackButton
-import ir.aispeaking.subscription.component.*
-import org.jetbrains.compose.resources.painterResource
+import ir.aispeaking.sharedui.ic_back
+import ir.aispeaking.sharedui.ic_crown
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
+import ir.aispeaking.sharedui.ui.game.GameIconButton
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.GlassPanel
+import ir.aispeaking.subscription.component.PlanSelectionCard
+import ir.aispeaking.subscription.component.PromoCodeInputRow
+import ir.aispeaking.subscription.component.SubscriptionBenefitsList
+import ir.aispeaking.subscription.component.SubscriptionHeader
+import ir.aispeaking.subscription.component.TrustBadgesRow
+import kotlinx.coroutines.delay
 
 @Composable
 fun SubscriptionScreen(
@@ -34,191 +58,167 @@ fun SubscriptionScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
+    var toast by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is SubscriptionEffect.NavigateBack -> onNavigateBack()
                 is SubscriptionEffect.SubscriptionActivated -> onSubscriptionSuccess()
-                is SubscriptionEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is SubscriptionEffect.ShowSnackbar -> toast = effect.message
             }
         }
     }
 
+    LaunchedEffect(toast) {
+        if (toast != null) {
+            delay(3500)
+            toast = null
+        }
+    }
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        Scaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
-            containerColor = Color(0xFF070B19),
-            modifier = modifier.fillMaxSize(),
-            topBar = {
-                // Top App Bar with back button
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(Game.FallbackBackground)
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    AppBackButton(onClick = onNavigateBack)
-
-                    Text(
-                        text = "اشتراک ویژه",
-                        color = Color.White,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold
+                    GameIconButton(
+                        icon = Res.drawable.ic_back,
+                        onClick = onNavigateBack,
+                        contentDescription = "بازگشت"
                     )
-
-                    // Spacer to keep title centered
-                    Spacer(modifier = Modifier.size(38.dp))
+                    GameText(
+                        text = "اشتراک ویژه",
+                        size = 18.sp,
+                        bold = true,
+                        align = TextAlign.Center,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.size(44.dp))
                 }
-            },
-            bottomBar = {
-                // Sticky Purchase Action Bar at Bottom
-                Surface(
-                    color = Color(0xFF0B1120),
-                    tonalElevation = 8.dp,
-                    shadowElevation = 16.dp,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+
+                if (uiState.isLoading && uiState.plans.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Game.Gold, strokeWidth = 3.dp)
+                    }
+                } else {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .navigationBarsPadding()
-                            .padding(horizontal = 20.dp, vertical = 14.dp),
+                            .weight(1f)
+                            .verticalScroll(scrollState)
+                            .padding(horizontal = 18.dp, vertical = 8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        val selectedPlan = uiState.selectedPlan
-                        val finalPrice = selectedPlan?.let { uiState.calculateFinalPrice(it) } ?: 0L
+                        SubscriptionHeader(currentStatus = uiState.currentStatus)
 
-                        Button(
-                            onClick = {
-                                viewModel.processIntent(SubscriptionIntent.PurchaseSelectedPlan)
-                            },
-                            enabled = !uiState.isPurchasing && !uiState.isLoading,
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Transparent
-                            ),
-                            contentPadding = PaddingValues(0.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .shadow(
-                                    elevation = 12.dp,
-                                    shape = RoundedCornerShape(16.dp),
-                                    spotColor = Color(0xFF6366F1)
-                                )
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(
-                                            Color(0xFF8B5CF6),
-                                            Color(0xFF6366F1),
-                                            Color(0xFFEC4899)
-                                        )
-                                    ),
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-                        ) {
-                            if (uiState.isPurchasing) {
-                                CircularProgressIndicator(
-                                    color = Color.White,
-                                    strokeWidth = 3.dp,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            } else {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Text(
-                                        text = "خرید اشتراک و شروع یادگیری",
-                                        color = Color.White,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    if (finalPrice > 0) {
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "(${formatToPersian(finalPrice)} تومان)",
-                                            color = Color(0xFFFFD700),
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
+                        uiState.plans.forEach { plan ->
+                            val isSelected = plan.id == uiState.selectedPlanId
+                            val finalPrice = uiState.calculateFinalPrice(plan)
+                            PlanSelectionCard(
+                                plan = plan,
+                                finalPriceTomans = finalPrice,
+                                isSelected = isSelected,
+                                onClick = {
+                                    viewModel.processIntent(SubscriptionIntent.SelectPlan(plan.id))
                                 }
-                            }
+                            )
                         }
+
+                        PromoCodeInputRow(
+                            promoCode = uiState.promoCodeInput,
+                            onPromoCodeChanged = {
+                                viewModel.processIntent(SubscriptionIntent.OnPromoCodeChanged(it))
+                            },
+                            onApplyClicked = {
+                                viewModel.processIntent(SubscriptionIntent.ApplyPromoCode)
+                            },
+                            feedbackMessage = uiState.promoFeedbackMessage,
+                            isError = uiState.isPromoError
+                        )
+
+                        SubscriptionBenefitsList()
+                        TrustBadgesRow()
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
-            }
-        ) { innerPadding ->
-            if (uiState.isLoading && uiState.plans.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = Color(0xFFFFD700),
-                        strokeWidth = 3.dp
-                    )
-                }
-            } else {
+
+                // Sticky purchase bar
+                val dockShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .verticalScroll(scrollState)
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                        .fillMaxWidth()
+                        .clip(dockShape)
+                        .background(Game.Panel)
+                        .border(1.dp, Game.Stroke, dockShape)
+                        .navigationBarsPadding()
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    // 1. Hero Header
-                    SubscriptionHeader(currentStatus = uiState.currentStatus)
+                    val selectedPlan = uiState.selectedPlan
+                    val finalPrice = selectedPlan?.let { uiState.calculateFinalPrice(it) } ?: 0L
 
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // 2. Plan Cards
-                    uiState.plans.forEach { plan ->
-                        val isSelected = plan.id == uiState.selectedPlanId
-                        val finalPrice = uiState.calculateFinalPrice(plan)
-                        PlanSelectionCard(
-                            plan = plan,
-                            finalPriceTomans = finalPrice,
-                            isSelected = isSelected,
-                            onClick = {
-                                viewModel.processIntent(SubscriptionIntent.SelectPlan(plan.id))
-                            }
-                        )
+                    if (finalPrice > 0) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            GameText(text = "مبلغ قابل پرداخت", size = 13.sp, color = Game.TextSecondary)
+                            GameText(
+                                text = "${formatToPersian(finalPrice)} تومان",
+                                size = 16.sp,
+                                bold = true,
+                                color = Game.Gold
+                            )
+                        }
                     }
-
-                    // 3. Promo Code Row
-                    PromoCodeInputRow(
-                        promoCode = uiState.promoCodeInput,
-                        onPromoCodeChanged = {
-                            viewModel.processIntent(SubscriptionIntent.OnPromoCodeChanged(it))
-                        },
-                        onApplyClicked = {
-                            viewModel.processIntent(SubscriptionIntent.ApplyPromoCode)
-                        },
-                        feedbackMessage = uiState.promoFeedbackMessage,
-                        isError = uiState.isPromoError
+                    GameButton(
+                        text = "خرید اشتراک و شروع یادگیری",
+                        onClick = { viewModel.processIntent(SubscriptionIntent.PurchaseSelectedPlan) },
+                        modifier = Modifier.fillMaxWidth(),
+                        style = GameButtonStyle.Gold,
+                        icon = Res.drawable.ic_crown,
+                        enabled = !uiState.isPurchasing && !uiState.isLoading,
+                        loading = uiState.isPurchasing
                     )
+                }
+            }
 
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // 4. Feature Benefits List
-                    SubscriptionBenefitsList()
-
-                    // 5. Trust and Security Badges
-                    TrustBadgesRow()
-
-                    Spacer(modifier = Modifier.height(24.dp))
+            toast?.let { message ->
+                GlassPanel(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                        .padding(top = 64.dp, start = 16.dp, end = 16.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    color = Game.PanelSolid,
+                    border = Game.Sky.copy(alpha = 0.6f)
+                ) {
+                    GameText(
+                        text = message,
+                        size = 13.sp,
+                        lineHeight = 20.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
                 }
             }
         }
@@ -242,14 +242,10 @@ private fun SubscriptionScreenPreview() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF070B19)),
+                .background(Game.Ink),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "پیش‌نمایش صفحه ارتقا و اشتراک ویژه",
-                color = Color.White,
-                fontSize = 16.sp
-            )
+            GameText(text = "پیش‌نمایش صفحه ارتقا و اشتراک ویژه", size = 16.sp)
         }
     }
 }

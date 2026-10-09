@@ -27,77 +27,51 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
+import ir.aispeaking.sharedui.ui.game.GameModal
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.GameTextField
 @Composable
 fun EditNickNameDialog(
+    visible: Boolean = true,
     currentNickName: String,
     onSave: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var text by remember { mutableStateOf(currentNickName) }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(22.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x336366F1)),
+    GameModal(visible = visible, onDismiss = onDismiss) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp)
+                .padding(22.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(22.dp)
-            ) {
-                Text(
-                    text = "ویرایش نام مستعار",
-                    color = Color.White,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    singleLine = true,
-                    placeholder = { Text("نام مستعار جدید", color = Color(0xFF64748B)) },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFF6366F1),
-                        unfocusedBorderColor = Color(0xFF475569)
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(text = "انصراف", color = Color(0xFF94A3B8), fontSize = 13.sp)
-                    }
-
-                    Button(
-                        onClick = { onSave(text) },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1)),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(text = "ذخیره", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
+            GameText(text = "ویرایش نام مستعار", size = 18.sp, bold = true)
+            GameTextField(
+                value = text,
+                onValueChange = { text = it },
+                label = "نام مستعار",
+                placeholder = "نام مستعار جدید",
+                onImeAction = { if (text.isNotBlank()) onSave(text) }
+            )
+            GameButton(
+                text = "ذخیره",
+                onClick = { onSave(text) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = text.isNotBlank()
+            )
+            GameButton(
+                text = "انصراف",
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                style = GameButtonStyle.Glass,
+                height = 46.dp,
+                textSize = 14.sp
+            )
         }
     }
 }

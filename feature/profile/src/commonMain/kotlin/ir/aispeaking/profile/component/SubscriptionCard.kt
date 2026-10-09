@@ -55,7 +55,7 @@ fun SubscriptionCard(
                 .border(
                     width = 1.5.dp,
                     brush = Brush.horizontalGradient(
-                        listOf(Color(0xFFFFD700), Color(0xFFF59E0B))
+                        listOf(Color(0xFFFFC83D), Color(0xFFFFC83D))
                     ),
                     shape = RoundedCornerShape(22.dp)
                 )
@@ -83,7 +83,7 @@ fun SubscriptionCard(
                             Icon(
                                 painter = painterResource(Res.drawable.ic_crown),
                                 contentDescription = null,
-                                tint = Color(0xFFFFD700),
+                                tint = Color(0xFFFFC83D),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -115,12 +115,12 @@ fun SubscriptionCard(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(14.dp))
                                 .background(Color(0x33000000))
-                                .border(1.dp, Color(0xFFFFD700), RoundedCornerShape(14.dp))
+                                .border(1.dp, Color(0xFFFFC83D), RoundedCornerShape(14.dp))
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
                             Text(
                                 text = "${subscription.remainingDays} روز باقیمانده",
-                                color = Color(0xFFFFD700),
+                                color = Color(0xFFFFC83D),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -151,8 +151,8 @@ fun SubscriptionCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0x33EF4444))
-                            .border(1.dp, Color(0xFFEF4444), RoundedCornerShape(12.dp))
+                            .background(Color(0x33FF6B6B))
+                            .border(1.dp, Color(0xFFFF6B6B), RoundedCornerShape(12.dp))
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         Row(
@@ -169,7 +169,7 @@ fun SubscriptionCard(
 
                             Text(
                                 text = "تمدید اشتراک",
-                                color = Color(0xFFFFD700),
+                                color = Color(0xFFFFC83D),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.clickable { onUpgradeClick() }
@@ -185,7 +185,7 @@ fun SubscriptionCard(
             modifier = modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(22.dp))
-                .background(Color(0xFF1E293B))
+                .background(Color(0xFF1B2550))
                 .border(1.dp, Color(0x3394A3B8), RoundedCornerShape(22.dp))
                 .padding(18.dp)
         ) {
@@ -209,7 +209,7 @@ fun SubscriptionCard(
                             Icon(
                                 painter = painterResource(Res.drawable.ic_crown),
                                 contentDescription = null,
-                                tint = Color(0xFF94A3B8),
+                                tint = Color(0xFFB7C0E0),
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -224,7 +224,7 @@ fun SubscriptionCard(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "دسترسی به تمامی مراحل و سناریوها با اشتراک ویژه",
-                        color = Color(0xFF94A3B8),
+                        color = Color(0xFFB7C0E0),
                         fontSize = 12.sp
                     )
                 }
@@ -235,12 +235,12 @@ fun SubscriptionCard(
                     onClick = onUpgradeClick,
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF59E0B)
+                        containerColor = Color(0xFFFFC83D)
                     )
                 ) {
                     Text(
                         text = "خرید اشتراک",
-                        color = Color(0xFF0F172A),
+                        color = Color(0xFF111833),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )

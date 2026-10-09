@@ -44,7 +44,7 @@ private fun TrustBadgeItem(
         )
         Text(
             text = text,
-            color = Color(0xFF94A3B8),
+            color = Color(0xFFB7C0E0),
             fontSize = 11.sp
         )
     }
