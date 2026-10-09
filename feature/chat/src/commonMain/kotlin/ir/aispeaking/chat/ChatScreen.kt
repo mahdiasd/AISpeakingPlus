@@ -347,7 +347,7 @@ private fun TypingBubble(
                 )
             }
         }
-        GameText(text = "در حال نوشتن…", size = 11.sp, color = Game.TextSecondary)
+        GameText(text = "در حال پاسخ…", size = 11.sp, color = Game.TextSecondary)
     }
 }
 

@@ -250,10 +250,10 @@ class ChatViewModel(
 
         _uiState.update {
             it.copy(
-                chats = (it.chats + userChat + Chat.WaitingForAi).toImmutableList(),
+                chats = (it.chats + userChat).toImmutableList(),
                 messageText = "",
                 turnsCount = updatedTurns,
-                isModelSpeaking = true
+                isModelSpeaking = false
             )
         }
 
@@ -272,7 +272,7 @@ class ChatViewModel(
                 is DataResult.Success -> {
                     val turn = result.data
 
-                    // Update user chat with grammar check result
+                    // Update user chat with grammar check result, and now show AI waiting/typing indicator
                     val answeredUserChat = userChat.copy(
                         status = ChatStatus.Answered(grammar = turn.grammarFeedbackFa)
                     )
@@ -281,8 +281,13 @@ class ChatViewModel(
                         val updated = state.chats.map {
                             if (it.uid == userUid) answeredUserChat else it
                         }
-                        state.copy(chats = updated.toImmutableList())
+                        state.copy(
+                            chats = (updated + Chat.WaitingForAi).toImmutableList(),
+                            isModelSpeaking = true
+                        )
                     }
+
+                    delay(700)
 
                     val aiUid = "ai_${Clock.System.now().toEpochMilliseconds()}"
                     streamAiResponse(
@@ -364,7 +369,12 @@ class ChatViewModel(
 
     fun retrySendMessage() {
         val lastUserChat = _uiState.value.chats.lastOrNull { it is Chat.User } as? Chat.User ?: return
-        _uiState.update { it.copy(messageText = lastUserChat.message) }
+        _uiState.update { state ->
+            state.copy(
+                chats = state.chats.filter { it.uid != lastUserChat.uid }.toImmutableList(),
+                messageText = lastUserChat.message
+            )
+        }
         sendMessage()
     }
 
