@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,8 +56,7 @@ fun StagesListScreen(
     // Auto-scroll to current active stage when list is loaded
     LaunchedEffect(uiState.isLoading, uiState.stages) {
         if (!uiState.isLoading && uiState.stages.isNotEmpty()) {
-            val targetIndex = (uiState.currentActiveStageIndex + 1).coerceAtMost(uiState.stages.size)
-            // +1 accounts for the header stats item at index 0
+            val targetIndex = uiState.currentActiveStageIndex.coerceIn(0, uiState.stages.size - 1)
             listState.animateScrollToItem(targetIndex)
         }
     }
@@ -72,27 +72,41 @@ fun StagesListScreen(
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
-                // Top App Bar
+                // Top App Bar: Back button on the RIGHT (Start in RTL), Centered title
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "مراحل و پیشرفت یادگیری",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White
-                        )
-                    }
-
+                    // Right button (Start in RTL): Back button pointing right
                     AppBackButton(onClick = onNavigateBack)
+
+                    // Symmetric Center-Aligned Screen Title
+                    Text(
+                        text = "مراحل و پیشرفت یادگیری",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // Balanced spacer equal to AppBackButton size (38dp) for true center alignment
+                    Spacer(modifier = Modifier.size(38.dp))
+                }
+
+                // Pinned Header Status Card: Always pinned at the top above the scrolling list
+                if (uiState.stages.isNotEmpty()) {
+                    StagesHeaderStatsCard(
+                        totalStars = uiState.totalStarsEarned,
+                        maxStars = uiState.maxPossibleStars,
+                        completedStages = uiState.completedStagesCount,
+                        totalStages = uiState.stages.size,
+                        progressPercentage = uiState.progressPercentage,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
                 }
 
                 if (uiState.isLoading && uiState.stages.isEmpty()) {
@@ -144,7 +158,7 @@ fun StagesListScreen(
                         }
                     }
                 } else {
-                    // Content List
+                    // Content List: Compact stages items
                     LazyColumn(
                         state = listState,
                         modifier = Modifier
@@ -153,24 +167,11 @@ fun StagesListScreen(
                         contentPadding = PaddingValues(
                             start = 16.dp,
                             end = 16.dp,
-                            top = 8.dp,
+                            top = 6.dp,
                             bottom = 24.dp
                         ),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Header Stats Item
-                        item {
-                            StagesHeaderStatsCard(
-                                totalStars = uiState.totalStarsEarned,
-                                maxStars = uiState.maxPossibleStars,
-                                completedStages = uiState.completedStagesCount,
-                                totalStages = uiState.stages.size,
-                                progressPercentage = uiState.progressPercentage,
-                                modifier = Modifier.padding(bottom = 6.dp)
-                            )
-                        }
-
-                        // Stages List Items
                         itemsIndexed(
                             items = uiState.stages,
                             key = { _, stage -> stage.id }

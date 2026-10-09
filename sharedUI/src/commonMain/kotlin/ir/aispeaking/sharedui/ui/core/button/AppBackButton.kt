@@ -19,6 +19,15 @@ import ir.aispeaking.sharedui.ic_back
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.graphicsLayer
+
 /**
  * Standard circular top-bar icon button matching the profile container styling.
  */
@@ -34,9 +43,21 @@ fun AppTopBarIconButton(
     backgroundColor: Color = Color(0xCC0F172A),
     borderColor: Color = Color(0x446366F1)
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.92f else 1f,
+        animationSpec = tween(durationMillis = 120, easing = FastOutSlowInEasing),
+        label = "topBarBtnScale"
+    )
+
     Box(
         modifier = modifier
             .size(containerSize)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clip(CircleShape)
             .background(backgroundColor)
             .border(
@@ -44,7 +65,11 @@ fun AppTopBarIconButton(
                 color = borderColor,
                 shape = CircleShape
             )
-            .clickable(onClick = onClick),
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
         contentAlignment = Alignment.Center
     ) {
         Icon(

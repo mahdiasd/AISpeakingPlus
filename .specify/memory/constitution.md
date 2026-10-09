@@ -1,14 +1,12 @@
 <!--
 # Sync Impact Report
-- Version change: 1.1.0 -> 1.2.0
+- Version change: 1.2.0 -> 1.3.0
 - Added sections:
   * Core Principles:
-    - VI. Living OpenAPI Specification & Self-Documenting Contracts (API & WebSocket):
-      * Mandatory requestBody definitions with schema structures and concrete example payloads.
-      * OpenAPI 3.0.3 compatibility guarantee for seamless Apidog Live Sync and desktop UI importing.
-      * Resilient input normalization: consumer endpoints (e.g. mobile authentication) must accept standard formats, international codes (+98), Persian/Arabic digits, and common parameter aliases without rejecting valid input.
-  * Technology Stack & Architecture Constraints: OpenAPI 3.0.3 compatibility sanitizer.
-  * Development Workflow, Quality Gates & Verification: Mandatory Apidog Live Sync verification gate.
+    - II. Pure Kotlin Multiplatform (KMP) & Compose Multiplatform (CMP) Client:
+      * RTL Navigation & Back Button Standards: In right-to-left (RTL) Persian layouts, top navigation back buttons (`AppBackButton`) MUST ALWAYS be positioned at the top-right corner of the screen (the Start anchor in RTL) and the chevron icon MUST explicitly point to the right (`>`). Inverted or left-pointing chevrons are strictly prohibited.
+      * Symmetrical Center-Aligned Screen Titles: Top app bar headers MUST default to center alignment (`TextAlign.Center`) balanced with equivalent spacing opposite the back button to maintain consistent visual symmetry.
+  * Governance: Ratified 1.3.0 minor amendment.
 - Removed sections: None
 - Follow-up TODOs: None
 -->
@@ -27,6 +25,8 @@ Both Client and Server modules MUST adhere strictly to Clean Architecture princi
 The frontend and shared client application MUST be built using Kotlin Multiplatform (KMP) and Compose Multiplatform (CMP) across targets (Android, Desktop, Web, iOS).
 - Shared business logic, state management, networking, and UI components MUST reside in shared modules (`domain`, `data`, `sharedUI`, `feature/*`) rather than platform-specific code.
 - Platform-specific code (`actual` implementations) is permitted only for hardware-level or OS-specific capabilities (e.g., native audio record/playback, specific notification channels) and MUST be hidden behind common interfaces.
+- **RTL Navigation & Back Button Standards**: In all RTL (Persian) user interfaces, top-bar navigation back buttons (`AppBackButton`) MUST ALWAYS be positioned at the top-right corner of the screen (the `Start` anchor in RTL). The back chevron icon (`ic_back`) MUST explicitly point to the right (`>`), correctly reflecting the return path in right-to-left flow. Left-positioned back buttons or left-pointing back chevrons in RTL headers are strictly prohibited.
+- **Symmetrical Center-Aligned Screen Titles**: Screen titles in top navigation bars MUST default to horizontal center alignment (`TextAlign.Center`), symmetrically balanced (e.g. with matching width spacing opposite the back button) to ensure visual elegance and spatial consistency across all form factors.
 
 ### III. Ktor Server & Asynchronous Coroutine Pipeline
 The backend MUST be built exclusively on Ktor Server running on an asynchronous, non-blocking coroutine engine (Netty).
@@ -86,4 +86,4 @@ All HTTP REST and WebSocket endpoints in the backend MUST be self-documenting us
   * **PATCH**: Non-semantic refinements, typographical fixes, and clarifications.
 - Compliance MUST be verified during architecture reviews and pull request approvals.
 
-**Version**: 1.2.0 | **Ratified**: 2026-09-17 | **Last Amended**: 2026-09-26
+**Version**: 1.3.0 | **Ratified**: 2026-09-17 | **Last Amended**: 2026-10-08

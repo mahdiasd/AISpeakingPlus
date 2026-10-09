@@ -78,6 +78,7 @@ kotlin {
 
 buildConfig {
     packageName("ir.aispeaking.network")
-    buildConfigField("String", "BaseUrl", "\"${project.findProperty("BASE_URL")}\"")
+    val rawBaseUrl = (project.findProperty("BASE_URL") as? String)?.trimEnd('/') ?: "http://localhost:8080"
+    buildConfigField("String", "BaseUrl", "\"$rawBaseUrl\"")
     buildConfigField("Boolean", "DEBUG", "true")
 }

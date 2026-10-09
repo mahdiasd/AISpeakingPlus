@@ -1,5 +1,8 @@
 package ir.aispeaking.sharedui.ui.stage.stageslist.component
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -7,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,9 +21,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +37,10 @@ import ir.aispeaking.sharedui.ic_points
 import ir.aispeaking.sharedui.ic_star
 import org.jetbrains.compose.resources.painterResource
 
+/**
+ * Compact, pinned, multi-color header status card displaying user progress and stars.
+ * Designed with visual restraint, vibrant accents, and minimal vertical footprint.
+ */
 @Composable
 fun StagesHeaderStatsCard(
     totalStars: Int,
@@ -42,135 +50,188 @@ fun StagesHeaderStatsCard(
     progressPercentage: Float,
     modifier: Modifier = Modifier
 ) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = progressPercentage.coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+        label = "headerProgress"
+    )
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .border(
                 width = 1.dp,
                 brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0x33F59E0B), Color(0x336366F1))
+                    colors = listOf(
+                        Color(0x66F59E0B), // Vibrant Amber
+                        Color(0x66818CF8), // Indigo
+                        Color(0x6610B981)  // Emerald
+                    )
                 ),
-                shape = RoundedCornerShape(24.dp)
+                shape = RoundedCornerShape(18.dp)
             ),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF131B2E)
+            containerColor = Color(0xFF111827)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF1E1B4B).copy(alpha = 0.5f), // Deep Indigo tint
+                            Color(0xFF0F172A),                    // Midnight slate
+                            Color(0xFF064E3B).copy(alpha = 0.35f) // Emerald subtle glow
+                        )
+                    )
+                )
+                .padding(horizontal = 14.dp, vertical = 10.dp)
         ) {
+            // Top Row: Journey Info & Colorful Metric Badges
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Column: Title & Subtitle
-                Column {
-                    Text(
-                        text = "پیشرفت مسیر یادگیری",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "داستان سفر هیجان‌انگیز به لندن",
-                        fontSize = 12.sp,
-                        color = Color(0xFFA5B4FC)
-                    )
+                // Journey Context
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(26.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(Color(0xFF6366F1), Color(0xFF8B5CF6))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "✈",
+                            fontSize = 13.sp,
+                            color = Color.White
+                        )
+                    }
+
+                    Column {
+                        Text(
+                            text = "داستان سفر به لندن",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "مسیر اصلی یادگیری مکالمه",
+                            fontSize = 10.sp,
+                            color = Color(0xFFA5B4FC)
+                        )
+                    }
                 }
 
-                // Stars Highlight Pill
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(Color(0x33F59E0B), Color(0x33D97706))
-                            )
-                        )
-                        .border(1.dp, Color(0x66F59E0B), RoundedCornerShape(16.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                // Metric Badges (Amber Stars & Emerald Stages)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    // Star Badge (Amber/Gold)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0x2AF59E0B))
+                            .border(1.dp, Color(0x66F59E0B), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_star),
-                            contentDescription = null,
-                            tint = Color(0xFFFFD700),
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = "$totalStars",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color(0xFFFFD700)
-                        )
-                        Text(
-                            text = "از $maxStars ستاره",
-                            fontSize = 11.sp,
-                            color = Color(0xFFFDE68A)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_star),
+                                contentDescription = null,
+                                tint = Color(0xFFFFD700),
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Text(
+                                text = "$totalStars/$maxStars",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFFFFD700)
+                            )
+                        }
+                    }
+
+                    // Completed Stages Badge (Emerald)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0x2A10B981))
+                            .border(1.dp, Color(0x6610B981), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_points),
+                                contentDescription = null,
+                                tint = Color(0xFF34D399),
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                text = "$completedStages/$totalStages",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF34D399)
+                            )
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Progress bar
-            LinearProgressIndicator(
-                progress = { progressPercentage.coerceIn(0f, 1f) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = Color(0xFFFFD700),
-                trackColor = Color(0x33334155),
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Footer statistics
+            // Bottom Row: Sleek Multi-color Gradient Progress Bar & Percentage
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                // Gradient Progress Track
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(Color(0x40334155))
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x336366F1)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_points),
-                            contentDescription = null,
-                            tint = Color(0xFF818CF8),
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-                    Text(
-                        text = "$completedStages از $totalStages مرحله تکمیل‌شده",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFFCBD5E1)
+                            .fillMaxWidth(animatedProgress)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color(0xFFF59E0B), // Gold
+                                        Color(0xFF818CF8), // Indigo
+                                        Color(0xFF10B981)  // Emerald
+                                    )
+                                )
+                            )
                     )
                 }
 
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Text(
-                    text = "${(progressPercentage * 100).toInt()}% پیشرفت",
-                    fontSize = 12.sp,
+                    text = "${(animatedProgress * 100).toInt()}%",
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFA5B4FC)
                 )

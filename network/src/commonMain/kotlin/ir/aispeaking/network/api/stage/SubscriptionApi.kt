@@ -8,6 +8,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import ir.aispeaking.network.BuildConfig
+import ir.aispeaking.network.NetworkConfig
 import ir.aispeaking.network.model.NetworkResponse
 import ir.aispeaking.network.model.stage.dto.SubscribeRequestDto
 import ir.aispeaking.network.model.stage.dto.SubscribeResponseDto
@@ -19,7 +20,7 @@ import org.koin.core.annotation.Single
 class SubscriptionApi(
     private val client: HttpClient
 ) {
-    private val baseUrl = BuildConfig.BaseUrl
+    private val baseUrl get() = NetworkConfig.baseUrl
 
     suspend fun getPlans(): NetworkResponse<List<SubscriptionPlanDto>> {
         return client.get("$baseUrl/api/v2/subscriptions/plans").body()
