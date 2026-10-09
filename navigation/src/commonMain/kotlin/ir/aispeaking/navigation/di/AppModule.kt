@@ -1,6 +1,13 @@
 package ir.aispeaking.navigation.di
 
+import ir.aispeaking.auth.di.AuthKoinModule
+import ir.aispeaking.chat.di.ChatKoinModule
+import ir.aispeaking.main.di.MainKoinModule
+import ir.aispeaking.profile.di.ProfileKoinModule
 import ir.aispeaking.sharedui.ui.di.UiKoinModule
+import ir.aispeaking.splash.di.SplashKoinModule
+import ir.aispeaking.stageslist.di.StagesListKoinModule
+import ir.aispeaking.subscription.di.SubscriptionKoinModule
 import ir.aispeaking.utils.di.UtilsKoinModule
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Configuration
@@ -22,6 +29,13 @@ class MyModule
         ir.aispeaking.storage.di.StorageKoinModule::class,
         UiKoinModule::class,
         UtilsKoinModule::class,
+        SplashKoinModule::class,
+        AuthKoinModule::class,
+        MainKoinModule::class,
+        StagesListKoinModule::class,
+        ChatKoinModule::class,
+        ProfileKoinModule::class,
+        SubscriptionKoinModule::class,
     ]
 )
 class MyApp

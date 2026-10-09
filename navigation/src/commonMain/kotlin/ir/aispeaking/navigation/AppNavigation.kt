@@ -8,9 +8,13 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import ir.aispeaking.sharedui.ui.login.LoginRoute
-import ir.aispeaking.sharedui.ui.splash.SplashRoute
-import ir.aispeaking.sharedui.ui.stage.JourneyMapScreen
+import ir.aispeaking.auth.LoginRoute
+import ir.aispeaking.chat.ChatScreen
+import ir.aispeaking.main.JourneyMapScreen
+import ir.aispeaking.profile.ProfileScreen
+import ir.aispeaking.splash.SplashRoute
+import ir.aispeaking.stageslist.StagesListScreen
+import ir.aispeaking.subscription.SubscriptionScreen
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -71,7 +75,7 @@ fun AppNavigation(
             }
 
             entry<StagesListRoute> {
-                ir.aispeaking.sharedui.ui.stage.stageslist.StagesListScreen(
+                StagesListScreen(
                     viewModel = koinViewModel(),
                     onNavigateBack = { backStack.removeLastOrNull() },
                     onNavigateToStageChat = { stageId ->
@@ -84,7 +88,7 @@ fun AppNavigation(
             }
 
             entry<ProfileRoute> {
-                ir.aispeaking.sharedui.ui.profile.ProfileScreen(
+                ProfileScreen(
                     viewModel = koinViewModel(),
                     onNavigateBack = { backStack.removeLastOrNull() },
                     onNavigateToLogin = { backStack.add(LoginRoute) },
@@ -95,7 +99,7 @@ fun AppNavigation(
             }
 
             entry<StageChatRoute> { route ->
-                ir.aispeaking.sharedui.ui.stage.ChatScreen(
+                ChatScreen(
                     stageId = route.stageId,
                     viewModel = koinViewModel(),
                     onNavigateBack = { backStack.removeLastOrNull() }
@@ -103,7 +107,7 @@ fun AppNavigation(
             }
 
             entry<SubscriptionRoute> {
-                ir.aispeaking.sharedui.ui.subscription.SubscriptionScreen(
+                SubscriptionScreen(
                     viewModel = koinViewModel(),
                     onNavigateBack = { backStack.removeLastOrNull() },
                     onSubscriptionSuccess = {

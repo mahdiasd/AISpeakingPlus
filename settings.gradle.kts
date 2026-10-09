@@ -35,6 +35,10 @@ include(":navigation")
 include(":network")
 include(":storage")
 
-
-
-
+include(":feature:splash")
+include(":feature:auth")
+include(":feature:main")
+include(":feature:stages_list")
+include(":feature:chat")
+include(":feature:profile")
+include(":feature:subscription")

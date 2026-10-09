@@ -2,7 +2,7 @@
 
 package ir.aispeaking.web
 
-import ir.aispeaking.sharedui.ui.stage.audio.DefaultStageAudioController
+import ir.aispeaking.chat.audio.DefaultStageAudioController
 import kotlinx.coroutines.*
 
 // External JS functions for WasmJs browser runtime

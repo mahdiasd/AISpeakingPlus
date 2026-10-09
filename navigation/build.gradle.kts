@@ -36,6 +36,13 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":sharedUI"))
+            api(project(":feature:splash"))
+            api(project(":feature:auth"))
+            api(project(":feature:main"))
+            api(project(":feature:stages_list"))
+            api(project(":feature:chat"))
+            api(project(":feature:profile"))
+            api(project(":feature:subscription"))
             implementation(project(":utils"))
             implementation(project(":data"))
             implementation(project(":domain"))

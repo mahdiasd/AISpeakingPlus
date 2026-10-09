@@ -13,8 +13,8 @@ import ir.aispeaking.navigation.AppNavigation
 import ir.aispeaking.navigation.di.initKoin
 import ir.aispeaking.sharedui.ui.them.AppTheme
 
-import ir.aispeaking.sharedui.ui.stage.audio.DefaultStageAudioController
-import ir.aispeaking.sharedui.ui.stage.audio.StageAudioController
+import ir.aispeaking.chat.audio.DefaultStageAudioController
+import ir.aispeaking.chat.audio.StageAudioController
 import org.koin.core.context.GlobalContext
 
 class AppActivity : ComponentActivity() {

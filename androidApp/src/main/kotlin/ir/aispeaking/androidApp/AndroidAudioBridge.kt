@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
-import ir.aispeaking.sharedui.ui.stage.audio.DefaultStageAudioController
+import ir.aispeaking.chat.audio.DefaultStageAudioController
 
 class AndroidAudioBridge(
     private val context: Context,
