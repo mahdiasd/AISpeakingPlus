@@ -7,6 +7,7 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import ir.aispeaking.network.BuildConfig
+import ir.aispeaking.network.NetworkConfig
 import ir.aispeaking.network.model.NetworkResponse
 import ir.aispeaking.network.model.tts.dto.SynthesizeRequestDto
 import ir.aispeaking.network.model.tts.dto.SynthesizeResponseDto
@@ -17,7 +18,7 @@ import org.koin.core.annotation.Single
 class TtsApi(
     private val client: HttpClient
 ) {
-    private val baseUrl = BuildConfig.BaseUrl
+    private val baseUrl get() = NetworkConfig.baseUrl
 
     suspend fun getVoices(): NetworkResponse<List<TtsVoiceDto>> {
         return client.get("$baseUrl/api/v2/tts/voices").body()

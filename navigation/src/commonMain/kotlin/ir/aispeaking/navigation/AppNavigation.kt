@@ -63,6 +63,22 @@ fun AppNavigation(
                     },
                     onNavigateToSubscription = {
                         backStack.add(SubscriptionRoute)
+                    },
+                    onNavigateToStagesList = {
+                        backStack.add(StagesListRoute)
+                    }
+                )
+            }
+
+            entry<StagesListRoute> {
+                ir.aispeaking.sharedui.ui.stage.stageslist.StagesListScreen(
+                    viewModel = koinViewModel(),
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                    onNavigateToStageChat = { stageId ->
+                        backStack.add(StageChatRoute(stageId))
+                    },
+                    onNavigateToSubscription = {
+                        backStack.add(SubscriptionRoute)
                     }
                 )
             }

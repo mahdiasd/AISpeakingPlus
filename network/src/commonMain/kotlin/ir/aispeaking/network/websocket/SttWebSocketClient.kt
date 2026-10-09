@@ -8,6 +8,7 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import ir.aispeaking.network.BuildConfig
+import ir.aispeaking.network.NetworkConfig
 import ir.aispeaking.network.model.stt.dto.SttMessageDto
 import ir.aispeaking.storage.preferences.token.TokenPreferences
 import ir.aispeaking.utils.dLog
@@ -24,7 +25,7 @@ class SttWebSocketClient(
     private val client: HttpClient,
     private val tokenPreferences: TokenPreferences
 ) {
-    private val baseUrl = BuildConfig.BaseUrl
+    private val baseUrl get() = NetworkConfig.baseUrl
     private var activeSession: DefaultClientWebSocketSession? = null
     private val sessionMutex = Mutex()
 

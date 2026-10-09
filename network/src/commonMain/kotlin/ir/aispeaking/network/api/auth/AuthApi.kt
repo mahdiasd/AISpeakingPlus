@@ -6,6 +6,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import ir.aispeaking.network.BuildConfig
+import ir.aispeaking.network.NetworkConfig
 import ir.aispeaking.network.model.NetworkResponse
 import ir.aispeaking.network.model.auth.dto.AuthResponseDto
 import ir.aispeaking.network.model.auth.dto.SendOtpRequestDto
@@ -18,7 +19,7 @@ import org.koin.core.annotation.Single
 class AuthApi(
     private val client: HttpClient
 ) {
-    private val baseUrl = BuildConfig.BaseUrl
+    private val baseUrl get() = NetworkConfig.baseUrl
 
     suspend fun sendOtp(request: SendOtpRequestDto): NetworkResponse<SendOtpResponseDto> {
         return client.post("$baseUrl/api/v2/auth/otp/send") {

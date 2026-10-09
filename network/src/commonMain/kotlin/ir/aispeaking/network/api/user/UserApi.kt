@@ -8,6 +8,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import ir.aispeaking.network.BuildConfig
+import ir.aispeaking.network.NetworkConfig
 import ir.aispeaking.network.model.NetworkResponse
 import ir.aispeaking.network.model.user.dto.UpdateProfileRequestDto
 import ir.aispeaking.network.model.user.dto.UserProfileResponseDto
@@ -17,7 +18,7 @@ import org.koin.core.annotation.Single
 class UserApi(
     private val client: HttpClient
 ) {
-    private val baseUrl = BuildConfig.BaseUrl
+    private val baseUrl get() = NetworkConfig.baseUrl
 
     suspend fun getProfile(): NetworkResponse<UserProfileResponseDto> {
         return client.get("$baseUrl/api/v2/user/profile").body()
