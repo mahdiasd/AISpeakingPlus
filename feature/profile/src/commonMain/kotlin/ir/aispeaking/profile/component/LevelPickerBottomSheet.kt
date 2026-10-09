@@ -1,29 +1,43 @@
 package ir.aispeaking.profile.component
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_done
-import org.jetbrains.compose.resources.painterResource
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameSheet
 import ir.aispeaking.sharedui.ui.game.GameText
+import org.jetbrains.compose.resources.painterResource
 
 data class CefrLevelInfo(
     val code: String,
@@ -37,37 +51,37 @@ private val CEFR_LEVELS = listOf(
         code = "A1",
         titleFa = "مبتدی (Beginner)",
         descriptionFa = "آشنایی با کلمات ساده، معرفی خود و اصطلاحات روزمره",
-        accentColor = Color(0xFF38BDF8)
+        accentColor = Game.Sky
     ),
     CefrLevelInfo(
         code = "A2",
         titleFa = "پیش‌متوسط (Elementary)",
         descriptionFa = "درک عبارات پرکاربرد و مکالمات ساده پیرامون کارهای روزانه",
-        accentColor = Color(0xFF34D399)
+        accentColor = Game.Mint
     ),
     CefrLevelInfo(
         code = "B1",
         titleFa = "متوسط (Intermediate)",
         descriptionFa = "مکالمه در موقعیت‌های سفر، کار و بیان تجربیات و اهداف",
-        accentColor = Color(0xFF818CF8)
+        accentColor = Game.Blue
     ),
     CefrLevelInfo(
         code = "B2",
         titleFa = "فوق‌متوسط (Upper-Intermediate)",
         descriptionFa = "صحبت روان و موثر در بحث‌های فنی، اجتماعی و تخصصی",
-        accentColor = Color(0xFFA78BFA)
+        accentColor = Game.Violet
     ),
     CefrLevelInfo(
         code = "C1",
         titleFa = "پیشرفته (Advanced)",
         descriptionFa = "درک آسان مفاهیم پیچیده و کاربرد منعطف و خلاقانه زبان",
-        accentColor = Color(0xFFFFC83D)
+        accentColor = Game.Gold
     ),
     CefrLevelInfo(
         code = "C2",
         titleFa = "مسلط / بومی (Mastery)",
         descriptionFa = "تسلط کامل، دقیق، سریع و بی‌وقفه در تمامی ابعاد زبان",
-        accentColor = Color(0xFFFFC83D)
+        accentColor = Game.GoldDeep
     )
 )
 
@@ -86,7 +100,7 @@ fun LevelPickerBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
-                .padding(bottom = 20.dp),
+                .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
@@ -98,7 +112,7 @@ fun LevelPickerBottomSheet(
                 align = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
@@ -123,21 +137,38 @@ private fun LevelOptionCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val cardBg = if (isSelected) Color(0xFF1B2550) else Color(0xFF131B3B)
-    val cardBorder = if (isSelected) levelInfo.accentColor else Color(0x228C6CFF)
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.98f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 450f),
+        label = "level_option_press"
+    )
+
+    val cardBg = if (isSelected) Game.PanelRaised else Game.PanelSolid
+    val cardBorder = if (isSelected) levelInfo.accentColor else Game.Stroke
+    val shape = RoundedCornerShape(18.dp)
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(shape)
             .background(cardBg)
             .border(
                 width = if (isSelected) 1.5.dp else 1.dp,
                 color = cardBorder,
-                shape = RoundedCornerShape(16.dp)
+                shape = shape
             )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp)
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(horizontal = 14.dp, vertical = 13.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -149,42 +180,43 @@ private fun LevelOptionCard(
                 modifier = Modifier
                     .size(42.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(levelInfo.accentColor.copy(alpha = if (isSelected) 0.25f else 0.15f))
+                    .background(levelInfo.accentColor.copy(alpha = if (isSelected) 0.22f else 0.12f))
                     .border(
                         width = 1.dp,
-                        color = levelInfo.accentColor.copy(alpha = if (isSelected) 0.8f else 0.3f),
+                        color = levelInfo.accentColor.copy(alpha = if (isSelected) 0.75f else 0.25f),
                         shape = RoundedCornerShape(12.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
+                GameText(
                     text = levelInfo.code,
                     color = levelInfo.accentColor,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    size = 15.sp,
+                    bold = true,
+                    latin = true
                 )
             }
 
             // Title & Description
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
-                Text(
+                GameText(
                     text = levelInfo.titleFa,
-                    color = if (isSelected) Color.White else Color(0xFFE2E8F0),
-                    fontSize = 14.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                    color = if (isSelected) Game.TextPrimary else Game.TextSecondary,
+                    size = 14.sp,
+                    bold = isSelected
                 )
-                Text(
+                GameText(
                     text = levelInfo.descriptionFa,
-                    color = Color(0xFFB7C0E0),
-                    fontSize = 11.sp,
+                    color = Game.TextSecondary,
+                    size = 11.sp,
                     lineHeight = 16.sp
                 )
             }
 
-            // Radio/Selection Indicator
+            // Radio / Checkmark Selection Indicator
             if (isSelected) {
                 Box(
                     modifier = Modifier
@@ -205,7 +237,7 @@ private fun LevelOptionCard(
                     modifier = Modifier
                         .size(24.dp)
                         .clip(CircleShape)
-                        .border(1.5.dp, Color(0xFF40497A), CircleShape)
+                        .border(1.5.dp, Game.StrokeStrong, CircleShape)
                 )
             }
         }
