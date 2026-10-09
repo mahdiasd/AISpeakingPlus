@@ -110,11 +110,11 @@ fun StageListItemCard(
                     .padding(top = 12.dp)
                     .size(if (isActiveCurrentStage) 44.dp else 38.dp)
                     .background(
-                        if (isLocked) Brush.linearGradient(listOf(Color(0xFF2A3262), Color(0xFF1B2250)))
+                        if (isLocked) Brush.linearGradient(listOf(Color(0xFF2C2C2E), Color(0xFF1C1C1E)))
                         else Brush.linearGradient(listOf(accent, accent.copy(alpha = 0.7f))),
                         CircleShape
                     )
-                    .border(2.dp, if (isActiveCurrentStage) Color.White else accent.copy(alpha = 0.5f), CircleShape),
+                    .border(1.5.dp, if (isActiveCurrentStage) Color.White else accent.copy(alpha = 0.4f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 when (stage.lockStatus) {
@@ -134,7 +134,7 @@ fun StageListItemCard(
                         text = stage.orderIndex.fa(),
                         size = 15.sp,
                         bold = true,
-                        color = if (isActiveCurrentStage || !hasPlayed) Color(0xFF04261C) else Color(0xFF3A2600)
+                        color = if (isActiveCurrentStage) Color(0xFF07080A) else Color.White
                     )
                 }
             }

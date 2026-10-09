@@ -4,48 +4,49 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 /**
- * Design tokens for the game-style look of the learner app (not the admin panel).
+ * Design tokens aligned with Apple Human Interface Guidelines & Emil Kowalski's craft sensibility.
  *
- * The palette is intentionally small: a deep-navy "ink" base so stage artwork pops,
- * one warm reward color (gold), one action color (mint) and one secondary accent (violet).
+ * Uses Apple dark materials, translucent frosted glass layers, iOS system accents (Blue, Mint,
+ * Indigo, Amber, Coral, Cyan), and iOS typography label hierarchies.
  */
 object Game {
-    // Surfaces
-    val Ink = Color(0xFF080D22)
-    val InkSoft = Color(0xFF111833)
-    val Panel = Color(0xE6101734)
-    val PanelSolid = Color(0xFF131B3B)
-    val PanelRaised = Color(0xFF1B2550)
+    // Apple Surfaces & Materials
+    val Ink = Color(0xFF07080A)
+    val InkSoft = Color(0xFF121316)
+    val Panel = Color(0xD91C1C1E)
+    val PanelSolid = Color(0xFF1C1C1E)
+    val PanelRaised = Color(0xFF2C2C2E)
     val Stroke = Color(0x24FFFFFF)
-    val StrokeStrong = Color(0x40FFFFFF)
+    val StrokeStrong = Color(0x38FFFFFF)
 
-    // Text
+    // Apple Typography Labels
     val TextPrimary = Color(0xFFFFFFFF)
-    val TextSecondary = Color(0xFFB7C0E0)
-    val TextMuted = Color(0xFF7F8AB3)
+    val TextSecondary = Color(0x99EBEBF5) // 60% white (iOS secondary label)
+    val TextMuted = Color(0x4DEBEBF5)     // 30% white (iOS tertiary label)
 
-    // Action / reward / accent
-    val Mint = Color(0xFF2EE6A8)
-    val MintDeep = Color(0xFF12A878)
-    val Gold = Color(0xFFFFC83D)
-    val GoldDeep = Color(0xFFD98E00)
-    val Violet = Color(0xFF8C6CFF)
-    val VioletDeep = Color(0xFF5636D8)
-    val Coral = Color(0xFFFF6B6B)
-    val CoralDeep = Color(0xFFC53B3B)
-    val Sky = Color(0xFF4CC9F0)
+    // Apple System Accents
+    val Blue = Color(0xFF0A84FF)
+    val Mint = Color(0xFF30D158)
+    val MintDeep = Color(0xFF248A3D)
+    val Gold = Color(0xFFFFD60A)
+    val GoldDeep = Color(0xFFD4A000)
+    val Violet = Color(0xFF5E5CE6)
+    val VioletDeep = Color(0xFF4745B8)
+    val Coral = Color(0xFFFF453A)
+    val CoralDeep = Color(0xFFD70015)
+    val Sky = Color(0xFF64D2FF)
 
-    // Chat
-    val BubbleAi = Color(0xE6121A3A)
-    val BubbleUserTop = Color(0xFF7C5CFF)
-    val BubbleUserBottom = Color(0xFF5A3EE0)
+    // Chat Bubbles (Apple iMessage style)
+    val BubbleAi = Color(0xFF242426)
+    val BubbleUserTop = Color(0xFF0A84FF)
+    val BubbleUserBottom = Color(0xFF0071E3)
 
-    val ScrimTop = Color(0xCC050816)
-    val ScrimBottom = Color(0xF2050816)
-
-    val ModalScrim = Color(0xB3030612)
+    // Overlays & Scrims
+    val ScrimTop = Color(0xCC000000)
+    val ScrimBottom = Color(0xF2000000)
+    val ModalScrim = Color(0x8C000000)
 
     val FallbackBackground = Brush.verticalGradient(
-        listOf(Color(0xFF1B1F4B), Color(0xFF0E1433), Color(0xFF080D22))
+        listOf(Color(0xFF181920), Color(0xFF0D0E12), Color(0xFF07080A))
     )
 }

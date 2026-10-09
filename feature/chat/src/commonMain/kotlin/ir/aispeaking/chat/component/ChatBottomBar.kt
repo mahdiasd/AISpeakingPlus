@@ -1,19 +1,18 @@
 package ir.aispeaking.chat.component
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,13 +23,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -46,7 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
@@ -63,7 +59,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDirection
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,13 +71,11 @@ import ir.aispeaking.sharedui.ic_lamp
 import ir.aispeaking.sharedui.ic_microphone
 import ir.aispeaking.sharedui.ic_send
 import ir.aispeaking.sharedui.ui.game.Game
-import ir.aispeaking.sharedui.ui.game.GameChip
 import ir.aispeaking.sharedui.ui.game.GameIconButton
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.fa
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import org.jetbrains.compose.resources.painterResource
-import kotlin.math.roundToInt
 
 enum class ChatInputMode {
     VOICE,
@@ -89,11 +83,9 @@ enum class ChatInputMode {
 }
 
 /**
- * Bottom dock of the conversation. One clear primary action at a time:
- *  - voice mode: a big microphone, with live text appearing above it and "send" lighting up when
- *    there is something to send;
- *  - text mode: a plain text field with send.
- * Every secondary control carries a Persian label so nothing has to be guessed.
+ * Ultra-compact, elegant Apple-style bottom dock for conversation.
+ * Designed to maximize chat transcript visibility while offering instant access to:
+ * voice recording, text input, smart hints, transcript preview, and send.
  */
 @Composable
 fun ChatBottomBar(
@@ -109,324 +101,167 @@ fun ChatBottomBar(
     onSendClick: () -> Unit,
     onHintClick: () -> Unit = {}
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        // Floating help button, always reachable but clearly separate from the main input
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.Start
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .imePadding()
+    ) {
+        // Floating Compact Transcript Preview Capsule (shown when voice transcript is ready)
+        AnimatedVisibility(
+            visible = text.isNotBlank() && inputMode == ChatInputMode.VOICE,
+            enter = fadeIn(tween(140)) + slideInVertically(tween(160)) { it / 2 },
+            exit = fadeOut(tween(100)) + slideOutVertically(tween(120)) { it / 2 }
         ) {
-            GameChip(
-                text = when {
-                    isRequestingHint -> "در حال دریافت راهنما…"
-                    hintsUsedCount > 0 -> "راهنما (${hintsUsedCount.fa()} بار)"
-                    else -> "راهنما بگیر"
-                },
-                icon = Res.drawable.ic_lamp,
-                accent = Game.Gold,
-                container = Game.Panel,
-                active = hintsUsedCount > 0,
-                onClick = if (isRequestingHint) null else onHintClick
+            CompactTranscriptCapsule(
+                text = text,
+                onEdit = { onInputModeChange(ChatInputMode.TEXT) },
+                onClear = { onTextChange("") }
             )
         }
 
-        val dockShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-        Column(
+        // Main Compact Dock (height ~54dp)
+        val dockShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(dockShape)
                 .background(Game.Panel)
                 .border(1.dp, Game.Stroke, dockShape)
-                .navigationBarsPadding()
-                .imePadding()
-                .padding(horizontal = 16.dp, vertical = 14.dp)
-                .animateContentSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = 10.dp, vertical = 7.dp)
         ) {
             when (inputMode) {
-                ChatInputMode.VOICE -> VoiceDock(
+                ChatInputMode.VOICE -> CompactVoiceRow(
                     text = text,
                     isRecording = isRecording,
+                    hintsUsedCount = hintsUsedCount,
+                    isRequestingHint = isRequestingHint,
                     onSwitchToText = { onInputModeChange(ChatInputMode.TEXT) },
                     onVoiceToggle = onVoiceToggle,
                     onSendClick = onSendClick,
-                    onClear = { onTextChange("") }
+                    onHintClick = onHintClick
                 )
 
-                ChatInputMode.TEXT -> TextDock(
+                ChatInputMode.TEXT -> CompactTextRow(
                     text = text,
+                    hintsUsedCount = hintsUsedCount,
+                    isRequestingHint = isRequestingHint,
                     onTextChange = onTextChange,
                     onSwitchToVoice = { onInputModeChange(ChatInputMode.VOICE) },
-                    onSendClick = onSendClick
+                    onSendClick = onSendClick,
+                    onHintClick = onHintClick
                 )
             }
         }
     }
 }
 
+/**
+ * Compact voice controls row:
+ * [Keyboard toggle] --- [Pulsing recording pill OR Apple record button] --- [Send OR Hint]
+ */
 @Composable
-private fun VoiceDock(
+private fun CompactVoiceRow(
     text: String,
     isRecording: Boolean,
+    hintsUsedCount: Int,
+    isRequestingHint: Boolean,
     onSwitchToText: () -> Unit,
     onVoiceToggle: (Boolean) -> Unit,
     onSendClick: () -> Unit,
-    onClear: () -> Unit
+    onHintClick: () -> Unit
 ) {
-    val hasText = text.isNotBlank()
-
-    // Live transcript
-    AnimatedVisibility(
-        visible = hasText,
-        enter = fadeIn(tween(160)) + expandVertically(tween(200)),
-        exit = fadeOut(tween(120)) + shrinkVertically(tween(160))
-    ) {
-        val shape = RoundedCornerShape(18.dp)
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Game.PanelRaised, shape)
-                .border(1.dp, Game.Stroke, shape)
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            GameText(
-                text = "جمله‌ای که گفتی",
-                size = 11.sp,
-                color = Game.TextSecondary
-            )
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                GameText(
-                    text = text,
-                    size = 16.sp,
-                    lineHeight = 24.sp,
-                    latin = true,
-                    maxLines = 4,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 110.dp)
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                GameChip(
-                    text = "ویرایش",
-                    icon = Res.drawable.ic_edit,
-                    accent = Game.Sky,
-                    onClick = onSwitchToText
-                )
-                GameChip(
-                    text = "پاک کردن",
-                    icon = Res.drawable.ic_clear,
-                    accent = Game.Coral,
-                    onClick = onClear
-                )
-            }
-        }
-    }
-
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            LabeledAction(label = "تایپ می‌کنم", modifier = Modifier.width(72.dp)) {
-                GameIconButton(
-                    icon = Res.drawable.ic_keyboard,
-                    onClick = onSwitchToText,
-                    contentDescription = "تایپ کردن به‌جای صحبت",
-                    size = 48.dp,
-                    iconSize = 22.dp,
-                    container = Game.PanelRaised
-                )
-            }
-
-            MicButton(isRecording = isRecording, onClick = { onVoiceToggle(!isRecording) })
-
-            LabeledAction(label = "ارسال", modifier = Modifier.width(72.dp)) {
-                SendButton(enabled = hasText, onClick = onSendClick, size = 48.dp)
-            }
-        }
-    }
-
-    GameText(
-        text = when {
-            isRecording -> "در حال شنیدن… وقتی تمام شد دوباره لمس کن"
-            hasText -> "درست بود؟ ارسال کن یا دوباره ضبط کن"
-            else -> "برای صحبت به انگلیسی، میکروفون را لمس کن"
-        },
-        size = 12.sp,
-        color = if (isRecording) Game.Coral else Game.TextSecondary,
-        align = androidx.compose.ui.text.style.TextAlign.Center
-    )
-}
-
-@Composable
-private fun LabeledAction(
-    label: String,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        content()
-        GameText(text = label, size = 11.sp, color = Game.TextSecondary, maxLines = 1)
-    }
-}
-
-@Composable
-private fun SendButton(enabled: Boolean, onClick: () -> Unit, size: androidx.compose.ui.unit.Dp) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed && enabled) 0.9f else 1f,
-        animationSpec = tween(100),
-        label = "send_press"
-    )
-    Box(
-        modifier = Modifier
-            .size(size)
-            .scale(scale)
-            .clip(CircleShape)
-            .background(
-                if (enabled) Brush.verticalGradient(listOf(Color(0xFF5BF5C4), Game.Mint))
-                else Brush.verticalGradient(listOf(Color(0xFF2A3262), Color(0xFF2A3262)))
+            // Mode toggle to Keyboard
+            GameIconButton(
+                icon = Res.drawable.ic_keyboard,
+                onClick = onSwitchToText,
+                contentDescription = "تایپ متنی",
+                size = 38.dp,
+                iconSize = 19.dp,
+                container = Color(0x1AFFFFFF),
+                border = Color(0x14FFFFFF)
             )
-            .border(1.dp, Color.White.copy(alpha = if (enabled) 0.3f else 0.08f), CircleShape)
-            .clickable(
-                interactionSource = interaction,
-                indication = null,
-                enabled = enabled,
-                onClick = onClick
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_send),
-            contentDescription = "ارسال پیام",
-            tint = if (enabled) Color(0xFF04261C) else Game.TextMuted,
-            modifier = Modifier.size(22.dp)
-        )
-    }
-}
 
-/** Big record button. While recording it turns coral, shows a stop square and emits soft rings. */
-@Composable
-private fun MicButton(isRecording: Boolean, onClick: () -> Unit) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val depth = 5.dp
-    val press by animateFloatAsState(
-        targetValue = if (pressed) 1f else 0f,
-        animationSpec = tween(90),
-        label = "mic_press"
-    )
-    val transition = rememberInfiniteTransition(label = "mic_rings")
-    val ring by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(1500, easing = LinearEasing), RepeatMode.Restart),
-        label = "mic_ring"
-    )
-
-    val top = if (isRecording) Color(0xFFFF8E8E) else Color(0xFF5BF5C4)
-    val bottom = if (isRecording) Game.Coral else Game.Mint
-    val edge = if (isRecording) Game.CoralDeep else Game.MintDeep
-
-    Box(modifier = Modifier.size(92.dp), contentAlignment = Alignment.Center) {
-        if (isRecording) {
-            repeat(2) { i ->
-                val p = ((ring + i * 0.5f) % 1f)
-                Box(
-                    modifier = Modifier
-                        .size(78.dp)
-                        .graphicsLayer {
-                            val s = 1f + p * 0.45f
-                            scaleX = s
-                            scaleY = s
-                            alpha = (1f - p) * 0.45f
-                        }
-                        .border(2.dp, Game.Coral, CircleShape)
-                )
+            // Center: Interactive Recording Pill
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isRecording) {
+                    AppleRecordingActivePill(onStop = { onVoiceToggle(false) })
+                } else {
+                    AppleRecordPill(
+                        hasText = text.isNotBlank(),
+                        onClick = { onVoiceToggle(true) }
+                    )
+                }
             }
-        }
-        Box(
-            modifier = Modifier
-                .size(78.dp)
-                .offset(y = depth / 2)
-                .background(edge, CircleShape)
-        )
-        Box(
-            modifier = Modifier
-                .size(78.dp)
-                .offset { IntOffset(0, (press * depth.toPx()).roundToInt() - (depth / 2).roundToPx()) }
-                .clip(CircleShape)
-                .background(Brush.verticalGradient(listOf(top, bottom)))
-                .border(1.5.dp, Color.White.copy(alpha = 0.35f), CircleShape)
-                .clickable(interactionSource = interaction, indication = null, onClick = onClick),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isRecording) {
-                Box(
-                    modifier = Modifier
-                        .size(26.dp)
-                        .background(Color.White, RoundedCornerShape(6.dp))
-                )
+
+            // Trailing: Send when text is ready, otherwise Hint button
+            if (text.isNotBlank()) {
+                AppleSendButton(onClick = onSendClick, size = 38.dp)
             } else {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_microphone),
-                    contentDescription = "شروع ضبط صدا",
-                    tint = Color(0xFF04261C),
-                    modifier = Modifier.size(34.dp)
+                AppleHintButton(
+                    hintsUsedCount = hintsUsedCount,
+                    isRequesting = isRequestingHint,
+                    onClick = onHintClick
                 )
             }
         }
     }
 }
 
+/**
+ * Compact text input row:
+ * [Mic toggle] --- [Apple Input Field] --- [Send OR Hint]
+ */
 @Composable
-private fun TextDock(
+private fun CompactTextRow(
     text: String,
+    hintsUsedCount: Int,
+    isRequestingHint: Boolean,
     onTextChange: (String) -> Unit,
     onSwitchToVoice: () -> Unit,
-    onSendClick: () -> Unit
+    onSendClick: () -> Unit,
+    onHintClick: () -> Unit
 ) {
     val canSend = text.isNotBlank()
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         try {
             focusRequester.requestFocus()
-        } catch (_: Throwable) {
-        }
+        } catch (_: Throwable) {}
     }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            LabeledAction(label = "صحبت می‌کنم", modifier = Modifier.width(72.dp)) {
-                GameIconButton(
-                    icon = Res.drawable.ic_microphone,
-                    onClick = onSwitchToVoice,
-                    contentDescription = "صحبت کردن به‌جای تایپ",
-                    size = 48.dp,
-                    iconSize = 22.dp,
-                    container = Game.PanelRaised
-                )
-            }
+            // Mode toggle to Voice
+            GameIconButton(
+                icon = Res.drawable.ic_microphone,
+                onClick = onSwitchToVoice,
+                contentDescription = "مکالمه صوتی",
+                size = 38.dp,
+                iconSize = 19.dp,
+                container = Color(0x1AFFFFFF),
+                border = Color(0x14FFFFFF)
+            )
 
-            val fieldShape = RoundedCornerShape(22.dp)
+            // Apple Compact Input Pill
+            val fieldShape = RoundedCornerShape(20.dp)
             val textStyle = TextStyle(
                 color = Game.TextPrimary,
-                fontSize = 16.sp,
-                lineHeight = 24.sp,
+                fontSize = 15.sp,
+                lineHeight = 20.sp,
                 fontFamily = AppTheme.typography.bodyLarge.fontFamily,
                 textDirection = TextDirection.Ltr
             )
@@ -443,24 +278,24 @@ private fun TextDock(
                         } else false
                     },
                 textStyle = textStyle,
-                cursorBrush = SolidColor(Game.Mint),
-                maxLines = 4,
+                cursorBrush = SolidColor(Game.Blue),
+                maxLines = 3,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(onSend = { if (canSend) onSendClick() }),
                 decorationBox = { inner ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 48.dp)
+                            .height(38.dp)
                             .background(Game.PanelRaised, fieldShape)
-                            .border(1.dp, if (canSend) Game.Mint.copy(alpha = 0.6f) else Game.StrokeStrong, fieldShape)
-                            .padding(horizontal = 16.dp, vertical = 11.dp),
+                            .border(1.dp, if (canSend) Game.Blue.copy(alpha = 0.6f) else Color(0x1AFFFFFF), fieldShape)
+                            .padding(horizontal = 14.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         if (text.isEmpty()) {
                             GameText(
                                 text = "Type in English…",
-                                size = 16.sp,
+                                size = 14.sp,
                                 latin = true,
                                 color = Game.TextMuted
                             )
@@ -470,60 +305,268 @@ private fun TextDock(
                 }
             )
 
-            LabeledAction(label = "ارسال", modifier = Modifier.width(56.dp)) {
-                SendButton(enabled = canSend, onClick = onSendClick, size = 48.dp)
+            // Trailing: Send when entered, otherwise Hint
+            if (canSend) {
+                AppleSendButton(onClick = onSendClick, size = 38.dp)
+            } else {
+                AppleHintButton(
+                    hintsUsedCount = hintsUsedCount,
+                    isRequesting = isRequestingHint,
+                    onClick = onHintClick
+                )
             }
         }
     }
 }
 
-/* --------------------------------- Previews --------------------------------- */
-
-@androidx.compose.ui.tooling.preview.Preview
+/** Floating pill above the dock showing the voice transcript with 1-tap clear / edit */
 @Composable
-private fun ChatBottomBarVoicePreview() {
-    AppTheme {
-        ChatBottomBar(
-            inputMode = ChatInputMode.VOICE,
-            text = "",
-            isRecording = false,
-            onTextChange = {},
-            onInputModeChange = {},
-            onVoiceToggle = {},
-            onSendClick = {}
+private fun CompactTranscriptCapsule(
+    text: String,
+    onEdit: () -> Unit,
+    onClear: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(Game.PanelRaised)
+                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(14.dp))
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                GameText(
+                    text = text,
+                    size = 14.sp,
+                    lineHeight = 19.sp,
+                    latin = true,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                GameIconButton(
+                    icon = Res.drawable.ic_edit,
+                    onClick = onEdit,
+                    contentDescription = "ویرایش",
+                    size = 28.dp,
+                    iconSize = 14.dp,
+                    tint = Game.Sky,
+                    container = Color(0x14FFFFFF),
+                    border = Color.Transparent
+                )
+                GameIconButton(
+                    icon = Res.drawable.ic_clear,
+                    onClick = onClear,
+                    contentDescription = "پاک کردن",
+                    size = 28.dp,
+                    iconSize = 14.dp,
+                    tint = Game.Coral,
+                    container = Color(0x14FFFFFF),
+                    border = Color.Transparent
+                )
+            }
+        }
+    }
+}
+
+/** Apple Voice Memos style active recording pill with pulsing wave and stop button */
+@Composable
+private fun AppleRecordingActivePill(onStop: () -> Unit) {
+    val transition = rememberInfiniteTransition(label = "rec_pulse")
+    val alpha by transition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(700, easing = LinearEasing), RepeatMode.Reverse),
+        label = "rec_dot_alpha"
+    )
+
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f),
+        label = "rec_stop_press"
+    )
+
+    Row(
+        modifier = Modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(20.dp))
+            .background(Game.Coral.copy(alpha = 0.16f))
+            .border(1.dp, Game.Coral.copy(alpha = 0.45f), RoundedCornerShape(20.dp))
+            .clickable(interactionSource = interaction, indication = null, onClick = onStop)
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(9.dp)
+                .graphicsLayer { this.alpha = alpha }
+                .background(Game.Coral, CircleShape)
+        )
+        GameText(
+            text = "در حال شنیدن… لمس برای توقف",
+            size = 12.sp,
+            bold = true,
+            color = Game.Coral
+        )
+        Box(
+            modifier = Modifier
+                .size(14.dp)
+                .background(Game.Coral, RoundedCornerShape(3.dp))
         )
     }
 }
 
-@androidx.compose.ui.tooling.preview.Preview
+/** Apple-style Record button capsule in idle state */
 @Composable
-private fun ChatBottomBarRecordingPreview() {
-    AppTheme {
-        ChatBottomBar(
-            inputMode = ChatInputMode.VOICE,
-            text = "I would like the chicken, please",
-            isRecording = true,
-            hintsUsedCount = 1,
-            onTextChange = {},
-            onInputModeChange = {},
-            onVoiceToggle = {},
-            onSendClick = {}
+private fun AppleRecordPill(
+    hasText: Boolean,
+    onClick: () -> Unit
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f),
+        label = "rec_start_press"
+    )
+
+    val shape = RoundedCornerShape(20.dp)
+    Row(
+        modifier = Modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(shape)
+            .background(if (hasText) Color(0x22FFFFFF) else Game.Mint.copy(alpha = 0.18f))
+            .border(1.dp, if (hasText) Color(0x28FFFFFF) else Game.Mint.copy(alpha = 0.5f), shape)
+            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_microphone),
+            contentDescription = "ضبط صدا",
+            tint = if (hasText) Game.TextPrimary else Game.Mint,
+            modifier = Modifier.size(17.dp)
+        )
+        GameText(
+            text = if (hasText) "ضبط مجدد صدا" else "برای صحبت لمس کنید",
+            size = 13.sp,
+            bold = true,
+            color = if (hasText) Game.TextPrimary else Game.Mint
         )
     }
 }
 
-@androidx.compose.ui.tooling.preview.Preview
+/** Apple circular vibrant Send button */
 @Composable
-private fun ChatBottomBarTextPreview() {
-    AppTheme {
-        ChatBottomBar(
-            inputMode = ChatInputMode.TEXT,
-            text = "Hello there",
-            isRecording = false,
-            onTextChange = {},
-            onInputModeChange = {},
-            onVoiceToggle = {},
-            onSendClick = {}
+private fun AppleSendButton(onClick: () -> Unit, size: androidx.compose.ui.unit.Dp) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.92f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 450f),
+        label = "apple_send_press"
+    )
+    Box(
+        modifier = Modifier
+            .size(size)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(CircleShape)
+            .background(Brush.verticalGradient(listOf(Color(0xFF0A84FF), Color(0xFF0071E3))))
+            .border(1.dp, Color.White.copy(alpha = 0.25f), CircleShape)
+            .clickable(interactionSource = interaction, indication = null, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_send),
+            contentDescription = "ارسال پیام",
+            tint = Color.White,
+            modifier = Modifier.size(18.dp)
         )
+    }
+}
+
+/** Apple compact circular Hint button with smart counter badge */
+@Composable
+private fun AppleHintButton(
+    hintsUsedCount: Int,
+    isRequesting: Boolean,
+    onClick: () -> Unit
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && !isRequesting) 0.92f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f),
+        label = "apple_hint_press"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(CircleShape)
+            .background(if (hintsUsedCount > 0) Game.Gold.copy(alpha = 0.2f) else Color(0x1AFFFFFF))
+            .border(
+                1.dp,
+                if (hintsUsedCount > 0) Game.Gold.copy(alpha = 0.55f) else Color(0x14FFFFFF),
+                CircleShape
+            )
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = !isRequesting,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isRequesting) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(16.dp),
+                strokeWidth = 2.dp,
+                color = Game.Gold
+            )
+        } else {
+            Icon(
+                painter = painterResource(Res.drawable.ic_lamp),
+                contentDescription = "راهنما",
+                tint = if (hintsUsedCount > 0) Game.Gold else Game.TextSecondary,
+                modifier = Modifier.size(18.dp)
+            )
+            if (hintsUsedCount > 0) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(2.dp)
+                        .size(8.dp)
+                        .background(Game.Gold, CircleShape)
+                )
+            }
+        }
     }
 }

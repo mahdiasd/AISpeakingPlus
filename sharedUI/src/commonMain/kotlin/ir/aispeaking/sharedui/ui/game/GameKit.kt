@@ -129,18 +129,16 @@ enum class GameButtonStyle(
     val edge: Color,
     val content: Color,
 ) {
-    Primary(Color(0xFF5BF5C4), Color(0xFF2EE6A8), Color(0xFF12A878), Color(0xFF04261C)),
-    Gold(Color(0xFFFFE283), Color(0xFFFFC83D), Color(0xFFD98E00), Color(0xFF3A2600)),
-    Violet(Color(0xFFA88FFF), Color(0xFF8C6CFF), Color(0xFF5636D8), Color.White),
-    Danger(Color(0xFFFF8E8E), Color(0xFFFF6B6B), Color(0xFFC53B3B), Color.White),
-    Glass(Color(0xFF2B3568), Color(0xFF232C5A), Color(0xFF121940), Color.White),
+    Primary(Color(0xFF0A84FF), Color(0xFF0071E3), Color.Transparent, Color.White),
+    Gold(Color(0xFFFFD60A), Color(0xFFFFB800), Color.Transparent, Color(0xFF1E1700)),
+    Violet(Color(0xFF6366F1), Color(0xFF4F46E5), Color.Transparent, Color.White),
+    Danger(Color(0xFFFF453A), Color(0xFFD70015), Color.Transparent, Color.White),
+    Glass(Color(0x28FFFFFF), Color(0x18FFFFFF), Color.Transparent, Color.White),
 }
 
-private val ButtonDepth = 5.dp
-
 /**
- * Chunky "arcade" button: a colored face sitting on a darker edge. Pressing pushes the face down
- * onto the edge, which gives immediate physical feedback.
+ * Apple-style interactive button: smooth squircle, responsive spring scale on press (Emil Kowalski principle),
+ * and subtle hairline reflection border.
  */
 @Composable
 fun GameButton(
@@ -151,104 +149,103 @@ fun GameButton(
     icon: DrawableResource? = null,
     enabled: Boolean = true,
     loading: Boolean = false,
-    height: Dp = 54.dp,
-    textSize: TextUnit = 16.sp,
+    height: Dp = 50.dp,
+    textSize: TextUnit = 15.sp,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val active = enabled && !loading
-    val press by animateFloatAsState(
-        targetValue = if (pressed && active) 1f else 0f,
-        animationSpec = tween(durationMillis = 90),
-        label = "game_button_press",
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && active) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+        label = "apple_button_press",
     )
-    val shape = RoundedCornerShape(18.dp)
-    val top = if (enabled) style.top else Color(0xFF3B4268)
-    val bottom = if (enabled) style.bottom else Color(0xFF343B60)
-    val edge = if (enabled) style.edge else Color(0xFF222844)
+    val shape = RoundedCornerShape(16.dp)
+    val top = if (enabled) style.top else Color(0xFF2C2C2E)
+    val bottom = if (enabled) style.bottom else Color(0xFF232326)
     val content = if (enabled) style.content else Game.TextMuted
 
-    Box(modifier = modifier.height(height + ButtonDepth)) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(height)
-                .background(edge, shape)
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .height(height)
-                .offset { IntOffset(0, (press * ButtonDepth.toPx()).roundToInt()) }
-                .clip(shape)
-                .background(Brush.verticalGradient(listOf(top, bottom)))
-                .border(1.dp, Color.White.copy(alpha = if (enabled) 0.28f else 0.08f), shape)
-                .clickable(
-                    interactionSource = interaction,
-                    indication = null,
-                    enabled = active,
-                    onClick = onClick,
-                ),
-            contentAlignment = Alignment.Center,
+    Box(
+        modifier = modifier
+            .height(height)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(shape)
+            .background(Brush.verticalGradient(listOf(top, bottom)))
+            .border(
+                1.dp,
+                if (style == GameButtonStyle.Glass) Color.White.copy(alpha = if (enabled) 0.22f else 0.08f)
+                else Color.White.copy(alpha = if (enabled) 0.16f else 0.06f),
+                shape
+            )
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = active,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            modifier = Modifier.padding(horizontal = 16.dp),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                modifier = Modifier.padding(horizontal = 14.dp),
-            ) {
-                if (loading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp,
-                        color = content,
-                    )
-                } else if (icon != null) {
-                    Icon(
-                        painter = painterResource(icon),
-                        contentDescription = null,
-                        tint = content,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-                GameText(
-                    text = text,
-                    size = textSize,
-                    bold = true,
+            if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
                     color = content,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                )
+            } else if (icon != null) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = content,
+                    modifier = Modifier.size(19.dp),
                 )
             }
+            GameText(
+                text = text,
+                size = textSize,
+                bold = true,
+                color = content,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
 
-/** Round glass icon button used for back / profile / utility actions. */
+/** Round Apple-style icon button with spring press feedback. */
 @Composable
 fun GameIconButton(
     icon: DrawableResource,
     onClick: () -> Unit,
     contentDescription: String,
     modifier: Modifier = Modifier,
-    size: Dp = 44.dp,
+    size: Dp = 40.dp,
     iconSize: Dp = 20.dp,
     tint: Color = Game.TextPrimary,
-    container: Color = Game.Panel,
+    container: Color = Color(0x22FFFFFF),
     border: Color = Game.Stroke,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.9f else 1f,
-        animationSpec = tween(100),
-        label = "game_icon_press",
+        targetValue = if (pressed) 0.92f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f),
+        label = "apple_icon_press",
     )
     Box(
         modifier = modifier
             .size(size)
-            .scale(scale)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clip(CircleShape)
             .background(container)
             .border(1.dp, border, CircleShape)
@@ -271,24 +268,27 @@ fun GameChip(
     modifier: Modifier = Modifier,
     icon: DrawableResource? = null,
     accent: Color = Game.TextSecondary,
-    container: Color = Color(0x33FFFFFF),
+    container: Color = Color(0x22FFFFFF),
     active: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.94f else 1f,
-        animationSpec = tween(100),
-        label = "game_chip_press",
+        targetValue = if (pressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 450f),
+        label = "apple_chip_press",
     )
     val shape = RoundedCornerShape(50)
     Row(
         modifier = modifier
-            .scale(scale)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clip(shape)
             .background(if (active) accent.copy(alpha = 0.22f) else container)
-            .border(1.dp, if (active) accent.copy(alpha = 0.7f) else Color.Transparent, shape)
+            .border(1.dp, if (active) accent.copy(alpha = 0.65f) else Color(0x1FFFFFFF), shape)
             .then(
                 if (onClick != null) {
                     Modifier.clickable(interactionSource = interaction, indication = null, onClick = onClick)
@@ -452,8 +452,8 @@ fun GameModal(
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedVisibility(
             visible = visible,
-            enter = fadeIn(tween(180)),
-            exit = fadeOut(tween(140)),
+            enter = fadeIn(tween(160)),
+            exit = fadeOut(tween(130)),
         ) {
             Box(
                 modifier = Modifier
@@ -470,19 +470,19 @@ fun GameModal(
         AnimatedVisibility(
             visible = visible,
             modifier = Modifier.align(Alignment.Center),
-            enter = fadeIn(tween(180)) + scaleIn(initialScale = 0.9f, animationSpec = tween(220)),
-            exit = fadeOut(tween(120)) + scaleOut(targetScale = 0.95f, animationSpec = tween(120)),
+            enter = fadeIn(tween(160)) + scaleIn(initialScale = 0.94f, animationSpec = spring(dampingRatio = 0.84f, stiffness = 400f)),
+            exit = fadeOut(tween(120)) + scaleOut(targetScale = 0.96f, animationSpec = tween(120)),
         ) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 Column(
                     modifier = Modifier
                         .padding(horizontal = 20.dp, vertical = 24.dp)
-                        .widthIn(max = 380.dp)
+                        .widthIn(max = 390.dp)
                         .fillMaxWidth()
-                        .heightIn(max = 640.dp)
-                        .clip(RoundedCornerShape(28.dp))
+                        .heightIn(max = 660.dp)
+                        .clip(RoundedCornerShape(26.dp))
                         .background(Game.PanelSolid)
-                        .border(1.dp, Game.StrokeStrong, RoundedCornerShape(28.dp))
+                        .border(1.dp, Game.StrokeStrong, RoundedCornerShape(26.dp))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
@@ -506,8 +506,8 @@ fun GameSheet(
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedVisibility(
             visible = visible,
-            enter = fadeIn(tween(180)),
-            exit = fadeOut(tween(140)),
+            enter = fadeIn(tween(160)),
+            exit = fadeOut(tween(130)),
         ) {
             Box(
                 modifier = Modifier
@@ -523,11 +523,11 @@ fun GameSheet(
         AnimatedVisibility(
             visible = visible,
             modifier = Modifier.align(Alignment.BottomCenter),
-            enter = slideInVertically(tween(260)) { it } + fadeIn(tween(160)),
-            exit = slideOutVertically(tween(200)) { it } + fadeOut(tween(160)),
+            enter = slideInVertically(spring(dampingRatio = 0.86f, stiffness = 380f)) { it } + fadeIn(tween(140)),
+            exit = slideOutVertically(tween(200)) { it } + fadeOut(tween(140)),
         ) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                val shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+                val shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -546,12 +546,12 @@ fun GameSheet(
                     Spacer(Modifier.height(10.dp))
                     Box(
                         Modifier
-                            .width(40.dp)
-                            .height(4.dp)
+                            .width(36.dp)
+                            .height(5.dp)
                             .clip(CircleShape)
-                            .background(Color(0x55FFFFFF))
+                            .background(Color(0x40FFFFFF))
                     )
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(8.dp))
                     content()
                 }
             }
@@ -584,10 +584,10 @@ fun GameTextField(
     isError: Boolean = false,
     singleLine: Boolean = true,
     centered: Boolean = false,
-    accent: Color = Game.Mint,
+    accent: Color = Game.Blue,
     leading: (@Composable () -> Unit)? = null,
 ) {
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(14.dp)
     var focused by remember { mutableStateOf(false) }
     val direction = if (ltr) androidx.compose.ui.text.style.TextDirection.Ltr else androidx.compose.ui.text.style.TextDirection.Rtl
     val fontFamily = AppTheme.typography.persianRegular
@@ -601,7 +601,7 @@ fun GameTextField(
             singleLine = singleLine,
             textStyle = androidx.compose.ui.text.TextStyle(
                 color = Game.TextPrimary,
-                fontSize = 17.sp,
+                fontSize = 16.sp,
                 fontFamily = fontFamily,
                 textDirection = direction,
                 textAlign = if (centered) TextAlign.Center else TextAlign.Start,
@@ -622,15 +622,15 @@ fun GameTextField(
             decorationBox = { inner ->
                 val borderColor = when {
                     isError -> Game.Coral
-                    focused -> accent
-                    else -> Game.StrokeStrong
+                    focused -> accent.copy(alpha = 0.85f)
+                    else -> Color(0x22FFFFFF)
                 }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 54.dp)
+                        .heightIn(min = 50.dp)
                         .background(Game.PanelRaised, shape)
-                        .border(if (focused || isError) 2.dp else 1.dp, borderColor, shape)
+                        .border(if (focused || isError) 1.5.dp else 1.dp, borderColor, shape)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -640,7 +640,7 @@ fun GameTextField(
                         if (value.isEmpty()) {
                             GameText(
                                 text = placeholder,
-                                size = 17.sp,
+                                size = 16.sp,
                                 color = Game.TextMuted,
                                 align = if (centered) TextAlign.Center else null,
                             )

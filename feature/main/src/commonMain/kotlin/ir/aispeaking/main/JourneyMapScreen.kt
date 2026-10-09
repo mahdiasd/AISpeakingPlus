@@ -319,8 +319,8 @@ private fun StageCard(
     GlassPanel(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 12.dp),
-        shape = RoundedCornerShape(30.dp)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        shape = RoundedCornerShape(26.dp)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),

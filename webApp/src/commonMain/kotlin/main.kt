@@ -57,15 +57,15 @@ fun main() {
 
     ComposeViewport {
         AppTheme(true) {
-            // Dark game-style backdrop shown around the phone frame on large screens.
+            // Apple-style dark ambient backdrop shown around the phone frame on large screens.
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         Brush.radialGradient(
-                            0.0f to Color(0xFF1B2250),
-                            0.55f to Color(0xFF0C1230),
-                            1.0f to Color(0xFF060A1D)
+                            0.0f to Color(0xFF161822),
+                            0.6f to Color(0xFF0A0C10),
+                            1.0f to Color(0xFF000000)
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -81,7 +81,7 @@ fun main() {
                         // Desktop / tablet: centered phone-sized stage, empty space around it.
                         val phoneWidth = min(430.dp, maxWidth - 32.dp)
                         val phoneHeight = min(900.dp, maxHeight - 32.dp)
-                        val frame = RoundedCornerShape(40.dp)
+                        val frame = RoundedCornerShape(42.dp)
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -92,12 +92,12 @@ fun main() {
                                     .width(phoneWidth)
                                     .height(phoneHeight)
                                     .shadow(
-                                        elevation = 40.dp,
+                                        elevation = 32.dp,
                                         shape = frame,
-                                        spotColor = Color(0xAA6C4DFF),
-                                        ambientColor = Color(0x55000000)
+                                        spotColor = Color(0x77000000),
+                                        ambientColor = Color(0x44000000)
                                     )
-                                    .border(1.5.dp, Color(0x33FFFFFF), frame)
+                                    .border(1.5.dp, Color(0x28FFFFFF), frame)
                                     .clip(frame)
                                     .background(Game.Ink)
                             ) {
