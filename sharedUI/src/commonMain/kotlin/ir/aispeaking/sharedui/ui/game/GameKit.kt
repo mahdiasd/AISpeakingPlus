@@ -268,7 +268,8 @@ fun GameChip(
     modifier: Modifier = Modifier,
     icon: DrawableResource? = null,
     accent: Color = Game.TextSecondary,
-    container: Color = Color(0x22FFFFFF),
+    container: Color = Color(0xEB181A22),
+    border: Color = Color(0x33FFFFFF),
     active: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
@@ -287,8 +288,8 @@ fun GameChip(
                 scaleY = scale
             }
             .clip(shape)
-            .background(if (active) accent.copy(alpha = 0.22f) else container)
-            .border(1.dp, if (active) accent.copy(alpha = 0.65f) else Color(0x1FFFFFFF), shape)
+            .background(if (active) accent.copy(alpha = 0.28f) else container)
+            .border(1.dp, if (active) accent.copy(alpha = 0.75f) else border, shape)
             .then(
                 if (onClick != null) {
                     Modifier.clickable(interactionSource = interaction, indication = null, onClick = onClick)
@@ -302,11 +303,17 @@ fun GameChip(
             Icon(
                 painter = painterResource(icon),
                 contentDescription = null,
-                tint = accent,
+                tint = if (active) accent else (if (accent == Game.TextSecondary) Game.TextPrimary else accent),
                 modifier = Modifier.size(15.dp),
             )
         }
-        GameText(text = text, size = 12.sp, bold = true, color = if (active) accent else Game.TextPrimary, maxLines = 1)
+        GameText(
+            text = text,
+            size = 12.sp,
+            bold = true,
+            color = if (active) accent else Game.TextPrimary,
+            maxLines = 1
+        )
     }
 }
 

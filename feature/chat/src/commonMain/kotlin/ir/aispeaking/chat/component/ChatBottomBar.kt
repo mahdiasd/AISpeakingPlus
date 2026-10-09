@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -120,14 +121,15 @@ fun ChatBottomBar(
             )
         }
 
-        // Main Compact Dock (height ~54dp)
-        val dockShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+        // Main Floating Compact Dock
+        val dockShape = RoundedCornerShape(26.dp)
         Box(
             modifier = Modifier
+                .padding(start = 14.dp, end = 14.dp, bottom = 12.dp, top = 4.dp)
                 .fillMaxWidth()
                 .clip(dockShape)
                 .background(Game.Panel)
-                .border(1.dp, Game.Stroke, dockShape)
+                .border(1.dp, Game.StrokeStrong, dockShape)
                 .padding(horizontal = 10.dp, vertical = 7.dp)
         ) {
             when (inputMode) {
@@ -182,8 +184,8 @@ private fun CompactVoiceRow(
                 icon = Res.drawable.ic_keyboard,
                 onClick = onSwitchToText,
                 contentDescription = "تایپ متنی",
-                size = 38.dp,
-                iconSize = 19.dp,
+                size = 40.dp,
+                iconSize = 20.dp,
                 container = Color(0x1AFFFFFF),
                 border = Color(0x14FFFFFF)
             )
@@ -205,11 +207,12 @@ private fun CompactVoiceRow(
 
             // Trailing: Send when text is ready, otherwise Hint button
             if (text.isNotBlank()) {
-                AppleSendButton(onClick = onSendClick, size = 38.dp)
+                AppleSendButton(onClick = onSendClick, size = 40.dp)
             } else {
                 AppleHintButton(
                     hintsUsedCount = hintsUsedCount,
                     isRequesting = isRequestingHint,
+                    size = 40.dp,
                     onClick = onHintClick
                 )
             }
@@ -250,18 +253,18 @@ private fun CompactTextRow(
                 icon = Res.drawable.ic_microphone,
                 onClick = onSwitchToVoice,
                 contentDescription = "مکالمه صوتی",
-                size = 38.dp,
-                iconSize = 19.dp,
+                size = 40.dp,
+                iconSize = 20.dp,
                 container = Color(0x1AFFFFFF),
                 border = Color(0x14FFFFFF)
             )
 
             // Apple Compact Input Pill
-            val fieldShape = RoundedCornerShape(20.dp)
+            val fieldShape = RoundedCornerShape(22.dp)
             val textStyle = TextStyle(
                 color = Game.TextPrimary,
                 fontSize = 15.sp,
-                lineHeight = 20.sp,
+                lineHeight = 22.sp,
                 fontFamily = AppTheme.typography.bodyLarge.fontFamily,
                 textDirection = TextDirection.Ltr
             )
@@ -279,17 +282,17 @@ private fun CompactTextRow(
                     },
                 textStyle = textStyle,
                 cursorBrush = SolidColor(Game.Blue),
-                maxLines = 3,
+                maxLines = 4,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(onSend = { if (canSend) onSendClick() }),
                 decorationBox = { inner ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(38.dp)
+                            .heightIn(min = 42.dp, max = 110.dp)
                             .background(Game.PanelRaised, fieldShape)
-                            .border(1.dp, if (canSend) Game.Blue.copy(alpha = 0.6f) else Color(0x1AFFFFFF), fieldShape)
-                            .padding(horizontal = 14.dp),
+                            .border(1.dp, if (canSend) Game.Blue.copy(alpha = 0.65f) else Color(0x22FFFFFF), fieldShape)
+                            .padding(horizontal = 16.dp, vertical = 9.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         if (text.isEmpty()) {
@@ -307,11 +310,12 @@ private fun CompactTextRow(
 
             // Trailing: Send when entered, otherwise Hint
             if (canSend) {
-                AppleSendButton(onClick = onSendClick, size = 38.dp)
+                AppleSendButton(onClick = onSendClick, size = 40.dp)
             } else {
                 AppleHintButton(
                     hintsUsedCount = hintsUsedCount,
                     isRequesting = isRequestingHint,
+                    size = 40.dp,
                     onClick = onHintClick
                 )
             }
@@ -513,6 +517,7 @@ private fun AppleSendButton(onClick: () -> Unit, size: androidx.compose.ui.unit.
 private fun AppleHintButton(
     hintsUsedCount: Int,
     isRequesting: Boolean,
+    size: androidx.compose.ui.unit.Dp = 40.dp,
     onClick: () -> Unit
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -525,7 +530,7 @@ private fun AppleHintButton(
 
     Box(
         modifier = Modifier
-            .size(38.dp)
+            .size(size)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale

@@ -81,7 +81,7 @@ fun main() {
                         // Desktop / tablet: centered phone-sized stage, empty space around it.
                         val phoneWidth = min(430.dp, maxWidth - 32.dp)
                         val phoneHeight = min(900.dp, maxHeight - 32.dp)
-                        val frame = RoundedCornerShape(42.dp)
+                        val frame = RoundedCornerShape(8.dp)
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,

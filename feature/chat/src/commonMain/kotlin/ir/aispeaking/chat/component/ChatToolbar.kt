@@ -18,7 +18,6 @@ import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_back
 import ir.aispeaking.sharedui.ic_lamp
 import ir.aispeaking.sharedui.ui.game.Game
-import ir.aispeaking.sharedui.ui.game.GameAvatar
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameChip
@@ -67,27 +66,24 @@ fun ChatToolbar(
                 modifier = Modifier.weight(1f),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(start = 12.dp, end = 6.dp, top = 5.dp, bottom = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    GameAvatar(
-                        name = stage?.characterName ?: "A",
-                        imageUrl = stage?.characterAvatarUrl,
-                        size = 34.dp
+                    GameText(
+                        text = stage?.titleFa ?: "مکالمه انگلیسی",
+                        size = 13.sp,
+                        lineHeight = 18.sp,
+                        bold = true,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    Column(modifier = Modifier.weight(1f)) {
+                    if (!stage?.characterName.isNullOrBlank()) {
                         GameText(
-                            text = stage?.titleFa ?: "مکالمه انگلیسی",
-                            size = 12.sp,
-                            lineHeight = 17.sp,
-                            bold = true,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        GameText(
-                            text = stage?.characterName ?: "",
+                            text = stage.characterName,
                             size = 11.sp,
                             color = Game.TextSecondary,
                             latin = true,
@@ -127,7 +123,7 @@ fun ChatToolbar(
             ) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     GameText(
-                        text = "نوبت ${turnsCount.coerceAtMost(maxTurns).fa()} از ${maxTurns.fa()}",
+                        text = "پیشرفت گفتگو: ${turnsCount.coerceAtMost(maxTurns).fa()} از ${maxTurns.fa()} پیام",
                         size = 11.sp,
                         color = Game.TextSecondary,
                         maxLines = 1

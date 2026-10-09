@@ -154,7 +154,8 @@ fun AiChatItem(
                         GameChip(
                             text = if (copied) "کپی شد" else "کپی",
                             icon = if (copied) Res.drawable.ic_done else Res.drawable.ic_copy,
-                            accent = if (copied) Game.Mint else Game.TextSecondary,
+                            accent = if (copied) Game.Mint else Game.TextPrimary,
+                            active = copied,
                             onClick = {
                                 clipboardManager.setText(AnnotatedString(chat.message))
                                 copied = true
