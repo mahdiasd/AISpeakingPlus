@@ -277,13 +277,16 @@ class ChatViewModel(
                         status = ChatStatus.Answered(grammar = turn.grammarFeedbackFa)
                     )
 
+                    val isGoalCompleted = turn.objectiveCompleted || _uiState.value.isObjectiveCompleted
+
                     _uiState.update { state ->
                         val updated = state.chats.map {
                             if (it.uid == userUid) answeredUserChat else it
                         }
                         state.copy(
                             chats = (updated + Chat.WaitingForAi).toImmutableList(),
-                            isModelSpeaking = true
+                            isModelSpeaking = true,
+                            isObjectiveCompleted = isGoalCompleted
                         )
                     }
 
@@ -297,7 +300,8 @@ class ChatViewModel(
                         audioUrl = turn.audioUrl
                     )
 
-                    if (turn.objectiveCompleted) {
+                    if (isGoalCompleted) {
+                        delay(900)
                         submitEvaluation()
                     }
                 }
@@ -426,6 +430,7 @@ class ChatViewModel(
         val stageId = _uiState.value.stage?.id ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmittingEvaluation = true) }
+            val isGoalDone = _uiState.value.isObjectiveCompleted
 
             val dialogue = _uiState.value.chats.mapNotNull {
                 when (it) {
@@ -451,6 +456,31 @@ class ChatViewModel(
                 }
             val localGrammarErrorsCount = localGrammarErrors.size
 
+            if (!isGoalDone) {
+                // User ended prematurely without fulfilling the objective:
+                // No stars, not completed, do not save progress!
+                val session = EvaluationSession(
+                    stageId = stageId,
+                    hintsUsedCount = hintsCount,
+                    grammarErrorsCount = localGrammarErrorsCount,
+                    objectiveCompleted = false,
+                    grammarErrors = localGrammarErrors,
+                    calculatedStars = 0,
+                    score = 0,
+                    feedbackFa = "مکالمه پیش از رسیدن به هدف مرحله پایان یافت. برای دریافت ستاره و تکمیل مرحله، مکالمه را ادامه دهید."
+                )
+                _uiState.update {
+                    it.copy(
+                        isSubmittingEvaluation = false,
+                        evaluationSession = session,
+                        showFinishConfirmDialog = true,
+                        earnedStars = 0,
+                        earnedScore = 0
+                    )
+                }
+                return@launch
+            }
+
             val session = when (val result = submitStageEvaluationUseCase(
                 stageId = stageId,
                 hintsUsedCount = hintsCount,
@@ -468,33 +498,26 @@ class ChatViewModel(
                         localGrammarErrors
                     }
 
-                    if (finalGrammarErrorsCount > serverSession.grammarErrorsCount) {
-                        val totalPenalties = hintsCount + finalGrammarErrorsCount
-                        val stars = when {
-                            !serverSession.objectiveCompleted -> 0
-                            totalPenalties == 0 -> 3
-                            totalPenalties == 1 -> 2
-                            totalPenalties == 2 -> 1
-                            else -> 0
-                        }
-                        val score = when (stars) {
-                            3 -> 100
-                            2 -> 85
-                            1 -> 70
-                            else -> if (serverSession.objectiveCompleted) 50 else 25
-                        }
-                        serverSession.copy(
-                            grammarErrorsCount = finalGrammarErrorsCount,
-                            grammarErrors = finalGrammarErrors,
-                            calculatedStars = stars,
-                            score = score
-                        )
-                    } else {
-                        serverSession.copy(
-                            grammarErrorsCount = finalGrammarErrorsCount,
-                            grammarErrors = if (serverSession.grammarErrors.isEmpty() && localGrammarErrors.isNotEmpty()) localGrammarErrors else serverSession.grammarErrors
-                        )
+                    val totalPenalties = hintsCount + finalGrammarErrorsCount
+                    val stars = when {
+                        totalPenalties == 0 -> 3
+                        totalPenalties == 1 -> 2
+                        totalPenalties == 2 -> 1
+                        else -> 0
                     }
+                    val score = when (stars) {
+                        3 -> 100
+                        2 -> 85
+                        1 -> 70
+                        else -> 50
+                    }
+                    serverSession.copy(
+                        objectiveCompleted = true,
+                        grammarErrorsCount = finalGrammarErrorsCount,
+                        grammarErrors = finalGrammarErrors,
+                        calculatedStars = stars,
+                        score = score
+                    )
                 }
                 is DataResult.Failure -> {
                     val penalties = hintsCount + localGrammarErrorsCount
@@ -515,7 +538,7 @@ class ChatViewModel(
                             3 -> 100
                             2 -> 85
                             1 -> 70
-                            else -> 40
+                            else -> 50
                         },
                         feedbackFa = "مکالمه به پایان رسید و پیشرفت شما ثبت شد."
                     )
@@ -590,7 +613,12 @@ class ChatViewModel(
             it.copy(
                 showFinishConfirmDialog = false,
                 evaluationSession = null,
-                chats = persistentListOf()
+                chats = persistentListOf(),
+                isObjectiveCompleted = false,
+                turnsCount = 0,
+                hintsUsedCount = 0,
+                earnedStars = 0,
+                earnedScore = 0
             )
         }
         currentStageId = ""

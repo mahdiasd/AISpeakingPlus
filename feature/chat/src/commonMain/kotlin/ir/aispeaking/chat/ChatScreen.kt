@@ -251,7 +251,11 @@ fun ChatScreen(
                         viewModel.dismissFinishConfirmDialog()
                         onNavigateBack()
                     },
-                    onDismissRequest = { viewModel.dismissFinishConfirmDialog() }
+                    onDismissRequest = { viewModel.dismissFinishConfirmDialog() },
+                    onExitWithoutSave = {
+                        viewModel.dismissFinishConfirmDialog()
+                        onNavigateBack()
+                    }
                 )
             }
         }

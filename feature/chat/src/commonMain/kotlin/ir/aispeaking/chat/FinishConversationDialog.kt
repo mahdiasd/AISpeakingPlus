@@ -22,9 +22,9 @@ import ir.aispeaking.domain.model.stage.EvaluationSession
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
-import ir.aispeaking.sharedui.ui.game.GameModal
 import ir.aispeaking.sharedui.ui.game.GameStars
 import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.GameTopModal
 import ir.aispeaking.sharedui.ui.game.fa
 
 /** "Level complete" result card: stars first, then what affected them, then what to do next. */
@@ -35,13 +35,15 @@ fun FinishConversationDialog(
     onContinueChatting: () -> Unit,
     onReplayStage: () -> Unit,
     onConfirmAndNext: () -> Unit,
-    onDismissRequest: () -> Unit
+    onDismissRequest: () -> Unit,
+    onExitWithoutSave: () -> Unit = onDismissRequest
 ) {
-    val stars = evaluation.calculatedStars
-    val isPerfect = stars >= 3
-    val accent = if (isPerfect) Game.Mint else if (stars > 0) Game.Gold else Game.Coral
+    val isGoalDone = evaluation.objectiveCompleted
+    val stars = if (isGoalDone) evaluation.calculatedStars else 0
+    val isPerfect = stars >= 3 && isGoalDone
+    val accent = if (!isGoalDone) Game.Coral else if (isPerfect) Game.Mint else if (stars > 0) Game.Gold else Game.Coral
 
-    GameModal(visible = visible, onDismiss = onDismissRequest) {
+    GameTopModal(visible = visible, onDismiss = onDismissRequest) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -56,35 +58,60 @@ fun FinishConversationDialog(
                     .background(
                         Brush.verticalGradient(listOf(accent.copy(alpha = 0.28f), Color.Transparent))
                     )
-                    .padding(top = 28.dp, bottom = 8.dp, start = 20.dp, end = 20.dp),
+                    .padding(top = 22.dp, bottom = 8.dp, start = 18.dp, end = 18.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                GameStars(
-                    stars = stars,
-                    size = 54.dp,
-                    spacing = 8.dp,
-                    animate = true,
-                    earnedTint = Game.Gold,
-                    emptyTint = Color(0x44FFFFFF)
-                )
-                GameText(
-                    text = when (stars) {
-                        3 -> "عالی بود! کامل تمامش کردی"
-                        2 -> "آفرین! خیلی خوب بود"
-                        1 -> "خوب بود، ادامه بده"
-                        else -> "این بار ستاره نگرفتی"
-                    },
-                    size = 20.sp,
-                    bold = true,
-                    align = TextAlign.Center
-                )
-                if (evaluation.score > 0) {
+                if (isGoalDone) {
+                    GameStars(
+                        stars = stars,
+                        size = 48.dp,
+                        spacing = 8.dp,
+                        animate = true,
+                        earnedTint = Game.Gold,
+                        emptyTint = Color(0x44FFFFFF)
+                    )
                     GameText(
-                        text = "امتیاز تو: ${evaluation.score.fa()}",
-                        size = 14.sp,
+                        text = when (stars) {
+                            3 -> "عالی بود! کامل تمامش کردی"
+                            2 -> "آفرین! خیلی خوب بود"
+                            1 -> "خوب بود، ادامه بده"
+                            else -> "این بار ستاره نگرفتی"
+                        },
+                        size = 18.sp,
                         bold = true,
-                        color = Game.Gold
+                        align = TextAlign.Center
+                    )
+                    if (evaluation.score > 0) {
+                        GameText(
+                            text = "امتیاز تو: ${evaluation.score.fa()}",
+                            size = 13.sp,
+                            bold = true,
+                            color = Game.Gold
+                        )
+                    }
+                } else {
+                    GameStars(
+                        stars = 0,
+                        size = 48.dp,
+                        spacing = 8.dp,
+                        animate = false,
+                        earnedTint = Game.Gold,
+                        emptyTint = Color(0x33FFFFFF)
+                    )
+                    GameText(
+                        text = "هدف مرحله انجام نشده است",
+                        size = 18.sp,
+                        bold = true,
+                        color = Game.Coral,
+                        align = TextAlign.Center
+                    )
+                    GameText(
+                        text = "مکالمه پیش از رسیدن به هدف پایان یافت، بنابراین ستاره‌ای دریافت نمی‌کنید.",
+                        size = 12.sp,
+                        lineHeight = 18.sp,
+                        color = Game.TextSecondary,
+                        align = TextAlign.Center
                     )
                 }
             }
@@ -92,10 +119,10 @@ fun FinishConversationDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = 18.dp, vertical = 6.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // What changed the stars
+                // What changed the stars / progress stats
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -114,72 +141,120 @@ fun FinishConversationDialog(
                     )
                 }
 
-                GameText(
-                    text = when (stars) {
-                        3 -> "بدون خطا و بدون راهنما، هر ۳ ستاره را گرفتی."
-                        2 -> "یک مورد کسر امتیاز (خطا یا راهنما) داشتی، پس ۲ ستاره گرفتی."
-                        1 -> "دو مورد کسر امتیاز داشتی، پس ۱ ستاره گرفتی."
-                        else -> "با ۳ خطا یا راهنما ستاره‌ای تعلق نمی‌گیرد. دوباره امتحان کن!"
-                    },
-                    size = 13.sp,
-                    lineHeight = 21.sp,
-                    color = Game.TextSecondary
-                )
+                if (isGoalDone) {
+                    GameText(
+                        text = when (stars) {
+                            3 -> "بدون خطا و بدون راهنما، هر ۳ ستاره را گرفتی."
+                            2 -> "یک مورد کسر امتیاز (خطا یا راهنما) داشتی، پس ۲ ستاره گرفتی."
+                            1 -> "دو مورد کسر امتیاز داشتی، پس ۱ ستاره گرفتی."
+                            else -> "با ۳ خطا یا راهنما ستاره‌ای تعلق نمی‌گیرد. دوباره امتحان کن!"
+                        },
+                        size = 12.sp,
+                        lineHeight = 19.sp,
+                        color = Game.TextSecondary
+                    )
+                } else {
+                    val shape = RoundedCornerShape(14.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Game.Coral.copy(alpha = 0.1f), shape)
+                            .border(1.dp, Game.Coral.copy(alpha = 0.35f), shape)
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        GameText(text = "راهنمای تکمیل مرحله", size = 12.sp, bold = true, color = Game.Coral)
+                        GameText(
+                            text = "تنها زمانی ستاره دریافت می‌کنید و مرحله کامل می‌شود که هوش مصنوعی تحقق هدف را تایید کند. پیشنهاد می‌کنیم مکالمه را ادامه دهید.",
+                            size = 12.sp,
+                            lineHeight = 19.sp,
+                            color = Game.TextPrimary
+                        )
+                    }
+                }
 
-                if (evaluation.feedbackFa.isNotBlank()) {
-                    val shape = RoundedCornerShape(16.dp)
+                if (isGoalDone && evaluation.feedbackFa.isNotBlank()) {
+                    val shape = RoundedCornerShape(14.dp)
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Game.PanelRaised, shape)
                             .border(1.dp, Game.Stroke, shape)
-                            .padding(14.dp),
+                            .padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         GameText(text = "نظر مربی", size = 12.sp, bold = true, color = Game.Sky)
                         GameText(
                             text = evaluation.feedbackFa,
-                            size = 13.sp,
-                            lineHeight = 21.sp
+                            size = 12.sp,
+                            lineHeight = 19.sp
                         )
                     }
                 }
             }
-
         }
 
         // Actions: one obvious primary, the rest quieter
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 22.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+                .padding(start = 18.dp, end = 18.dp, top = 6.dp, bottom = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            GameButton(
-                text = "ثبت نتیجه و ادامه مسیر",
-                onClick = onConfirmAndNext,
-                modifier = Modifier.fillMaxWidth(),
-                style = GameButtonStyle.Primary
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (!isPerfect) {
+            if (isGoalDone) {
+                GameButton(
+                    text = "ثبت نتیجه و ادامه مسیر",
+                    onClick = onConfirmAndNext,
+                    modifier = Modifier.fillMaxWidth(),
+                    style = GameButtonStyle.Primary,
+                    height = 44.dp
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (!isPerfect) {
+                        GameButton(
+                            text = "تلاش دوباره",
+                            onClick = onReplayStage,
+                            modifier = Modifier.weight(1f),
+                            style = GameButtonStyle.Gold,
+                            height = 42.dp,
+                            textSize = 13.sp
+                        )
+                    }
                     GameButton(
-                        text = "تلاش دوباره",
+                        text = "ادامه گفتگو",
+                        onClick = onContinueChatting,
+                        modifier = Modifier.weight(1f),
+                        style = GameButtonStyle.Glass,
+                        height = 42.dp,
+                        textSize = 13.sp
+                    )
+                }
+            } else {
+                GameButton(
+                    text = "ادامه گفتگو برای تکمیل هدف",
+                    onClick = onContinueChatting,
+                    modifier = Modifier.fillMaxWidth(),
+                    style = GameButtonStyle.Primary,
+                    height = 44.dp
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    GameButton(
+                        text = "تلاش دوباره از ابتدا",
                         onClick = onReplayStage,
                         modifier = Modifier.weight(1f),
                         style = GameButtonStyle.Gold,
-                        height = 46.dp,
-                        textSize = 14.sp
+                        height = 42.dp,
+                        textSize = 13.sp
+                    )
+                    GameButton(
+                        text = "خروج بدون ثبت",
+                        onClick = onExitWithoutSave,
+                        modifier = Modifier.weight(1f),
+                        style = GameButtonStyle.Glass,
+                        height = 42.dp,
+                        textSize = 13.sp
                     )
                 }
-                GameButton(
-                    text = "ادامه گفتگو",
-                    onClick = onContinueChatting,
-                    modifier = Modifier.weight(1f),
-                    style = GameButtonStyle.Glass,
-                    height = 46.dp,
-                    textSize = 14.sp
-                )
             }
         }
     }

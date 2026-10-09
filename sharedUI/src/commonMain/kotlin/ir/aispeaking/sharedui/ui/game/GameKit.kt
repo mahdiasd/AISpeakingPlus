@@ -502,6 +502,70 @@ fun GameModal(
     }
 }
 
+/**
+ * Top card modal sliding down from the top edge of the screen.
+ * Perfect for result/evaluation cards so the latest chat messages and audio playback remain visible below.
+ */
+@Composable
+fun GameTopModal(
+    visible: Boolean,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    dismissOnScrimClick: Boolean = true,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(tween(160)),
+            exit = fadeOut(tween(140)),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x66000000))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        enabled = dismissOnScrimClick,
+                        onClick = onDismiss,
+                    )
+            )
+        }
+        AnimatedVisibility(
+            visible = visible,
+            modifier = Modifier.align(Alignment.TopCenter),
+            enter = slideInVertically(
+                initialOffsetY = { -it },
+                animationSpec = spring(dampingRatio = 0.82f, stiffness = 380f)
+            ) + fadeIn(tween(160)),
+            exit = slideOutVertically(
+                targetOffsetY = { -it },
+                animationSpec = tween(160)
+            ) + fadeOut(tween(120)),
+        ) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                Column(
+                    modifier = Modifier
+                        .padding(top = 16.dp, start = 14.dp, end = 14.dp, bottom = 20.dp)
+                        .widthIn(max = 410.dp)
+                        .fillMaxWidth()
+                        .heightIn(max = 560.dp)
+                        .clip(RoundedCornerShape(26.dp))
+                        .background(Game.PanelSolid)
+                        .border(1.dp, Game.StrokeStrong, RoundedCornerShape(26.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {},
+                        ),
+                    content = content,
+                )
+            }
+        }
+    }
+}
+
 /** Bottom sheet rendered inside the screen, same reasoning as [GameModal]. */
 @Composable
 fun GameSheet(
