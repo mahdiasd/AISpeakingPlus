@@ -12,32 +12,41 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 
 sealed class ThemeMode(
-    open val key: String,
-    open val icon: DrawableResource,
-    open val title: StringResource
+    val key: String,
+    val icon: DrawableResource,
+    val title: StringResource
 ) {
-    data class System(
-        override val icon: DrawableResource = Res.drawable.ic_theme_system,
-        override val title: StringResource = Res.string.theme_system_title
-    ) : ThemeMode(key = "System", icon = icon, title = title)
+    data object System : ThemeMode(
+        key = "System",
+        icon = Res.drawable.ic_theme_system,
+        title = Res.string.theme_system_title
+    ) {
+        operator fun invoke() = this
+    }
 
-    data class Dark(
-        override val icon: DrawableResource = Res.drawable.ic_theme_dark,
-        override val title: StringResource = Res.string.theme_dark_title
-    ) : ThemeMode(key = "Dark", icon = icon, title = title)
+    data object Dark : ThemeMode(
+        key = "Dark",
+        icon = Res.drawable.ic_theme_dark,
+        title = Res.string.theme_dark_title
+    ) {
+        operator fun invoke() = this
+    }
 
-    data class Light(
-        override val icon: DrawableResource = Res.drawable.ic_theme_light,
-        override val title: StringResource = Res.string.theme_light_title
-    ) : ThemeMode(key = "Light", icon = icon, title = title)
+    data object Light : ThemeMode(
+        key = "Light",
+        icon = Res.drawable.ic_theme_light,
+        title = Res.string.theme_light_title
+    ) {
+        operator fun invoke() = this
+    }
 
     companion object {
         fun mapper(string: String): ThemeMode {
             return when (string) {
-                System().key -> System()
-                Dark().key -> Dark()
-                Light().key -> Light()
-                else -> System()
+                System.key -> System
+                Dark.key -> Dark
+                Light.key -> Light
+                else -> System
             }
         }
     }

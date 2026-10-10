@@ -59,7 +59,7 @@ private val LightColorScheme = AppColor(
     aiChatContainer = AiChatContainerLight,
     userChatContainer = UserChatContainerLight,
     points = PointsColor,
-    roadMapSurface = Color(0xFF003543)
+    roadMapSurface = RoadMapSurfaceColor
 )
 
 private val DarkColorScheme = AppColor(
@@ -92,7 +92,7 @@ private val DarkColorScheme = AppColor(
     aiChatContainer = AiChatContainerDark,
     userChatContainer = UserChatContainerDark,
     points = PointsColor,
-    roadMapSurface = Color(0xFF003543)
+    roadMapSurface = RoadMapSurfaceColor
 )
 
 @Composable
