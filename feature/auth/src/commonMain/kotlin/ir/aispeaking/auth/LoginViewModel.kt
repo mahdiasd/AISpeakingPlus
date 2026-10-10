@@ -142,7 +142,7 @@ class LoginViewModel(
             when (val result = verifyOtpUseCase(phone, otp)) {
                 is DataResult.Success -> {
                     timerJob?.cancel()
-                    syncGuestProgressUseCase()
+                    runCatching { syncGuestProgressUseCase() }
                     _uiState.update { it.copy(isLoading = false) }
                     _effect.send(LoginEffect.LoginSuccess(result.data))
                     _effect.send(LoginEffect.NavigateToMain)

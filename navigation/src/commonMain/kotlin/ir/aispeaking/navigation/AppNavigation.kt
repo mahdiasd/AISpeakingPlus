@@ -8,7 +8,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import ir.aispeaking.auth.LoginRoute
+import ir.aispeaking.auth.LoginRootScreen
 import ir.aispeaking.chat.ChatScreen
 import ir.aispeaking.main.JourneyMapScreen
 import ir.aispeaking.profile.ProfileScreen
@@ -49,7 +49,7 @@ fun AppNavigation(
             }
 
             entry<LoginRoute> {
-                LoginRoute(
+                LoginRootScreen(
                     onNavigateToMain = {
                         backStack.clear()
                         backStack.add(MainRoute)

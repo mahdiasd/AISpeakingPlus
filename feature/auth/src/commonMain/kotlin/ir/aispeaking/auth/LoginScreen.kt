@@ -75,10 +75,10 @@ import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Route composable connecting LoginViewModel to pure LoginScreen.
+ * Root composable connecting LoginViewModel to pure LoginScreen.
  */
 @Composable
-fun LoginRoute(
+fun LoginRootScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = koinViewModel(),
     onNavigateToMain: (User?) -> Unit = {}
@@ -117,6 +117,16 @@ fun LoginRoute(
         onDismissError = { viewModel.processIntent(LoginIntent.DismissError) }
     )
 }
+
+/**
+ * Backward-compatible alias for LoginRootScreen.
+ */
+@Composable
+fun LoginRoute(
+    modifier: Modifier = Modifier,
+    viewModel: LoginViewModel = koinViewModel(),
+    onNavigateToMain: (User?) -> Unit = {}
+) = LoginRootScreen(modifier, viewModel, onNavigateToMain)
 
 /**
  * Backwards compatible overload for LoginScreen with ViewModel injection.
