@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -53,9 +53,9 @@ import ir.aispeaking.profile.component.SubscriptionCard
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_back
 import ir.aispeaking.sharedui.ic_exit
+import ir.aispeaking.sharedui.ic_user
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
-import ir.aispeaking.sharedui.ui.game.GameIconButton
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.utils.lifecycle.OnResume
 import org.jetbrains.compose.resources.painterResource
@@ -78,14 +78,14 @@ fun ProfileScreen(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(Game.FallbackBackground)
+                .background(Color(0xFF0F1015))
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
-                // Apple-style Navigation Bar
+                // Top Navigation Bar matching the sleek mockup
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -93,19 +93,68 @@ fun ProfileScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    GameIconButton(
-                        icon = Res.drawable.ic_back,
-                        onClick = onNavigateBack,
-                        contentDescription = "بازگشت"
-                    )
-                    GameText(
-                        text = "پروفایل کاربری",
-                        size = 18.sp,
-                        bold = true,
-                        align = TextAlign.Center,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.size(40.dp))
+                    // Right side in RTL: Circular Back Button (chevron right) + Page Title
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        val backInteraction = remember { MutableInteractionSource() }
+                        val backPressed by backInteraction.collectIsPressedAsState()
+                        val backScale by animateFloatAsState(
+                            targetValue = if (backPressed) 0.92f else 1f,
+                            animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+                            label = "back_btn_press"
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .graphicsLayer {
+                                    scaleX = backScale
+                                    scaleY = backScale
+                                }
+                                .clip(CircleShape)
+                                .background(Color(0x1AFFFFFF))
+                                .border(1.dp, Color(0x22FFFFFF), CircleShape)
+                                .clickable(
+                                    interactionSource = backInteraction,
+                                    indication = null,
+                                    onClick = onNavigateBack
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_back),
+                                contentDescription = "بازگشت",
+                                tint = Game.TextPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        GameText(
+                            text = "پروفایل کاربری",
+                            size = 18.sp,
+                            bold = true,
+                            color = Game.TextPrimary
+                        )
+                    }
+
+                    // Left side in RTL: Profile silhouette icon in frosted violet circle
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x265E5CE6))
+                            .border(1.dp, Color(0x455E5CE6), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_user),
+                            contentDescription = null,
+                            tint = Color(0xFFA5A3F6),
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
                 }
 
                 // Main Content
@@ -133,8 +182,8 @@ fun ProfileScreen(
                             .fillMaxWidth()
                             .weight(1f)
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         ProfileHeaderCard(
                             user = user,
@@ -156,31 +205,17 @@ fun ProfileScreen(
                             onLevelClick = { viewModel.onLevelPickerClicked() }
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-
-                    // Anchored Bottom Dock: Sign-out is always pinned at the bottom of the screen
-                    if (!user.isGuest) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            Color.Transparent,
-                                            Game.Ink.copy(alpha = 0.85f),
-                                            Game.Ink
-                                        )
-                                    )
-                                )
-                                .navigationBarsPadding()
-                                .padding(horizontal = 16.dp, vertical = 12.dp)
-                        ) {
+                        // Sign-out Button right below stats cards
+                        if (!user.isGuest) {
                             AppleSignOutButton(
                                 onClick = { viewModel.onSignOutClicked() },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 4.dp)
                             )
                         }
+
+                        Spacer(modifier = Modifier.height(20.dp).navigationBarsPadding())
                     }
                 } else if (uiState.errorMessage != null) {
                     Box(
@@ -246,7 +281,7 @@ fun ProfileScreen(
 
 /**
  * Apple-style destructive sign-out button:
- * Frosted translucent container with coral tint, hairline border, and spring press physics.
+ * Frosted translucent crimson container with hairline border and spring press physics.
  */
 @Composable
 private fun AppleSignOutButton(
@@ -260,18 +295,18 @@ private fun AppleSignOutButton(
         animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
         label = "apple_sign_out_press"
     )
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(18.dp)
 
     Box(
         modifier = modifier
-            .height(50.dp)
+            .height(52.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
             .clip(shape)
-            .background(Color(0x1AFF453A))
-            .border(1.dp, Color(0x38FF453A), shape)
+            .background(Color(0x1FFF453A))
+            .border(1.dp, Color(0x40FF453A), shape)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
@@ -308,7 +343,7 @@ private fun ProfileScreenPreview() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Game.Ink),
+                .background(Color(0xFF0F1015)),
             contentAlignment = Alignment.Center
         ) {
             GameText(text = "پیش‌نمایش صفحه پروفایل کاربری", size = 16.sp)

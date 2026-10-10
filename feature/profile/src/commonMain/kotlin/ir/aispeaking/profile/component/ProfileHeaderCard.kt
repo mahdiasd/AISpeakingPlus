@@ -60,95 +60,22 @@ fun ProfileHeaderCard(
         user.avatar.contains(it.name.lowercase())
     }?.drawable ?: Res.drawable.avatar_g1
 
-    val shape = RoundedCornerShape(24.dp)
+    val shape = RoundedCornerShape(26.dp)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        Color(0xFF24252B),
-                        Game.PanelSolid
-                    )
-                )
-            )
-            .border(1.dp, Game.StrokeStrong, shape)
+            .background(Color(0xFF1B1C23))
+            .border(1.dp, Color(0x22FFFFFF), shape)
             .padding(18.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Tactile Avatar with Apple spring press feedback
-            val avatarInteraction = remember { MutableInteractionSource() }
-            val avatarPressed by avatarInteraction.collectIsPressedAsState()
-            val avatarScale by animateFloatAsState(
-                targetValue = if (avatarPressed) 0.94f else 1f,
-                animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
-                label = "apple_avatar_press"
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .graphicsLayer {
-                        scaleX = avatarScale
-                        scaleY = avatarScale
-                    }
-                    .clickable(
-                        interactionSource = avatarInteraction,
-                        indication = null,
-                        onClick = onAvatarClick
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                // Multi-ring Apple depth
-                Box(
-                    modifier = Modifier
-                        .size(76.dp)
-                        .clip(CircleShape)
-                        .background(Game.PanelRaised)
-                        .border(
-                            2.dp,
-                            Brush.linearGradient(listOf(Game.Violet, Game.Sky.copy(alpha = 0.6f))),
-                            CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(avatarResource),
-                        contentDescription = "Avatar",
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(CircleShape)
-                    )
-                }
-
-                // Apple-style camera/edit overlay badge
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .offset(x = 2.dp, y = 2.dp)
-                        .size(26.dp)
-                        .clip(CircleShape)
-                        .background(Brush.verticalGradient(listOf(Game.Blue, Color(0xFF0066D6))))
-                        .border(2.dp, Game.PanelSolid, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_camera),
-                        contentDescription = "Edit Avatar",
-                        tint = Color.White,
-                        modifier = Modifier.size(13.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            // User Info (Name + Phone / Guest status)
+            // Left side in RTL: User Name, Edit button, Phone / Guest badge, Level badge
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
@@ -174,19 +101,19 @@ fun ProfileHeaderCard(
                     val editScale by animateFloatAsState(
                         targetValue = if (editPressed) 0.90f else 1f,
                         animationSpec = spring(dampingRatio = 0.82f, stiffness = 450f),
-                        label = "apple_edit_press"
+                        label = "edit_name_press"
                     )
 
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(28.dp)
                             .graphicsLayer {
                                 scaleX = editScale
                                 scaleY = editScale
                             }
                             .clip(CircleShape)
-                            .background(Color(0x1FFFFFFF))
-                            .border(1.dp, Game.Stroke, CircleShape)
+                            .background(Color(0x1AFFFFFF))
+                            .border(1.dp, Color(0x24FFFFFF), CircleShape)
                             .clickable(
                                 interactionSource = editInteraction,
                                 indication = null,
@@ -196,16 +123,16 @@ fun ProfileHeaderCard(
                     ) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_edit),
-                            contentDescription = "Edit Nickname",
+                            contentDescription = "ویرایش نام",
                             tint = Game.TextSecondary,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(13.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // Metadata tags: Phone / Guest status + CEFR Level
+                // Badges: Phone / Guest status + CEFR Level
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -216,8 +143,8 @@ fun ProfileHeaderCard(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0x12FFFFFF))
-                                .border(1.dp, Game.Stroke, RoundedCornerShape(8.dp))
+                                .background(Color(0x14FFFFFF))
+                                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(8.dp))
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Icon(
@@ -229,7 +156,7 @@ fun ProfileHeaderCard(
                             GameText(
                                 text = user.phoneNumber.toFaDigits(),
                                 color = Game.TextSecondary,
-                                size = 12.sp,
+                                size = 11.sp,
                                 bold = false
                             )
                             Box(
@@ -282,6 +209,73 @@ fun ProfileHeaderCard(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Right side in RTL: Avatar with Camera badge
+            val avatarInteraction = remember { MutableInteractionSource() }
+            val avatarPressed by avatarInteraction.collectIsPressedAsState()
+            val avatarScale by animateFloatAsState(
+                targetValue = if (avatarPressed) 0.94f else 1f,
+                animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+                label = "avatar_press"
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .graphicsLayer {
+                        scaleX = avatarScale
+                        scaleY = avatarScale
+                    }
+                    .clickable(
+                        interactionSource = avatarInteraction,
+                        indication = null,
+                        onClick = onAvatarClick
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                // Avatar circular container with subtle ring
+                Box(
+                    modifier = Modifier
+                        .size(76.dp)
+                        .clip(CircleShape)
+                        .background(Game.PanelRaised)
+                        .border(
+                            2.dp,
+                            Brush.linearGradient(listOf(Color(0x66FFFFFF), Color(0x22FFFFFF))),
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(avatarResource),
+                        contentDescription = "تصویر کاربر",
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(CircleShape)
+                    )
+                }
+
+                // Camera edit badge at bottom-left in RTL (inner side)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .offset(x = (-2).dp, y = 2.dp)
+                        .size(26.dp)
+                        .clip(CircleShape)
+                        .background(Brush.verticalGradient(listOf(Game.Blue, Color(0xFF0066D6))))
+                        .border(2.dp, Color(0xFF1B1C23), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_camera),
+                        contentDescription = "ویرایش تصویر پروفایل",
+                        tint = Color.White,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -297,8 +291,8 @@ private fun ProfileHeaderCardPreview() {
                 id = "1",
                 phoneNumber = "09123456789",
                 nickName = "مسیحا",
-                avatar = "avatar_b1",
-                languageLevel = "B1"
+                avatar = "avatar_g1",
+                languageLevel = "A2"
             ),
             onAvatarClick = {},
             onEditNameClick = {}

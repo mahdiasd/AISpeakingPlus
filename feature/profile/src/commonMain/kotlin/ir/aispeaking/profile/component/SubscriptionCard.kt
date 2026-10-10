@@ -25,13 +25,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.user.SubscriptionSummary
 import ir.aispeaking.sharedui.Res
+import ir.aispeaking.sharedui.ic_alert_circle
 import ir.aispeaking.sharedui.ic_crown
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
@@ -47,42 +47,26 @@ fun SubscriptionCard(
     onUpgradeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(22.dp)
+    val shape = RoundedCornerShape(24.dp)
 
     if (subscription.isSubscriber) {
-        // Apple VIP / Luxury Member Card
+        // Active / Trial Subscription Card
         Box(
             modifier = modifier
                 .fillMaxWidth()
                 .clip(shape)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color(0xFF221F2B),
-                            Color(0xFF16151E),
-                            Game.PanelSolid
-                        )
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.horizontalGradient(
-                        listOf(
-                            Game.Gold.copy(alpha = 0.55f),
-                            Game.Violet.copy(alpha = 0.35f),
-                            Game.Gold.copy(alpha = 0.35f)
-                        )
-                    ),
-                    shape = shape
-                )
-                .padding(18.dp)
+                .background(Color(0xFF1B1C23))
+                .border(1.dp, Color(0x22FFFFFF), shape)
+                .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
+                // Top Row: Crown + Plan info (Right) and "تمدید" button (Left) in RTL
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Right side in RTL: Crown squircle + Plan Details
                     Row(
                         modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically,
@@ -92,9 +76,9 @@ fun SubscriptionCard(
                         Box(
                             modifier = Modifier
                                 .size(42.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Game.Gold.copy(alpha = 0.16f))
-                                .border(1.dp, Game.Gold.copy(alpha = 0.35f), RoundedCornerShape(12.dp)),
+                                .clip(RoundedCornerShape(13.dp))
+                                .background(Color(0x26FFD60A))
+                                .border(1.dp, Color(0x4DFFD60A), RoundedCornerShape(13.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -105,89 +89,99 @@ fun SubscriptionCard(
                             )
                         }
 
-                        Column {
-                            GameText(
-                                text = subscription.planTitleFa ?: "اشتراک طلایی VIP",
-                                color = Game.TextPrimary,
-                                size = 16.sp,
-                                bold = true
-                            )
+                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                GameText(
+                                    text = subscription.planTitleFa?.ifBlank { "TRIAL" } ?: "TRIAL",
+                                    color = Game.Gold,
+                                    size = 17.sp,
+                                    bold = true
+                                )
+
+                                // Remaining Days Badge
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0x33FFD60A))
+                                        .border(1.dp, Color(0x4DFFD60A), RoundedCornerShape(10.dp))
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    GameText(
+                                        text = "${subscription.remainingDays.fa()} روز مانده",
+                                        color = Game.Gold,
+                                        size = 11.sp,
+                                        bold = true
+                                    )
+                                }
+                            }
+
                             val expiresAt = subscription.expiresAt
                             if (!expiresAt.isNullOrBlank()) {
-                                Spacer(modifier = Modifier.height(2.dp))
                                 GameText(
                                     text = "اعتبار تا ${expiresAt.take(10).toFaDigits()}",
                                     color = Game.TextSecondary,
-                                    size = 12.sp
+                                    size = 11.sp
                                 )
                             }
                         }
                     }
 
-                    // Remaining days badge and tactile extend button
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0x22000000))
-                                .border(1.dp, Game.Gold.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
-                                .padding(horizontal = 9.dp, vertical = 6.dp)
-                        ) {
-                            GameText(
-                                text = "${subscription.remainingDays.fa()} روز مانده",
-                                color = Game.Gold,
-                                size = 12.sp,
-                                bold = true
-                            )
-                        }
+                    // Left side in RTL: Tactile "تمدید" action button
+                    val extendInteraction = remember { MutableInteractionSource() }
+                    val extendPressed by extendInteraction.collectIsPressedAsState()
+                    val extendScale by animateFloatAsState(
+                        targetValue = if (extendPressed) 0.94f else 1f,
+                        animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f),
+                        label = "extend_press"
+                    )
 
-                        // Tactile Extend action
-                        val extendInteraction = remember { MutableInteractionSource() }
-                        val extendPressed by extendInteraction.collectIsPressedAsState()
-                        val extendScale by animateFloatAsState(
-                            targetValue = if (extendPressed) 0.94f else 1f,
-                            animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f),
-                            label = "apple_extend_press"
-                        )
-                        Box(
-                            modifier = Modifier
-                                .graphicsLayer {
-                                    scaleX = extendScale
-                                    scaleY = extendScale
-                                }
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0x26FFFFFF))
-                                .border(1.dp, Game.StrokeStrong, RoundedCornerShape(12.dp))
-                                .clickable(
-                                    interactionSource = extendInteraction,
-                                    indication = null,
-                                    onClick = onUpgradeClick
-                                )
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            GameText(
-                                text = "تمدید",
-                                color = Game.TextPrimary,
-                                size = 12.sp,
-                                bold = true
+                    Box(
+                        modifier = Modifier
+                            .graphicsLayer {
+                                scaleX = extendScale
+                                scaleY = extendScale
+                            }
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0x22FFFFFF))
+                            .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(12.dp))
+                            .clickable(
+                                interactionSource = extendInteraction,
+                                indication = null,
+                                onClick = onUpgradeClick
                             )
-                        }
+                            .padding(horizontal = 14.dp, vertical = 7.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        GameText(
+                            text = "تمدید",
+                            color = Game.TextPrimary,
+                            size = 12.sp,
+                            bold = true
+                        )
                     }
                 }
 
-                // Expiring warning alert banner
+                // Expiring warning alert banner with clean, symmetric margins & padding
                 if (subscription.isExpiringSoon) {
                     Spacer(modifier = Modifier.height(14.dp))
+
+                    val quickExtendInteraction = remember { MutableInteractionSource() }
+                    val quickExtendPressed by quickExtendInteraction.collectIsPressedAsState()
+                    val quickExtendScale by animateFloatAsState(
+                        targetValue = if (quickExtendPressed) 0.95f else 1f,
+                        animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f),
+                        label = "quick_extend_press"
+                    )
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Game.Coral.copy(alpha = 0.12f))
-                            .border(1.dp, Game.Coral.copy(alpha = 0.32f), RoundedCornerShape(12.dp))
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(Color(0x26FF453A))
+                            .border(1.dp, Color(0x40FF453A), RoundedCornerShape(14.dp))
                             .padding(horizontal = 12.dp, vertical = 9.dp)
                     ) {
                         Row(
@@ -195,41 +189,65 @@ fun SubscriptionCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            GameText(
-                                text = "اشتراک شما رو به پایان است!",
-                                color = Game.Coral,
-                                size = 12.sp,
-                                bold = true
-                            )
+                            // Right side in RTL: Alert circle icon + warning text
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.ic_alert_circle),
+                                    contentDescription = null,
+                                    tint = Game.Coral,
+                                    modifier = Modifier.size(17.dp)
+                                )
 
-                            GameText(
-                                text = "تمدید سریع ←",
-                                color = Game.Gold,
-                                size = 12.sp,
-                                bold = true,
-                                modifier = Modifier.clickable(onClick = onUpgradeClick)
-                            )
+                                GameText(
+                                    text = "اشتراک شما رو به پایان است!",
+                                    color = Game.Coral,
+                                    size = 12.sp,
+                                    bold = true
+                                )
+                            }
+
+                            // Left side in RTL: "تمدید سریع" button
+                            Box(
+                                modifier = Modifier
+                                    .graphicsLayer {
+                                        scaleX = quickExtendScale
+                                        scaleY = quickExtendScale
+                                    }
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0x40FF453A))
+                                    .border(1.dp, Color(0x55FF453A), RoundedCornerShape(10.dp))
+                                    .clickable(
+                                        interactionSource = quickExtendInteraction,
+                                        indication = null,
+                                        onClick = onUpgradeClick
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                GameText(
+                                    text = "تمدید سریع",
+                                    color = Color(0xFFFFD4D1),
+                                    size = 11.sp,
+                                    bold = true
+                                )
+                            }
                         }
                     }
                 }
             }
         }
     } else {
-        // Apple Upgrade / Free Plan Card
+        // Free Plan Card
         Box(
             modifier = modifier
                 .fillMaxWidth()
                 .clip(shape)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Game.PanelRaised,
-                            Game.PanelSolid
-                        )
-                    )
-                )
-                .border(1.dp, Game.StrokeStrong, shape)
-                .padding(18.dp)
+                .background(Color(0xFF1B1C23))
+                .border(1.dp, Color(0x22FFFFFF), shape)
+                .padding(16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -239,12 +257,12 @@ fun SubscriptionCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(34.dp)
-                                .clip(RoundedCornerShape(10.dp))
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(11.dp))
                                 .background(Color(0x1AFFFFFF)),
                             contentAlignment = Alignment.Center
                         ) {
@@ -252,9 +270,10 @@ fun SubscriptionCard(
                                 painter = painterResource(Res.drawable.ic_crown),
                                 contentDescription = null,
                                 tint = Game.TextSecondary,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(19.dp)
                             )
                         }
+
                         GameText(
                             text = "طرح رایگان",
                             color = Game.TextPrimary,
@@ -264,10 +283,11 @@ fun SubscriptionCard(
                     }
 
                     Spacer(modifier = Modifier.height(6.dp))
+
                     GameText(
                         text = "دسترسی نامحدود به تمامی مراحل، سناریوها و مکالمه هوش مصنوعی",
                         color = Game.TextSecondary,
-                        size = 12.sp,
+                        size = 11.sp,
                         lineHeight = 17.sp
                     )
                 }
@@ -278,8 +298,8 @@ fun SubscriptionCard(
                     text = "خرید اشتراک",
                     onClick = onUpgradeClick,
                     style = GameButtonStyle.Gold,
-                    height = 42.dp,
-                    textSize = 13.sp
+                    height = 38.dp,
+                    textSize = 12.sp
                 )
             }
         }
@@ -295,9 +315,9 @@ private fun SubscriptionCardPreview() {
         SubscriptionCard(
             subscription = SubscriptionSummary(
                 isSubscriber = true,
-                planTitleFa = "اشتراک طلایی",
-                remainingDays = 12,
-                expiresAt = "2026-11-20"
+                planTitleFa = "TRIAL",
+                remainingDays = 5,
+                expiresAt = "2026-10-15"
             ),
             onUpgradeClick = {}
         )
