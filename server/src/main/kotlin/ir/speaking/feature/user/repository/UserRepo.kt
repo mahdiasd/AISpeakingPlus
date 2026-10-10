@@ -17,8 +17,9 @@ import java.util.*
 
 @Single
 class UserRepo(
-    private val subscriptionRepo: SubscriptionRepo = SubscriptionRepo()
+    private val subscriptionRepo: SubscriptionRepo
 ) {
+    constructor() : this(SubscriptionRepo())
 
     suspend fun findOrCreateUserByMobile(mobile: String): UserProfileResponse = suspendTransaction {
         val existing = UserTable.selectAll()
@@ -66,6 +67,20 @@ class UserRepo(
             }
     }
 
+    suspend fun isUserSuspended(userId: UUID): Boolean = suspendTransaction {
+        UserTable.selectAll()
+            .where { UserTable.id eq userId }
+            .firstOrNull()
+            ?.get(UserTable.status) == "SUSPENDED"
+    }
+
+    suspend fun isUserSuspendedByMobile(mobile: String): Boolean = suspendTransaction {
+        UserTable.selectAll()
+            .where { UserTable.mobile eq mobile }
+            .firstOrNull()
+            ?.get(UserTable.status) == "SUSPENDED"
+    }
+
     suspend fun getDetailedUserProfile(userId: UUID): DetailedUserProfileResponse? {
         val userRow = suspendTransaction {
             UserTable.selectAll()
@@ -84,9 +99,12 @@ class UserRepo(
 
         val subInfo = subscriptionRepo.getSubscriptionInfo(userId)
         val planTitleFa = when (subInfo.planType) {
-            "1_MONTH" -> "اشتراک ۱ ماهه"
-            "3_MONTHS" -> "اشتراک ۳ ماهه"
-            "6_MONTHS" -> "اشتراک ۶ ماهه"
+            "1_MONTH", "MONTHLY" -> "اشتراک ۱ ماهه"
+            "3_MONTHS", "QUARTERLY" -> "اشتراک ۳ ماهه"
+            "6_MONTHS", "BIANNUAL", "SEMI_ANNUAL" -> "اشتراک ۶ ماهه"
+            "1_YEAR", "ANNUAL", "YEARLY" -> "اشتراک ۱ ساله"
+            "TRIAL" -> "اشتراک آزمایشی"
+            "CUSTOM" -> "اشتراک اختصاصی"
             else -> subInfo.planType
         }
 
@@ -105,6 +123,7 @@ class UserRepo(
                 isSubscriber = subInfo.isSubscriber,
                 planType = subInfo.planType,
                 planTitleFa = planTitleFa,
+                startedAt = subInfo.startedAt,
                 expiresAt = subInfo.expiresAt,
                 remainingDays = subInfo.remainingDays
             )

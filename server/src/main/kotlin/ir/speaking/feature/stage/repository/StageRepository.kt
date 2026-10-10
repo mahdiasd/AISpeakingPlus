@@ -182,12 +182,14 @@ class StageRepository {
         allStages: List<org.jetbrains.exposed.sql.ResultRow>,
         progressMap: Map<String, StageProgressResponse>
     ): String {
-        if (orderIndex == 1) return "UNLOCKED"
+        val isFirstStage = orderIndex == 1 || (index == 0 && orderIndex <= 1)
+        if (isFirstStage) return "UNLOCKED"
 
-        if (orderIndex == 2) {
+        val isSecondStage = orderIndex == 2 || (index == 1 && orderIndex <= 2)
+        if (isSecondStage) {
             if (tier == "GUEST") return "LOCKED_REGISTRATION"
             val prevStageId = allStages.getOrNull(index - 1)?.get(StageTable.id)?.value
-            val prevCompleted = (progressMap[prevStageId]?.stars ?: 0) >= 1
+            val prevCompleted = prevStageId == null || (progressMap[prevStageId]?.stars ?: 0) >= 1
             return if (prevCompleted) "UNLOCKED" else "LOCKED_PREVIOUS_STAGE"
         }
 
@@ -195,7 +197,7 @@ class StageRepository {
         if (tier != "SUBSCRIBER") return "LOCKED_SUBSCRIPTION"
 
         val prevStageId = allStages.getOrNull(index - 1)?.get(StageTable.id)?.value
-        val prevCompleted = (progressMap[prevStageId]?.stars ?: 0) >= 1
+        val prevCompleted = prevStageId == null || (progressMap[prevStageId]?.stars ?: 0) >= 1
         return if (prevCompleted) "UNLOCKED" else "LOCKED_PREVIOUS_STAGE"
     }
 }

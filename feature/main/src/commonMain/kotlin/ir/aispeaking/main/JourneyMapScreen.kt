@@ -163,6 +163,7 @@ fun JourneyMapScreen(
                             isSubscriber = uiState.currentTier == AccessTier.SUBSCRIBER,
                             onProfile = onNavigateToProfile,
                             onSubscribe = onNavigateToSubscription,
+                            onLeaderboard = { viewModel.openLeaderboard() },
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
                                 .statusBarsPadding()
@@ -244,7 +245,20 @@ fun JourneyMapScreen(
                     visible = uiState.selectedStageForRegister != null,
                     stage = stage,
                     onDismiss = { viewModel.dismissRegister() },
-                    onRegisterSuccess = { viewModel.onRegisterSuccess() }
+                    onRegisterSuccess = { viewModel.onRegisterSuccess() },
+                    isLoading = uiState.isRegisterLoading,
+                    step = uiState.registerStep,
+                    errorMessage = uiState.registerError,
+                    onSendOtp = { phone -> viewModel.sendRegisterOtp(phone) },
+                    onVerifyOtp = { phone, otp -> viewModel.verifyRegisterOtp(phone, otp) },
+                    onEditPhone = { viewModel.resetRegisterStep() }
+                )
+            }
+
+            if (uiState.showLeaderboardSheet && uiState.leaderboard != null) {
+                JourneyLeaderboardSheet(
+                    leaderboard = uiState.leaderboard!!,
+                    onDismiss = { viewModel.dismissLeaderboard() }
                 )
             }
         }
@@ -257,6 +271,7 @@ private fun TopHud(
     isSubscriber: Boolean,
     onProfile: () -> Unit,
     onSubscribe: () -> Unit,
+    onLeaderboard: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -274,7 +289,8 @@ private fun TopHud(
         GameStatPill(
             text = "${totalStars.fa()} ستاره",
             icon = Res.drawable.ic_star,
-            accent = Game.Gold
+            accent = Game.Gold,
+            onClick = onLeaderboard
         )
         Spacer(modifier = Modifier.weight(1f))
         if (isSubscriber) {

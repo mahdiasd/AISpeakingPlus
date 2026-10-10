@@ -13,7 +13,15 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 
+import io.ktor.util.AttributeKey
 import ir.speaking.feature.admin.auth.AdminPrincipal
+import ir.speaking.feature.user.db.UserTable
+import kotlinx.coroutines.Dispatchers
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+
+val SuspendedUserAttributeKey = AttributeKey<Boolean>("SuspendedUser")
 
 fun Application.configureSecurity() {
     
@@ -88,15 +96,39 @@ fun Application.configureSecurity() {
                     .build()
             )
             validate { credential ->
-                if (credential.payload.getClaim("uid").asString() != "") {
-                    JWTPrincipal(credential.payload)
+                val uid = credential.payload.getClaim("uid")?.asString()
+                if (!uid.isNullOrBlank()) {
+                    val userId = try { UUID.fromString(uid) } catch (_: Exception) { null }
+                    if (userId != null) {
+                        val isSuspended = try {
+                            newSuspendedTransaction(Dispatchers.IO) {
+                                UserTable.selectAll()
+                                    .where { (UserTable.id eq userId) and (UserTable.status eq "SUSPENDED") }
+                                    .count() > 0
+                            }
+                        } catch (_: Exception) {
+                            false
+                        }
+                        if (isSuspended) {
+                            this.attributes.put(SuspendedUserAttributeKey, true)
+                            null
+                        } else {
+                            JWTPrincipal(credential.payload)
+                        }
+                    } else {
+                        JWTPrincipal(credential.payload)
+                    }
                 } else {
                     null
                 }
             }
 
             challenge { _, _ ->
-                call.failureRespond(HttpStatusCode.Unauthorized)
+                if (call.attributes.getOrNull(SuspendedUserAttributeKey) == true) {
+                    call.failureRespond(HttpStatusCode.Forbidden, "حساب کاربری شما تعلیق شده است.")
+                } else {
+                    call.failureRespond(HttpStatusCode.Unauthorized)
+                }
             }
         }
     }

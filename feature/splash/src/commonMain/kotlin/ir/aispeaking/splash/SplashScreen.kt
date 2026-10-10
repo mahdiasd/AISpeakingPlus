@@ -62,7 +62,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun SplashRoute(
     modifier: Modifier = Modifier,
     viewModel: SplashViewModel = koinViewModel(),
-    onNavigateToMain: (User) -> Unit = {},
+    onNavigateToMain: (User?) -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -93,7 +93,7 @@ fun SplashRoute(
 fun SplashScreen(
     modifier: Modifier = Modifier,
     viewModel: SplashViewModel = koinViewModel(),
-    onNavigateToMain: (User) -> Unit = {},
+    onNavigateToMain: (User?) -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
 ) {
     SplashRoute(

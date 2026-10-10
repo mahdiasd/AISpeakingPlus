@@ -51,7 +51,7 @@ class SplashViewModel(
                     }
                     is AuthStatus.Unauthenticated -> {
                         _uiState.update { it.copy(isLoading = false) }
-                        _effect.send(SplashEffect.NavigateToLogin)
+                        _effect.send(SplashEffect.NavigateToMain(null))
                     }
                 }
             } catch (e: Throwable) {

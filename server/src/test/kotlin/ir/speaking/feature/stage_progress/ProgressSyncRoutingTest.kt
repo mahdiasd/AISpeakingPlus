@@ -16,6 +16,8 @@ import ir.speaking.feature.stage_progress.dto.SyncProgressRequest
 import ir.speaking.feature.stage_progress.repository.StageProgressRepo
 import ir.speaking.feature.stage_progress.routing.progressRouting
 import ir.speaking.feature.stage_progress.service.EvaluationRubricService
+import ir.speaking.feature.subscription.repository.SubscriptionRepo
+import ir.speaking.feature.user.repository.UserRepo
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
@@ -38,6 +40,8 @@ class ProgressSyncRoutingTest {
                         single { StageRepository() }
                         single { StageProgressRepo() }
                         single { EvaluationRubricService() }
+                        single { SubscriptionRepo() }
+                        single { UserRepo(subscriptionRepo = get()) }
                     }
                 )
             }

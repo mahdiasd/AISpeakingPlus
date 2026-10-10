@@ -20,6 +20,8 @@ import ir.speaking.feature.stage.dto.HintResponse
 import ir.speaking.feature.stage.dto.StageCatalogResponse
 import ir.speaking.feature.stage.dto.StageDetailResponse
 import ir.speaking.feature.stage.repository.StageRepository
+import ir.speaking.feature.subscription.interceptor.enforceNotSuspended
+import ir.speaking.feature.subscription.interceptor.enforceStageAccess
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
 import java.util.*
@@ -44,6 +46,8 @@ fun Application.stageRouting() {
                     val principal = call.principal<JWTPrincipal>()
                     val uidString = principal?.payload?.getClaim("uid")?.asString()
                     val userId = uidString?.let { try { UUID.fromString(it) } catch (_: Exception) { null } }
+
+                    if (!call.enforceNotSuspended(userId)) return@get
 
                     val catalog = stageRepository.getStageCatalog(userId)
                     call.successRespond(catalog, message = "Stages retrieved successfully")
@@ -79,50 +83,9 @@ fun Application.stageRouting() {
                     val userId = uidString?.let { try { UUID.fromString(it) } catch (_: Exception) { null } }
 
                     val stage = stageRepository.getStageDetail(stageId, userId)
-                    if (stage == null) {
-                        call.failureRespond(HttpStatusCode.NotFound, "Stage not found")
-                        return@get
-                    }
+                    if (!call.enforceStageAccess(stage, userId)) return@get
 
-                    // Enforce gating
-                    if (stage.orderIndex == 2 && userId == null) {
-                        call.respond(
-                            HttpStatusCode.Unauthorized,
-                            StageErrorResponse(
-                                status = 401,
-                                message = "ثبت‌نام برای ورود به مرحله ۲ الزامی است.",
-                                code = "AUTH_REQUIRED"
-                            )
-                        )
-                        return@get
-                    }
-
-                    if (stage.orderIndex >= 3) {
-                        if (userId == null) {
-                            call.respond(
-                                HttpStatusCode.Unauthorized,
-                                StageErrorResponse(
-                                    status = 401,
-                                    message = "ورود به حساب کاربری الزامی است.",
-                                    code = "AUTH_REQUIRED"
-                                )
-                            )
-                            return@get
-                        }
-                        if (stage.lockStatus == "LOCKED_SUBSCRIPTION") {
-                            call.respond(
-                                HttpStatusCode.PaymentRequired,
-                                StageErrorResponse(
-                                    status = 402,
-                                    message = "برای دسترسی به مرحله ۳ به بعد، اشتراک ویژه تهیه کنید.",
-                                    code = "SUBSCRIPTION_REQUIRED"
-                                )
-                            )
-                            return@get
-                        }
-                    }
-
-                    call.successRespond(stage, message = "Stage details retrieved")
+                    call.successRespond(stage!!, message = "Stage details retrieved")
                 }.describe {
                     tag("Stages")
                     summary = "Get Stage Detail"
@@ -168,6 +131,13 @@ fun Application.stageRouting() {
                         return@post
                     }
 
+                    val principal = call.principal<JWTPrincipal>()
+                    val uidString = principal?.payload?.getClaim("uid")?.asString()
+                    val userId = uidString?.let { try { UUID.fromString(it) } catch (_: Exception) { null } }
+
+                    val stage = stageRepository.getStageDetail(stageId, userId)
+                    if (!call.enforceStageAccess(stage, userId)) return@post
+
                     val request = try {
                         call.receiveNullable<HintRequest>()
                     } catch (e: Exception) {
@@ -176,7 +146,7 @@ fun Application.stageRouting() {
 
                     val hint = stageChatService.generateHint(
                         stageId = stageId,
-                        userId = null,
+                        userId = userId,
                         messages = request?.messages ?: emptyList()
                     )
 
@@ -230,6 +200,9 @@ fun Application.stageRouting() {
                     val principal = call.principal<JWTPrincipal>()
                     val uidString = principal?.payload?.getClaim("uid")?.asString()
                     val userId = uidString?.let { try { UUID.fromString(it) } catch (_: Exception) { null } }
+
+                    val stage = stageRepository.getStageDetail(stageId, userId)
+                    if (!call.enforceStageAccess(stage, userId)) return@post
 
                     val request = try {
                         call.receive<ir.speaking.feature.stage.dto.StageChatRequest>()

@@ -43,6 +43,7 @@ import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameIconButton
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.GlassPanel
+import ir.aispeaking.sharedui.utils.lifecycle.OnResume
 import kotlinx.coroutines.delay
 import ir.aispeaking.stageslist.component.StageListItemCard
 import ir.aispeaking.stageslist.component.StagesHeaderStatsCard
@@ -53,10 +54,15 @@ fun StagesListScreen(
     onNavigateBack: () -> Unit,
     onNavigateToStageChat: (stageId: String) -> Unit,
     onNavigateToSubscription: () -> Unit,
+    onNavigateToLogin: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+
+    OnResume {
+        viewModel.loadStages()
+    }
 
     // Auto-scroll to current active stage when list is loaded
     LaunchedEffect(uiState.isLoading, uiState.stages) {
@@ -179,10 +185,12 @@ fun StagesListScreen(
                                 isFirst = index == 0,
                                 isLast = index == uiState.stages.lastIndex,
                                 onStageClick = { clickedStage ->
+                                    viewModel.onAction(StagesListUiAction.StageClicked(clickedStage))
                                     handleStageClick(
                                         stage = clickedStage,
                                         onNavigateToChat = onNavigateToStageChat,
-                                        onNavigateToSubscription = onNavigateToSubscription
+                                        onNavigateToSubscription = onNavigateToSubscription,
+                                        onNavigateToLogin = onNavigateToLogin
                                     )
                                 }
                             )
@@ -222,7 +230,8 @@ fun StagesListScreen(
 private fun handleStageClick(
     stage: Stage,
     onNavigateToChat: (stageId: String) -> Unit,
-    onNavigateToSubscription: () -> Unit
+    onNavigateToSubscription: () -> Unit,
+    onNavigateToLogin: () -> Unit = {}
 ) {
     when (stage.lockStatus) {
         StageLockStatus.UNLOCKED -> {
@@ -232,11 +241,10 @@ private fun handleStageClick(
             onNavigateToSubscription()
         }
         StageLockStatus.LOCKED_REGISTRATION -> {
-            // Unlocked through registration on main journey or fallback
-            onNavigateToChat(stage.id)
+            onNavigateToLogin()
         }
         StageLockStatus.LOCKED_PREVIOUS_STAGE -> {
-            // Cannot start ahead of sequence
+            // Toast message shown via StagesListViewModel.onAction(StageClicked)
         }
     }
 }

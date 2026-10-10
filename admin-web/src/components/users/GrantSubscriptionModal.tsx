@@ -16,9 +16,10 @@ interface GrantSubscriptionModalProps {
 
 const PRESETS = [
   { label: '۷ روزه (تست/هدیه)', days: 7, planType: 'TRIAL' },
-  { label: '۱ ماهه (۳۰ روز)', days: 30, planType: 'MONTHLY' },
-  { label: '۳ ماهه (۹۰ روز)', days: 90, planType: 'QUARTERLY' },
-  { label: '۱ ساله (۳۶۵ روز)', days: 365, planType: 'ANNUAL' },
+  { label: '۱ ماهه (۳۰ روز)', days: 30, planType: '1_MONTH' },
+  { label: '۳ ماهه (۹۰ روز)', days: 90, planType: '3_MONTHS' },
+  { label: '۶ ماهه (۱۸۰ روز)', days: 180, planType: '6_MONTHS' },
+  { label: '۱ ساله (۳۶۵ روز)', days: 365, planType: '1_YEAR' },
   { label: 'مدت دلخواه...', days: 0, planType: 'CUSTOM' },
 ];
 
@@ -30,7 +31,7 @@ export const GrantSubscriptionModal: React.FC<GrantSubscriptionModalProps> = ({
 }) => {
   const { success, error } = useToast();
   const [selectedPreset, setSelectedPreset] = useState<number>(30);
-  const [planType, setPlanType] = useState<string>('MONTHLY');
+  const [planType, setPlanType] = useState<string>('1_MONTH');
   const [customDays, setCustomDays] = useState<number>(14);
   const [reason, setReason] = useState<string>('اهدای دستی توسط ادمین');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);

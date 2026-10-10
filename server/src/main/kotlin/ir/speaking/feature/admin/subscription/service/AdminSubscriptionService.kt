@@ -64,6 +64,7 @@ class AdminSubscriptionService {
         val durationDays = if (request.durationDays <= 0) 30 else request.durationDays
         val newExpiresAt = baseTime.plus(durationDays, DateTimeUnit.DAY, kotlinx.datetime.TimeZone.UTC)
 
+        // Do NOT mark existing active subscription(s) as EXPIRED; insert cumulative renewal row with extended expiresAt
         val insertedId = SubscriptionTable.insertAndGetId {
             it[SubscriptionTable.userId] = userId
             it[SubscriptionTable.planType] = request.planType.uppercase()

@@ -174,12 +174,21 @@ fun Application.subscriptionRouting() {
                         }
                     }
 
+                    val normalizedPromo = request.promoCode?.trim()?.uppercase()?.takeIf { it.isNotEmpty() }
+                    if (normalizedPromo != null) {
+                        val validPromoCodes = setOf("GOLD20", "WELCOME10", "VIP30", "FREE100", "SPEAK50", "TEST", "NOWRUZ", "AISPEAKING", "VIP")
+                        if (normalizedPromo !in validPromoCodes) {
+                            call.failureRespond(HttpStatusCode.BadRequest, "کد تخفیف وارد شده معتبر نیست")
+                            return@post
+                        }
+                    }
+
                     val info = subscriptionRepo.activateSubscription(
                         userId = userId,
                         planType = planType,
                         durationDays = durationDays,
-                        grantSource = if (request.promoCode.isNullOrBlank()) "USER_PURCHASE" else "PROMO_PURCHASE",
-                        reason = request.promoCode?.let { "Purchased with promo code: $it" }
+                        grantSource = if (normalizedPromo == null) "USER_PURCHASE" else "PROMO_PURCHASE",
+                        reason = normalizedPromo?.let { "Purchased with promo code: $it" }
                     )
 
                     call.successRespond(

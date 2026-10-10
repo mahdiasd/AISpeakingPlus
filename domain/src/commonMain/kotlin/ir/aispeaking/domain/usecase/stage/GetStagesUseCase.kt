@@ -29,28 +29,28 @@ class GetStagesUseCase(
         allStages: List<Stage>,
         tier: AccessTier
     ): StageLockStatus {
-        // Stage 1 (orderIndex 1) is always unlocked for everyone
-        if (stage.orderIndex == 1) return StageLockStatus.UNLOCKED
+        // First stage (orderIndex 1) is always unlocked for everyone
+        if (stage.orderIndex == 1 || (index == 0 && stage.orderIndex <= 1)) return StageLockStatus.UNLOCKED
 
-        // Stage 2 (orderIndex 2) requires registration
-        if (stage.orderIndex == 2) {
+        // Second stage (orderIndex 2) requires registration
+        if (stage.orderIndex == 2 || (index == 1 && stage.orderIndex <= 2)) {
             if (tier == AccessTier.GUEST) {
                 return StageLockStatus.LOCKED_REGISTRATION
             }
-            // Check if stage 1 was completed (>= 1 star)
             val prevStage = allStages.getOrNull(index - 1)
-            val prevCompleted = (prevStage?.userProgress?.stars ?: 0) >= 1
+            val prevCompleted = prevStage == null || (prevStage.userProgress?.stars ?: 0) >= 1
             return if (prevCompleted) StageLockStatus.UNLOCKED else StageLockStatus.LOCKED_PREVIOUS_STAGE
         }
 
-        // Stage 3+ (orderIndex >= 3) requires subscription
+        // Stage 3+ requires subscription
         if (tier != AccessTier.SUBSCRIBER) {
             return StageLockStatus.LOCKED_SUBSCRIPTION
         }
 
         // For subscriber, check if previous stage was completed
         val prevStage = allStages.getOrNull(index - 1)
-        val prevCompleted = (prevStage?.userProgress?.stars ?: 0) >= 1
+        val prevCompleted = prevStage == null || (prevStage.userProgress?.stars ?: 0) >= 1
         return if (prevCompleted) StageLockStatus.UNLOCKED else StageLockStatus.LOCKED_PREVIOUS_STAGE
     }
 }
+

@@ -747,7 +747,9 @@
   "required" : [ "filename", "url" ],
   "properties" : {
     "url" : { },
-    "filename" : { }
+    "filename" : { },
+    "mimeType" : { },
+    "sizeBytes" : { }
   }
 };
             defs["AdminStageItemDto"] = {
@@ -772,6 +774,14 @@
     "maxTurns" : { },
     "status" : { },
     "createdAt" : { }
+  }
+};
+            defs["AdminStageReorderRequest"] = {
+  "title" : "AdminStageReorderRequest",
+  "required" : [ "newOrderIndex" ],
+  "properties" : {
+    "newOrderIndex" : { },
+    "shiftSubsequent" : { }
   }
 };
             defs["AdminStageUpsertRequest"] = {
@@ -913,6 +923,7 @@
             defs["EvaluationRequest"] = {
   "title" : "EvaluationRequest",
   "properties" : {
+    "objectiveCompleted" : { },
     "hintsUsedCount" : { },
     "turnsCount" : { },
     "grammarErrorsCount" : { },
@@ -1095,6 +1106,8 @@
     "message" : { },
     "translatedMessage" : { },
     "audioUrl" : { },
+    "hasGrammarError" : { },
+    "correctedSentence" : { },
     "grammarFeedbackFa" : { },
     "objectiveCompleted" : { },
     "finishTaskIndexes" : {
@@ -1391,6 +1404,9 @@
                     </li>
                     <li data-group="AdminStages" data-name="apiAdminStagesIdGet" class="">
                       <a href="#api-AdminStages-apiAdminStagesIdGet">apiAdminStagesIdGet</a>
+                    </li>
+                    <li data-group="AdminStages" data-name="apiAdminStagesIdReorderPost" class="">
+                      <a href="#api-AdminStages-apiAdminStagesIdReorderPost">apiAdminStagesIdReorderPost</a>
                     </li>
                     <li data-group="AdminStages" data-name="apiAdminStagesPost" class="">
                       <a href="#api-AdminStages-apiAdminStagesPost">apiAdminStagesPost</a>
@@ -4182,6 +4198,379 @@ except ApiException as e:
                                     </script>
                                   </div>
                                   <input id='responses-apiAdminStagesIdGet-404-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AdminStages-apiAdminStagesIdReorderPost">
+                      <article id="api-AdminStages-apiAdminStagesIdReorderPost-0" data-group="User" data-name="apiAdminStagesIdReorderPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminStagesIdReorderPost</h1>
+                          <p>Reorder Stage</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Safely swap or shift stage orderIndex without unique constraint conflicts</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/admin/stages/{id}/reorder</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminStages-apiAdminStagesIdReorderPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminStages-apiAdminStagesIdReorderPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminStages-apiAdminStagesIdReorderPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminStages-apiAdminStagesIdReorderPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminStages-apiAdminStagesIdReorderPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminStages-apiAdminStagesIdReorderPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminStages-apiAdminStagesIdReorderPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminStages-apiAdminStagesIdReorderPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminStages-apiAdminStagesIdReorderPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminStages-apiAdminStagesIdReorderPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminStages-apiAdminStagesIdReorderPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminStages-apiAdminStagesIdReorderPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/admin/stages/{id}/reorder"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminStages-apiAdminStagesIdReorderPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminStagesApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminStagesApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminStagesApi apiInstance = new AdminStagesApi();
+        AdminStageReorderRequest body = ; // AdminStageReorderRequest | Target order index
+         id = ; //  | Unique stage identifier
+        try {
+            Object result = apiInstance.apiAdminStagesIdReorderPost(body, id);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminStagesApi#apiAdminStagesIdReorderPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminStages-apiAdminStagesIdReorderPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminStagesApi;
+
+public class AdminStagesApiExample {
+
+    public static void main(String[] args) {
+        AdminStagesApi apiInstance = new AdminStagesApi();
+        AdminStageReorderRequest body = ; // AdminStageReorderRequest | Target order index
+         id = ; //  | Unique stage identifier
+        try {
+            Object result = apiInstance.apiAdminStagesIdReorderPost(body, id);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminStagesApi#apiAdminStagesIdReorderPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminStages-apiAdminStagesIdReorderPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminStages-apiAdminStagesIdReorderPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+AdminStageReorderRequest *body = ; // Target order index
+ *id = ; // Unique stage identifier
+
+AdminStagesApi *apiInstance = [[AdminStagesApi alloc] init];
+
+// Reorder Stage
+[apiInstance apiAdminStagesIdReorderPostWith:body
+    id:id
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminStages-apiAdminStagesIdReorderPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminStagesApi()
+var body = ; // {{AdminStageReorderRequest}} Target order index
+var id = ; // {{}} Unique stage identifier
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminStagesIdReorderPost(bodyid, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminStages-apiAdminStagesIdReorderPost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminStages-apiAdminStagesIdReorderPost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminStagesIdReorderPostExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminStagesApi();
+            var body = new AdminStageReorderRequest(); // AdminStageReorderRequest | Target order index
+            var id = new (); //  | Unique stage identifier
+
+            try
+            {
+                // Reorder Stage
+                Object result = apiInstance.apiAdminStagesIdReorderPost(body, id);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminStagesApi.apiAdminStagesIdReorderPost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminStages-apiAdminStagesIdReorderPost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminStagesApi();
+$body = ; // AdminStageReorderRequest | Target order index
+$id = ; //  | Unique stage identifier
+
+try {
+    $result = $api_instance->apiAdminStagesIdReorderPost($body, $id);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminStagesApi->apiAdminStagesIdReorderPost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminStages-apiAdminStagesIdReorderPost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminStagesApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminStagesApi->new();
+my $body = WWW::SwaggerClient::Object::AdminStageReorderRequest->new(); # AdminStageReorderRequest | Target order index
+my $id = ; #  | Unique stage identifier
+
+eval { 
+    my $result = $api_instance->apiAdminStagesIdReorderPost(body => $body, id => $id);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminStagesApi->apiAdminStagesIdReorderPost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminStages-apiAdminStagesIdReorderPost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminStagesApi()
+body =  # AdminStageReorderRequest | Target order index
+id =  #  | Unique stage identifier
+
+try: 
+    # Reorder Stage
+    api_response = api_instance.api_admin_stages_id_reorder_post(body, id)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminStagesApi->apiAdminStagesIdReorderPost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">id*</td>
+                                  <td>
+                                  
+                                  
+                                      <div id="d2e199_apiAdminStagesIdReorderPost_id">
+                                          <div class="json-schema-view">
+                                              <div class="primitive">
+                                                  <span class="type">
+                                                      
+                                                  </span>
+                                  
+                                                      <div class="inner description">
+                                                          Unique stage identifier
+                                                      </div>
+                                              </div>
+                                                  <div class="inner required">
+                                                      Required
+                                                  </div>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  </tr>
+                            </table>
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Target order index",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/AdminStageReorderRequest"
+      }
+    }
+  },
+  "required" : true
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiAdminStagesIdReorderPost_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiAdminStagesIdReorderPost_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Stage reordered successfully </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminStagesIdReorderPost-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminStagesIdReorderPost-200-schema">
+                                  <div id='responses-apiAdminStagesIdReorderPost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Stage reordered successfully",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AdminStageItemDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminStagesIdReorderPost-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminStagesIdReorderPost-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminStagesIdReorderPost-200-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 
@@ -7475,6 +7864,54 @@ except ApiException as e:
                                 </div>
                             </div>
 
+                            <h3> Status: 429 - Rate limit exceeded (max 5 SMS per 15 minutes) </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2AuthOtpSendPost-429-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2AuthOtpSendPost-429-schema">
+                                  <div id='responses-apiV2AuthOtpSendPost-429-schema-429' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Rate limit exceeded (max 5 SMS per 15 minutes)",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2AuthOtpSendPost-429-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2AuthOtpSendPost-429-schema-429');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2AuthOtpSendPost-429-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
                         </article>
                       </div>
                       <hr>
@@ -7893,6 +8330,54 @@ except ApiException as e:
                                     </script>
                                   </div>
                                   <input id='responses-apiV2AuthOtpVerifyPost-401-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 403 - User account is suspended </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2AuthOtpVerifyPost-403-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2AuthOtpVerifyPost-403-schema">
+                                  <div id='responses-apiV2AuthOtpVerifyPost-403-schema-403' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "User account is suspended",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2AuthOtpVerifyPost-403-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2AuthOtpVerifyPost-403-schema-403');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2AuthOtpVerifyPost-403-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 

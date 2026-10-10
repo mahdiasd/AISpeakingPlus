@@ -100,7 +100,15 @@ fun Application.authRouting() {
                     return@post
                 }
 
-                val response = authService.sendOtp(mobileNumber)
+                val response = try {
+                    authService.sendOtp(mobileNumber)
+                } catch (e: ir.speaking.feature.user.service.RateLimitExceededException) {
+                    call.failureRespond(
+                        HttpStatusCode.TooManyRequests,
+                        e.message ?: "تعداد درخواست‌های پیامک بیش از حد مجاز است"
+                    )
+                    return@post
+                }
                 call.successRespond(response, message = "OTP code sent successfully")
             }.describe {
                 tag("Auth")
@@ -118,6 +126,10 @@ fun Application.authRouting() {
                     }
                     HttpStatusCode.BadRequest {
                         description = "Invalid mobile number format"
+                        schema = jsonSchema<FailureResponse>()
+                    }
+                    HttpStatusCode.TooManyRequests {
+                        description = "Rate limit exceeded (max 5 SMS per 15 minutes)"
                         schema = jsonSchema<FailureResponse>()
                     }
                 }
@@ -206,11 +218,16 @@ fun Application.authRouting() {
                     return@post
                 }
 
-                val authResult = authService.verifyOtp(
-                    mobile = mobileNumber,
-                    otpCode = otpCode,
-                    tokenGenerator = { uid -> generateToken(call = call, uid = uid) }
-                )
+                val authResult = try {
+                    authService.verifyOtp(
+                        mobile = mobileNumber,
+                        otpCode = otpCode,
+                        tokenGenerator = { uid -> generateToken(call = call, uid = uid) }
+                    )
+                } catch (e: ir.speaking.feature.user.service.AccountSuspendedException) {
+                    call.failureRespond(HttpStatusCode.Forbidden, e.message ?: "حساب کاربری شما تعلیق شده است")
+                    return@post
+                }
 
                 if (authResult != null) {
                     call.successRespond(authResult, message = "Authentication successful")
@@ -239,6 +256,10 @@ fun Application.authRouting() {
                         description = "Invalid or expired OTP code"
                         schema = jsonSchema<FailureResponse>()
                     }
+                    HttpStatusCode.Forbidden {
+                        description = "User account is suspended"
+                        schema = jsonSchema<FailureResponse>()
+                    }
                 }
             }
 
@@ -248,6 +269,11 @@ fun Application.authRouting() {
                         call.getUserUid()
                     } catch (e: Exception) {
                         call.failureRespond(HttpStatusCode.Unauthorized, "Invalid user credentials")
+                        return@get
+                    }
+
+                    if (authService.isUserSuspended(userId)) {
+                        call.failureRespond(HttpStatusCode.Forbidden, "حساب کاربری شما تعلیق شده است")
                         return@get
                     }
 

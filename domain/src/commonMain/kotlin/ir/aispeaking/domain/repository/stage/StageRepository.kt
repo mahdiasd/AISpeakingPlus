@@ -18,7 +18,9 @@ interface StageRepository {
         turnsCount: Int,
         transcript: List<Pair<String, String>>,
         grammarErrorsCount: Int = 0,
-        grammarErrors: List<ir.aispeaking.domain.model.stage.GrammarErrorDetail> = emptyList()
+        grammarErrors: List<ir.aispeaking.domain.model.stage.GrammarErrorDetail> = emptyList(),
+        objectiveCompleted: Boolean = false
     ): DataResult<ir.aispeaking.domain.model.stage.EvaluationSession>
     suspend fun sendStageChatMessage(stageId: String, userMessage: String?, history: List<Pair<String, String>>): DataResult<ir.aispeaking.domain.model.chat.StageChatTurnResult>
 }
+

@@ -30,13 +30,20 @@ fun RegisterBottomSheet(
     stage: Stage,
     onDismiss: () -> Unit,
     onRegisterSuccess: () -> Unit,
+    isLoading: Boolean = false,
+    step: Int = 1,
+    errorMessage: String? = null,
+    onSendOtp: ((String) -> Unit)? = null,
+    onVerifyOtp: ((String, String) -> Unit)? = null,
+    onEditPhone: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var phoneNumber by remember { mutableStateOf("") }
     var otpCode by remember { mutableStateOf("") }
-    var step by remember { mutableStateOf(1) } // 1: Phone, 2: OTP
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var localError by remember { mutableStateOf<String?>(null) }
+
+    val activeStep = step
+    val activeError = errorMessage ?: localError
 
     GameSheet(visible = visible, onDismiss = onDismiss, modifier = modifier) {
         Column(
@@ -48,13 +55,13 @@ fun RegisterBottomSheet(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             GameText(
-                text = if (step == 1) "برای ادامه ماجراجویی وارد شو" else "کد تایید را وارد کن",
+                text = if (activeStep == 1) "برای ادامه ماجراجویی وارد شو" else "کد تایید را وارد کن",
                 size = 19.sp,
                 bold = true,
                 align = TextAlign.Center
             )
             GameText(
-                text = if (step == 1) {
+                text = if (activeStep == 1) {
                     "با ورود، مرحله «${stage.titleFa}» باز می‌شود و پیشرفتت روی حسابت ذخیره می‌ماند."
                 } else {
                     "کدی که برای شماره $phoneNumber پیامک شد را وارد کن."
@@ -65,47 +72,56 @@ fun RegisterBottomSheet(
                 align = TextAlign.Center
             )
 
-            if (step == 1) {
+            if (activeStep == 1) {
                 GameTextField(
                     value = phoneNumber,
-                    onValueChange = { if (it.length <= 11) phoneNumber = it.filter { c -> c.isDigit() } },
+                    onValueChange = { raw ->
+                        val normalized = normalizeDigitsToAscii(raw).filter { c -> c in '0'..'9' }
+                        if (normalized.length <= 11) {
+                            phoneNumber = normalized
+                            localError = null
+                        }
+                    },
                     label = "شماره موبایل",
                     placeholder = "09123456789",
                     keyboardType = KeyboardType.Phone,
                     ltr = true,
-                    isError = errorMessage != null,
+                    isError = activeError != null,
                     onImeAction = {}
                 )
             } else {
                 GameTextField(
                     value = otpCode,
-                    onValueChange = { if (it.length <= 6) otpCode = it.filter { c -> c.isDigit() } },
+                    onValueChange = { raw ->
+                        val normalized = normalizeDigitsToAscii(raw).filter { c -> c in '0'..'9' }
+                        if (normalized.length <= 6) {
+                            otpCode = normalized
+                            localError = null
+                        }
+                    },
                     label = "کد تایید",
                     placeholder = "••••",
                     keyboardType = KeyboardType.Number,
                     ltr = true,
                     centered = true,
-                    isError = errorMessage != null,
+                    isError = activeError != null,
                     accent = Game.Gold
                 )
             }
 
-            errorMessage?.let { msg ->
+            activeError?.let { msg ->
                 GameText(text = msg, size = 12.sp, color = Game.Coral, align = TextAlign.Center)
             }
 
-            if (step == 1) {
+            if (activeStep == 1) {
                 GameButton(
                     text = "ارسال کد تایید",
                     onClick = {
-                        if (phoneNumber.length >= 10) {
-                            isLoading = true
-                            errorMessage = null
-                            // Transition to OTP step
-                            step = 2
-                            isLoading = false
+                        if (phoneNumber.length == 11 && phoneNumber.startsWith("09")) {
+                            localError = null
+                            onSendOtp?.invoke(phoneNumber)
                         } else {
-                            errorMessage = "شماره موبایل باید ۱۱ رقم باشد."
+                            localError = "شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود."
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -117,12 +133,10 @@ fun RegisterBottomSheet(
                     text = "تایید و باز کردن مرحله",
                     onClick = {
                         if (otpCode.length >= 4) {
-                            isLoading = true
-                            errorMessage = null
-                            // Registration verified & synced
-                            onRegisterSuccess()
+                            localError = null
+                            onVerifyOtp?.invoke(phoneNumber, otpCode)
                         } else {
-                            errorMessage = "کد تایید را کامل وارد کن."
+                            localError = "کد تایید را کامل وارد کن."
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -132,7 +146,11 @@ fun RegisterBottomSheet(
                 )
                 GameButton(
                     text = "ویرایش شماره موبایل",
-                    onClick = { step = 1; errorMessage = null },
+                    onClick = {
+                        localError = null
+                        otpCode = ""
+                        onEditPhone?.invoke()
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     style = GameButtonStyle.Glass,
                     height = 44.dp,
@@ -140,6 +158,16 @@ fun RegisterBottomSheet(
                 )
             }
             androidx.compose.foundation.layout.Spacer(Modifier.padding(bottom = 6.dp))
+        }
+    }
+}
+
+private fun normalizeDigitsToAscii(input: String): String = buildString(input.length) {
+    for (ch in input) {
+        when (ch) {
+            in '۰'..'۹' -> append('0' + (ch - '۰'))
+            in '٠'..'٩' -> append('0' + (ch - '٠'))
+            else -> append(ch)
         }
     }
 }

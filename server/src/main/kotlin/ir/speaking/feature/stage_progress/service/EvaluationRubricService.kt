@@ -38,7 +38,7 @@ class EvaluationRubricService {
             3 -> 100
             2 -> 85
             1 -> 70
-            else -> if (objectiveCompleted) 50 else 25
+            else -> if (objectiveCompleted) 50 else 0
         }
 
         return RubricResult(

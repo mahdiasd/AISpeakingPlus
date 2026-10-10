@@ -11,6 +11,9 @@ import ir.speaking.core.configureTestDatabases
 import ir.speaking.core.configureTestSecurity
 import ir.speaking.feature.stage.repository.StageRepository
 import ir.speaking.feature.stage.routing.stageRouting
+import ir.speaking.feature.stage_progress.repository.StageProgressRepo
+import ir.speaking.feature.subscription.repository.SubscriptionRepo
+import ir.speaking.feature.user.repository.UserRepo
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -32,6 +35,9 @@ class StageRoutingTest {
                 modules(
                     module {
                         single { StageRepository() }
+                        single { StageProgressRepo() }
+                        single { SubscriptionRepo() }
+                        single { UserRepo(subscriptionRepo = get()) }
                     }
                 )
             }

@@ -6,6 +6,7 @@ import ir.aispeaking.domain.model.data_result.DataResult
 import ir.aispeaking.domain.model.error.getErrorMessage
 import ir.aispeaking.domain.usecase.auth.SendOtpUseCase
 import ir.aispeaking.domain.usecase.auth.VerifyOtpUseCase
+import ir.aispeaking.domain.usecase.stage.SyncGuestProgressUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -20,7 +21,8 @@ import org.koin.core.annotation.Factory
 @Factory
 class LoginViewModel(
     private val sendOtpUseCase: SendOtpUseCase,
-    private val verifyOtpUseCase: VerifyOtpUseCase
+    private val verifyOtpUseCase: VerifyOtpUseCase,
+    private val syncGuestProgressUseCase: SyncGuestProgressUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -91,23 +93,6 @@ class LoginViewModel(
             return
         }
 
-        // Demo support for end-to-end testing of OTP step without backend
-        if (phone == "09000000000") {
-            val expiresIn = 60
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    step = LoginStep.ENTER_OTP,
-                    countdownSeconds = expiresIn,
-                    canResendOtp = false,
-                    otpCode = "",
-                    otpError = null
-                )
-            }
-            startCountdown(expiresIn)
-            return
-        }
-
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, phoneError = null, generalError = null) }
             when (val result = sendOtpUseCase(phone)) {
@@ -153,23 +138,11 @@ class LoginViewModel(
         }
 
         viewModelScope.launch {
-            // Demo verification for testing
-            if (phone == "09000000000") {
-                if (otp == "12345") {
-                    timerJob?.cancel()
-                    _uiState.update { it.copy(isLoading = false) }
-                    _effect.send(LoginEffect.LoginSuccess(ir.aispeaking.domain.model.user.User(uid = "demo_user", nickName = "کاربر آزمایشی", mobile = phone)))
-                    _effect.send(LoginEffect.NavigateToMain)
-                } else {
-                    _uiState.update { it.copy(isLoading = false, otpError = "کد تایید اشتباه است (برای تست 12345 را وارد نمایید)") }
-                }
-                return@launch
-            }
-
             _uiState.update { it.copy(isLoading = true, otpError = null, generalError = null) }
             when (val result = verifyOtpUseCase(phone, otp)) {
                 is DataResult.Success -> {
                     timerJob?.cancel()
+                    syncGuestProgressUseCase()
                     _uiState.update { it.copy(isLoading = false) }
                     _effect.send(LoginEffect.LoginSuccess(result.data))
                     _effect.send(LoginEffect.NavigateToMain)

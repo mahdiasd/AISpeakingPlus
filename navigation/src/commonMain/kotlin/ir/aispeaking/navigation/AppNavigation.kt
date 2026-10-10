@@ -51,6 +51,7 @@ fun AppNavigation(
             entry<LoginRoute> {
                 LoginRoute(
                     onNavigateToMain = {
+                        backStack.clear()
                         backStack.add(MainRoute)
                     }
                 )
@@ -83,6 +84,9 @@ fun AppNavigation(
                     },
                     onNavigateToSubscription = {
                         backStack.add(SubscriptionRoute)
+                    },
+                    onNavigateToLogin = {
+                        backStack.add(LoginRoute)
                     }
                 )
             }
@@ -91,7 +95,10 @@ fun AppNavigation(
                 ProfileScreen(
                     viewModel = koinViewModel(),
                     onNavigateBack = { backStack.removeLastOrNull() },
-                    onNavigateToLogin = { backStack.add(LoginRoute) },
+                    onNavigateToLogin = {
+                        backStack.clear()
+                        backStack.add(LoginRoute)
+                    },
                     onNavigateToSubscription = {
                         backStack.add(SubscriptionRoute)
                     }

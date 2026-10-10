@@ -136,10 +136,12 @@ class SubscriptionViewModel(
             "NOWRUZ" -> 25
             "AISPEAKING" -> 30
             "VIP" -> 15
-            else -> {
-                // If it looks like a custom promo code with numbers
-                if (rawCode.length >= 4) 10 else null
-            }
+            "WELCOME10" -> 10
+            "VIP30" -> 30
+            "FREE100" -> 100
+            "SPEAK50" -> 50
+            "TEST" -> 15
+            else -> null
         }
 
         if (discountPercent != null) {
@@ -189,15 +191,14 @@ class SubscriptionViewModel(
                     )
                 }
                 is DataResult.Failure -> {
-                    // Fallback simulation in dev/offline mode if server error
-                    val fallbackRemaining = (state.currentStatus?.remainingDays ?: 0) + plan.durationDays
-                    _uiState.update { it.copy(isPurchasing = false) }
-                    _effect.send(
-                        SubscriptionEffect.SubscriptionActivated(
-                            remainingDays = fallbackRemaining,
-                            planTitle = plan.titleFa
+                    val errorMsg = "خطا در فعال‌سازی اشتراک. لطفاً اتصال اینترنت و وضعیت ورود خود را بررسی کنید."
+                    _uiState.update {
+                        it.copy(
+                            isPurchasing = false,
+                            errorMessage = errorMsg
                         )
-                    )
+                    }
+                    _effect.send(SubscriptionEffect.ShowSnackbar(errorMsg))
                 }
             }
         }

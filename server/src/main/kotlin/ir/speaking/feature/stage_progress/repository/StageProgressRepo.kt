@@ -5,6 +5,7 @@ import ir.speaking.feature.stage.db.StageTable
 import ir.speaking.feature.stage_progress.db.StageProgressTable
 import ir.speaking.feature.stage_progress.dto.SyncProgressItem
 import ir.speaking.feature.stage_progress.dto.SyncProgressItemResult
+import ir.speaking.feature.user.db.UserTable
 import kotlinx.datetime.Clock
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
@@ -22,6 +23,16 @@ data class ProgressSaveResult(
 
 @Single
 class StageProgressRepo {
+
+    private fun refreshUserTotalScore(userId: UUID, now: kotlinx.datetime.Instant) {
+        val totalScore = StageProgressTable.selectAll()
+            .where { StageProgressTable.userId eq userId }
+            .sumOf { it[StageProgressTable.bestScore] }
+        UserTable.update({ UserTable.id eq userId }) {
+            it[UserTable.score] = totalScore
+            it[UserTable.updatedAt] = now
+        }
+    }
 
     suspend fun syncProgress(
         userId: UUID,
@@ -89,6 +100,7 @@ class StageProgressRepo {
                 )
             }
         }
+        refreshUserTotalScore(userId, now)
         results
     }
 
@@ -107,7 +119,7 @@ class StageProgressRepo {
 
         val now = Clock.System.now()
 
-        if (existingRow != null) {
+        val saveResult = if (existingRow != null) {
             val existingStars = existingRow[StageProgressTable.stars]
             val existingScore = existingRow[StageProgressTable.bestScore]
             val existingRepeat = existingRow[StageProgressTable.repeatCount]
@@ -141,5 +153,9 @@ class StageProgressRepo {
 
             ProgressSaveResult(stars, score, isHighScore = true, repeatCount = 1)
         }
+
+        refreshUserTotalScore(userId, now)
+        saveResult
     }
 }
+

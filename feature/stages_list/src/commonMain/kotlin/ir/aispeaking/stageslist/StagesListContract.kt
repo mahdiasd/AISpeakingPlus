@@ -45,7 +45,7 @@ data class StagesListUiState(
      * Percentage of journey completed (0.0f - 1.0f).
      */
     val progressPercentage: Float
-        get() = if (maxPossibleStars > 0) totalStarsEarned.toFloat() / maxPossibleStars else 0f
+        get() = if (stages.isNotEmpty()) completedStagesCount.toFloat() / stages.size else 0f
 }
 
 sealed interface StagesListUiAction {

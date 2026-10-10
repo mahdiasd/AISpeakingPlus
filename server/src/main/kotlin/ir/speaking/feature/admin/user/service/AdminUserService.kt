@@ -68,6 +68,7 @@ class AdminUserService {
                     (SubscriptionTable.status eq "ACTIVE") and
                     (SubscriptionTable.expiresAt greater now)
                 }
+                .orderBy(SubscriptionTable.expiresAt, SortOrder.ASC)
                 .associateBy { it[SubscriptionTable.userId].value }
         } else emptyMap()
 

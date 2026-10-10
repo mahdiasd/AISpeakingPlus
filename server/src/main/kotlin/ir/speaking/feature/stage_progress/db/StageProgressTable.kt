@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
 object StageProgressTable : UUIDTable("stage_progress") {
     val userId = reference("user_id", UserTable, onDelete = ReferenceOption.CASCADE)
-    val stageId = reference("stage_id", StageTable, onDelete = ReferenceOption.CASCADE)
+    val stageId = reference("stage_id", StageTable, onDelete = ReferenceOption.RESTRICT)
     val stars = integer("stars").check("stars_range_check") { it.between(0, 3) }
     val bestScore = integer("best_score").default(0)
     val repeatCount = integer("repeat_count").default(1)

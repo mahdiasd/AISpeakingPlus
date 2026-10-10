@@ -8,6 +8,8 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import ir.speaking.core.response.failureRespond
 import ir.speaking.core.utils.MyConstant
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.selectAll
 
 fun Application.configureTestSecurity() {
     // Please read the jwt property from the config file if you are using EngineMain
@@ -26,16 +28,41 @@ fun Application.configureTestSecurity() {
                     .build()
             )
             validate { credential ->
-                if (credential.payload.getClaim("uid").asString() != "") {
-                    JWTPrincipal(credential.payload)
+                val uid = credential.payload.getClaim("uid")?.asString()
+                if (!uid.isNullOrBlank()) {
+                    val userId = try { java.util.UUID.fromString(uid) } catch (_: Exception) { null }
+                    if (userId != null) {
+                        val isSuspended = try {
+                            org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction(kotlinx.coroutines.Dispatchers.IO) {
+                                ir.speaking.feature.user.db.UserTable.selectAll()
+                                    .where {
+                                        (ir.speaking.feature.user.db.UserTable.id eq userId) and
+                                        (ir.speaking.feature.user.db.UserTable.status eq "SUSPENDED")
+                                    }
+                                    .count() > 0
+                            }
+                        } catch (_: Exception) {
+                            false
+                        }
+                        if (isSuspended) {
+                            this.attributes.put(SuspendedUserAttributeKey, true)
+                            null
+                        } else {
+                            JWTPrincipal(credential.payload)
+                        }
+                    } else {
+                        JWTPrincipal(credential.payload)
+                    }
                 } else {
                     null
                 }
             }
-            challenge { a , b ->
-                println("******** $a")
-                println("******** $b")
-                call.failureRespond(HttpStatusCode.Unauthorized)
+            challenge { _, _ ->
+                if (call.attributes.getOrNull(SuspendedUserAttributeKey) == true) {
+                    call.failureRespond(HttpStatusCode.Forbidden, "حساب کاربری شما تعلیق شده است.")
+                } else {
+                    call.failureRespond(HttpStatusCode.Unauthorized)
+                }
             }
         }
         jwt(MyConstant.ADMIN_JWT_NAME) {

@@ -17,6 +17,7 @@ data class GrammarErrorItem(
 
 @Serializable
 data class EvaluationRequest(
+    val objectiveCompleted: Boolean = false,
     val hintsUsedCount: Int = 0,
     val turnsCount: Int = 0,
     val grammarErrorsCount: Int = 0,

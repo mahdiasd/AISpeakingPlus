@@ -3,10 +3,15 @@ package ir.aispeaking.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.aispeaking.domain.model.data_result.DataResult
+import ir.aispeaking.domain.model.error.getErrorMessage
 import ir.aispeaking.domain.model.stage.AccessTier
+import ir.aispeaking.domain.model.stage.JourneyLeaderboard
 import ir.aispeaking.domain.model.stage.Stage
 import ir.aispeaking.domain.model.stage.StageLockStatus
 import ir.aispeaking.domain.usecase.auth.GetCurrentAccessTierUseCase
+import ir.aispeaking.domain.usecase.auth.SendOtpUseCase
+import ir.aispeaking.domain.usecase.auth.VerifyOtpUseCase
+import ir.aispeaking.domain.usecase.stage.GetJourneyLeaderboardUseCase
 import ir.aispeaking.domain.usecase.stage.GetStagesUseCase
 import ir.aispeaking.domain.usecase.stage.SyncGuestProgressUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +31,11 @@ data class JourneyMapUiState(
     val selectedStageForBriefing: Stage? = null,
     val selectedStageForRegister: Stage? = null,
     val selectedStageForPaywall: Stage? = null,
+    val isRegisterLoading: Boolean = false,
+    val registerStep: Int = 1,
+    val registerError: String? = null,
+    val showLeaderboardSheet: Boolean = false,
+    val leaderboard: JourneyLeaderboard? = null,
     val snackbarMessage: String? = null
 ) {
     /**
@@ -60,7 +70,10 @@ data class JourneyMapUiState(
 class JourneyMapViewModel(
     private val getStagesUseCase: GetStagesUseCase,
     private val syncGuestProgressUseCase: SyncGuestProgressUseCase,
-    private val getCurrentAccessTierUseCase: GetCurrentAccessTierUseCase
+    private val getCurrentAccessTierUseCase: GetCurrentAccessTierUseCase,
+    private val sendOtpUseCase: SendOtpUseCase,
+    private val verifyOtpUseCase: VerifyOtpUseCase,
+    private val getJourneyLeaderboardUseCase: GetJourneyLeaderboardUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(JourneyMapUiState())
@@ -73,9 +86,111 @@ class JourneyMapViewModel(
         }
     }
 
+    private fun normalizeDigits(input: String): String = buildString(input.length) {
+        for (ch in input.trim()) {
+            when (ch) {
+                in '۰'..'۹' -> append('0' + (ch - '۰'))
+                in '٠'..'٩' -> append('0' + (ch - '٠'))
+                else -> append(ch)
+            }
+        }
+    }
+
+    fun sendRegisterOtp(phone: String) {
+        val cleanPhone = normalizeDigits(phone)
+        if (cleanPhone.length != 11 || !cleanPhone.startsWith("09")) {
+            _uiState.update { it.copy(registerError = "شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود.") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRegisterLoading = true, registerError = null) }
+            when (val result = sendOtpUseCase(cleanPhone)) {
+                is DataResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isRegisterLoading = false,
+                            registerStep = 2,
+                            registerError = null
+                        )
+                    }
+                }
+                is DataResult.Failure -> {
+                    val msg = result.appError.getErrorMessage().ifBlank { "خطا در ارسال کد تایید" }
+                    _uiState.update {
+                        it.copy(
+                            isRegisterLoading = false,
+                            registerError = msg
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun verifyRegisterOtp(phone: String, otp: String) {
+        val cleanPhone = normalizeDigits(phone)
+        val cleanOtp = normalizeDigits(otp)
+        if (cleanOtp.length < 4) {
+            _uiState.update { it.copy(registerError = "کد تایید را کامل وارد کن.") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRegisterLoading = true, registerError = null) }
+            when (val result = verifyOtpUseCase(cleanPhone, cleanOtp)) {
+                is DataResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isRegisterLoading = false,
+                            registerStep = 1,
+                            registerError = null
+                        )
+                    }
+                    onRegisterSuccess()
+                }
+                is DataResult.Failure -> {
+                    val msg = result.appError.getErrorMessage().ifBlank { "کد تایید اشتباه است یا منقضی شده است" }
+                    _uiState.update {
+                        it.copy(
+                            isRegisterLoading = false,
+                            registerError = msg
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun resetRegisterStep() {
+        _uiState.update { it.copy(registerStep = 1, registerError = null, isRegisterLoading = false) }
+    }
+
+    fun openLeaderboard() {
+        viewModelScope.launch {
+            when (val result = getJourneyLeaderboardUseCase()) {
+                is DataResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            leaderboard = result.data,
+                            showLeaderboardSheet = true
+                        )
+                    }
+                }
+                is DataResult.Failure -> {
+                    _uiState.update {
+                        it.copy(snackbarMessage = "خطا در بارگذاری جدول رده‌بندی")
+                    }
+                }
+            }
+        }
+    }
+
+    fun dismissLeaderboard() {
+        _uiState.update { it.copy(showLeaderboardSheet = false) }
+    }
+
     fun onRegisterSuccess() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, selectedStageForRegister = null) }
+            _uiState.update { it.copy(isLoading = true, selectedStageForRegister = null, registerStep = 1, registerError = null) }
             syncGuestProgressUseCase()
             val tier = getCurrentAccessTierUseCase()
             loadStages(tier)
@@ -130,7 +245,7 @@ class JourneyMapViewModel(
                 _uiState.update { it.copy(selectedStageForBriefing = stage) }
             }
             StageLockStatus.LOCKED_REGISTRATION -> {
-                _uiState.update { it.copy(selectedStageForRegister = stage) }
+                _uiState.update { it.copy(selectedStageForRegister = stage, registerStep = 1, registerError = null) }
             }
             StageLockStatus.LOCKED_SUBSCRIPTION -> {
                 _uiState.update { it.copy(selectedStageForPaywall = stage) }
@@ -176,7 +291,7 @@ class JourneyMapViewModel(
     }
 
     fun dismissRegister() {
-        _uiState.update { it.copy(selectedStageForRegister = null) }
+        _uiState.update { it.copy(selectedStageForRegister = null, registerStep = 1, registerError = null, isRegisterLoading = false) }
     }
 
     fun dismissPaywall() {

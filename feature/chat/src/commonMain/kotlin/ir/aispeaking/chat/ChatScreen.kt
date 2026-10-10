@@ -137,7 +137,14 @@ fun ChatScreen(
                         .weight(1f)
                         .fillMaxWidth()
                 ) {
-                    if (stage == null) {
+                    if (uiState.stageLoadError != null) {
+                        StageLoadErrorState(
+                            errorMessage = uiState.stageLoadError!!,
+                            onRetry = { viewModel.retryLoadStage() },
+                            onBack = onNavigateBack,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    } else if (stage == null) {
                         LoadingState(modifier = Modifier.align(Alignment.Center))
                     } else {
                         if (uiState.chats.isEmpty() && stage.initialSpeaker != "Model") {
@@ -276,6 +283,45 @@ private fun LoadingState(modifier: Modifier = Modifier) {
                 color = Game.Mint
             )
             GameText(text = "در حال آماده‌سازی گفتگو…", size = 14.sp, color = Game.TextSecondary)
+        }
+    }
+}
+
+@Composable
+private fun StageLoadErrorState(
+    errorMessage: String,
+    onRetry: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    GlassPanel(modifier = modifier.padding(horizontal = 32.dp)) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            GameText(text = "خطا در باز کردن مرحله", size = 16.sp, bold = true, color = Game.Coral)
+            GameText(
+                text = errorMessage,
+                size = 13.sp,
+                lineHeight = 21.sp,
+                color = Game.TextSecondary,
+                align = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                ir.aispeaking.sharedui.ui.game.GameChip(
+                    text = "تلاش مجدد",
+                    accent = Game.Mint,
+                    active = true,
+                    onClick = onRetry
+                )
+                ir.aispeaking.sharedui.ui.game.GameChip(
+                    text = "بازگشت",
+                    accent = Game.TextSecondary,
+                    active = false,
+                    onClick = onBack
+                )
+            }
         }
     }
 }

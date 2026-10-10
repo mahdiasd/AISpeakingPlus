@@ -165,6 +165,8 @@ export interface AuditLogItem {
 export interface MediaUploadResponse {
   url: string;
   filename: string;
+  mimeType: string;
+  sizeBytes: number;
 }
 
 // TTS & STT Testing Models

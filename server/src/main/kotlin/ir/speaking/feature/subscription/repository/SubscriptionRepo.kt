@@ -11,9 +11,12 @@ import org.jetbrains.exposed.sql.selectAll
 import org.koin.core.annotation.Single
 import java.util.*
 
+import org.jetbrains.exposed.sql.update
+
 data class UserSubscriptionInfo(
     val isSubscriber: Boolean,
     val planType: String? = null,
+    val startedAt: String? = null,
     val expiresAt: String? = null,
     val remainingDays: Int = 0
 )
@@ -42,15 +45,20 @@ class SubscriptionRepo {
                 (SubscriptionTable.status eq "ACTIVE") and
                 (SubscriptionTable.expiresAt greater now)
             }
-            .orderBy(SubscriptionTable.expiresAt to org.jetbrains.exposed.sql.SortOrder.DESC)
+            .orderBy(
+                SubscriptionTable.expiresAt to org.jetbrains.exposed.sql.SortOrder.DESC,
+                SubscriptionTable.createdAt to org.jetbrains.exposed.sql.SortOrder.DESC
+            )
             .firstOrNull()
 
         if (activeRow != null) {
+            val startedAt = activeRow[SubscriptionTable.startedAt]
             val expiresAt = activeRow[SubscriptionTable.expiresAt]
             val remainingDays = maxOf(0, (expiresAt.epochSeconds - now.epochSeconds) / (24 * 3600)).toInt()
             UserSubscriptionInfo(
                 isSubscriber = true,
                 planType = activeRow[SubscriptionTable.planType],
+                startedAt = startedAt.toString(),
                 expiresAt = expiresAt.toString(),
                 remainingDays = remainingDays
             )
@@ -73,7 +81,10 @@ class SubscriptionRepo {
                 (SubscriptionTable.status eq "ACTIVE") and
                 (SubscriptionTable.expiresAt greater now)
             }
-            .orderBy(SubscriptionTable.expiresAt to org.jetbrains.exposed.sql.SortOrder.DESC)
+            .orderBy(
+                SubscriptionTable.expiresAt to org.jetbrains.exposed.sql.SortOrder.DESC,
+                SubscriptionTable.createdAt to org.jetbrains.exposed.sql.SortOrder.DESC
+            )
             .firstOrNull()
 
         val baseTime = if (activeRow != null) {
@@ -81,14 +92,16 @@ class SubscriptionRepo {
         } else {
             now
         }
+        val effectiveStartedAt = activeRow?.get(SubscriptionTable.startedAt) ?: now
 
         val effectiveDays = if (durationDays <= 0) 30 else durationDays
         val newExpiresAt = baseTime.plus(effectiveDays, kotlinx.datetime.DateTimeUnit.DAY, kotlinx.datetime.TimeZone.UTC)
 
+        // Do NOT mark existing active subscription(s) as EXPIRED; insert cumulative renewal row with extended expiresAt
         SubscriptionTable.insertAndGetId {
             it[SubscriptionTable.userId] = userId
             it[SubscriptionTable.planType] = planType.uppercase()
-            it[SubscriptionTable.startedAt] = now
+            it[SubscriptionTable.startedAt] = effectiveStartedAt
             it[SubscriptionTable.expiresAt] = newExpiresAt
             it[SubscriptionTable.status] = "ACTIVE"
             it[SubscriptionTable.grantSource] = grantSource
@@ -99,6 +112,7 @@ class SubscriptionRepo {
         UserSubscriptionInfo(
             isSubscriber = true,
             planType = planType.uppercase(),
+            startedAt = effectiveStartedAt.toString(),
             expiresAt = newExpiresAt.toString(),
             remainingDays = remainingDays
         )

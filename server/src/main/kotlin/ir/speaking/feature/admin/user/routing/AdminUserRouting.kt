@@ -20,6 +20,8 @@ import ir.speaking.feature.admin.model.AdminUserDetailDto
 import ir.speaking.feature.admin.model.AdminUserItemDto
 import ir.speaking.feature.admin.model.AdminUserStatusUpdateRequest
 import ir.speaking.feature.admin.user.service.AdminUserService
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.util.UUID
 
 @OptIn(ExperimentalKtorApi::class)
@@ -123,10 +125,16 @@ fun Route.adminUserRouting(
                     action = "USER_STATUS_CHANGE",
                     targetType = "USER",
                     targetId = userId.toString(),
-                    detailsJson = """{"status":"${request.status}","reason":"${request.reason ?: ""}"}"""
+                    detailsJson = buildJsonObject {
+                        put("status", request.status)
+                        put("reason", request.reason ?: "")
+                    }.toString()
                 )
 
-                call.successRespond(mapOf("success" to "true", "status" to request.status), message = "وضعیت کاربر با موفقیت تغییر یافت")
+                call.successRespond(
+                    mapOf("userId" to userId.toString(), "success" to "true", "status" to request.status),
+                    message = "وضعیت کاربر با موفقیت تغییر یافت"
+                )
             }.describe {
                 tag("Admin Users")
                 summary = "Update User Status"
