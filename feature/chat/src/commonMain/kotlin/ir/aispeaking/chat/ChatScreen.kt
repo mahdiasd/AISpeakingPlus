@@ -207,9 +207,10 @@ fun ChatScreen(
                 }
 
                 HintSuggestionCue(
-                    visible = uiState.currentHintSuggestion != null,
+                    visible = uiState.currentHintSuggestion != null || uiState.hintError != null,
                     suggestionEn = uiState.currentHintSuggestion,
                     explanationFa = uiState.currentHintExplanation,
+                    errorMessage = uiState.hintError,
                     onApplySuggestion = { suggestion ->
                         viewModel.onMessageTextChanged(suggestion)
                         viewModel.setInputMode(ChatInputMode.TEXT)

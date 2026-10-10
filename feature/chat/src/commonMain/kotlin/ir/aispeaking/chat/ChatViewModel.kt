@@ -8,6 +8,7 @@ import ir.aispeaking.domain.model.chat.AiVoiceState
 import ir.aispeaking.domain.model.chat.Chat
 import ir.aispeaking.domain.model.chat.ChatStatus
 import ir.aispeaking.domain.model.data_result.DataResult
+import ir.aispeaking.domain.model.error.getErrorMessage
 import ir.aispeaking.domain.model.stage.AccessTier
 import ir.aispeaking.domain.model.stage.EvaluationSession
 import ir.aispeaking.domain.model.stage.GrammarErrorDetail
@@ -46,6 +47,7 @@ data class ChatUiState(
     val turnsCount: Int = 0,
     val currentHintSuggestion: String? = null,
     val currentHintExplanation: String? = null,
+    val hintError: String? = null,
     val showEvaluationDialog: Boolean = false,
     val isObjectiveCompleted: Boolean = false,
     val showFinishConfirmDialog: Boolean = false,
@@ -223,7 +225,8 @@ class ChatViewModel(
                     _uiState.update { it.copy(messageText = text) }
                 },
                 onSilenceDetected = {
-                    // 5-second silence detected -> auto pause
+                    // 5-second silence detected -> auto pause & stop recording
+                    audioController.stopRecording()
                     _uiState.update { it.copy(isRecording = false) }
                 }
             )
@@ -426,7 +429,7 @@ class ChatViewModel(
     fun requestHint() {
         val stageId = _uiState.value.stage?.id ?: return
         viewModelScope.launch {
-            _uiState.update { it.copy(isRequestingHint = true) }
+            _uiState.update { it.copy(isRequestingHint = true, hintError = null) }
             val dialogue = _uiState.value.chats.mapNotNull {
                 when (it) {
                     is Chat.User -> "User" to it.message
@@ -442,17 +445,22 @@ class ChatViewModel(
                             isRequestingHint = false,
                             hintsUsedCount = newHintsCount,
                             currentHintSuggestion = result.data.suggestionEn,
-                            currentHintExplanation = result.data.explanationFa
+                            currentHintExplanation = result.data.explanationFa,
+                            hintError = null
                         )
                     }
                 }
                 is DataResult.Failure -> {
                     // Do not increment hintsUsedCount on network failure
+                    val errorMsg = result.appError.getErrorMessage().ifBlank {
+                        "خطا در دریافت راهنمایی. لطفاً اتصال اینترنت خود را بررسی کنید."
+                    }
                     _uiState.update {
                         it.copy(
                             isRequestingHint = false,
                             currentHintSuggestion = null,
-                            currentHintExplanation = null
+                            currentHintExplanation = null,
+                            hintError = errorMsg
                         )
                     }
                 }
@@ -462,7 +470,11 @@ class ChatViewModel(
 
     fun dismissHint() {
         _uiState.update {
-            it.copy(currentHintSuggestion = null, currentHintExplanation = null)
+            it.copy(
+                currentHintSuggestion = null,
+                currentHintExplanation = null,
+                hintError = null
+            )
         }
     }
 

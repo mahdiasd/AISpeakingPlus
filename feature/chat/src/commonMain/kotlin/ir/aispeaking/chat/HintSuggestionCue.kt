@@ -36,24 +36,29 @@ fun HintSuggestionCue(
     visible: Boolean,
     suggestionEn: String?,
     explanationFa: String?,
+    errorMessage: String? = null,
     onApplySuggestion: (String) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isError = !errorMessage.isNullOrBlank()
+    val isSuggestion = !suggestionEn.isNullOrBlank()
+
     AnimatedVisibility(
-        visible = visible && !suggestionEn.isNullOrBlank(),
+        visible = visible && (isSuggestion || isError),
         enter = slideInVertically(tween(240)) { it / 2 } + fadeIn(tween(200)),
         exit = slideOutVertically(tween(180)) { it / 2 } + fadeOut(tween(150)),
         modifier = modifier
     ) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             val shape = RoundedCornerShape(22.dp)
+            val borderColor = if (isError) Game.Coral.copy(alpha = 0.6f) else Game.Gold.copy(alpha = 0.6f)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp)
                     .background(Game.PanelSolid, shape)
-                    .border(1.dp, Game.Gold.copy(alpha = 0.6f), shape)
+                    .border(1.dp, borderColor, shape)
                     .padding(14.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
@@ -63,9 +68,9 @@ fun HintSuggestionCue(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     GameChip(
-                        text = "جمله پیشنهادی",
-                        icon = Res.drawable.ic_lamp,
-                        accent = Game.Gold,
+                        text = if (isError) "خطا در راهنمایی" else "جمله پیشنهادی",
+                        icon = if (isError) Res.drawable.ic_close else Res.drawable.ic_lamp,
+                        accent = if (isError) Game.Coral else Game.Gold,
                         active = true
                     )
                     GameChip(
@@ -76,34 +81,44 @@ fun HintSuggestionCue(
                     )
                 }
 
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                if (isError) {
                     GameText(
-                        text = suggestionEn ?: "",
-                        size = 17.sp,
-                        lineHeight = 25.sp,
-                        latin = true,
-                        bold = true,
-                        color = Game.Sky,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                if (!explanationFa.isNullOrBlank()) {
-                    GameText(
-                        text = explanationFa,
+                        text = errorMessage ?: "",
                         size = 13.sp,
                         lineHeight = 21.sp,
-                        color = Game.TextSecondary
+                        color = Game.Coral,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        GameText(
+                            text = suggestionEn ?: "",
+                            size = 17.sp,
+                            lineHeight = 25.sp,
+                            latin = true,
+                            bold = true,
+                            color = Game.Sky,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    if (!explanationFa.isNullOrBlank()) {
+                        GameText(
+                            text = explanationFa,
+                            size = 13.sp,
+                            lineHeight = 21.sp,
+                            color = Game.TextSecondary
+                        )
+                    }
+
+                    GameChip(
+                        text = "استفاده از این جمله",
+                        icon = Res.drawable.ic_done,
+                        accent = Game.Mint,
+                        active = true,
+                        onClick = { suggestionEn?.let { onApplySuggestion(it) } }
                     )
                 }
-
-                GameChip(
-                    text = "استفاده از این جمله",
-                    icon = Res.drawable.ic_done,
-                    accent = Game.Mint,
-                    active = true,
-                    onClick = { suggestionEn?.let { onApplySuggestion(it) } }
-                )
             }
         }
     }
