@@ -66,13 +66,9 @@ export const StageThumbnail: React.FC<StageThumbnailProps> = ({
             <div className="w-7 h-7 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 flex items-center justify-center mb-1 shadow-xs border border-indigo-200/40 dark:border-indigo-500/20">
               <Compass className="w-4 h-4" />
             </div>
-            {fallbackTitle ? (
+            {fallbackTitle && (
               <span className="text-[9px] font-medium text-slate-600 dark:text-slate-400 line-clamp-2 max-w-[95%] leading-tight text-center px-0.5">
                 {fallbackTitle}
-              </span>
-            ) : (
-              <span className="text-[8px] font-mono text-slate-400 dark:text-slate-500 leading-none">
-                عمودی ۹:۱۶
               </span>
             )}
           </div>
@@ -84,7 +80,6 @@ export const StageThumbnail: React.FC<StageThumbnailProps> = ({
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
           title={alt || 'پیش‌نمایش تصویر سناریو'}
-          description="تصویر عمودی تمام‌صفحه محیط مکالمه مخصوص گوشی موبایل (نسبت ۹:۱۶)"
           maxWidth="md"
         >
           <div className="flex flex-col items-center justify-center p-2">
