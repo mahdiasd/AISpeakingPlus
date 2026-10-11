@@ -192,7 +192,7 @@ export const StagesListPage: React.FC = () => {
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-[#0E1422]/90 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   <th className="py-4 px-4 w-16 text-center">ترتیب</th>
-                  <th className="py-4 px-4">تصویر شاخص</th>
+                  <th className="py-4 px-4">تصویر سناریو (عمودی ۹:۱۶)</th>
                   <th className="py-4 px-4">عنوان سناریو و جزئیات</th>
                   <th className="py-4 px-4 hidden lg:table-cell">تنظیمات صدا و هوش مصنوعی</th>
                   <th className="py-4 px-4 text-center">وضعیت</th>

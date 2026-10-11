@@ -527,10 +527,10 @@ export const StageEditorPage: React.FC = () => {
                   <ImageIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   <div>
                     <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                      تصویر شاخص محیط سناریو (اصلی)
+                      تصویر پس‌زمینه سناریو (محیط مکالمه - عمودی ۹:۱۶)
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      این تصویر به عنوان کاور اصلی در لیست مراحل و پس‌زمینه عمودی تمام‌صفحه موبایل نمایش داده می‌شود.
+                      این تصویر به عنوان پس‌زمینه عمودی تمام‌صفحه موبایل در گفتگو و کاور شاخص مرحله نمایش داده می‌شود.
                     </p>
                   </div>
                 </div>
