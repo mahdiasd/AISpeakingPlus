@@ -11,7 +11,8 @@ data class StageChatMessageDto(
 @Serializable
 data class StageChatRequest(
     val message: String? = null,
-    val history: List<StageChatMessageDto> = emptyList()
+    val history: List<StageChatMessageDto> = emptyList(),
+    val userLevel: String? = null
 )
 
 @Serializable

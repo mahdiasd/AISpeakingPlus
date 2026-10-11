@@ -12,6 +12,7 @@ import ir.speaking.feature.stage.repository.StageRepository
 import ir.speaking.feature.tts.model.KokoroVoices
 import ir.speaking.feature.tts.service.TtsService
 import ir.speaking.feature.stage.dto.StageDetailResponse
+import ir.speaking.feature.user.repository.UserRepo
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.jsonObject
@@ -24,7 +25,8 @@ import java.util.UUID
 class StageChatService(
     private val stageRepository: StageRepository,
     private val ttsService: TtsService,
-    private val aiApiService: AiApiService
+    private val aiApiService: AiApiService,
+    private val userRepo: UserRepo = UserRepo()
 ) {
     private val logger = LoggerFactory.getLogger(StageChatService::class.java)
     private val json = Json { ignoreUnknownKeys = true }
@@ -38,11 +40,16 @@ class StageChatService(
         val userMessage = request.message?.trim().orEmpty()
         val history = request.history
 
+        val resolvedUserLevel = request.userLevel?.trim()?.takeIf { it.isNotBlank() }
+            ?: (if (userId != null) userRepo.getUserLanguageLevel(userId) else null)
+            ?: "A1"
+        val normalizedLevel = resolvedUserLevel.uppercase()
+
         val voiceSid = KokoroVoices.ALL.firstOrNull { it.code.equals(stage?.voiceId, ignoreCase = true) }?.id ?: 0
 
         // If userMessage is empty, this is the AI starter greeting turn
         if (userMessage.isEmpty()) {
-            val (initialGreeting, initialTranslation) = generateAiStarterTurn(stage)
+            val (initialGreeting, initialTranslation) = generateAiStarterTurn(stage, normalizedLevel)
             val audioUrl = trySynthesize(initialGreeting, voiceSid)
 
             return StageChatResponse(
@@ -61,7 +68,8 @@ class StageChatService(
         val turnResult = generateAiChatTurn(
             stage = stage,
             userMessage = userMessage,
-            history = history
+            history = history,
+            level = normalizedLevel
         )
 
         val audioUrl = trySynthesize(turnResult.reply, voiceSid)
@@ -88,7 +96,46 @@ class StageChatService(
         }
     }
 
-    private suspend fun generateAiStarterTurn(stage: StageDetailResponse?): Pair<String, String?> {
+    private fun buildCefrDirectives(level: String): String = buildString {
+        appendLine("Learner English Level (CEFR): $level")
+        appendLine("CRITICAL LEVEL ADAPTATION MANDATES:")
+        when (level) {
+            "A1" -> {
+                appendLine("- LEVEL A1 (Beginner):")
+                appendLine("  * Vocabulary: Strictly use ONLY high-frequency, basic A1 everyday words (e.g., want, like, have, go, eat, drink, please, thank you, hello).")
+                appendLine("  * Sentence Length: Keep sentences very short (3 to 6 words each). Maximum 1-2 short sentences.")
+                appendLine("  * Grammar: Use simple present tense or basic imperative/questions ('Do you want...', 'Here is...').")
+                appendLine("  * Prohibited: NEVER use idioms, phrasal verbs, passive voice, formal vocabulary, or complex multi-clause sentences.")
+                appendLine("  * Feedback: When correcting, focus only on fundamental beginner errors and explain gently and encouragingly in simple Persian.")
+            }
+            "A2" -> {
+                appendLine("- LEVEL A2 (Elementary):")
+                appendLine("  * Vocabulary: Use common everyday words and routine phrases.")
+                appendLine("  * Sentence Length: Short sentences, connected with simple conjunctions (and, but, because).")
+                appendLine("  * Grammar: Simple past, future with 'going to', basic modals.")
+                appendLine("  * Prohibited: Avoid rare idioms or complex sentence structures.")
+            }
+            "B1" -> {
+                appendLine("- LEVEL B1 (Intermediate):")
+                appendLine("  * Vocabulary: Standard everyday conversational English.")
+                appendLine("  * Flow: Connected sentences, common daily idioms, natural conversational pace.")
+            }
+            "B2" -> {
+                appendLine("- LEVEL B2 (Upper-Intermediate):")
+                appendLine("  * Vocabulary: Rich, expressive vocabulary and natural idioms.")
+                appendLine("  * Flow: Fluent, authentic conversational flow with varied structures.")
+            }
+            "C1", "C2" -> {
+                appendLine("- LEVEL $level (Advanced / Mastery):")
+                appendLine("  * Sophisticated, native-like conversational English with nuance, idioms, and natural eloquence.")
+            }
+            else -> {
+                appendLine("- Use simple and accessible English suitable for beginners.")
+            }
+        }
+    }
+
+    private suspend fun generateAiStarterTurn(stage: StageDetailResponse?, level: String = "A1"): Pair<String, String?> {
         return try {
             val systemPrompt = buildString {
                 appendLine("You are an interactive conversational English learning assistant acting as a character in an English speaking simulation scenario.")
@@ -97,8 +144,11 @@ class StageChatService(
                 appendLine("Character Persona & Behavior: ${stage?.characterBehavior ?: "Friendly and helpful conversational partner"}")
                 appendLine("Stage Target Objective: ${stage?.targetObjective ?: "Practice natural English conversation"}")
                 appendLine()
+                append(buildCefrDirectives(level))
+                appendLine()
                 appendLine("Task:")
                 appendLine("Generate the OPENING greeting message from '${stage?.characterName ?: "Character"}' to start the conversation with the user in this scenario.")
+                appendLine("The greeting MUST strictly match the learner's English level ($level) in vocabulary and sentence structure.")
                 appendLine("Keep it natural, in-character, and concise (1 to 2 sentences max).")
                 appendLine("Also provide a natural Persian translation.")
                 appendLine("ALWAYS return valid JSON matching this schema:")
@@ -119,35 +169,71 @@ class StageChatService(
             } else {
                 logger.warn("AI starter request failed: ${rawResult.exceptionOrNull()?.message}")
             }
-            getInitialGreeting(stage?.orderIndex, stage?.characterName)
+            getInitialGreeting(stage?.orderIndex, stage?.characterName, level)
         } catch (e: Exception) {
             logger.warn("Error in generateAiStarterTurn: ${e.message}, using fallback starter")
-            getInitialGreeting(stage?.orderIndex, stage?.characterName)
+            getInitialGreeting(stage?.orderIndex, stage?.characterName, level)
         }
     }
 
-    private fun getInitialGreeting(orderIndex: Int?, characterName: String?): Pair<String, String> {
+    private fun getInitialGreeting(orderIndex: Int?, characterName: String?, level: String = "A1"): Pair<String, String> {
+        val isBeginner = level.equals("A1", ignoreCase = true)
         return when (orderIndex) {
-            1 -> Pair(
-                "Good evening! Welcome aboard. Would you like the grilled chicken with rice, or the vegetarian pasta tonight?",
-                "عصر بخیر! به پرواز خوش آمدید. امشب مرغ گریل شده با برنج میل دارید یا پاستای گیاهی؟"
-            )
-            2 -> Pair(
-                "Good day. What is the purpose of your visit to the United Kingdom?",
-                "روز بخیر. هدف شما از سفر به بریتانیا چیست؟"
-            )
-            3 -> Pair(
-                "Hello! How can I help you today? Did your luggage not arrive on the carousel?",
-                "سلام! چطور می‌توانم کمکتان کنم؟ آیا چمدانتان روی نوار نقاله نیامده است؟"
-            )
-            4 -> Pair(
-                "Hello there! Welcome to the London Underground. Do you need an Oyster card or a standard travelcard?",
-                "سلام! به متروی لندن خوش آمدید. کارت اویستر می‌خواهید یا بلیت استاندارد سفر؟"
-            )
-            else -> Pair(
-                "Hello! Welcome. How can I help you today?",
-                "سلام! خوش آمدید. چطور می‌توانم امروز کمکتان کنم؟"
-            )
+            1 -> if (isBeginner) {
+                Pair(
+                    "Hello! Welcome aboard. Do you want chicken or pasta tonight?",
+                    "سلام! به پرواز خوش آمدید. امشب مرغ می‌خواهید یا پاستا؟"
+                )
+            } else {
+                Pair(
+                    "Good evening! Welcome aboard. Would you like the grilled chicken with rice, or the vegetarian pasta tonight?",
+                    "عصر بخیر! به پرواز خوش آمدید. امشب مرغ گریل شده با برنج میل دارید یا پاستای گیاهی؟"
+                )
+            }
+            2 -> if (isBeginner) {
+                Pair(
+                    "Hello. Why are you visiting the UK?",
+                    "سلام. چرا به بریتانیا سفر می‌کنید؟"
+                )
+            } else {
+                Pair(
+                    "Good day. What is the purpose of your visit to the United Kingdom?",
+                    "روز بخیر. هدف شما از سفر به بریتانیا چیست؟"
+                )
+            }
+            3 -> if (isBeginner) {
+                Pair(
+                    "Hello! Can I help you with your bags?",
+                    "سلام! می‌توانم در مورد چمدان‌هایتان کمکتان کنم؟"
+                )
+            } else {
+                Pair(
+                    "Hello! How can I help you today? Did your luggage not arrive on the carousel?",
+                    "سلام! چطور می‌توانم کمکتان کنم؟ آیا چمدانتان روی نوار نقاله نیامده است؟"
+                )
+            }
+            4 -> if (isBeginner) {
+                Pair(
+                    "Hello! Welcome to the train station. Do you need a ticket?",
+                    "سلام! به ایستگاه قطار خوش آمدید. آیا بلیت می‌خواهید؟"
+                )
+            } else {
+                Pair(
+                    "Hello there! Welcome to the London Underground. Do you need an Oyster card or a standard travelcard?",
+                    "سلام! به متروی لندن خوش آمدید. کارت اویستر می‌خواهید یا بلیت استاندارد سفر؟"
+                )
+            }
+            else -> if (isBeginner) {
+                Pair(
+                    "Hello! Welcome. How can I help you?",
+                    "سلام! خوش آمدید. چطور می‌توانم کمکتان کنم؟"
+                )
+            } else {
+                Pair(
+                    "Hello! Welcome. How can I help you today?",
+                    "سلام! خوش آمدید. چطور می‌توانم امروز کمکتان کنم؟"
+                )
+            }
         }
     }
 
