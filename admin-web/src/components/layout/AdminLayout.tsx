@@ -30,7 +30,7 @@ export const AdminLayout: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 lg:pr-64 flex flex-col min-w-0">
         <AdminTopBar onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
-        <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto animate-in fade-in duration-200">
+        <main className="flex-1 p-5 sm:p-6 lg:p-8 w-full animate-in fade-in duration-200">
           <Outlet />
         </main>
       </div>

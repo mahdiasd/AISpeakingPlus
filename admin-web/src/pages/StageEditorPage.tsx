@@ -272,17 +272,17 @@ export const StageEditorPage: React.FC = () => {
       </div>
 
       {/* Main Grid Container */}
-      <div className={`grid gap-6 ${activeTab === 'both' ? 'lg:grid-cols-12' : 'grid-cols-1'}`}>
+      <div className={`grid gap-6 ${activeTab === 'both' ? 'lg:grid-cols-12' : 'grid-cols-1'} w-full`}>
         {/* Form Column */}
         {(activeTab === 'both' || activeTab === 'form') && (
-          <div className={`${activeTab === 'both' ? 'lg:col-span-7' : 'max-w-4xl mx-auto w-full'} space-y-6`}>
+          <div className={`${activeTab === 'both' ? 'lg:col-span-7' : 'w-full'} space-y-6`}>
             {/* Card 1: Basic Info */}
             <div className="bg-white dark:bg-[#111726] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-6 shadow-2xs space-y-5">
               <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight pb-3 border-b border-slate-100 dark:border-slate-800/60">
                 مشخصات اصلی
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className={`grid grid-cols-1 sm:grid-cols-2 ${activeTab === 'form' ? 'lg:grid-cols-3' : ''} gap-4`}>
                 <Input
                   label="عنوان فارسی"
                   placeholder="خروج از فرودگاه"
@@ -415,7 +415,7 @@ export const StageEditorPage: React.FC = () => {
                 کاراکتر هوش مصنوعی و تنظیمات صدا
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className={`grid grid-cols-1 sm:grid-cols-2 ${activeTab === 'form' ? 'lg:grid-cols-4' : ''} gap-4`}>
                 <Input
                   label="نام کاراکتر"
                   placeholder="Sarah"
@@ -436,13 +436,6 @@ export const StageEditorPage: React.FC = () => {
                     <option value="Woman">زن (Woman)</option>
                     <option value="Man">مرد (Man)</option>
                   </select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <VoiceDropdown
-                    value={formData.voiceId}
-                    onChange={(voiceId) => updateFormField('voiceId', voiceId)}
-                  />
                 </div>
 
                 <div>
@@ -469,7 +462,14 @@ export const StageEditorPage: React.FC = () => {
                   dir="ltr"
                 />
 
-                <div className="sm:col-span-2">
+                <div className={`sm:col-span-2 ${activeTab === 'form' ? 'lg:col-span-4' : ''}`}>
+                  <VoiceDropdown
+                    value={formData.voiceId}
+                    onChange={(voiceId) => updateFormField('voiceId', voiceId)}
+                  />
+                </div>
+
+                <div className={`sm:col-span-2 ${activeTab === 'form' ? 'lg:col-span-4' : ''}`}>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 select-none">
                     رفتار و لحن کاراکتر
                   </label>
@@ -490,22 +490,26 @@ export const StageEditorPage: React.FC = () => {
                 تصاویر مرحله
               </h2>
 
-              <div className="flex flex-wrap items-start gap-8 pt-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
                 {/* Scenario Background (Vertical 9:16) */}
-                <ImageDropzone
-                  label="تصویر پس‌زمینه سناریو"
-                  value={formData.backgroundUrl}
-                  onChange={(url) => updateFormField('backgroundUrl', url)}
-                  aspectRatio="portrait"
-                />
+                <div className="p-5 rounded-2xl bg-slate-50/70 dark:bg-[#0E1422]/60 border border-slate-200/60 dark:border-slate-800/60 flex flex-col items-center sm:items-start">
+                  <ImageDropzone
+                    label="تصویر پس‌زمینه سناریو"
+                    value={formData.backgroundUrl}
+                    onChange={(url) => updateFormField('backgroundUrl', url)}
+                    aspectRatio="portrait"
+                  />
+                </div>
 
                 {/* Character Avatar (Square 1:1) */}
-                <ImageDropzone
-                  label="آواتار کاراکتر (اختیاری)"
-                  value={formData.characterAvatarUrl}
-                  onChange={(url) => updateFormField('characterAvatarUrl', url)}
-                  aspectRatio="square"
-                />
+                <div className="p-5 rounded-2xl bg-slate-50/70 dark:bg-[#0E1422]/60 border border-slate-200/60 dark:border-slate-800/60 flex flex-col items-center sm:items-start">
+                  <ImageDropzone
+                    label="آواتار کاراکتر (اختیاری)"
+                    value={formData.characterAvatarUrl}
+                    onChange={(url) => updateFormField('characterAvatarUrl', url)}
+                    aspectRatio="square"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -513,7 +517,7 @@ export const StageEditorPage: React.FC = () => {
 
         {/* JSON Column */}
         {(activeTab === 'both' || activeTab === 'json') && (
-          <div className={`${activeTab === 'both' ? 'lg:col-span-5' : 'max-w-4xl mx-auto w-full'} space-y-4`}>
+          <div className={`${activeTab === 'both' ? 'lg:col-span-5' : 'w-full'} space-y-4`}>
             <div className="sticky top-20 bg-white dark:bg-[#111726] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-5 shadow-2xs flex flex-col h-[calc(100vh-7.5rem)]">
               {/* JSON Toolbar */}
               <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/60">
