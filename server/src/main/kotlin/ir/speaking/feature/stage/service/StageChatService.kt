@@ -243,34 +243,60 @@ class StageChatService(
         characterName: String,
         characterBehavior: String,
         userMessage: String,
-        history: List<StageChatMessageDto>
+        history: List<StageChatMessageDto>,
+        level: String = "A1"
     ): Triple<String, String, Boolean> {
         val lower = userMessage.lowercase()
         val userTurnCount = history.count { it.role.equals("User", ignoreCase = true) } + 1
+        val isBeginner = level.equals("A1", ignoreCase = true)
 
         // Stage 1: In-Flight to London
         if (stageOrderIndex == 1) {
             return when {
                 userTurnCount == 1 || lower.contains("chicken") || lower.contains("pasta") || lower.contains("vegetarian") || lower.contains("rice") -> {
-                    Triple(
-                        "Certainly! And what can I get you to drink with that? We have orange juice, water, apple juice, or hot tea.",
-                        "حتماً! و مایلید همراه آن چه نوشیدنی‌ای برایتان بیاورم؟ آب پرتقال، آب، آب سیب یا چای داغ داریم.",
-                        false
-                    )
+                    if (isBeginner) {
+                        Triple(
+                            "Sure! What do you want to drink? We have water, tea, or juice.",
+                            "حتماً! چه نوشیدنی‌ای می‌خواهید؟ آب، چای یا آب‌میوه داریم.",
+                            false
+                        )
+                    } else {
+                        Triple(
+                            "Certainly! And what can I get you to drink with that? We have orange juice, water, apple juice, or hot tea.",
+                            "حتماً! و مایلید همراه آن چه نوشیدنی‌ای برایتان بیاورم؟ آب پرتقال، آب، آب سیب یا چای داغ داریم.",
+                            false
+                        )
+                    }
                 }
                 userTurnCount == 2 || lower.contains("juice") || lower.contains("water") || lower.contains("tea") || lower.contains("coke") -> {
-                    Triple(
-                        "Here you are, enjoy your meal! It's quite a long journey tonight—are you traveling to London for a holiday or for university studies?",
-                        "بفرمایید، نوش جان! امشب سفر طولانی‌ای در پیش است؛ آیا برای تعطیلات به لندن می‌روید یا برای تحصیلات دانشگاهی؟",
-                        false
-                    )
+                    if (isBeginner) {
+                        Triple(
+                            "Here is your drink. Are you traveling to London for holiday or school?",
+                            "بفرمایید این نوشیدنی شماست. آیا برای تعطیلات به لندن می‌روید یا دانشگاه؟",
+                            false
+                        )
+                    } else {
+                        Triple(
+                            "Here you are, enjoy your meal! It's quite a long journey tonight—are you traveling to London for a holiday or for university studies?",
+                            "بفرمایید، نوش جان! امشب سفر طولانی‌ای در پیش است؛ آیا برای تعطیلات به لندن می‌روید یا برای تحصیلات دانشگاهی؟",
+                            false
+                        )
+                    }
                 }
                 else -> {
-                    Triple(
-                        "That's wonderful! London is an amazing city for students. Best of luck with your studies and enjoy your meal! We have accomplished our mission for this flight.",
-                        "فوق‌العاده است! لندن شهری بی‌نظیر برای دانشجویان است. با آرزوی موفقیت در تحصیلات و نوش جان! هدف این مرحله از مکالمه با موفقیت به پایان رسید.",
-                        true
-                    )
+                    if (isBeginner) {
+                        Triple(
+                            "Great! Welcome to London. Enjoy your food! We have finished this mission.",
+                            "عالی است! به لندن خوش آمدید. نوش جان! ماموریت این مرحله به پایان رسید.",
+                            true
+                        )
+                    } else {
+                        Triple(
+                            "That's wonderful! London is an amazing city for students. Best of luck with your studies and enjoy your meal! We have accomplished our mission for this flight.",
+                            "فوق‌العاده است! لندن شهری بی‌نظیر برای دانشجویان است. با آرزوی موفقیت در تحصیلات و نوش جان! هدف این مرحله از مکالمه با موفقیت به پایان رسید.",
+                            true
+                        )
+                    }
                 }
             }
         }
@@ -279,25 +305,49 @@ class StageChatService(
         if (stageOrderIndex == 2) {
             return when {
                 userTurnCount == 1 || lower.contains("study") || lower.contains("student") || lower.contains("university") -> {
-                    Triple(
-                        "Which university will you be attending, and what course are you studying?",
-                        "در کدام دانشگاه تحصیل خواهید کرد و رشته تحصیلی‌تان چیست؟",
-                        false
-                    )
+                    if (isBeginner) {
+                        Triple(
+                            "What school do you go to, and what do you study?",
+                            "به کدام دانشگاه می‌روید و چه می‌خوانید؟",
+                            false
+                        )
+                    } else {
+                        Triple(
+                            "Which university will you be attending, and what course are you studying?",
+                            "در کدام دانشگاه تحصیل خواهید کرد و رشته تحصیلی‌تان چیست؟",
+                            false
+                        )
+                    }
                 }
                 userTurnCount == 2 || lower.contains("london") || lower.contains("college") || lower.contains("engineering") || lower.contains("science") -> {
-                    Triple(
-                        "Where will you be staying while studying in London, and how long is your course?",
-                        "در طول تحصیل در لندن کجا اقامت خواهید داشت و دوره تحصیلی شما چقدر طول می‌کشد؟",
-                        false
-                    )
+                    if (isBeginner) {
+                        Triple(
+                            "Where will you stay in London?",
+                            "در لندن کجا اقامت خواهید داشت؟",
+                            false
+                        )
+                    } else {
+                        Triple(
+                            "Where will you be staying while studying in London, and how long is your course?",
+                            "در طول تحصیل در لندن کجا اقامت خواهید داشت و دوره تحصیلی شما چقدر طول می‌کشد؟",
+                            false
+                        )
+                    }
                 }
                 else -> {
-                    Triple(
-                        "Everything is in order. Welcome to the United Kingdom, and all the best with your academic studies! Your border clearance is complete.",
-                        "همه مدارک کامل و مرتب است. به پادشاهی متحده خوش آمدید و با آرزوی موفقیت در تحصیلات دانشگاهی‌تان! بررسی مدارک با موفقیت انجام شد.",
-                        true
-                    )
+                    if (isBeginner) {
+                        Triple(
+                            "Everything is good. Welcome to the UK! Your border check is finished.",
+                            "همه چیز خوب است. به بریتانیا خوش آمدید! بررسی مدارک شما به پایان رسید.",
+                            true
+                        )
+                    } else {
+                        Triple(
+                            "Everything is in order. Welcome to the United Kingdom, and all the best with your academic studies! Your border clearance is complete.",
+                            "همه مدارک کامل و مرتب است. به پادشاهی متحده خوش آمدید و با آرزوی موفقیت در تحصیلات دانشگاهی‌تان! بررسی مدارک با موفقیت انجام شد.",
+                            true
+                        )
+                    }
                 }
             }
         }
@@ -313,7 +363,8 @@ class StageChatService(
     private suspend fun generateAiChatTurn(
         stage: StageDetailResponse?,
         userMessage: String,
-        history: List<StageChatMessageDto>
+        history: List<StageChatMessageDto>,
+        level: String = "A1"
     ): ChatTurnResult {
         return try {
             val systemPrompt = buildString {
@@ -323,17 +374,19 @@ class StageChatService(
                 appendLine("Character Persona & Behavior: ${stage?.characterBehavior ?: "Friendly and helpful conversational partner"}")
                 appendLine("Stage Target Objective: ${stage?.targetObjective ?: "Practice natural English conversation"}")
                 appendLine()
+                append(buildCefrDirectives(level))
+                appendLine()
                 appendLine("Instructions:")
-                appendLine("1. Reply in-character as '${stage?.characterName ?: "Character"}' in spoken-style English. Keep your character reply concise (1 to 2 sentences) and conversational.")
+                appendLine("1. Reply in-character as '${stage?.characterName ?: "Character"}' in spoken-style English strictly tailored to CEFR level $level. Keep your character reply concise (1 to 2 sentences) and conversational.")
                 appendLine("2. Provide a fluent, natural Persian translation ('translation') for your English reply.")
-                appendLine("3. Critically examine the user's latest message for English grammar, vocabulary, preposition, or phrasing errors:")
+                appendLine("3. Critically examine the user's latest message for English grammar, vocabulary, preposition, or phrasing errors suited to level $level:")
                 appendLine("   - Pay close attention to word boundaries: never report words as glued or concatenated if standard spaces or punctuation separate them. Only report genuine spelling, grammar, preposition, or phrasing errors.")
-                appendLine("   - If the user made ANY mistake: set 'has_grammar_error': true, provide the corrected English sentence in 'corrected_sentence', and provide a helpful, polite explanation in Persian ('grammar_feedback') explaining the issue.")
+                appendLine("   - If the user made ANY mistake: set 'has_grammar_error': true, provide the corrected English sentence in 'corrected_sentence' (matched to level $level), and provide a helpful, polite explanation in Persian ('grammar_feedback') explaining the issue simply and constructively.")
                 appendLine("   - If the user's sentence is grammatically correct and natural: set 'has_grammar_error': false, 'corrected_sentence': null, and 'grammar_feedback': \"\".")
                 appendLine("4. Stage Objective Completion & Wrap-up:")
                 appendLine("   - Assess whether the user's latest response has completed the stage target objective ('${stage?.targetObjective ?: ""}').")
                 appendLine("   - If the goal is met or the scenario has reached its natural conclusion:")
-                appendLine("     * Wrap up the conversation in-character in English (e.g. warmly state that everything is sorted/completed for this stage and congratulate or wish them well).")
+                appendLine("     * Wrap up the conversation in-character in English at level $level (e.g. warmly state that everything is sorted/completed for this stage and congratulate or wish them well).")
                 appendLine("     * Provide the corresponding natural Persian translation in 'translation'.")
                 appendLine("     * Set 'objective_completed': true.")
                 appendLine("   - If the conversation is still ongoing and the objective is not yet reached, set 'objective_completed': false.")
@@ -389,10 +442,10 @@ class StageChatService(
             } else {
                 logger.warn("AI API request failed: ${rawResult.exceptionOrNull()?.message}")
             }
-            fallbackChatTurn(stage, userMessage, history)
+            fallbackChatTurn(stage, userMessage, history, level)
         } catch (e: Exception) {
             logger.warn("Error in generateAiChatTurn: ${e.message}, falling back to offline turn")
-            fallbackChatTurn(stage, userMessage, history)
+            fallbackChatTurn(stage, userMessage, history, level)
         }
     }
 
@@ -412,14 +465,16 @@ class StageChatService(
     private suspend fun fallbackChatTurn(
         stage: StageDetailResponse?,
         userMessage: String,
-        history: List<StageChatMessageDto>
+        history: List<StageChatMessageDto>,
+        level: String = "A1"
     ): ChatTurnResult {
         val (reply, translation, isObjectiveDone) = generateNextTurn(
             stageOrderIndex = stage?.orderIndex ?: 1,
             characterName = stage?.characterName ?: "Character",
             characterBehavior = stage?.characterBehavior ?: "",
             userMessage = userMessage,
-            history = history
+            history = history,
+            level = level
         )
         return ChatTurnResult(
             reply = reply,
@@ -434,9 +489,15 @@ class StageChatService(
     suspend fun generateHint(
         stageId: String,
         userId: UUID?,
-        messages: List<HintMessageRequest>
+        messages: List<HintMessageRequest>,
+        userLevel: String? = null
     ): HintResponse {
         val stage = stageRepository.getStageDetail(stageId, userId)
+        val resolvedUserLevel = userLevel?.trim()?.takeIf { it.isNotBlank() }
+            ?: (if (userId != null) userRepo.getUserLanguageLevel(userId) else null)
+            ?: "A1"
+        val normalizedLevel = resolvedUserLevel.uppercase()
+
         return try {
             val systemPrompt = buildString {
                 appendLine("You are an expert English conversation tutor assisting a learner in an interactive English speaking simulation scenario.")
@@ -444,11 +505,16 @@ class StageChatService(
                 appendLine("Character Interacting With User: ${stage?.characterName ?: "Character"}")
                 appendLine("Target Objective for the User: ${stage?.targetObjective ?: "Practice natural English conversation"}")
                 appendLine()
+                append(buildCefrDirectives(normalizedLevel))
+                appendLine()
                 appendLine("Task:")
                 appendLine("Analyze the ongoing conversation between the user and the character.")
                 appendLine("Generate a natural, polite, and helpful English sentence ('suggestion_en') that the USER can say right now to respond to the character and make progress towards the objective.")
+                appendLine("The suggestion MUST strictly match the learner's proficiency level ($normalizedLevel) so they can comfortably understand and say it.")
+                if (normalizedLevel == "A1") {
+                    appendLine("Keep suggestion_en VERY SIMPLE (3 to 6 words maximum, only beginner A1 vocabulary).")
+                }
                 appendLine("Also provide a brief, clear Persian explanation ('explanation_fa') explaining why this phrase is appropriate or how it helps.")
-                appendLine("Keep suggestion_en concise (1 sentence, conversational, spoken English).")
                 appendLine("ALWAYS return valid JSON matching this schema:")
                 appendLine("{\n  \"suggestion_en\": \"English response suggestion\",\n  \"explanation_fa\": \"توضیح کوتاه فارسی برای زبان‌آموز\"\n}")
             }
@@ -475,62 +541,110 @@ class StageChatService(
             } else {
                 logger.warn("AI Hint request failed: ${rawResult.exceptionOrNull()?.message}")
             }
-            fallbackHint(stage, messages)
+            fallbackHint(stage, messages, normalizedLevel)
         } catch (e: Exception) {
             logger.warn("Error in generateHint: ${e.message}, using fallback hint")
-            fallbackHint(stage, messages)
+            fallbackHint(stage, messages, normalizedLevel)
         }
     }
 
-    private fun fallbackHint(stage: StageDetailResponse?, messages: List<HintMessageRequest>): HintResponse {
+    private fun fallbackHint(
+        stage: StageDetailResponse?,
+        messages: List<HintMessageRequest>,
+        level: String = "A1"
+    ): HintResponse {
         val lastAssistantMessage = messages.lastOrNull {
             it.role.equals("Model", ignoreCase = true) || it.role.equals("Assistant", ignoreCase = true)
         }?.content?.lowercase().orEmpty()
+
+        val isBeginner = level.equals("A1", ignoreCase = true)
 
         return when (stage?.orderIndex) {
             1 -> {
                 when {
                     lastAssistantMessage.contains("drink") || lastAssistantMessage.contains("tea") || lastAssistantMessage.contains("juice") -> {
-                        HintResponse(
-                            suggestionEn = "Could I please have a hot tea and a glass of water?",
-                            explanationFa = "می‌توانید برای سفارش نوشیدنی از عبارت مؤدبانه «Could I please have...» استفاده کنید."
-                        )
+                        if (isBeginner) {
+                            HintResponse(
+                                suggestionEn = "I want water and tea, please.",
+                                explanationFa = "می‌توانید برای سفارش نوشیدنی خیلی ساده بگویید: «I want water and tea, please.»"
+                            )
+                        } else {
+                            HintResponse(
+                                suggestionEn = "Could I please have a hot tea and a glass of water?",
+                                explanationFa = "می‌توانید برای سفارش نوشیدنی از عبارت مؤدبانه «Could I please have...» استفاده کنید."
+                            )
+                        }
                     }
                     lastAssistantMessage.contains("holiday") || lastAssistantMessage.contains("study") || lastAssistantMessage.contains("traveling") -> {
-                        HintResponse(
-                            suggestionEn = "I am traveling to London for my university studies.",
-                            explanationFa = "می‌توانید هدف سفر خود (تحصیل در دانشگاه یا تعطیلات) را با جمله‌ای ساده و واضح بیان کنید."
-                        )
+                        if (isBeginner) {
+                            HintResponse(
+                                suggestionEn = "I travel to London to study.",
+                                explanationFa = "می‌توانید هدف سفر خود را با جمله‌ای ساده بیان کنید: «I travel to London to study.»"
+                            )
+                        } else {
+                            HintResponse(
+                                suggestionEn = "I am traveling to London for my university studies.",
+                                explanationFa = "می‌توانید هدف سفر خود (تحصیل در دانشگاه یا تعطیلات) را با جمله‌ای ساده و واضح بیان کنید."
+                            )
+                        }
                     }
                     else -> {
-                        HintResponse(
-                            suggestionEn = "I would like the grilled chicken with rice, please.",
-                            explanationFa = "می‌توانید غذای مورد نظرتان را به شکل مؤدبانه با عبارت «I would like...» درخواست کنید."
-                        )
+                        if (isBeginner) {
+                            HintResponse(
+                                suggestionEn = "I want chicken with rice, please.",
+                                explanationFa = "می‌توانید غذای مورد نظرتان را خیلی ساده درخواست کنید: «I want chicken with rice, please.»"
+                            )
+                        } else {
+                            HintResponse(
+                                suggestionEn = "I would like the grilled chicken with rice, please.",
+                                explanationFa = "می‌توانید غذای مورد نظرتان را به شکل مؤدبانه با عبارت «I would like...» درخواست کنید."
+                            )
+                        }
                     }
                 }
             }
             2 -> {
                 when {
                     lastAssistantMessage.contains("staying") || lastAssistantMessage.contains("long") -> {
-                        HintResponse(
-                            suggestionEn = "I will be staying in central London and my course lasts for one year.",
-                            explanationFa = "محل اقامت در لندن و طول دوره تحصیلی‌تان را توضیح دهید."
-                        )
+                        if (isBeginner) {
+                            HintResponse(
+                                suggestionEn = "I will stay in London for one year.",
+                                explanationFa = "می‌توانید خیلی ساده بگویید: «I will stay in London for one year.»"
+                            )
+                        } else {
+                            HintResponse(
+                                suggestionEn = "I will be staying in central London and my course lasts for one year.",
+                                explanationFa = "محل اقامت در لندن و طول دوره تحصیلی‌تان را توضیح دهید."
+                            )
+                        }
                     }
                     else -> {
-                        HintResponse(
-                            suggestionEn = "I am here to study computer science at the university.",
-                            explanationFa = "هدف از سفر و رشته تحصیلی‌تان را به افسر مرزی اعلام کنید."
-                        )
+                        if (isBeginner) {
+                            HintResponse(
+                                suggestionEn = "I want to study at university.",
+                                explanationFa = "می‌توانید هدف سفرتان را ساده بگویید: «I want to study at university.»"
+                            )
+                        } else {
+                            HintResponse(
+                                suggestionEn = "I am here to study computer science at the university.",
+                                explanationFa = "هدف از سفر و رشته تحصیلی‌تان را به افسر مرزی اعلام کنید."
+                            )
+                        }
                     }
                 }
             }
             else -> {
-                HintResponse(
-                    suggestionEn = "Could you please explain what I should do next?",
-                    explanationFa = "می‌توانید مؤدبانه از هم‌صحبت خود بخواهید مرحله بعدی را برایتان توضیح دهد."
-                )
+                if (isBeginner) {
+                    HintResponse(
+                        suggestionEn = "Can you please help me?",
+                        explanationFa = "می‌توانید خیلی ساده بپرسید: «Can you please help me?»"
+                    )
+                } else {
+                    HintResponse(
+                        suggestionEn = "Could you please explain what I should do next?",
+                        explanationFa = "می‌توانید مؤدبانه از هم‌صحبت خود بخواهید مرحله بعدی را برایتان توضیح دهد."
+                    )
+                }
             }
         }
     }

@@ -11,7 +11,7 @@ interface StageRepository {
     suspend fun saveLocalGuestProgress(progress: LocalGuestProgress): DataResult<Unit>
     suspend fun getLocalGuestProgress(): DataResult<List<LocalGuestProgress>>
     suspend fun clearLocalGuestProgress(): DataResult<Unit>
-    suspend fun requestHint(stageId: String, messages: List<Pair<String, String>>): DataResult<ir.aispeaking.domain.model.stage.HintSuggestion>
+    suspend fun requestHint(stageId: String, messages: List<Pair<String, String>>, userLevel: String? = null): DataResult<ir.aispeaking.domain.model.stage.HintSuggestion>
     suspend fun submitEvaluation(
         stageId: String,
         hintsUsedCount: Int,
@@ -21,6 +21,6 @@ interface StageRepository {
         grammarErrors: List<ir.aispeaking.domain.model.stage.GrammarErrorDetail> = emptyList(),
         objectiveCompleted: Boolean = false
     ): DataResult<ir.aispeaking.domain.model.stage.EvaluationSession>
-    suspend fun sendStageChatMessage(stageId: String, userMessage: String?, history: List<Pair<String, String>>): DataResult<ir.aispeaking.domain.model.chat.StageChatTurnResult>
+    suspend fun sendStageChatMessage(stageId: String, userMessage: String?, history: List<Pair<String, String>>, userLevel: String? = null): DataResult<ir.aispeaking.domain.model.chat.StageChatTurnResult>
 }
 

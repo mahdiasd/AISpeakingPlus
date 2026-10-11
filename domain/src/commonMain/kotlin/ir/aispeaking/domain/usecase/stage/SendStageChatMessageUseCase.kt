@@ -12,8 +12,9 @@ class SendStageChatMessageUseCase(
     suspend operator fun invoke(
         stageId: String,
         userMessage: String?,
-        history: List<Pair<String, String>>
+        history: List<Pair<String, String>>,
+        userLevel: String? = null
     ): DataResult<StageChatTurnResult> {
-        return stageRepository.sendStageChatMessage(stageId, userMessage, history)
+        return stageRepository.sendStageChatMessage(stageId, userMessage, history, userLevel)
     }
 }

@@ -42,7 +42,8 @@ class UserProfileRepositoryImpl(
                         firstName = profile.firstName ?: "",
                         lastName = profile.lastName ?: "",
                         avatar = profile.avatar,
-                        score = profile.score
+                        score = profile.score,
+                        languageLevel = profile.languageLevel
                     )
                 )
                 DataResult.Success(profile)

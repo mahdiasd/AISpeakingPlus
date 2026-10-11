@@ -9,7 +9,7 @@ import org.koin.core.annotation.Factory
 class RequestStageHintUseCase(
     private val repository: StageRepository
 ) {
-    suspend operator fun invoke(stageId: String, messages: List<Pair<String, String>>): DataResult<HintSuggestion> {
-        return repository.requestHint(stageId, messages)
+    suspend operator fun invoke(stageId: String, messages: List<Pair<String, String>>, userLevel: String? = null): DataResult<HintSuggestion> {
+        return repository.requestHint(stageId, messages, userLevel)
     }
 }

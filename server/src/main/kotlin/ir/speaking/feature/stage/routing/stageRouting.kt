@@ -147,7 +147,8 @@ fun Application.stageRouting() {
                     val hint = stageChatService.generateHint(
                         stageId = stageId,
                         userId = userId,
-                        messages = request?.messages ?: emptyList()
+                        messages = request?.messages ?: emptyList(),
+                        userLevel = request?.userLevel
                     )
 
                     call.successRespond(hint, message = "Hint generated successfully")

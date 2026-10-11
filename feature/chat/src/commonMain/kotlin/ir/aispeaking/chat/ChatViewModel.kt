@@ -20,6 +20,7 @@ import ir.aispeaking.domain.usecase.stage.GetStageDetailUseCase
 import ir.aispeaking.domain.usecase.stage.RequestStageHintUseCase
 import ir.aispeaking.domain.usecase.stage.SendStageChatMessageUseCase
 import ir.aispeaking.domain.usecase.stage.SubmitStageEvaluationUseCase
+import ir.aispeaking.domain.usecase.user.GetUserProfileUseCase
 import ir.aispeaking.chat.audio.StageAudioController
 import ir.aispeaking.chat.component.ChatInputMode
 import kotlinx.collections.immutable.ImmutableList
@@ -36,6 +37,7 @@ import org.koin.core.annotation.Factory
 
 data class ChatUiState(
     val stage: Stage? = null,
+    val userLevel: String = "A1",
     val stageLoadError: String? = null,
     val chats: ImmutableList<Chat> = persistentListOf(),
     val inputMode: ChatInputMode = ChatInputMode.VOICE,
@@ -66,7 +68,8 @@ class ChatViewModel(
     private val requestStageHintUseCase: RequestStageHintUseCase,
     private val submitStageEvaluationUseCase: SubmitStageEvaluationUseCase,
     private val stageRepository: StageRepository,
-    private val audioController: StageAudioController
+    private val audioController: StageAudioController,
+    private val getUserProfileUseCase: GetUserProfileUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -83,12 +86,19 @@ class ChatViewModel(
         viewModelScope.launch {
             val resolvedTier = tier ?: getCurrentAccessTierUseCase()
             currentTier = resolvedTier
+            val profileResult = getUserProfileUseCase()
+            val userLevel = when (profileResult) {
+                is DataResult.Success -> profileResult.data.languageLevel.takeIf { it.isNotBlank() } ?: "A1"
+                else -> "A1"
+            }
+
             when (val result = getStageDetailUseCase(stageId, resolvedTier)) {
                 is DataResult.Success -> {
                     val stage = result.data
                     _uiState.update {
                         it.copy(
                             stage = stage,
+                            userLevel = userLevel,
                             stageLoadError = null,
                             chats = persistentListOf(),
                             turnsCount = 0,
@@ -130,6 +140,7 @@ class ChatViewModel(
 
     private fun requestInitialAiGreeting(stageId: String) {
         viewModelScope.launch {
+            val level = _uiState.value.userLevel
             _uiState.update {
                 it.copy(
                     chats = kotlinx.collections.immutable.persistentListOf(Chat.WaitingForAi),
@@ -137,7 +148,7 @@ class ChatViewModel(
                 )
             }
 
-            when (val result = sendStageChatMessageUseCase(stageId, userMessage = null, history = emptyList())) {
+            when (val result = sendStageChatMessageUseCase(stageId, userMessage = null, history = emptyList(), userLevel = level)) {
                 is DataResult.Success -> {
                     val d = result.data
                     val aiUid = "ai_init_${Clock.System.now().toEpochMilliseconds()}"
@@ -149,12 +160,13 @@ class ChatViewModel(
                     )
                 }
                 is DataResult.Failure -> {
-                    // Fallback initial greeting
+                    // Fallback initial greeting adapted to level
+                    val isA1 = level.equals("A1", ignoreCase = true)
                     val aiUid = "ai_init_fallback"
                     streamAiResponse(
                         aiUid = aiUid,
-                        fullMessage = "Good evening! Welcome aboard. Would you like the grilled chicken with rice, or the vegetarian pasta tonight?",
-                        translatedMessage = "عصر بخیر! به پرواز خوش آمدید. امشب مرغ گریل شده با برنج میل دارید یا پاستای گیاهی؟",
+                        fullMessage = if (isA1) "Hello! Welcome aboard. Do you want chicken or pasta tonight?" else "Good evening! Welcome aboard. Would you like the grilled chicken with rice, or the vegetarian pasta tonight?",
+                        translatedMessage = if (isA1) "سلام! به پرواز خوش آمدید. امشب مرغ می‌خواهید یا پاستا؟" else "عصر بخیر! به پرواز خوش آمدید. امشب مرغ گریل شده با برنج میل دارید یا پاستای گیاهی؟",
                         audioUrl = null
                     )
                 }
@@ -300,7 +312,7 @@ class ChatViewModel(
                     }
                 }
 
-            when (val result = sendStageChatMessageUseCase(currentStageId, content, history)) {
+            when (val result = sendStageChatMessageUseCase(currentStageId, content, history, _uiState.value.userLevel)) {
                 is DataResult.Success -> {
                     val turn = result.data
 
@@ -437,7 +449,7 @@ class ChatViewModel(
                     else -> null
                 }
             }
-            when (val result = requestStageHintUseCase(stageId, dialogue)) {
+            when (val result = requestStageHintUseCase(stageId, dialogue, _uiState.value.userLevel)) {
                 is DataResult.Success -> {
                     val newHintsCount = _uiState.value.hintsUsedCount + 1
                     _uiState.update {
