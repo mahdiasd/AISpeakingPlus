@@ -138,23 +138,6 @@ fun ProfileScreen(
                             color = Game.TextPrimary
                         )
                     }
-
-                    // Left side in RTL: Profile silhouette icon in frosted violet circle
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x265E5CE6))
-                            .border(1.dp, Color(0x455E5CE6), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_user),
-                            contentDescription = null,
-                            tint = Color(0xFFA5A3F6),
-                            modifier = Modifier.size(19.dp)
-                        )
-                    }
                 }
 
                 // Main Content
