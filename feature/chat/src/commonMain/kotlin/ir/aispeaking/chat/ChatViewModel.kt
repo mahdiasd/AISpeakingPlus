@@ -160,14 +160,198 @@ class ChatViewModel(
                     )
                 }
                 is DataResult.Failure -> {
-                    // Fallback initial greeting adapted to level
-                    val isA1 = level.equals("A1", ignoreCase = true)
+                    val currentStage = _uiState.value.stage
+                    val (fallbackMessage, fallbackTranslation) = resolveStageFallbackInitialGreeting(currentStage, level)
                     val aiUid = "ai_init_fallback"
                     streamAiResponse(
                         aiUid = aiUid,
-                        fullMessage = if (isA1) "Hello! Welcome aboard. Do you want chicken or pasta tonight?" else "Good evening! Welcome aboard. Would you like the grilled chicken with rice, or the vegetarian pasta tonight?",
-                        translatedMessage = if (isA1) "سلام! به پرواز خوش آمدید. امشب مرغ می‌خواهید یا پاستا؟" else "عصر بخیر! به پرواز خوش آمدید. امشب مرغ گریل شده با برنج میل دارید یا پاستای گیاهی؟",
+                        fullMessage = fallbackMessage,
+                        translatedMessage = fallbackTranslation,
                         audioUrl = null
+                    )
+                }
+            }
+        }
+    }
+
+    private fun resolveStageFallbackInitialGreeting(stage: Stage?, level: String): Pair<String, String> {
+        val isBeginner = level.equals("A1", ignoreCase = true)
+        return when (stage?.orderIndex) {
+            1 -> if (isBeginner) {
+                Pair(
+                    "Hello! Welcome aboard. Do you want chicken or pasta tonight?",
+                    "سلام! به پرواز خوش آمدید. امشب مرغ می‌خواهید یا پاستا؟"
+                )
+            } else {
+                Pair(
+                    "Good evening! Welcome aboard. Would you like the grilled chicken with rice, or the vegetarian pasta tonight?",
+                    "عصر بخیر! به پرواز خوش آمدید. امشب مرغ گریل شده با برنج میل دارید یا پاستای گیاهی؟"
+                )
+            }
+            2 -> if (isBeginner) {
+                Pair(
+                    "Hello. Why are you visiting the UK?",
+                    "سلام. چرا به بریتانیا سفر می‌کنید؟"
+                )
+            } else {
+                Pair(
+                    "Good day. What is the purpose of your visit to the United Kingdom?",
+                    "روز بخیر. هدف شما از سفر به بریتانیا چیست؟"
+                )
+            }
+            3 -> if (isBeginner) {
+                Pair(
+                    "Hello! Can I help you with your bags?",
+                    "سلام! می‌توانم در مورد چمدان‌هایتان کمکتان کنم؟"
+                )
+            } else {
+                Pair(
+                    "Hello! How can I help you today? Did your luggage not arrive on the carousel?",
+                    "سلام! چطور می‌توانم کمکتان کنم؟ آیا چمدانتان روی نوار نقاله نیامده است؟"
+                )
+            }
+            4 -> if (isBeginner) {
+                Pair(
+                    "Hello! Welcome to the train station. Do you need a ticket?",
+                    "سلام! به ایستگاه قطار خوش آمدید. آیا بلیت می‌خواهید؟"
+                )
+            } else {
+                Pair(
+                    "Hello there! Welcome to the London Underground. Do you need an Oyster card or a standard travelcard?",
+                    "سلام! به متروی لندن خوش آمدید. کارت اویستر می‌خواهید یا بلیت استاندارد سفر؟"
+                )
+            }
+            5 -> if (isBeginner) {
+                Pair(
+                    "Hello! Welcome to Russell Hall. Are you checking in today?",
+                    "سلام! به خوابگاه راسل خوش آمدید. آیا امروز برای تحویل اتاق آمده‌اید؟"
+                )
+            } else {
+                Pair(
+                    "Welcome to Russell Hall! You must be exhausted from traveling. Are you checking in today?",
+                    "به خوابگاه راسل خوش آمدید! حتماً از سفر خسته شده‌اید. آیا امروز برای تحویل اتاق تشریف آورده‌اید؟"
+                )
+            }
+            6 -> if (isBeginner) {
+                Pair(
+                    "Hi! Are you my new flatmate? I am Liam.",
+                    "سلام! هم‌اتاقی جدید من هستی؟ من لیام هستم."
+                )
+            } else {
+                Pair(
+                    "Hey there! Welcome to the flat. You must be my new flatmate—I'm Liam!",
+                    "سلام! به آپارتمان خوش آمدی. حتماً هم‌اتاقی جدیدم هستی—من لیام هستم!"
+                )
+            }
+            7 -> if (isBeginner) {
+                Pair(
+                    "Hello! Do you need a UK SIM card for your phone?",
+                    "سلام! آیا برای گوشیتان سیم‌کارت بریتانیا می‌خواهید؟"
+                )
+            } else {
+                Pair(
+                    "Hello! Welcome to EE Mobile. Are you looking to set up a new UK phone plan or SIM card today?",
+                    "سلام! به فروشگاه ای‌ای خوش آمدید. آیا به دنبال راه‌اندازی سیم‌کارت یا طرح مخابراتی در بریتانیا هستید؟"
+                )
+            }
+            8 -> if (isBeginner) {
+                Pair(
+                    "Hello! Can I help you find something in the supermarket?",
+                    "سلام! می‌توانم کمکتان کنم چیزی را در سوپرمارکت پیدا کنید؟"
+                )
+            } else {
+                Pair(
+                    "Hi! Welcome to Sainsbury's. Are you looking for any particular groceries or household items today?",
+                    "سلام! به سینزبریز خوش آمدید. آیا به دنبال اقلام خوراکی یا وسایل خاصی می‌گردید؟"
+                )
+            }
+            9 -> if (isBeginner) {
+                Pair(
+                    "Hello! Do you want to open a student bank account?",
+                    "سلام! آیا می‌خواهید حساب بانکی دانشجویی باز کنید؟"
+                )
+            } else {
+                Pair(
+                    "Good morning! Welcome to Barclays. Are you here to open a student bank account with us today?",
+                    "صبح بخیر! به بارکلیز خوش آمدید. آیا برای افتتاح حساب بانکی دانشجویی تشریف آورده‌اید؟"
+                )
+            }
+            10 -> if (isBeginner) {
+                Pair(
+                    "Hello! Welcome to campus. Are you here for student registration?",
+                    "سلام! به دانشگاه خوش آمدید. برای ثبت‌نام دانشجویی آمده‌اید؟"
+                )
+            } else {
+                Pair(
+                    "Hello and welcome to university registration day! Have you got your enrollment letter and passport with you?",
+                    "سلام و به روز ثبت‌نام دانشگاه خوش آمدید! آیا برگه ثبت‌نام و گذرنامه‌تان را همراه دارید؟"
+                )
+            }
+            11 -> if (isBeginner) {
+                Pair(
+                    "Hello! Welcome to the library. Do you need help finding books?",
+                    "سلام! به کتابخانه خوش آمدید. برای پیدا کردن کتاب‌ها راهنمایی می‌خواهید؟"
+                )
+            } else {
+                Pair(
+                    "Good afternoon! Welcome to the central university library. How can I assist you with your library account or book searches?",
+                    "عصر بخیر! به کتابخانه مرکزی دانشگاه خوش آمدید. چگونه می‌توانم در مورد حساب کاربری یا جستجوی کتاب کمکتان کنم؟"
+                )
+            }
+            12 -> if (isBeginner) {
+                Pair(
+                    "Hi! What coffee or food do you want today?",
+                    "سلام! امروز چه قهوه یا خوراکی‌ای می‌خواهید؟"
+                )
+            } else {
+                Pair(
+                    "Hey there! Welcome to the campus cafe. What can I get started for you today—coffee, tea, or a hot snack?",
+                    "سلام! به کافه پردیس خوش آمدید. چه چیزی برایتان آماده کنم—قهوه، چای یا یک میان‌وعده داغ؟"
+                )
+            }
+            13 -> if (isBeginner) {
+                Pair(
+                    "Hello! Are you here for the student job interview?",
+                    "سلام! برای مصاحبه کاری دانشجویی آمده‌اید؟"
+                )
+            } else {
+                Pair(
+                    "Good morning! Thanks for coming in. Are you ready for your student assistant job interview today?",
+                    "صبح بخیر! ممنون از حضورتان. آیا برای مصاحبه شغلی دستیار دانشجویی آماده هستید؟"
+                )
+            }
+            14 -> if (isBeginner) {
+                Pair(
+                    "Hello. Please sit down. How do you feel today?",
+                    "سلام. لطفاً بنشینید. امروز چه احساسی دارید؟"
+                )
+            } else {
+                Pair(
+                    "Good morning, come take a seat! What symptoms or health concerns bring you in today?",
+                    "صبح بخیر، بفرمایید بنشینید! چه علائم یا مشکلات سلامتی شما را به درمانگاه آورده است؟"
+                )
+            }
+            15 -> if (isBeginner) {
+                Pair(
+                    "Hello! Welcome to the presentation room. Are you ready to present?",
+                    "سلام! به اتاق ارائه خوش آمدید. آیا برای ارائه آماده‌اید؟"
+                )
+            } else {
+                Pair(
+                    "Welcome everyone to the seminar presentation symposium! Is your team ready to present your term project?",
+                    "به همایش ارائه پروژه سمینار خوش آمدید! آیا تیم شما برای ارائه پروژه پایان ترم آماده است؟"
+                )
+            }
+            else -> {
+                if (isBeginner) {
+                    Pair(
+                        "Hello! Welcome. How can I help you?",
+                        "سلام! خوش آمدید. چطور می‌توانم کمکتان کنم؟"
+                    )
+                } else {
+                    Pair(
+                        "Hello! Welcome. How can I help you today?",
+                        "سلام! خوش آمدید. چطور می‌توانم امروز کمکتان کنم؟"
                     )
                 }
             }
