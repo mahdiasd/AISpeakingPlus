@@ -1,15 +1,20 @@
 package ir.aispeaking.chat.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -97,16 +102,16 @@ fun ChatToolbar(
                             )
                         }
                         if (!userLevel.isNullOrBlank()) {
-                            androidx.compose.foundation.layout.Box(
+                            Box(
                                 modifier = Modifier
-                                    .androidx.compose.ui.draw.clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
-                                    .androidx.compose.foundation.background(androidx.compose.ui.graphics.Color(0x265E5CE6))
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color(0x265E5CE6))
                                     .padding(horizontal = 6.dp, vertical = 1.dp)
                             ) {
                                 GameText(
                                     text = "سطح $userLevel",
                                     size = 10.sp,
-                                    color = androidx.compose.ui.graphics.Color(0xFFA5A3F6),
+                                    color = Color(0xFFA5A3F6),
                                     bold = true
                                 )
                             }
