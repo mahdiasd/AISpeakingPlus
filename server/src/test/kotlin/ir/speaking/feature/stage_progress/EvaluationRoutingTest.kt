@@ -16,6 +16,8 @@ import ir.speaking.feature.stage_progress.dto.EvaluationTranscriptItem
 import ir.speaking.feature.stage_progress.repository.StageProgressRepo
 import ir.speaking.feature.stage_progress.routing.progressRouting
 import ir.speaking.feature.stage_progress.service.EvaluationRubricService
+import ir.speaking.feature.subscription.repository.SubscriptionRepo
+import ir.speaking.feature.user.repository.UserRepo
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
@@ -38,6 +40,8 @@ class EvaluationRoutingTest {
                         single { StageRepository() }
                         single { StageProgressRepo() }
                         single { EvaluationRubricService() }
+                        single { SubscriptionRepo() }
+                        single { UserRepo(subscriptionRepo = get()) }
                     }
                 )
             }
@@ -58,10 +62,11 @@ class EvaluationRoutingTest {
             assertTrue(body.contains("explanationFa"))
         }
 
-        // 2. Test POST evaluate
+        // 2. Test POST evaluate with objectiveCompleted = true
         val evalReq = EvaluationRequest(
             hintsUsedCount = 0,
             turnsCount = 4,
+            objectiveCompleted = true,
             transcript = listOf(
                 EvaluationTranscriptItem("Model", "Hello! Welcome aboard. Would you like chicken or pasta?"),
                 EvaluationTranscriptItem("User", "I would like chicken with rice and orange juice, please.")
@@ -80,10 +85,11 @@ class EvaluationRoutingTest {
             assertEquals(0, parsed.data?.grammarErrorsCount)
         }
 
-        // 3. Test POST evaluate with client-provided grammar errors
+        // 3. Test POST evaluate with AI-identified grammar errors and objectiveCompleted = true
         val evalReqWithErrors = EvaluationRequest(
             hintsUsedCount = 0,
             turnsCount = 4,
+            objectiveCompleted = true,
             grammarErrorsCount = 2,
             grammarErrors = listOf(
                 ir.speaking.feature.stage_progress.dto.GrammarErrorItem(
@@ -114,24 +120,25 @@ class EvaluationRoutingTest {
         assertEquals(2, parsedErrors.data?.totalPenalties)
         assertEquals(2, parsedErrors.data?.grammarErrors?.size)
 
-        // 4. Test POST evaluate with transcript ESL error fallback ("i would to")
-        val evalReqEsl = EvaluationRequest(
+        // 4. Test POST evaluate with objectiveCompleted = false -> awards 0 stars and 0 score
+        val evalReqIncomplete = EvaluationRequest(
             hintsUsedCount = 0,
             turnsCount = 2,
+            objectiveCompleted = false,
             transcript = listOf(
                 EvaluationTranscriptItem("Model", "Welcome!"),
-                EvaluationTranscriptItem("User", "I would to order chicken")
+                EvaluationTranscriptItem("User", "Hello there")
             )
         )
-        val evalResponseEsl = client.post("/api/v2/stages/stage-01-inflight-london/evaluate") {
+        val evalResponseIncomplete = client.post("/api/v2/stages/stage-01-inflight-london/evaluate") {
             contentType(ContentType.Application.Json)
-            setBody(Json.encodeToString(evalReqEsl))
+            setBody(Json.encodeToString(evalReqIncomplete))
         }
-        assertEquals(HttpStatusCode.OK, evalResponseEsl.status)
-        val bodyEsl = evalResponseEsl.bodyAsText()
-        val parsedEsl = Json.decodeFromString<ir.speaking.core.response.SuccessResponse<ir.speaking.feature.stage_progress.dto.EvaluationResponse>>(bodyEsl)
-        assertEquals(1, parsedEsl.data?.grammarErrorsCount)
-        assertEquals(2, parsedEsl.data?.starsEarned) // 1 penalty = 2 stars
-        assertTrue(parsedEsl.data?.grammarErrors?.isNotEmpty() == true)
+        assertEquals(HttpStatusCode.OK, evalResponseIncomplete.status)
+        val bodyIncomplete = evalResponseIncomplete.bodyAsText()
+        val parsedIncomplete = Json.decodeFromString<ir.speaking.core.response.SuccessResponse<ir.speaking.feature.stage_progress.dto.EvaluationResponse>>(bodyIncomplete)
+        assertEquals(0, parsedIncomplete.data?.starsEarned)
+        assertEquals(0, parsedIncomplete.data?.score)
+        assertEquals(false, parsedIncomplete.data?.objectiveCompleted)
     }
 }

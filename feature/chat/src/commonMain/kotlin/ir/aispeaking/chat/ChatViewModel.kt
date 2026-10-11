@@ -8,12 +8,14 @@ import ir.aispeaking.domain.model.chat.AiVoiceState
 import ir.aispeaking.domain.model.chat.Chat
 import ir.aispeaking.domain.model.chat.ChatStatus
 import ir.aispeaking.domain.model.data_result.DataResult
+import ir.aispeaking.domain.model.error.getErrorMessage
 import ir.aispeaking.domain.model.stage.AccessTier
 import ir.aispeaking.domain.model.stage.EvaluationSession
 import ir.aispeaking.domain.model.stage.GrammarErrorDetail
 import ir.aispeaking.domain.model.stage.LocalGuestProgress
 import ir.aispeaking.domain.model.stage.Stage
 import ir.aispeaking.domain.repository.stage.StageRepository
+import ir.aispeaking.domain.usecase.auth.GetCurrentAccessTierUseCase
 import ir.aispeaking.domain.usecase.stage.GetStageDetailUseCase
 import ir.aispeaking.domain.usecase.stage.RequestStageHintUseCase
 import ir.aispeaking.domain.usecase.stage.SendStageChatMessageUseCase
@@ -34,6 +36,7 @@ import org.koin.core.annotation.Factory
 
 data class ChatUiState(
     val stage: Stage? = null,
+    val stageLoadError: String? = null,
     val chats: ImmutableList<Chat> = persistentListOf(),
     val inputMode: ChatInputMode = ChatInputMode.VOICE,
     val messageText: String = "",
@@ -44,6 +47,7 @@ data class ChatUiState(
     val turnsCount: Int = 0,
     val currentHintSuggestion: String? = null,
     val currentHintExplanation: String? = null,
+    val hintError: String? = null,
     val showEvaluationDialog: Boolean = false,
     val isObjectiveCompleted: Boolean = false,
     val showFinishConfirmDialog: Boolean = false,
@@ -57,6 +61,7 @@ data class ChatUiState(
 @Factory
 class ChatViewModel(
     private val getStageDetailUseCase: GetStageDetailUseCase,
+    private val getCurrentAccessTierUseCase: GetCurrentAccessTierUseCase,
     private val sendStageChatMessageUseCase: SendStageChatMessageUseCase,
     private val requestStageHintUseCase: RequestStageHintUseCase,
     private val submitStageEvaluationUseCase: SubmitStageEvaluationUseCase,
@@ -68,18 +73,23 @@ class ChatViewModel(
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
     private var currentStageId: String = ""
+    private var currentTier: AccessTier = AccessTier.GUEST
 
-    fun initStage(stageId: String, tier: AccessTier = AccessTier.GUEST) {
+    fun initStage(stageId: String, tier: AccessTier? = null) {
         if (currentStageId == stageId && _uiState.value.stage != null) return
         currentStageId = stageId
+        _uiState.update { it.copy(stageLoadError = null) }
 
         viewModelScope.launch {
-            when (val result = getStageDetailUseCase(stageId, tier)) {
+            val resolvedTier = tier ?: getCurrentAccessTierUseCase()
+            currentTier = resolvedTier
+            when (val result = getStageDetailUseCase(stageId, resolvedTier)) {
                 is DataResult.Success -> {
                     val stage = result.data
                     _uiState.update {
                         it.copy(
                             stage = stage,
+                            stageLoadError = null,
                             chats = persistentListOf(),
                             turnsCount = 0,
                             hintsUsedCount = 0,
@@ -99,9 +109,22 @@ class ChatViewModel(
                     }
                 }
                 is DataResult.Failure -> {
-                    // Stage detail fetch error
+                    _uiState.update {
+                        it.copy(
+                            stage = null,
+                            stageLoadError = "امکان بارگذاری اطلاعات این مرحله وجود ندارد. لطفاً دسترسی یا اتصال اینترنت خود را بررسی کنید."
+                        )
+                    }
                 }
             }
+        }
+    }
+
+    fun retryLoadStage() {
+        val id = currentStageId
+        if (id.isNotBlank()) {
+            currentStageId = ""
+            initStage(id)
         }
     }
 
@@ -202,7 +225,8 @@ class ChatViewModel(
                     _uiState.update { it.copy(messageText = text) }
                 },
                 onSilenceDetected = {
-                    // 5-second silence detected -> auto pause
+                    // 5-second silence detected -> auto pause & stop recording
+                    audioController.stopRecording()
                     _uiState.update { it.copy(isRecording = false) }
                 }
             )
@@ -231,10 +255,18 @@ class ChatViewModel(
 
     // Requirement 4 & 7: Send message, grammar evaluation & beautiful correction box
     fun sendMessage() {
-        val content = _uiState.value.messageText.trim()
+        val stateSnapshot = _uiState.value
+        if (stateSnapshot.isSubmittingEvaluation || stateSnapshot.isModelSpeaking) return
+        val maxTurnsLimit = stateSnapshot.stage?.maxTurns ?: 12
+        if (stateSnapshot.turnsCount >= maxTurnsLimit) {
+            submitEvaluation()
+            return
+        }
+
+        val content = stateSnapshot.messageText.trim()
         if (content.isBlank()) return
 
-        if (_uiState.value.isRecording) {
+        if (stateSnapshot.isRecording) {
             audioController.stopRecording()
             _uiState.update { it.copy(isRecording = false) }
         }
@@ -250,10 +282,10 @@ class ChatViewModel(
 
         _uiState.update {
             it.copy(
-                chats = (it.chats + userChat + Chat.WaitingForAi).toImmutableList(),
+                chats = (it.chats + userChat).toImmutableList(),
                 messageText = "",
                 turnsCount = updatedTurns,
-                isModelSpeaking = true
+                isModelSpeaking = false
             )
         }
 
@@ -272,27 +304,44 @@ class ChatViewModel(
                 is DataResult.Success -> {
                     val turn = result.data
 
-                    // Update user chat with grammar check result
+                    // Update user chat with AI grammar check result, and now show AI waiting/typing indicator
                     val answeredUserChat = userChat.copy(
-                        status = ChatStatus.Answered(grammar = turn.grammarFeedbackFa)
+                        status = ChatStatus.Answered(
+                            grammar = turn.grammarFeedbackFa,
+                            correctedSentence = turn.correctedSentence,
+                            hasGrammarError = turn.hasGrammarError || turn.grammarFeedbackFa.isNotBlank()
+                        )
                     )
+
+                    val isTurnGoalCompleted = turn.objectiveCompleted || turn.finishTaskIndexes.isNotEmpty()
+                    val isGoalCompleted = isTurnGoalCompleted || _uiState.value.isObjectiveCompleted
 
                     _uiState.update { state ->
                         val updated = state.chats.map {
                             if (it.uid == userUid) answeredUserChat else it
                         }
-                        state.copy(chats = updated.toImmutableList())
+                        state.copy(
+                            chats = (updated + Chat.WaitingForAi).toImmutableList(),
+                            isModelSpeaking = true,
+                            isObjectiveCompleted = isGoalCompleted
+                        )
                     }
+
+                    delay(700)
 
                     val aiUid = "ai_${Clock.System.now().toEpochMilliseconds()}"
                     streamAiResponse(
                         aiUid = aiUid,
                         fullMessage = turn.message,
                         translatedMessage = turn.translatedMessage,
-                        audioUrl = turn.audioUrl
+                        audioUrl = turn.audioUrl,
+                        objectiveCompleted = isTurnGoalCompleted,
+                        finishTaskIndexes = turn.finishTaskIndexes
                     )
 
-                    if (turn.objectiveCompleted) {
+                    val maxTurns = _uiState.value.stage?.maxTurns ?: 12
+                    if (isGoalCompleted || _uiState.value.turnsCount >= maxTurns) {
+                        delay(900)
                         submitEvaluation()
                     }
                 }
@@ -318,7 +367,9 @@ class ChatViewModel(
         aiUid: String,
         fullMessage: String,
         translatedMessage: String?,
-        audioUrl: String?
+        audioUrl: String?,
+        objectiveCompleted: Boolean = false,
+        finishTaskIndexes: List<Int> = emptyList()
     ) {
         val hasAudio = !audioUrl.isNullOrBlank()
         val initialAiChat = Chat.Ai(
@@ -326,7 +377,9 @@ class ChatViewModel(
             message = "",
             translatedMessage = translatedMessage,
             voiceState = if (hasAudio) AiVoiceState.Playing else AiVoiceState.Stopped,
-            audioUrl = audioUrl
+            audioUrl = audioUrl,
+            objectiveCompleted = objectiveCompleted,
+            finishTaskIndexes = finishTaskIndexes.toImmutableList()
         )
 
         _uiState.update { state ->
@@ -364,14 +417,19 @@ class ChatViewModel(
 
     fun retrySendMessage() {
         val lastUserChat = _uiState.value.chats.lastOrNull { it is Chat.User } as? Chat.User ?: return
-        _uiState.update { it.copy(messageText = lastUserChat.message) }
+        _uiState.update { state ->
+            state.copy(
+                chats = state.chats.filter { it.uid != lastUserChat.uid }.toImmutableList(),
+                messageText = lastUserChat.message
+            )
+        }
         sendMessage()
     }
 
     fun requestHint() {
         val stageId = _uiState.value.stage?.id ?: return
         viewModelScope.launch {
-            _uiState.update { it.copy(isRequestingHint = true) }
+            _uiState.update { it.copy(isRequestingHint = true, hintError = null) }
             val dialogue = _uiState.value.chats.mapNotNull {
                 when (it) {
                     is Chat.User -> "User" to it.message
@@ -387,18 +445,22 @@ class ChatViewModel(
                             isRequestingHint = false,
                             hintsUsedCount = newHintsCount,
                             currentHintSuggestion = result.data.suggestionEn,
-                            currentHintExplanation = result.data.explanationFa
+                            currentHintExplanation = result.data.explanationFa,
+                            hintError = null
                         )
                     }
                 }
                 is DataResult.Failure -> {
-                    val newHintsCount = _uiState.value.hintsUsedCount + 1
+                    // Do not increment hintsUsedCount on network failure
+                    val errorMsg = result.appError.getErrorMessage().ifBlank {
+                        "خطا در دریافت راهنمایی. لطفاً اتصال اینترنت خود را بررسی کنید."
+                    }
                     _uiState.update {
                         it.copy(
                             isRequestingHint = false,
-                            hintsUsedCount = newHintsCount,
-                            currentHintSuggestion = "Could you please help me with this?",
-                            currentHintExplanation = "آیا می‌توانید در این مورد به من کمک کنید؟"
+                            currentHintSuggestion = null,
+                            currentHintExplanation = null,
+                            hintError = errorMsg
                         )
                     }
                 }
@@ -408,14 +470,23 @@ class ChatViewModel(
 
     fun dismissHint() {
         _uiState.update {
-            it.copy(currentHintSuggestion = null, currentHintExplanation = null)
+            it.copy(
+                currentHintSuggestion = null,
+                currentHintExplanation = null,
+                hintError = null
+            )
         }
     }
 
     fun submitEvaluation() {
         val stageId = _uiState.value.stage?.id ?: return
+        if (_uiState.value.isSubmittingEvaluation) return
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmittingEvaluation = true) }
+            val hasAiCompletionInChatList = _uiState.value.chats
+                .filterIsInstance<Chat.Ai>()
+                .any { it.objectiveCompleted || !it.finishTaskIndexes.isNullOrEmpty() }
+            val isGoalDone = _uiState.value.isObjectiveCompleted || hasAiCompletionInChatList
 
             val dialogue = _uiState.value.chats.mapNotNull {
                 when (it) {
@@ -430,12 +501,12 @@ class ChatViewModel(
             val localGrammarErrors = _uiState.value.chats
                 .filterIsInstance<Chat.User>()
                 .mapNotNull { userChat ->
-                    val grammar = (userChat.status as? ChatStatus.Answered)?.grammar
-                    if (!grammar.isNullOrBlank()) {
+                    val status = userChat.status as? ChatStatus.Answered
+                    if (status != null && (status.hasGrammarError || status.grammar.isNotBlank())) {
                         GrammarErrorDetail(
                             original = userChat.message,
-                            correction = extractCorrection(userChat.message, grammar),
-                            explanationFa = grammar
+                            correction = status.correctedSentence?.takeIf { it.isNotBlank() } ?: userChat.message,
+                            explanationFa = status.grammar
                         )
                     } else null
                 }
@@ -447,7 +518,8 @@ class ChatViewModel(
                 turnsCount = turnsCount,
                 transcript = dialogue,
                 grammarErrorsCount = localGrammarErrorsCount,
-                grammarErrors = localGrammarErrors
+                grammarErrors = localGrammarErrors,
+                objectiveCompleted = isGoalDone
             )) {
                 is DataResult.Success -> {
                     val serverSession = result.data
@@ -458,10 +530,17 @@ class ChatViewModel(
                         localGrammarErrors
                     }
 
-                    if (finalGrammarErrorsCount > serverSession.grammarErrorsCount) {
+                    if (!isGoalDone || !serverSession.objectiveCompleted) {
+                        serverSession.copy(
+                            objectiveCompleted = false,
+                            grammarErrorsCount = finalGrammarErrorsCount,
+                            grammarErrors = finalGrammarErrors,
+                            calculatedStars = 0,
+                            score = 0
+                        )
+                    } else {
                         val totalPenalties = hintsCount + finalGrammarErrorsCount
                         val stars = when {
-                            !serverSession.objectiveCompleted -> 0
                             totalPenalties == 0 -> 3
                             totalPenalties == 1 -> 2
                             totalPenalties == 2 -> 1
@@ -471,48 +550,59 @@ class ChatViewModel(
                             3 -> 100
                             2 -> 85
                             1 -> 70
-                            else -> if (serverSession.objectiveCompleted) 50 else 25
+                            else -> 50
                         }
                         serverSession.copy(
+                            objectiveCompleted = true,
                             grammarErrorsCount = finalGrammarErrorsCount,
                             grammarErrors = finalGrammarErrors,
                             calculatedStars = stars,
                             score = score
                         )
-                    } else {
-                        serverSession.copy(
-                            grammarErrorsCount = finalGrammarErrorsCount,
-                            grammarErrors = if (serverSession.grammarErrors.isEmpty() && localGrammarErrors.isNotEmpty()) localGrammarErrors else serverSession.grammarErrors
-                        )
                     }
                 }
                 is DataResult.Failure -> {
-                    val penalties = hintsCount + localGrammarErrorsCount
-                    val stars = when (penalties) {
-                        0 -> 3
-                        1 -> 2
-                        2 -> 1
-                        else -> 0
+                    if (!isGoalDone) {
+                        EvaluationSession(
+                            stageId = stageId,
+                            hintsUsedCount = hintsCount,
+                            grammarErrorsCount = localGrammarErrorsCount,
+                            objectiveCompleted = false,
+                            grammarErrors = localGrammarErrors,
+                            calculatedStars = 0,
+                            score = 0,
+                            feedbackFa = "مکالمه پیش از رسیدن به هدف مرحله پایان یافت. برای دریافت ستاره و تکمیل مرحله، مکالمه را ادامه دهید."
+                        )
+                    } else {
+                        val penalties = hintsCount + localGrammarErrorsCount
+                        val stars = when (penalties) {
+                            0 -> 3
+                            1 -> 2
+                            2 -> 1
+                            else -> 0
+                        }
+                        EvaluationSession(
+                            stageId = stageId,
+                            hintsUsedCount = hintsCount,
+                            grammarErrorsCount = localGrammarErrorsCount,
+                            objectiveCompleted = true,
+                            grammarErrors = localGrammarErrors,
+                            calculatedStars = stars,
+                            score = when (stars) {
+                                3 -> 100
+                                2 -> 85
+                                1 -> 70
+                                else -> 50
+                            },
+                            feedbackFa = "مکالمه به پایان رسید و پیشرفت شما ثبت شد."
+                        )
                     }
-                    EvaluationSession(
-                        stageId = stageId,
-                        hintsUsedCount = hintsCount,
-                        grammarErrorsCount = localGrammarErrorsCount,
-                        objectiveCompleted = true,
-                        grammarErrors = localGrammarErrors,
-                        calculatedStars = stars,
-                        score = when (stars) {
-                            3 -> 100
-                            2 -> 85
-                            1 -> 70
-                            else -> 40
-                        },
-                        feedbackFa = "مکالمه به پایان رسید و پیشرفت شما ثبت شد."
-                    )
                 }
             }
 
-            saveGuestProgress(stageId, session.calculatedStars, session.score)
+            if (currentTier == AccessTier.GUEST && session.objectiveCompleted) {
+                saveGuestProgress(stageId, session.calculatedStars, session.score)
+            }
 
             _uiState.update {
                 it.copy(
@@ -524,32 +614,6 @@ class ChatViewModel(
                 )
             }
         }
-    }
-
-    private fun extractCorrection(message: String, explanation: String): String {
-        val lower = message.lowercase()
-        val ruleCorrected = when {
-            lower.contains("i wants") -> message.replace("i wants", "I want", ignoreCase = true)
-            lower.contains("i flying") -> message.replace("i flying", "I am flying", ignoreCase = true)
-            lower.contains("i going") -> message.replace("i going", "I am going", ignoreCase = true)
-            lower.contains("i travelling") -> message.replace("i travelling", "I am travelling", ignoreCase = true)
-            lower.contains("i studying") -> message.replace("i studying", "I am studying", ignoreCase = true)
-            lower.contains("he want ") -> message.replace("he want ", "He wants ", ignoreCase = true)
-            lower.contains("she want ") -> message.replace("she want ", "She wants ", ignoreCase = true)
-            lower.contains("they is") -> message.replace("they is", "They are", ignoreCase = true)
-            lower.contains("we is") -> message.replace("we is", "We are", ignoreCase = true)
-            lower.contains("i would to") -> message.replace("i would to", "I would like to", ignoreCase = true)
-            lower.contains("would like to order of") -> message.replace("would like to order of", "would like to order", ignoreCase = true)
-            else -> null
-        }
-        if (ruleCorrected != null) return ruleCorrected
-
-        val colonIndex = explanation.lastIndexOf(':')
-        if (colonIndex != -1 && colonIndex < explanation.length - 1) {
-            val candidate = explanation.substring(colonIndex + 1).trim()
-            if (candidate.isNotEmpty()) return candidate
-        }
-        return message
     }
 
     private fun saveGuestProgress(stageId: String, stars: Int, score: Int) {
@@ -580,7 +644,12 @@ class ChatViewModel(
             it.copy(
                 showFinishConfirmDialog = false,
                 evaluationSession = null,
-                chats = persistentListOf()
+                chats = persistentListOf(),
+                isObjectiveCompleted = false,
+                turnsCount = 0,
+                hintsUsedCount = 0,
+                earnedStars = 0,
+                earnedScore = 0
             )
         }
         currentStageId = ""

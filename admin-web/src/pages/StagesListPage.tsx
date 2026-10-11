@@ -67,7 +67,7 @@ export const StagesListPage: React.FC = () => {
     setReorderingId(stage.id);
 
     try {
-      await api.reorderStage(stage.id, targetStage.orderIndex, true);
+      await api.reorderStage(stage.id, targetStage.orderIndex, false);
       success(`ترتیب مرحله ${stage.title} تغییر یافت`);
       await fetchStages();
     } catch (err: any) {

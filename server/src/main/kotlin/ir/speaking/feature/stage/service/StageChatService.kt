@@ -49,13 +49,15 @@ class StageChatService(
                 message = initialGreeting,
                 translatedMessage = initialTranslation,
                 audioUrl = audioUrl,
+                hasGrammarError = false,
+                correctedSentence = null,
                 grammarFeedbackFa = "",
                 objectiveCompleted = false,
                 finishTaskIndexes = emptyList()
             )
         }
 
-        // Generate response and evaluate grammar via AI (with resilient local fallback)
+        // Generate response and evaluate grammar via AI
         val turnResult = generateAiChatTurn(
             stage = stage,
             userMessage = userMessage,
@@ -68,6 +70,8 @@ class StageChatService(
             message = turnResult.reply,
             translatedMessage = turnResult.translation,
             audioUrl = audioUrl,
+            hasGrammarError = turnResult.hasGrammarError,
+            correctedSentence = turnResult.correctedSentence,
             grammarFeedbackFa = turnResult.grammarFeedback,
             objectiveCompleted = turnResult.isObjectiveDone,
             finishTaskIndexes = if (turnResult.isObjectiveDone) listOf(0, 1) else emptyList()
@@ -147,32 +151,6 @@ class StageChatService(
         }
     }
 
-    private fun evaluateGrammar(userText: String): String {
-        val lower = userText.lowercase()
-
-        // Common ESL grammar issues check
-        if (lower.contains("i wants")) {
-            return "اشکال در فاعل و فعل: برای ضمیر «I» از فعل ساده بدون s استفاده کنید: I want"
-        }
-        if (lower.contains("i flying") || lower.contains("i going") || lower.contains("i travelling") || lower.contains("i studying")) {
-            return "اشکال در زمان استمراری: بعد از «I» باید فعل کمکی «am» قرار گیرد: I am flying / I am going"
-        }
-        if (lower.contains("he want ") || lower.contains("she want ")) {
-            return "اشکال در سوم‌شخص: برای «he / she» فعل باید با s بیاید: He wants / She wants"
-        }
-        if (lower.contains("they is") || lower.contains("we is")) {
-            return "اشکال در تطابق فاعل و فعل: برای فاعل جمع از «are» استفاده کنید: They are / We are"
-        }
-        if (lower.contains("i would to") || lower.contains("would like to order of")) {
-            return "اشکال ساختار: بعد از «would like» شکل ساده فعل می‌آید: I would like to order"
-        }
-        if (lower.contains("give me food") || lower.contains("give me chicken")) {
-            return "نکته کاربردی: در زبان انگلیسی برای سفارش غذا بهتر است از عبارات مودبانه مثل «I would like...» یا «Could I please have...» استفاده کنید."
-        }
-
-        // Return empty string if grammar is fine (this enables the green "گرامر درسته" badge)
-        return ""
-    }
 
     private suspend fun generateNextTurn(
         stageOrderIndex: Int,
@@ -264,8 +242,8 @@ class StageChatService(
                 appendLine("2. Provide a fluent, natural Persian translation ('translation') for your English reply.")
                 appendLine("3. Critically examine the user's latest message for English grammar, vocabulary, preposition, or phrasing errors:")
                 appendLine("   - Pay close attention to word boundaries: never report words as glued or concatenated if standard spaces or punctuation separate them. Only report genuine spelling, grammar, preposition, or phrasing errors.")
-                appendLine("   - If the user made ANY mistake: provide a helpful, polite explanation in Persian ('grammar_feedback') explaining the issue and giving the correct sentence.")
-                appendLine("   - If the user's sentence is grammatically correct and natural: 'grammar_feedback' MUST be an empty string \"\".")
+                appendLine("   - If the user made ANY mistake: set 'has_grammar_error': true, provide the corrected English sentence in 'corrected_sentence', and provide a helpful, polite explanation in Persian ('grammar_feedback') explaining the issue.")
+                appendLine("   - If the user's sentence is grammatically correct and natural: set 'has_grammar_error': false, 'corrected_sentence': null, and 'grammar_feedback': \"\".")
                 appendLine("4. Stage Objective Completion & Wrap-up:")
                 appendLine("   - Assess whether the user's latest response has completed the stage target objective ('${stage?.targetObjective ?: ""}').")
                 appendLine("   - If the goal is met or the scenario has reached its natural conclusion:")
@@ -274,7 +252,7 @@ class StageChatService(
                 appendLine("     * Set 'objective_completed': true.")
                 appendLine("   - If the conversation is still ongoing and the objective is not yet reached, set 'objective_completed': false.")
                 appendLine("5. ALWAYS return valid JSON matching this schema:")
-                appendLine("{\n  \"reply\": \"English reply here\",\n  \"translation\": \"ترجمه فارسی پاسخ\",\n  \"grammar_feedback\": \"توضیح فارسی اشکال گرامری یا رشته خالی در صورت صحت\",\n  \"objective_completed\": false\n}")
+                appendLine("{\n  \"reply\": \"English reply here\",\n  \"translation\": \"ترجمه فارسی پاسخ\",\n  \"has_grammar_error\": false,\n  \"corrected_sentence\": null,\n  \"grammar_feedback\": \"توضیح فارسی اشکال گرامری یا رشته خالی در صورت صحت\",\n  \"objective_completed\": false\n}")
             }
 
             val chatMessages = mutableListOf<ChatMessage>()
@@ -300,7 +278,16 @@ class StageChatService(
 
                 val reply = jsonObject["reply"]?.jsonPrimitive?.content?.trim().orEmpty()
                 val translation = jsonObject["translation"]?.jsonPrimitive?.content?.trim().orEmpty()
-                val grammarFeedback = jsonObject["grammar_feedback"]?.jsonPrimitive?.content?.trim().orEmpty()
+                val grammarAnalysisObj = try { jsonObject["grammar_analysis"]?.jsonObject } catch (_: Exception) { null }
+                val grammarFeedback = jsonObject["grammar_feedback"]?.jsonPrimitive?.content?.trim()
+                    ?: grammarAnalysisObj?.get("error_details")?.jsonPrimitive?.content?.trim()
+                    ?: ""
+                val hasGrammarError = jsonObject["has_grammar_error"]?.jsonPrimitive?.booleanOrNull
+                    ?: grammarAnalysisObj?.get("has_error")?.jsonPrimitive?.booleanOrNull
+                    ?: grammarFeedback.isNotEmpty()
+                val rawCorrected = jsonObject["corrected_sentence"]?.jsonPrimitive?.content?.trim()
+                    ?: grammarAnalysisObj?.get("corrected_sentence")?.jsonPrimitive?.content?.trim()
+                val correctedSentence = rawCorrected?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
                 val objectiveCompleted = jsonObject["objective_completed"]?.jsonPrimitive?.booleanOrNull ?: false
 
                 if (reply.isNotEmpty()) {
@@ -308,7 +295,9 @@ class StageChatService(
                         reply = reply,
                         translation = translation.ifEmpty { null },
                         isObjectiveDone = objectiveCompleted,
-                        grammarFeedback = grammarFeedback
+                        hasGrammarError = hasGrammarError,
+                        correctedSentence = if (hasGrammarError) correctedSentence else null,
+                        grammarFeedback = if (hasGrammarError) grammarFeedback else ""
                     )
                 }
             } else {
@@ -316,7 +305,7 @@ class StageChatService(
             }
             fallbackChatTurn(stage, userMessage, history)
         } catch (e: Exception) {
-            logger.warn("Error in generateAiChatTurn: ${e.message}, falling back to rule-based engine")
+            logger.warn("Error in generateAiChatTurn: ${e.message}, falling back to offline turn")
             fallbackChatTurn(stage, userMessage, history)
         }
     }
@@ -339,7 +328,6 @@ class StageChatService(
         userMessage: String,
         history: List<StageChatMessageDto>
     ): ChatTurnResult {
-        val grammar = evaluateGrammar(userMessage)
         val (reply, translation, isObjectiveDone) = generateNextTurn(
             stageOrderIndex = stage?.orderIndex ?: 1,
             characterName = stage?.characterName ?: "Character",
@@ -351,7 +339,9 @@ class StageChatService(
             reply = reply,
             translation = translation,
             isObjectiveDone = isObjectiveDone,
-            grammarFeedback = grammar
+            hasGrammarError = false,
+            correctedSentence = null,
+            grammarFeedback = ""
         )
     }
 
@@ -464,5 +454,8 @@ data class ChatTurnResult(
     val reply: String,
     val translation: String?,
     val isObjectiveDone: Boolean,
+    val hasGrammarError: Boolean = false,
+    val correctedSentence: String? = null,
     val grammarFeedback: String
 )
+

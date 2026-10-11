@@ -110,3 +110,20 @@
   "message": "مرحله با موفقیت حذف یا آرشیو شد"
 }
 ```
+
+---
+
+## ۴. جابجایی ترتیب مرحله (Reorder Stage)
+
+جابجایی ایمن `orderIndex` مرحله بدون خطای تداخل یکتایی دیتابیس (با جابجایی مستقیم دو مرحله یا شیفت بازه‌ای مراحل میانی).
+
+- **مسیر**: `POST /api/admin/stages/{id}/reorder`
+
+### بدنه درخواست (Request Body)
+```json
+{
+  "newOrderIndex": 2,
+  "shiftSubsequent": false
+}
+```
+

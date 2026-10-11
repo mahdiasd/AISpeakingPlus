@@ -1,12 +1,21 @@
 package ir.aispeaking.main
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -14,180 +23,281 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import coil3.compose.AsyncImage
 import ir.aispeaking.domain.model.stage.Stage
 import ir.aispeaking.sharedui.Res
-import ir.aispeaking.sharedui.ic_user
+import ir.aispeaking.sharedui.ic_close
+import ir.aispeaking.sharedui.ic_done
+import ir.aispeaking.sharedui.ic_play
+import ir.aispeaking.sharedui.ic_scenario
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameAvatar
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
+import ir.aispeaking.sharedui.ui.game.GameIconButton
+import ir.aispeaking.sharedui.ui.game.GameModal
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.fa
 import org.jetbrains.compose.resources.painterResource
 
+/**
+ * Apple-style Mission Briefing Sheet presented before entering the conversation.
+ * Presents character context, learning objectives, and scenario clearly with Apple HIG hierarchy.
+ */
 @Composable
 fun StageBriefingDialog(
+    visible: Boolean = true,
     stage: Stage,
     onDismiss: () -> Unit,
     onStartMission: (Stage) -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1E2230)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    GameModal(visible = visible, onDismiss = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Top Navigation Row: Stage badge & Close button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .clip(RoundedCornerShape(50))
+                        .background(Game.Blue.copy(alpha = 0.16f))
+                        .border(1.dp, Game.Blue.copy(alpha = 0.35f), RoundedCornerShape(50))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    // Character Avatar & Name
-                    Box(
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF2C3248)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (!stage.characterAvatarUrl.isNullOrBlank()) {
-                            AsyncImage(
-                                model = stage.characterAvatarUrl,
-                                contentDescription = stage.characterName,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        } else {
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_user),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-                    }
+                    GameText(
+                        text = "مرحله ${stage.orderIndex.fa()}",
+                        size = 12.sp,
+                        bold = true,
+                        color = Game.Blue
+                    )
+                }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                GameIconButton(
+                    icon = Res.drawable.ic_close,
+                    onClick = onDismiss,
+                    contentDescription = "بستن",
+                    size = 32.dp,
+                    iconSize = 14.dp,
+                    tint = Game.TextSecondary,
+                    container = Color(0x1FFFFFFF),
+                    border = Color(0x14FFFFFF)
+                )
+            }
 
-                    Text(
+            // Hero Section: Character Presence & Stage Title
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                GameAvatar(
+                    name = stage.characterName,
+                    imageUrl = stage.characterAvatarUrl,
+                    size = 54.dp,
+                    ring = Game.StrokeStrong
+                )
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    GameText(
                         text = stage.titleFa,
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                        size = 18.sp,
+                        lineHeight = 26.sp,
+                        bold = true,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
-
-                    Text(
-                        text = "هم‌صحبت: ${stage.characterName}",
-                        color = Color(0xFF9FA8DA),
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Persian Scenario Briefing
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF272C3E)
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Text(
-                                text = "سناریو:",
-                                color = Color(0xFFFFD54F),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = stage.briefingFa,
-                                color = Color(0xFFE0E0E0),
-                                fontSize = 13.sp,
-                                lineHeight = 20.sp
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Target Mission Objective
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF1B3B2B)
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Text(
-                                text = "هدف ماموریت:",
-                                color = Color(0xFF81C784),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            if (stage.targetObjectiveFa.isNotBlank()) {
-                                Text(
-                                    text = stage.targetObjectiveFa,
-                                    color = Color(0xFFE8F5E9),
-                                    fontSize = 13.sp,
-                                    lineHeight = 19.sp
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                            }
-                            Text(
-                                text = stage.targetObjective,
-                                color = Color(0xFFC8E6C9),
-                                fontSize = 12.sp,
-                                lineHeight = 17.sp
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Actions
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color(0xFFB0BEC5)
-                            )
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Text("انصراف", fontSize = 14.sp)
-                        }
-
-                        Button(
-                            onClick = { onStartMission(stage) },
-                            modifier = Modifier.weight(1.5f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF4CAF50),
-                                contentColor = Color.White
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .background(Game.Mint, CircleShape)
                             )
-                        ) {
-                            Text("شروع مکالمه", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            GameText(
+                                text = "${stage.characterName} · AI Partner",
+                                size = 12.sp,
+                                color = Game.TextSecondary,
+                                latin = true,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }
             }
+
+            // Apple Grouped Inset Card 1: Main Objective
+            val targetFa = stage.targetObjectiveFa.ifBlank { stage.targetObjective }
+            val targetEn = stage.targetObjective.takeIf { stage.targetObjectiveFa.isNotBlank() && it.isNotBlank() }
+            AppleInsetCard(
+                icon = Res.drawable.ic_done,
+                iconTint = Game.Mint,
+                badgeBg = Game.Mint.copy(alpha = 0.16f),
+                title = "هدف این مکالمه",
+                body = targetFa,
+                latinSubtext = targetEn
+            )
+
+            // Apple Grouped Inset Card 2: Scenario & Story
+            if (stage.briefingFa.isNotBlank()) {
+                AppleInsetCard(
+                    icon = Res.drawable.ic_scenario,
+                    iconTint = Game.Sky,
+                    badgeBg = Game.Sky.copy(alpha = 0.16f),
+                    title = "سناریو و موقعیت",
+                    body = stage.briefingFa
+                )
+            }
+
+            // Quick Info Tags
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                QuickTag(text = "مکالمه صوتی و متنی", modifier = Modifier.weight(1f))
+                QuickTag(text = "امتیاز تا ۳ ستاره", modifier = Modifier.weight(1f))
+            }
         }
+
+        // Action Buttons pinned at bottom
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, bottom = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            GameButton(
+                text = "شروع گفتگو",
+                onClick = { onStartMission(stage) },
+                modifier = Modifier.fillMaxWidth(),
+                icon = Res.drawable.ic_play,
+                height = 50.dp,
+                textSize = 15.sp,
+                style = GameButtonStyle.Primary
+            )
+            GameButton(
+                text = "فعلاً نه",
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                style = GameButtonStyle.Glass,
+                height = 42.dp,
+                textSize = 14.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun AppleInsetCard(
+    icon: org.jetbrains.compose.resources.DrawableResource,
+    iconTint: Color,
+    badgeBg: Color,
+    title: String,
+    body: String,
+    latinSubtext: String? = null
+) {
+    val shape = RoundedCornerShape(16.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(Game.PanelRaised)
+            .border(1.dp, Color(0x18FFFFFF), shape)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(badgeBg),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(15.dp)
+                )
+            }
+            GameText(
+                text = title,
+                size = 13.sp,
+                bold = true,
+                color = iconTint
+            )
+        }
+
+        GameText(
+            text = body,
+            size = 13.sp,
+            lineHeight = 22.sp,
+            color = Game.TextPrimary
+        )
+
+        if (latinSubtext != null) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0x14FFFFFF))
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    GameText(
+                        text = latinSubtext,
+                        size = 12.sp,
+                        lineHeight = 18.sp,
+                        latin = true,
+                        color = Game.TextSecondary
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickTag(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0x12FFFFFF))
+            .padding(vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        GameText(
+            text = text,
+            size = 11.sp,
+            color = Game.TextSecondary,
+            align = TextAlign.Center
+        )
     }
 }
 

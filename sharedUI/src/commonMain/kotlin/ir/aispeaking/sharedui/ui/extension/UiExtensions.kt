@@ -27,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -59,13 +60,14 @@ fun Dp.toCorner() = CornerSize(this)
 fun LazyListState.OnBottomReached(
     loadMore: () -> Unit,
 ) {
+    val currentLoadMore by rememberUpdatedState(loadMore)
     val shouldLoadMore = remember {
         derivedStateOf {
             val visibleItemsInfo = layoutInfo.visibleItemsInfo
             if (layoutInfo.totalItemsCount < 3) {
                 false
             } else {
-                val lastVisibleItem = visibleItemsInfo.last()
+                val lastVisibleItem = visibleItemsInfo.lastOrNull() ?: return@derivedStateOf false
                 val viewportHeight = layoutInfo.viewportEndOffset + layoutInfo.viewportStartOffset
 
                 (lastVisibleItem.index + 1 == layoutInfo.totalItemsCount && lastVisibleItem.offset + lastVisibleItem.size <= viewportHeight)
@@ -77,7 +79,7 @@ fun LazyListState.OnBottomReached(
         snapshotFlow { shouldLoadMore.value }
             .collect {
                 // if should load more, then invoke loadMore
-                if (it) loadMore()
+                if (it) currentLoadMore()
             }
     }
 }
@@ -86,6 +88,7 @@ fun LazyListState.OnBottomReached(
 fun LazyGridState.OnBottomReached(
     loadMore: () -> Unit,
 ) {
+    val currentLoadMore by rememberUpdatedState(loadMore)
     val shouldLoadMore = remember {
         derivedStateOf {
             val visibleItemsInfo = layoutInfo.visibleItemsInfo
@@ -109,7 +112,7 @@ fun LazyGridState.OnBottomReached(
     LaunchedEffect(shouldLoadMore) {
         snapshotFlow { shouldLoadMore.value }
             .collect { shouldLoad ->
-                if (shouldLoad) loadMore()
+                if (shouldLoad) currentLoadMore()
             }
     }
 }
@@ -264,17 +267,15 @@ fun Modifier.animatedBorder(
 
     return this
         .clip(shape)
-        .padding(borderWidth)
-        .drawWithContent {
+        .drawBehind {
             rotate(angle) {
                 drawCircle(
                     brush = brush,
-                    radius = size.width,
-                    blendMode = BlendMode.SrcIn,
+                    radius = maxOf(size.width, size.height),
                 )
             }
-            drawContent()
         }
+        .padding(borderWidth)
         .background(color = backgroundColor, shape = shape)
 }
 

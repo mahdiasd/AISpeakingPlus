@@ -41,29 +41,58 @@ fun Route.adminMediaRouting() {
 
                 var uploadedUrl: String? = null
                 var savedFilename: String? = null
+                var savedMimeType = "image/webp"
+                var savedSizeBytes = 0L
+                var validationErrorStatus: HttpStatusCode? = null
+                var validationErrorMessage: String? = null
+
+                val allowedExtensions = setOf("jpg", "jpeg", "png", "webp")
+                val allowedMimeTypes = setOf("image/jpeg", "image/jpg", "image/png", "image/webp")
+                val maxFileSizeBytes = 5L * 1024L * 1024L // 5 MB
 
                 multipart.forEachPart { part ->
-                    if (part is PartData.FileItem) {
+                    if (part is PartData.FileItem && validationErrorStatus == null) {
                         val originalFileName = part.originalFileName ?: "image.webp"
-                        val extension = originalFileName.substringAfterLast(".", "webp")
-                        val uniqueName = "${UUID.randomUUID()}.$extension"
-                        val file = File(uploadDir, uniqueName)
+                        val extension = originalFileName.substringAfterLast(".", "").lowercase()
+                        val contentTypeStr = part.contentType?.let { "${it.contentType}/${it.contentSubtype}".lowercase() }
 
-                        part.streamProvider().use { input ->
-                            file.outputStream().buffered().use { output ->
-                                input.copyTo(output)
+                        if (extension !in allowedExtensions || (contentTypeStr != null && contentTypeStr !in allowedMimeTypes && contentTypeStr != "application/octet-stream")) {
+                            validationErrorStatus = HttpStatusCode.UnsupportedMediaType
+                            validationErrorMessage = "فرمت فایل مجاز نیست. فقط تصاویر JPG، PNG و WEBP مجاز هستند."
+                        } else {
+                            val bytes = part.streamProvider().use { it.readNBytes((maxFileSizeBytes + 1).toInt()) }
+                            if (bytes.size > maxFileSizeBytes) {
+                                validationErrorStatus = HttpStatusCode.PayloadTooLarge
+                                validationErrorMessage = "حجم فایل بیش از حد مجاز (حداکثر ۵ مگابایت) است."
+                            } else {
+                                val uniqueName = "${UUID.randomUUID()}.$extension"
+                                val file = File(uploadDir, uniqueName)
+                                file.writeBytes(bytes)
+
+                                uploadedUrl = "/uploads/stages/$uniqueName"
+                                savedFilename = uniqueName
+                                savedMimeType = when (extension) {
+                                    "jpg", "jpeg" -> "image/jpeg"
+                                    "png" -> "image/png"
+                                    else -> "image/webp"
+                                }
+                                savedSizeBytes = bytes.size.toLong()
                             }
                         }
-
-                        uploadedUrl = "/uploads/stages/$uniqueName"
-                        savedFilename = uniqueName
                     }
                     part.dispose()
                 }
 
-                if (uploadedUrl != null && savedFilename != null) {
+                if (validationErrorStatus != null) {
+                    call.failureRespond(validationErrorStatus!!, validationErrorMessage ?: "خطا در اعتبارسنجی فایل")
+                } else if (uploadedUrl != null && savedFilename != null) {
                     call.successRespond(
-                        data = AdminMediaUploadResponse(url = uploadedUrl!!, filename = savedFilename!!),
+                        data = AdminMediaUploadResponse(
+                            url = uploadedUrl!!,
+                            filename = savedFilename!!,
+                            mimeType = savedMimeType,
+                            sizeBytes = savedSizeBytes
+                        ),
                         message = "فایل با موفقیت آپلود شد"
                     )
                 } else {

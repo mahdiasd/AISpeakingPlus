@@ -23,13 +23,7 @@ class AdminAuthService {
         val inputUser = request.username.trim().lowercase()
         val row = AdminUserTable
             .selectAll()
-            .where {
-                if (inputUser == "admin") {
-                    (AdminUserTable.username eq "admin") or (AdminUserTable.username eq "admin@aispeaking.ir")
-                } else {
-                    AdminUserTable.username eq inputUser
-                }
-            }
+            .where { AdminUserTable.username eq inputUser }
             .firstOrNull() ?: return@newSuspendedTransaction null
 
         val isActive = row[AdminUserTable.isActive]
@@ -37,8 +31,7 @@ class AdminAuthService {
 
         val storedHash = row[AdminUserTable.passwordHash]
         val verifyResult = BCrypt.verifyer().verify(request.password.toCharArray(), storedHash.toCharArray())
-        val isSuperAdminFallback = (row[AdminUserTable.role] == "ROLE_SUPER_ADMIN" && (request.password == "admin123" || request.password == "Admin@123456!"))
-        if (!verifyResult.verified && !isSuperAdminFallback) return@newSuspendedTransaction null
+        if (!verifyResult.verified) return@newSuspendedTransaction null
 
         AuthenticatedAdmin(
             id = row[AdminUserTable.id].value,

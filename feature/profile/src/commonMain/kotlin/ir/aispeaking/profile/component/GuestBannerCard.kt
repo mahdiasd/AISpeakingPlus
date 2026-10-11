@@ -11,23 +11,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_key
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
+import ir.aispeaking.sharedui.ui.game.GameText
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -35,23 +34,26 @@ fun GuestBannerCard(
     onLoginClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val shape = RoundedCornerShape(22.dp)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
+            .clip(shape)
             .background(
-                Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFF0F766E),
-                        Color(0xFF0D9488)
+                Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF142033),
+                        Game.PanelSolid
                     )
                 )
             )
-            .border(1.dp, Color(0x332DD4BF), RoundedCornerShape(22.dp))
+            .border(1.dp, Color(0x380A84FF), shape)
             .padding(18.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -59,53 +61,43 @@ fun GuestBannerCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(38.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0x33FFFFFF)),
+                        .background(Game.Blue.copy(alpha = 0.16f))
+                        .border(1.dp, Game.Blue.copy(alpha = 0.35f), RoundedCornerShape(10.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_key),
                         contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(18.dp)
+                        tint = Game.Blue,
+                        modifier = Modifier.size(19.dp)
                     )
                 }
 
-                Text(
-                    text = "ذخیره دائمی پیشرفت و ستاره‌ها",
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
+                GameText(
+                    text = "ذخیره همیشگی پیشرفت و مراحل",
+                    color = Game.TextPrimary,
+                    size = 15.sp,
+                    bold = true
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "اکنون در حالت مهمان هستید. با ثبت‌نام رایگان با شماره موبایل، پیشرفت شما در سرور ذخیره می‌شود و می‌توانید در هر دستگاهی ادامه دهید.",
-                color = Color(0xFFCCFBF1),
-                fontSize = 12.sp,
+            GameText(
+                text = "اکنون در حالت مهمان هستید. با ثبت‌نام رایگان شماره موبایل، پیشرفت، مراحل و امتیازات شما در فضای ابری ذخیره شده و هیچ‌گاه از دست نمی‌رود.",
+                color = Game.TextSecondary,
+                size = 12.sp,
                 lineHeight = 18.sp
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Button(
+            GameButton(
+                text = "ورود یا ثبت‌نام رایگان",
                 onClick = onLoginClick,
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White
-                ),
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text(
-                    text = "ورود یا ثبت‌نام",
-                    color = Color(0xFF0F766E),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                style = GameButtonStyle.Primary,
+                modifier = Modifier.align(Alignment.End),
+                height = 42.dp,
+                textSize = 13.sp
+            )
         }
     }
 }
@@ -116,8 +108,6 @@ fun GuestBannerCard(
 @Composable
 private fun GuestBannerCardPreview() {
     ir.aispeaking.sharedui.ui.them.AppTheme {
-        GuestBannerCard(
-            onLoginClick = {}
-        )
+        GuestBannerCard(onLoginClick = {})
     }
 }

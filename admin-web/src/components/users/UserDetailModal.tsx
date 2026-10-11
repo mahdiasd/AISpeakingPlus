@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
-import { UserDetail, UserStatus } from '../../types';
+import { SubscriptionItem, UserDetail, UserStatus } from '../../types';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -16,6 +16,7 @@ import {
   Gift,
   Clock,
   Award,
+  XCircle,
 } from 'lucide-react';
 
 interface UserDetailModalProps {
@@ -33,8 +34,10 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
 }) => {
   const { success, error } = useToast();
   const [user, setUser] = useState<UserDetail | null>(null);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isCancellingSub, setIsCancellingSub] = useState(false);
   const [suspendReason, setSuspendReason] = useState('');
   const [showSuspendInput, setShowSuspendInput] = useState(false);
   const [grantModalOpen, setGrantModalOpen] = useState(false);
@@ -42,8 +45,12 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   const fetchUser = async (id: string) => {
     setIsLoading(true);
     try {
-      const data = await api.getUser(id);
+      const [data, subs] = await Promise.all([
+        api.getUser(id),
+        api.getUserSubscriptions(id).catch(() => []),
+      ]);
       setUser(data);
+      setSubscriptions(subs);
     } catch (err: any) {
       error(err.message || 'خطا در دریافت اطلاعات کاربر');
       onClose();
@@ -59,6 +66,21 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
       setSuspendReason('');
     }
   }, [isOpen, userId]);
+
+  const handleCancelSubscription = async (subscriptionId: string) => {
+    if (!user) return;
+    setIsCancellingSub(true);
+    try {
+      await api.cancelSubscription(subscriptionId, 'لغو دستی اشتراک توسط ادمین');
+      success('اشتراک فعال کاربر با موفقیت لغو شد');
+      await fetchUser(user.id);
+      onUserUpdated();
+    } catch (err: any) {
+      error(err.message || 'خطا در لغو اشتراک');
+    } finally {
+      setIsCancellingSub(false);
+    }
+  };
 
   const handleStatusChange = async (newStatus: UserStatus) => {
     if (!user) return;
@@ -180,7 +202,18 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                         <Badge variant="info" size="sm">خرید درگاه بانکی</Badge>
                       )}
                     </div>
-                    <Badge variant="success" size="sm">معتبر</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="success" size="sm">معتبر</Badge>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => handleCancelSubscription(user.activeSubscription!.id)}
+                        isLoading={isCancellingSub}
+                        icon={<XCircle className="w-3.5 h-3.5" />}
+                      >
+                        لغو اشتراک
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 dark:text-slate-400 pt-1 font-mono">
@@ -205,6 +238,48 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 <div className="p-3.5 rounded-xl bg-white dark:bg-[#0B0F17]/40 border border-slate-200 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400 flex items-center justify-between">
                   <span>این کاربر در حال حاضر اشتراک فعالی ندارد.</span>
                   <span className="text-xs text-amber-600 dark:text-amber-400 font-mono font-medium">پلن پایه (رایگان)</span>
+                </div>
+              )}
+
+              {subscriptions.length > 0 && (
+                <div className="pt-2 space-y-2">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    سوابق اشتراک ({subscriptions.length} مورد)
+                  </div>
+                  <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+                    {subscriptions.map((sub) => (
+                      <div
+                        key={sub.id}
+                        className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-white/70 dark:bg-[#0B0F17]/40 border border-slate-200/70 dark:border-slate-800/70"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+                            {sub.planType}
+                          </span>
+                          <Badge
+                            size="sm"
+                            variant={
+                              sub.status === 'ACTIVE'
+                                ? 'success'
+                                : sub.status === 'CANCELLED'
+                                ? 'danger'
+                                : 'neutral'
+                            }
+                          >
+                            {sub.status === 'ACTIVE'
+                              ? 'فعال'
+                              : sub.status === 'CANCELLED'
+                              ? 'لغو شده'
+                              : 'منقضی'}
+                          </Badge>
+                        </div>
+                        <span className="font-mono text-slate-500 dark:text-slate-400">
+                          {new Date(sub.startedAt).toLocaleDateString('fa-IR')} تا{' '}
+                          {new Date(sub.expiresAt).toLocaleDateString('fa-IR')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

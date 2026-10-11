@@ -1,13 +1,18 @@
 package ir.aispeaking.data.utils
 
 import io.ktor.client.plugins.ResponseException
+import io.ktor.client.statement.bodyAsText
 import ir.aispeaking.data.mapper.paginate.toDomain
 import ir.aispeaking.domain.model.data_result.DataResult
 import ir.aispeaking.domain.model.error.AppError
 import ir.aispeaking.domain.model.error.NetworkError
 import ir.aispeaking.network.model.NetworkResponse
 import ir.aispeaking.utils.dLog
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 
+
+private val safeCallJson = Json { ignoreUnknownKeys = true }
 
 suspend fun <T> safeCall(execute: suspend () -> NetworkResponse<T>): DataResult<T> {
     return try {
@@ -37,8 +42,19 @@ suspend fun <T> safeCall(execute: suspend () -> NetworkResponse<T>): DataResult<
         }
     } catch (e: ResponseException) {
         val statusCode = e.response.status.value
-        e.message.dLog(tag = "ktor", plusTag = "safeCall ResponseException ($statusCode): ")
-        DataResult.Failure(getApiError(statusCode, e.message ?: ""))
+        val serverErrorMessage = try {
+            val text = e.response.bodyAsText()
+            try {
+                val parsed = safeCallJson.decodeFromString<NetworkResponse<JsonElement?>>(text)
+                parsed.errorMessage?.takeIf { it.isNotBlank() } ?: parsed.message?.takeIf { it.isNotBlank() } ?: text
+            } catch (_: Throwable) {
+                text.takeIf { it.isNotBlank() }
+            }
+        } catch (_: Throwable) {
+            null
+        } ?: e.message ?: ""
+        serverErrorMessage.dLog(tag = "ktor", plusTag = "safeCall ResponseException ($statusCode): ")
+        DataResult.Failure(getApiError(statusCode, serverErrorMessage))
     } catch (e: Throwable) {
         e.message.dLog(tag = "ktor", plusTag = "safeCall: ")
 

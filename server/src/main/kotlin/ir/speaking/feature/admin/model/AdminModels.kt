@@ -146,7 +146,16 @@ data class AdminAuditLogItemDto(
 )
 
 @Serializable
+data class AdminStageReorderRequest(
+    val newOrderIndex: Int,
+    val shiftSubsequent: Boolean = true
+)
+
+@Serializable
 data class AdminMediaUploadResponse(
     val url: String,
-    val filename: String
+    val filename: String,
+    val mimeType: String = "image/webp",
+    val sizeBytes: Long = 0L
 )
+

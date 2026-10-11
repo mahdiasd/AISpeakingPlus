@@ -14,7 +14,7 @@ import ir.speaking.core.response.SuccessResponse
 import ir.speaking.core.response.failureRespond
 import ir.speaking.core.response.successRespond
 import ir.speaking.core.utils.MyConstant
-import ir.speaking.feature.stage.db.StageTable
+import ir.speaking.feature.stage.repository.StageRepository
 import ir.speaking.feature.stage_progress.dto.EvaluationRequest
 import ir.speaking.feature.stage_progress.dto.EvaluationResponse
 import ir.speaking.feature.stage_progress.dto.GrammarErrorItem
@@ -22,8 +22,7 @@ import ir.speaking.feature.stage_progress.dto.SyncProgressRequest
 import ir.speaking.feature.stage_progress.dto.SyncProgressResponse
 import ir.speaking.feature.stage_progress.repository.StageProgressRepo
 import ir.speaking.feature.stage_progress.service.EvaluationRubricService
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import ir.speaking.feature.subscription.interceptor.enforceStageAccess
 import org.koin.ktor.ext.inject
 import java.util.*
 
@@ -31,6 +30,7 @@ import java.util.*
 fun Application.progressRouting() {
     val rubricService by inject<EvaluationRubricService>()
     val progressRepo by inject<StageProgressRepo>()
+    val stageRepository by inject<StageRepository>()
 
     routing {
         route("/api/v2/stages/{stageId}/evaluate") {
@@ -46,75 +46,20 @@ fun Application.progressRouting() {
                     val uidString = principal?.payload?.getClaim("uid")?.asString()
                     val userId = uidString?.let { try { UUID.fromString(it) } catch (_: Exception) { null } }
 
+                    val stage = stageRepository.getStageDetail(stageId, userId)
+                    if (!call.enforceStageAccess(stage, userId)) return@post
+
                     val request = try {
                         call.receive<EvaluationRequest>()
                     } catch (_: Exception) {
                         EvaluationRequest()
                     }
 
-                    // Heuristic grammar check on transcript if present, combined with client detected errors
-                    val grammarErrors = mutableListOf<GrammarErrorItem>()
-                    grammarErrors.addAll(request.grammarErrors)
-
-                    for (item in request.transcript) {
-                        if (item.role.equals("User", ignoreCase = true)) {
-                            if (grammarErrors.any { it.original.equals(item.content, ignoreCase = true) }) {
-                                continue
-                            }
-                            val text = item.content.lowercase()
-                            val errorItem = when {
-                                text.contains("i wants") -> GrammarErrorItem(
-                                    original = item.content,
-                                    correction = item.content.replace("i wants", "I want", ignoreCase = true),
-                                    explanationFa = "اشکال در فاعل و فعل: برای ضمیر «I» از فعل ساده بدون s استفاده کنید: I want"
-                                )
-                                text.contains("i flying") || text.contains("i going") || text.contains("i travelling") || text.contains("i studying") -> GrammarErrorItem(
-                                    original = item.content,
-                                    correction = item.content
-                                        .replace("i flying", "I am flying", ignoreCase = true)
-                                        .replace("i going", "I am going", ignoreCase = true)
-                                        .replace("i travelling", "I am travelling", ignoreCase = true)
-                                        .replace("i studying", "I am studying", ignoreCase = true),
-                                    explanationFa = "اشکال در زمان استمراری: بعد از «I» باید فعل کمکی «am» قرار گیرد: I am flying / I am going"
-                                )
-                                text.contains("he want ") || text.contains("she want ") -> GrammarErrorItem(
-                                    original = item.content,
-                                    correction = item.content
-                                        .replace("he want ", "He wants ", ignoreCase = true)
-                                        .replace("she want ", "She wants ", ignoreCase = true),
-                                    explanationFa = "اشکال در سوم‌شخص: برای «he / she» فعل باید با s بیاید: He wants / She wants"
-                                )
-                                text.contains("they is") || text.contains("we is") -> GrammarErrorItem(
-                                    original = item.content,
-                                    correction = item.content
-                                        .replace("they is", "They are", ignoreCase = true)
-                                        .replace("we is", "We are", ignoreCase = true),
-                                    explanationFa = "اشکال در تطابق فاعل و فعل: برای فاعل جمع از «are» استفاده کنید: They are / We are"
-                                )
-                                text.contains("i would to") || text.contains("would like to order of") -> GrammarErrorItem(
-                                    original = item.content,
-                                    correction = item.content
-                                        .replace("i would to", "I would like to", ignoreCase = true)
-                                        .replace("would like to order of", "would like to order", ignoreCase = true),
-                                    explanationFa = "اشکال ساختار: بعد از «would like» شکل ساده فعل می‌آید: I would like to order"
-                                )
-                                text.contains("give me food") || text.contains("give me chicken") -> GrammarErrorItem(
-                                    original = item.content,
-                                    correction = item.content
-                                        .replace("give me food", "I would like to have the food", ignoreCase = true)
-                                        .replace("give me chicken", "I would like the chicken", ignoreCase = true),
-                                    explanationFa = "نکته کاربردی: در زبان انگلیسی برای سفارش غذا بهتر است از عبارات مودبانه مثل «I would like...» یا «Could I please have...» استفاده کنید."
-                                )
-                                else -> null
-                            }
-                            if (errorItem != null) {
-                                grammarErrors.add(errorItem)
-                            }
-                        }
-                    }
-
+                    // Pure AI grammar errors collected during conversation turns (no manual regex/heuristic matching)
+                    val grammarErrors = request.grammarErrors
                     val totalGrammarErrors = maxOf(grammarErrors.size, request.grammarErrorsCount)
-                    val objectiveCompleted = request.turnsCount >= 2 || request.transcript.size >= 2
+                    val objectiveCompleted = request.objectiveCompleted
+
                     val rubricResult = rubricService.calculateRubric(
                         grammarErrorsCount = totalGrammarErrors,
                         hintsUsedCount = request.hintsUsedCount,
@@ -132,12 +77,11 @@ fun Application.progressRouting() {
                         isHighScore = saveResult.isHighScore
                     }
 
-                    val feedback = if (rubricResult.starsEarned == 3) {
-                        "فوق‌العاده بود! ماموریت را بدون خطا و بدون راهنما به پایان رساندید و ۳ ستاره کامل کسب کردید."
-                    } else if (rubricResult.starsEarned > 0) {
-                        "هدف ماموریت با موفقیت انجام شد! برای کسب ۳ ستاره تلاش کنید بدون راهنما و با اصلاح خطاهای گرامری مرحله را تکرار کنید."
-                    } else {
-                        "برای کسب ستاره، تلاش کنید هدف ماموریت را به طور کامل تکمیل کنید و از راهنماهای کمتری استفاده نمایید."
+                    val feedback = when {
+                        !objectiveCompleted -> "مکالمه قبل از تکمیل هدف ماموریت پایان یافت؛ بنابراین ۰ ستاره به این تلاش تعلق گرفت. برای کسب ستاره، ماموریت مرحله را کامل کنید."
+                        rubricResult.starsEarned == 3 -> "فوق‌العاده بود! ماموریت را بدون خطا و بدون راهنما به پایان رساندید و ۳ ستاره کامل کسب کردید."
+                        rubricResult.starsEarned > 0 -> "هدف ماموریت با موفقیت انجام شد! برای کسب ۳ ستاره تلاش کنید بدون راهنما و با اصلاح خطاهای گرامری مرحله را تکرار کنید."
+                        else -> "هدف ماموریت انجام شد اما به دلیل تعداد خطاها یا راهنماها ستاره‌ای کسب نشد. دوباره تلاش کنید!"
                     }
 
                     val response = EvaluationResponse(

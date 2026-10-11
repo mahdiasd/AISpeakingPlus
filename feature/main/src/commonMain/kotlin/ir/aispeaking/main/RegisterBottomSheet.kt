@@ -1,186 +1,173 @@
 package ir.aispeaking.main
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.stage.Stage
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
+import ir.aispeaking.sharedui.ui.game.GameSheet
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.GameTextField
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterBottomSheet(
+    visible: Boolean = true,
     stage: Stage,
     onDismiss: () -> Unit,
     onRegisterSuccess: () -> Unit,
+    isLoading: Boolean = false,
+    step: Int = 1,
+    errorMessage: String? = null,
+    onSendOtp: ((String) -> Unit)? = null,
+    onVerifyOtp: ((String, String) -> Unit)? = null,
+    onEditPhone: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var phoneNumber by remember { mutableStateOf("") }
     var otpCode by remember { mutableStateOf("") }
-    var step by remember { mutableStateOf(1) } // 1: Phone, 2: OTP
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var localError by remember { mutableStateOf<String?>(null) }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Color(0xFF1E293B),
-        modifier = modifier
-    ) {
+    val activeStep = step
+    val activeError = errorMessage ?: localError
+
+    GameSheet(visible = visible, onDismiss = onDismiss, modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .imePadding()
+                .padding(horizontal = 22.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text(
-                text = "📱 ورود / ثبت‌نام برای ادامه سفر",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+            GameText(
+                text = if (activeStep == 1) "برای ادامه ماجراجویی وارد شو" else "کد تایید را وارد کن",
+                size = 19.sp,
+                bold = true,
+                align = TextAlign.Center
+            )
+            GameText(
+                text = if (activeStep == 1) {
+                    "با ورود، مرحله «${stage.titleFa}» باز می‌شود و پیشرفتت روی حسابت ذخیره می‌ماند."
+                } else {
+                    "کدی که برای شماره $phoneNumber پیامک شد را وارد کن."
+                },
+                size = 13.sp,
+                lineHeight = 21.sp,
+                color = Game.TextSecondary,
+                align = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "برای باز کردن مرحله ۲ (${stage.titleFa}) و ذخیره پیشرفت مرحله اول روی حساب ابری، لطفاً شماره موبایل خود را وارد نمایید.",
-                color = Color(0xFFCBD5E1),
-                fontSize = 14.sp,
-                lineHeight = 22.sp,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            if (step == 1) {
-                OutlinedTextField(
+            if (activeStep == 1) {
+                GameTextField(
                     value = phoneNumber,
-                    onValueChange = {
-                        if (it.length <= 11) phoneNumber = it
-                    },
-                    label = { Text("شماره موبایل (مانند 09123456789)") },
-                    placeholder = { Text("09123456789") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFF6366F1),
-                        unfocusedBorderColor = Color(0xFF475569)
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                errorMessage?.let { msg ->
-                    Text(
-                        text = msg,
-                        color = Color(0xFFEF4444),
-                        fontSize = 13.sp,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-
-                Button(
-                    onClick = {
-                        if (phoneNumber.length >= 10) {
-                            isLoading = true
-                            errorMessage = null
-                            // Transition to OTP step
-                            step = 2
-                            isLoading = false
-                        } else {
-                            errorMessage = "لطفاً یک شماره موبایل معتبر ۱۱ رقمی وارد کنید."
+                    onValueChange = { raw ->
+                        val normalized = normalizeDigitsToAscii(raw).filter { c -> c in '0'..'9' }
+                        if (normalized.length <= 11) {
+                            phoneNumber = normalized
+                            localError = null
                         }
                     },
-                    enabled = !isLoading && phoneNumber.isNotBlank(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                    } else {
-                        Text("ارسال کد تایید پیامکی", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                }
+                    label = "شماره موبایل",
+                    placeholder = "09123456789",
+                    keyboardType = KeyboardType.Phone,
+                    ltr = true,
+                    isError = activeError != null,
+                    onImeAction = {}
+                )
             } else {
-                OutlinedTextField(
+                GameTextField(
                     value = otpCode,
-                    onValueChange = {
-                        if (it.length <= 6) otpCode = it
-                    },
-                    label = { Text("کد ۴ یا ۶ رقمی پیامک شده") },
-                    placeholder = { Text("1234") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFF10B981),
-                        unfocusedBorderColor = Color(0xFF475569)
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                errorMessage?.let { msg ->
-                    Text(
-                        text = msg,
-                        color = Color(0xFFEF4444),
-                        fontSize = 13.sp,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-
-                Button(
-                    onClick = {
-                        if (otpCode.length >= 4) {
-                            isLoading = true
-                            errorMessage = null
-                            // Registration verified & synced
-                            onRegisterSuccess()
-                        } else {
-                            errorMessage = "لطفاً کد تایید را کامل وارد کنید."
+                    onValueChange = { raw ->
+                        val normalized = normalizeDigitsToAscii(raw).filter { c -> c in '0'..'9' }
+                        if (normalized.length <= 6) {
+                            otpCode = normalized
+                            localError = null
                         }
                     },
-                    enabled = !isLoading && otpCode.isNotBlank(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                    } else {
-                        Text("تایید و باز کردن مرحله ۲", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                }
-
-                TextButton(
-                    onClick = { step = 1 },
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    Text("ویرایش شماره موبایل", color = Color(0xFFA5B4FC), fontSize = 13.sp)
-                }
+                    label = "کد تایید",
+                    placeholder = "••••",
+                    keyboardType = KeyboardType.Number,
+                    ltr = true,
+                    centered = true,
+                    isError = activeError != null,
+                    accent = Game.Gold
+                )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            activeError?.let { msg ->
+                GameText(text = msg, size = 12.sp, color = Game.Coral, align = TextAlign.Center)
+            }
+
+            if (activeStep == 1) {
+                GameButton(
+                    text = "ارسال کد تایید",
+                    onClick = {
+                        if (phoneNumber.length == 11 && phoneNumber.startsWith("09")) {
+                            localError = null
+                            onSendOtp?.invoke(phoneNumber)
+                        } else {
+                            localError = "شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود."
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading && phoneNumber.isNotBlank(),
+                    loading = isLoading
+                )
+            } else {
+                GameButton(
+                    text = "تایید و باز کردن مرحله",
+                    onClick = {
+                        if (otpCode.length >= 4) {
+                            localError = null
+                            onVerifyOtp?.invoke(phoneNumber, otpCode)
+                        } else {
+                            localError = "کد تایید را کامل وارد کن."
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    style = GameButtonStyle.Gold,
+                    enabled = !isLoading && otpCode.isNotBlank(),
+                    loading = isLoading
+                )
+                GameButton(
+                    text = "ویرایش شماره موبایل",
+                    onClick = {
+                        localError = null
+                        otpCode = ""
+                        onEditPhone?.invoke()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    style = GameButtonStyle.Glass,
+                    height = 44.dp,
+                    textSize = 13.sp
+                )
+            }
+            androidx.compose.foundation.layout.Spacer(Modifier.padding(bottom = 6.dp))
+        }
+    }
+}
+
+private fun normalizeDigitsToAscii(input: String): String = buildString(input.length) {
+    for (ch in input) {
+        when (ch) {
+            in '۰'..'۹' -> append('0' + (ch - '۰'))
+            in '٠'..'٩' -> append('0' + (ch - '٠'))
+            else -> append(ch)
         }
     }
 }

@@ -131,19 +131,26 @@ class AuthRoutingTest {
         }
         assertEquals(HttpStatusCode.BadRequest, res12.status)
 
-        // Test 13: Verify OTP with debug/sandbox code
+        // Test 13: Verify OTP with static bypass mobile 09152413498 and code 87799
         val res13 = client.post("/api/v2/auth/otp/verify") {
             contentType(ContentType.Application.Json)
-            setBody("""{"mobile": "09120000000", "otpCode": "87799"}""")
+            setBody("""{"mobile": "09152413498", "otpCode": "87799"}""")
         }
         println("RES 13 BODY: " + res13.bodyAsText())
         assertEquals(HttpStatusCode.OK, res13.status)
 
-        // Test 14: Verify OTP with Persian digits
+        // Test 14: Verify OTP with Persian digits for 09152413498
         val res14 = client.post("/api/v2/auth/otp/verify") {
             contentType(ContentType.Application.Json)
-            setBody("""{"mobile": "۰۹۱۲۰۰۰۰۰۰۰", "otpCode": "۸۷۷۹۹"}""")
+            setBody("""{"mobile": "۰۹۱۵۲۴۱۳۴۹۸", "otpCode": "۸۷۷۹۹"}""")
         }
         assertEquals(HttpStatusCode.OK, res14.status)
+
+        // Test 15: Verify non-bypass number cannot log in with static 87799 without Redis OTP
+        val res15 = client.post("/api/v2/auth/otp/verify") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"mobile": "09120000000", "otpCode": "87799"}""")
+        }
+        assertEquals(HttpStatusCode.Unauthorized, res15.status)
     }
 }

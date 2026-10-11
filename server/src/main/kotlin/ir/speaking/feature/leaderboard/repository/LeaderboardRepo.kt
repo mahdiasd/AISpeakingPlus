@@ -5,12 +5,25 @@ import ir.speaking.feature.leaderboard.dto.CurrentUserRank
 import ir.speaking.feature.leaderboard.dto.LeaderboardItem
 import ir.speaking.feature.leaderboard.dto.LeaderboardResponse
 import ir.speaking.feature.stage_progress.db.StageProgressTable
+import ir.speaking.feature.user.db.UserTable
 import org.jetbrains.exposed.sql.selectAll
 import org.koin.core.annotation.Single
 import java.util.*
 
 @Single
 class LeaderboardRepo {
+
+    private fun resolveDisplayName(userRow: org.jetbrains.exposed.sql.ResultRow?, userId: UUID): String {
+        if (userRow != null) {
+            val fullName = listOfNotNull(userRow[UserTable.firstName], userRow[UserTable.lastName])
+                .joinToString(" ")
+                .trim()
+            if (fullName.isNotBlank()) return fullName
+            val nick = userRow[UserTable.nickName].trim()
+            if (nick.isNotBlank() && !nick.equals("Learner", ignoreCase = true)) return nick
+        }
+        return "Learner_${userId.toString().takeLast(4)}"
+    }
 
     suspend fun getLeaderboard(
         currentUserId: UUID?,
@@ -39,12 +52,22 @@ class LeaderboardRepo {
             emptyList()
         }
 
+        val neededUserIds = (pagedList.map { it.first } + listOfNotNull(currentUserId)).distinct()
+        val userMap = if (neededUserIds.isNotEmpty()) {
+            UserTable.selectAll()
+                .where { UserTable.id inList neededUserIds }
+                .associateBy { it[UserTable.id].value }
+        } else {
+            emptyMap()
+        }
+
         val items = pagedList.mapIndexed { index, (userId, _, stats) ->
+            val uRow = userMap[userId]
             LeaderboardItem(
                 rank = fromIndex + index + 1,
                 userId = userId.toString(),
-                displayName = "مسافر #${userId.toString().take(4)}",
-                avatarUrl = null,
+                displayName = resolveDisplayName(uRow, userId),
+                avatarUrl = uRow?.get(UserTable.avatar)?.takeIf { it.isNotBlank() },
                 totalStars = stats.first,
                 completedStages = stats.second
             )
@@ -54,11 +77,12 @@ class LeaderboardRepo {
             val rankIndex = rankedList.indexOfFirst { it.first == uid }
             if (rankIndex >= 0) {
                 val found = rankedList[rankIndex]
+                val uRow = userMap[uid]
                 CurrentUserRank(
                     rank = rankIndex + 1,
                     userId = uid.toString(),
-                    displayName = "شما",
-                    avatarUrl = null,
+                    displayName = resolveDisplayName(uRow, uid),
+                    avatarUrl = uRow?.get(UserTable.avatar)?.takeIf { it.isNotBlank() },
                     totalStars = found.third.first,
                     completedStages = found.third.second
                 )
@@ -74,3 +98,4 @@ class LeaderboardRepo {
         )
     }
 }
+

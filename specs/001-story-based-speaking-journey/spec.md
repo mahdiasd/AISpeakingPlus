@@ -115,7 +115,7 @@ A learner revisits a previously completed stage from the session history or jour
 
 - **Speech Recognition Network Drop**: If the internet connection drops during audio streaming, the system halts recording immediately, alerts the user with a retry dialog, and retains conversational context without consuming a hint or penalizing stars.
 - **Mission Goal Not Met within Dialogue Limit**: If a user exchanges 10+ turns without fulfilling the objective, the NPC politely signals that the mission failed and offers a replay prompt.
-- **OTP Rate Limiting & Brute-Force Defense**: If an OTP is requested repeatedly within a 2-minute cooldown window, or if incorrect OTP attempts exceed 3 tries, requests are blocked with clear cooldown countdowns.
+- **OTP Rate Limiting, Redis Storage & Test Bypass**: Only mobile number `09152413498` bypasses SMS sending and can authenticate directly with static OTP code `87799`. All other mobile numbers must have their OTP stored in **Redis** (120s TTL) and are rate-limited to **at most 5 SMS requests per 15 minutes**.
 - **Local Progress Sync Conflict (Max Stars Preserved)**: When a guest logs in with a mobile number that already has server records, the server applies the high-score rule: $\max(\text{local\_stars}, \text{cloud\_stars})$ is retained, ensuring previously earned 3-star achievements are never degraded.
 - **Remote Asset Fetch & Local Caching**: Stage backgrounds are fetched dynamically from the server on demand, rendered full-screen with overlaid navigation and themed controls, and persistently cached locally on the client to ensure instant rendering on subsequent visits.
 - **Rich Journey Catalog (15+ Stages)**: The narrative catalog supports over 15 sequential story stages covering the hero's journey from arrival in London through diverse situational milestones.
@@ -129,15 +129,15 @@ A learner revisits a previously completed stage from the session history or jour
 - **FR-002**: The system MUST enforce sequential stage progression where Stage $N+1$ unlocks only when the user achieves at least 1 star (⭐) on Stage $N$.
 - **FR-003**: The system MUST support a 3-tiered access gating model:
   - Stage 1: Completely accessible in Guest Mode with local device persistence.
-  - Stage 2: Requires free user registration via mobile number and SMS OTP.
+  - Stage 2: Requires free user registration via mobile number and SMS OTP (only `09152413498` bypasses SMS with code `87799`; all other numbers store OTP in Redis and are rate-limited to max 5 SMS per 15 minutes).
   - Stage 3+: Requires an active paid subscription; upon subscription expiration, all Stage 3+ content (including previously completed stages) is immediately locked from playing or replaying until renewal.
 - **FR-004**: The system MUST calculate stage evaluation scores using the strict 0–3 star rubric:
-  - 3 Stars: 0 grammar/spelling errors AND 0 hints used.
-  - 2 Stars: Exactly 1 total error OR 1 hint used.
-  - 1 Star: Exactly 2 total errors and hints used.
-  - 0 Stars: 3 or more errors/hints OR mission objective unfulfilled.
+  - 3 Stars: Mission objective completed (`objectiveCompleted = true`) AND 0 grammar/spelling errors AND 0 hints used.
+  - 2 Stars: Mission objective completed AND exactly 1 total error OR 1 hint used.
+  - 1 Star: Mission objective completed AND exactly 2 total errors and hints used.
+  - 0 Stars: 3 or more errors/hints OR mission objective unfulfilled (`objectiveCompleted = false` — pressing finish before the conversation objective is completed yields 0 stars).
 - **FR-005**: The system MUST provide an on-demand in-chat hint capability that delivers contextual sentence prompts while incrementing the session hint penalty count.
-- **FR-006**: The system MUST evaluate mission completion via structured AI output; the AI NPC MUST NOT proactively complete or prompt forgotten user objectives; if the learner neglects required goal dimensions before dialogue exhaustion, the stage evaluates as failed (0 stars).
+- **FR-006**: The system MUST evaluate mission completion and grammar accuracy exclusively via structured AI output (no manual/heuristic regex or string matching); even in the per-turn AI chat response (`POST /api/v2/stages/{stageId}/chat`), structured grammar analysis fields (`hasGrammarError`, `correctedSentence`, `grammarFeedbackFa`) MUST be returned by the AI. If the conversation is not finished (`objectiveCompleted` is not true) when evaluation is triggered, the user receives 0 stars.
 - **FR-007**: The system MUST preserve the highest historical star rating and score when a stage is replayed.
 - **FR-008**: The system MUST synchronize local Stage 1 guest progress to the authenticated user account upon successful Stage 2 OTP login, resolving conflicts by preserving the maximum stars.
 - **FR-009**: The system MUST dynamically fetch full-screen vertical (portrait, aspect ratio 9:16 mobile-optimized) 2D stage background illustrations from the server, cache them locally on device, and render game-styled menus and buttons directly over the background image.

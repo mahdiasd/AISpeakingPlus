@@ -11,6 +11,7 @@ sealed class Chat(
         val translatedMessage: String? = null,
         val voiceState: AiVoiceState = AiVoiceState.Stopped,
         val audioUrl: String? = null,
+        val objectiveCompleted: Boolean = false,
         val finishTaskIndexes: ImmutableList<Int>? = null,
         val suggests: ImmutableList<String>? = null,
         val fetchingSuggest: Boolean = false,
@@ -34,14 +35,21 @@ sealed class AiVoiceState {
 sealed class ChatStatus {
     data object Failed : ChatStatus()
     data object Sending : ChatStatus()
-    data class Answered(val grammar: String) : ChatStatus()
+    data class Answered(
+        val grammar: String,
+        val correctedSentence: String? = null,
+        val hasGrammarError: Boolean = grammar.isNotBlank()
+    ) : ChatStatus()
 }
 
 data class StageChatTurnResult(
     val message: String,
     val translatedMessage: String? = null,
     val audioUrl: String? = null,
+    val hasGrammarError: Boolean = false,
+    val correctedSentence: String? = null,
     val grammarFeedbackFa: String = "",
     val objectiveCompleted: Boolean = false,
     val finishTaskIndexes: List<Int> = emptyList()
 )
+

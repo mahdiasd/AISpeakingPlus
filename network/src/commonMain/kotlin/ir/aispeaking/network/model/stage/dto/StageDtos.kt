@@ -110,6 +110,7 @@ data class GrammarErrorDto(
 
 @Serializable
 data class EvaluationRequestDto(
+    val objectiveCompleted: Boolean = false,
     val hintsUsedCount: Int,
     val turnsCount: Int,
     val grammarErrorsCount: Int = 0,
@@ -206,7 +207,10 @@ data class StageChatResponseDto(
     val message: String,
     val translatedMessage: String? = null,
     val audioUrl: String? = null,
+    val hasGrammarError: Boolean = false,
+    val correctedSentence: String? = null,
     val grammarFeedbackFa: String = "",
     val objectiveCompleted: Boolean = false,
     val finishTaskIndexes: List<Int> = emptyList()
 )
+

@@ -45,6 +45,7 @@ class SubscriptionRoutingTest {
                     module {
                         single { StageRepository() }
                         single { SubscriptionRepo() }
+                        single { UserRepo(subscriptionRepo = get()) }
                     }
                 )
             }
@@ -105,10 +106,10 @@ class SubscriptionRoutingTest {
         }
         assertEquals(HttpStatusCode.Unauthorized, unauthRes.status)
 
-        // 2. Obtain token via OTP login
+        // 2. Obtain token via OTP login with bypass number 09152413498
         val verifyRes = client.post("/api/v2/auth/otp/verify") {
             contentType(ContentType.Application.Json)
-            setBody("""{"mobile": "09129998877", "otpCode": "87799"}""")
+            setBody("""{"mobile": "09152413498", "otpCode": "87799"}""")
         }
         assertEquals(HttpStatusCode.OK, verifyRes.status)
         val verifyBody = json.parseToJsonElement(verifyRes.bodyAsText()).jsonObject
@@ -133,6 +134,14 @@ class SubscriptionRoutingTest {
         }
         assertEquals(HttpStatusCode.BadRequest, invalidPlanRes.status)
 
+        // 4.1 Invalid promo code -> 400
+        val invalidPromoRes = client.post("/api/v2/subscriptions/subscribe") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+            contentType(ContentType.Application.Json)
+            setBody("""{"planId":"plan-3m","promoCode":"INVALID_PROMO"}""")
+        }
+        assertEquals(HttpStatusCode.BadRequest, invalidPromoRes.status)
+
         // 5. Authenticated POST /api/v2/subscriptions/subscribe with valid plan -> 200
         val subscribeRes = client.post("/api/v2/subscriptions/subscribe") {
             header(HttpHeaders.Authorization, "Bearer $token")
@@ -145,9 +154,22 @@ class SubscriptionRoutingTest {
         assertNotNull(subData)
         assertEquals("true", subData["isSubscriber"]?.jsonPrimitive?.content)
         assertEquals("3_MONTHS", subData["planType"]?.jsonPrimitive?.content)
-        assertTrue((subData["remainingDays"]?.jsonPrimitive?.content?.toInt() ?: 0) >= 89)
+        val firstRemainingDays = subData["remainingDays"]?.jsonPrimitive?.content?.toInt() ?: 0
+        assertTrue(firstRemainingDays >= 89)
 
-        // 6. Verified subscription status -> true
+        // 6. Cumulative renewal: subscribe to 1_MONTH while active -> adds 30 days cumulatively
+        val renewRes = client.post("/api/v2/subscriptions/subscribe") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+            contentType(ContentType.Application.Json)
+            setBody("""{"planId":"plan-1m"}""")
+        }
+        assertEquals(HttpStatusCode.OK, renewRes.status)
+        val renewData = json.parseToJsonElement(renewRes.bodyAsText()).jsonObject["data"]?.jsonObject
+        assertNotNull(renewData)
+        val renewedRemainingDays = renewData["remainingDays"]?.jsonPrimitive?.content?.toInt() ?: 0
+        assertTrue(renewedRemainingDays >= firstRemainingDays + 29)
+
+        // 7. Verified subscription status -> true
         val finalStatusRes = client.get("/api/v2/subscriptions/status") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
@@ -156,7 +178,7 @@ class SubscriptionRoutingTest {
         val finalData = finalBody["data"]?.jsonObject
         assertNotNull(finalData)
         assertEquals("true", finalData["isSubscriber"]?.jsonPrimitive?.content)
-        assertEquals("3_MONTHS", finalData["planType"]?.jsonPrimitive?.content)
+        assertEquals("1_MONTH", finalData["planType"]?.jsonPrimitive?.content)
     }
 }
 

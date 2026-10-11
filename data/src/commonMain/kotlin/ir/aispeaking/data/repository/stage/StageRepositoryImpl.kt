@@ -119,9 +119,11 @@ class StageRepositoryImpl(
         turnsCount: Int,
         transcript: List<Pair<String, String>>,
         grammarErrorsCount: Int,
-        grammarErrors: List<GrammarErrorDetail>
+        grammarErrors: List<GrammarErrorDetail>,
+        objectiveCompleted: Boolean
     ): DataResult<EvaluationSession> {
         val requestDto = EvaluationRequestDto(
+            objectiveCompleted = objectiveCompleted,
             hintsUsedCount = hintsUsedCount,
             turnsCount = turnsCount,
             grammarErrorsCount = grammarErrorsCount,
@@ -168,6 +170,8 @@ class StageRepositoryImpl(
                 message = d.message,
                 translatedMessage = d.translatedMessage,
                 audioUrl = d.audioUrl,
+                hasGrammarError = d.hasGrammarError,
+                correctedSentence = d.correctedSentence,
                 grammarFeedbackFa = d.grammarFeedbackFa,
                 objectiveCompleted = d.objectiveCompleted,
                 finishTaskIndexes = d.finishTaskIndexes
@@ -175,3 +179,4 @@ class StageRepositoryImpl(
         )
     }
 }
+

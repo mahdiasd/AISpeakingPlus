@@ -42,4 +42,4 @@ data class StagesListUiState(
 - `currentStage: Stage? = stages.firstOrNull { (it.userProgress?.stars ?: 0) == 0 } ?: stages.lastOrNull()`
 - `totalStarsEarned: Int = stages.sumOf { it.userProgress?.stars ?: 0 }`
 - `maxPossibleStars: Int = stages.size * 3`
-- `progressPercentage: Float = if (maxPossibleStars > 0) totalStarsEarned.toFloat() / maxPossibleStars else 0f`
+- `progressPercentage: Float = if (stages.isNotEmpty()) completedStagesCount.toFloat() / stages.size else 0f`

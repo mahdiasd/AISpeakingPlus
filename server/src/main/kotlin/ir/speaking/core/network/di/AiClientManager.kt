@@ -8,14 +8,19 @@ import com.aallam.openai.client.OpenAI
 import com.aallam.openai.client.OpenAIHost
 import io.ktor.client.engine.cio.endpoint
 import ir.speaking.core.network.model.AiPlatformConfig
+import ir.speaking.core.redis.di.RedisClientHolder
 import org.koin.core.annotation.Single
 import org.redisson.api.RedissonClient
 import kotlin.time.Duration.Companion.seconds
 
 @Single
 class AiClientManager(
-    private val redissonClient: RedissonClient
+    redisClientHolder: RedisClientHolder
 ) {
+    constructor(redissonClient: RedissonClient? = null) : this(RedisClientHolder(redissonClient))
+
+    private val redissonClient: RedissonClient? = redisClientHolder.client
+
     private val bucketKey = "ai_platform_config"
 
     private var currentClient: OpenAI? = null
@@ -48,8 +53,8 @@ class AiClientManager(
 
     private fun getActiveConfig(): AiPlatformConfig {
         return try {
-            val bucket = redissonClient.getBucket<AiPlatformConfig>(bucketKey)
-            bucket.get() ?: fallbackConfig
+            val bucket = redissonClient?.getBucket<AiPlatformConfig>(bucketKey)
+            bucket?.get() ?: fallbackConfig
         } catch (e: Exception) {
             fallbackConfig
         }

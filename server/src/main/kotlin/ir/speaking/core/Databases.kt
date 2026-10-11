@@ -77,18 +77,16 @@ fun seedSuperAdminIfEmpty() {
 }
 
 fun seedStagesIfEmpty() {
-    seedOrSyncStages()
+    if (StageTable.selectAll().empty()) {
+        seedOrSyncStages()
+    }
 }
 
 fun seedOrSyncStages() {
     for (stage in StageSeedData.stages) {
+        val existingById = StageTable.selectAll().where { StageTable.id eq stage.id }.firstOrNull()
         val existingByOrder = StageTable.selectAll().where { StageTable.orderIndex eq stage.orderIndex }.firstOrNull()
-        if (existingByOrder != null && existingByOrder[StageTable.id].value != stage.id) {
-            val oldId = existingByOrder[StageTable.id].value
-            StageTable.deleteWhere { StageTable.id eq oldId }
-        }
-        val existing = StageTable.selectAll().where { StageTable.id eq stage.id }.firstOrNull()
-        if (existing == null) {
+        if (existingById == null && existingByOrder == null) {
             StageTable.insert {
                 it[id] = stage.id
                 it[orderIndex] = stage.orderIndex
@@ -107,24 +105,6 @@ fun seedOrSyncStages() {
                 it[initialSpeaker] = stage.initialSpeaker
                 it[maxTurns] = stage.maxTurns
                 it[status] = "PUBLISHED"
-            }
-        } else {
-            StageTable.update(where = { StageTable.id eq stage.id }) {
-                it[orderIndex] = stage.orderIndex
-                it[title] = stage.title
-                it[titleFa] = stage.titleFa
-                it[briefing] = stage.briefing
-                it[briefingFa] = stage.briefingFa
-                it[targetObjective] = stage.targetObjective
-                it[targetObjectiveFa] = stage.targetObjectiveFa
-                it[characterBehavior] = stage.characterBehavior
-                it[backgroundUrl] = stage.backgroundUrl
-                it[characterName] = stage.characterName
-                it[characterAvatarUrl] = stage.characterAvatarUrl
-                it[characterGender] = stage.characterGender
-                it[voiceId] = stage.voiceId
-                it[initialSpeaker] = stage.initialSpeaker
-                it[maxTurns] = stage.maxTurns
             }
         }
     }

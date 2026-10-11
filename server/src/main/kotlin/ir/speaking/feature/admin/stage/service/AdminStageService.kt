@@ -3,6 +3,7 @@ package ir.speaking.feature.admin.stage.service
 import ir.speaking.feature.admin.model.AdminStageItemDto
 import ir.speaking.feature.admin.model.AdminStageUpsertRequest
 import ir.speaking.feature.stage.db.StageTable
+import ir.speaking.feature.stage_progress.db.StageProgressTable
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -32,17 +33,38 @@ class AdminStageService {
         if (request.title.isBlank() || request.titleFa.isBlank()) throw IllegalArgumentException("عنوان انگلیسی و فارسی مرحله الزامی است")
         if (request.briefing.isBlank() || request.briefingFa.isBlank()) throw IllegalArgumentException("توضیحات و بریفینگ انگلیسی و فارسی مرحله الزامی است")
 
-        if (request.shiftSubsequent) {
-            StageTable.update(
-                where = { (StageTable.orderIndex greaterEq request.orderIndex) and (StageTable.id neq request.id) }
-            ) {
-                with(SqlExpressionBuilder) {
-                    it.update(orderIndex, orderIndex + 1)
-                }
+        val existing = StageTable.selectAll().where { StageTable.id eq request.id }.singleOrNull()
+        val oldOrderIndex = existing?.get(StageTable.orderIndex)
+        if (existing != null && oldOrderIndex != request.orderIndex) {
+            // Temporarily move current stage out of the way to prevent unique index collisions
+            StageTable.update(where = { StageTable.id eq request.id }) {
+                it[orderIndex] = -999999
             }
         }
 
-        val existing = StageTable.selectAll().where { StageTable.id eq request.id }.singleOrNull()
+        val occupiedTarget = StageTable.selectAll()
+            .where { (StageTable.orderIndex eq request.orderIndex) and (StageTable.id neq request.id) }
+            .singleOrNull()
+
+        if (request.shiftSubsequent || (existing == null && occupiedTarget != null)) {
+            val conflicting = StageTable.selectAll()
+                .where { (StageTable.orderIndex greaterEq request.orderIndex) and (StageTable.id neq request.id) }
+                .orderBy(StageTable.orderIndex, SortOrder.DESC)
+                .toList()
+            for (row in conflicting) {
+                val rowId = row[StageTable.id].value
+                val currentIdx = row[StageTable.orderIndex]
+                StageTable.update(where = { StageTable.id eq rowId }) {
+                    it[orderIndex] = currentIdx + 1
+                }
+            }
+        } else if (occupiedTarget != null && oldOrderIndex != null) {
+            val otherId = occupiedTarget[StageTable.id].value
+            StageTable.update(where = { StageTable.id eq otherId }) {
+                it[orderIndex] = oldOrderIndex
+            }
+        }
+
         if (existing == null) {
             StageTable.insert {
                 it[id] = request.id
@@ -87,9 +109,85 @@ class AdminStageService {
         StageTable.selectAll().where { StageTable.id eq request.id }.single().let { toDto(it) }
     }
 
+    suspend fun reorderStage(id: String, newOrderIndex: Int, shiftSubsequent: Boolean = true): AdminStageItemDto? = newSuspendedTransaction(Dispatchers.IO) {
+        if (newOrderIndex <= 0) throw IllegalArgumentException("شماره مرحله باید بزرگتر از صفر باشد")
+        val target = StageTable.selectAll().where { StageTable.id eq id }.singleOrNull() ?: return@newSuspendedTransaction null
+        val oldOrderIndex = target[StageTable.orderIndex]
+        if (oldOrderIndex == newOrderIndex) {
+            return@newSuspendedTransaction toDto(target)
+        }
+
+        // Park target stage at a temporary negative index to avoid unique constraint collisions
+        StageTable.update(where = { StageTable.id eq id }) {
+            it[orderIndex] = -999999
+        }
+
+        val occupiedTarget = StageTable.selectAll()
+            .where { (StageTable.orderIndex eq newOrderIndex) and (StageTable.id neq id) }
+            .singleOrNull()
+
+        if (occupiedTarget != null) {
+            if (!shiftSubsequent) {
+                // Direct swap with the stage currently at newOrderIndex
+                val otherId = occupiedTarget[StageTable.id].value
+                StageTable.update(where = { StageTable.id eq otherId }) {
+                    it[orderIndex] = oldOrderIndex
+                }
+            } else if (newOrderIndex < oldOrderIndex) {
+                // Moving earlier in sequence: shift [newOrderIndex, oldOrderIndex) up by +1 in DESC order
+                val rowsToShift = StageTable.selectAll()
+                    .where {
+                        (StageTable.orderIndex greaterEq newOrderIndex) and
+                            (StageTable.orderIndex less oldOrderIndex) and
+                            (StageTable.id neq id)
+                    }
+                    .orderBy(StageTable.orderIndex, SortOrder.DESC)
+                    .toList()
+                for (row in rowsToShift) {
+                    val rowId = row[StageTable.id].value
+                    val currentIdx = row[StageTable.orderIndex]
+                    StageTable.update(where = { StageTable.id eq rowId }) {
+                        it[orderIndex] = currentIdx + 1
+                    }
+                }
+            } else {
+                // Moving later in sequence: shift (oldOrderIndex, newOrderIndex] down by -1 in ASC order
+                val rowsToShift = StageTable.selectAll()
+                    .where {
+                        (StageTable.orderIndex greater oldOrderIndex) and
+                            (StageTable.orderIndex lessEq newOrderIndex) and
+                            (StageTable.id neq id)
+                    }
+                    .orderBy(StageTable.orderIndex, SortOrder.ASC)
+                    .toList()
+                for (row in rowsToShift) {
+                    val rowId = row[StageTable.id].value
+                    val currentIdx = row[StageTable.orderIndex]
+                    StageTable.update(where = { StageTable.id eq rowId }) {
+                        it[orderIndex] = currentIdx - 1
+                    }
+                }
+            }
+        }
+
+        StageTable.update(where = { StageTable.id eq id }) {
+            it[orderIndex] = newOrderIndex
+        }
+
+        StageTable.selectAll().where { StageTable.id eq id }.singleOrNull()?.let { toDto(it) }
+    }
+
     suspend fun deleteStage(id: String): Boolean = newSuspendedTransaction(Dispatchers.IO) {
-        val deleted = StageTable.deleteWhere { StageTable.id eq id }
-        deleted > 0
+        val existing = StageTable.selectAll().where { StageTable.id eq id }.singleOrNull() ?: return@newSuspendedTransaction false
+        val hasProgress = StageProgressTable.selectAll().where { StageProgressTable.stageId eq id }.count() > 0L
+        if (hasProgress) {
+            // Soft-archive if learners have progress on this stage (since FK is RESTRICT)
+            StageTable.update(where = { StageTable.id eq id }) {
+                it[status] = "ARCHIVED"
+            } > 0
+        } else {
+            StageTable.deleteWhere { StageTable.id eq id } > 0
+        }
     }
 
     private fun toDto(row: ResultRow): AdminStageItemDto {

@@ -19,7 +19,10 @@ data class StageChatResponse(
     val message: String,
     val translatedMessage: String? = null,
     val audioUrl: String? = null,
+    val hasGrammarError: Boolean = false,
+    val correctedSentence: String? = null,
     val grammarFeedbackFa: String = "",
     val objectiveCompleted: Boolean = false,
     val finishTaskIndexes: List<Int> = emptyList()
 )
+

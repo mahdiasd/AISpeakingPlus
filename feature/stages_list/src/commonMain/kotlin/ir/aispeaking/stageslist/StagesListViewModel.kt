@@ -55,7 +55,11 @@ class StagesListViewModel(
     fun onAction(action: StagesListUiAction) {
         when (action) {
             is StagesListUiAction.StageClicked -> {
-                // Handled in UI navigation layer
+                if (action.stage.lockStatus == ir.aispeaking.domain.model.stage.StageLockStatus.LOCKED_PREVIOUS_STAGE) {
+                    _uiState.update {
+                        it.copy(errorMessage = "برای باز شدن این مرحله، ابتدا مرحله قبلی را تکمیل کنید.")
+                    }
+                }
             }
             is StagesListUiAction.RefreshRequested -> {
                 loadStages()

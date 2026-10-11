@@ -16,8 +16,11 @@ import ir.speaking.core.utils.MyConstant
 import ir.speaking.feature.admin.audit.service.AuditLogService
 import ir.speaking.feature.admin.auth.AdminPrincipal
 import ir.speaking.feature.admin.model.AdminStageItemDto
+import ir.speaking.feature.admin.model.AdminStageReorderRequest
 import ir.speaking.feature.admin.model.AdminStageUpsertRequest
 import ir.speaking.feature.admin.stage.service.AdminStageService
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 @OptIn(ExperimentalKtorApi::class)
 fun Route.adminStageRouting(
@@ -103,7 +106,11 @@ fun Route.adminStageRouting(
                     action = "STAGE_UPSERT",
                     targetType = "STAGE",
                     targetId = saved.id,
-                    detailsJson = """{"title":"${saved.title}","orderIndex":${saved.orderIndex},"status":"${saved.status}"}"""
+                    detailsJson = buildJsonObject {
+                        put("title", saved.title)
+                        put("orderIndex", saved.orderIndex)
+                        put("status", saved.status)
+                    }.toString()
                 )
 
                 call.successRespond(saved, message = "مرحله با موفقیت ذخیره شد")
@@ -128,6 +135,63 @@ fun Route.adminStageRouting(
                 }
             }
 
+            post("/{id}/reorder") {
+                val principal = call.principal<AdminPrincipal>()
+                val id = call.parameters["id"] ?: return@post call.failureRespond(HttpStatusCode.BadRequest, "شناسه مرحله الزامی است")
+                val request = try {
+                    call.receive<AdminStageReorderRequest>()
+                } catch (e: Exception) {
+                    call.failureRespond(HttpStatusCode.BadRequest, "فرمت درخواست جابجایی مرحله نامعتبر است")
+                    return@post
+                }
+
+                val reordered = try {
+                    adminStageService.reorderStage(id, request.newOrderIndex, request.shiftSubsequent)
+                } catch (e: IllegalArgumentException) {
+                    call.failureRespond(HttpStatusCode.UnprocessableEntity, e.message ?: "شماره مرحله نامعتبر است")
+                    return@post
+                }
+
+                if (reordered == null) {
+                    call.failureRespond(HttpStatusCode.NotFound, "مرحله مورد نظر یافت نشد")
+                    return@post
+                }
+
+                auditLogService.log(
+                    adminId = principal?.id,
+                    action = "STAGE_REORDER",
+                    targetType = "STAGE",
+                    targetId = id,
+                    detailsJson = buildJsonObject {
+                        put("stageId", id)
+                        put("newOrderIndex", reordered.orderIndex)
+                        put("shiftSubsequent", request.shiftSubsequent)
+                    }.toString()
+                )
+
+                call.successRespond(reordered, message = "ترتیب مرحله با موفقیت بروزرسانی شد")
+            }.describe {
+                tag("Admin Stages")
+                summary = "Reorder Stage"
+                description = "Safely swap or shift stage orderIndex without unique constraint conflicts"
+                parameters {
+                    path("id") {
+                        description = "Unique stage identifier"
+                    }
+                }
+                requestBody {
+                    description = "Target order index"
+                    required = true
+                    schema = jsonSchema<AdminStageReorderRequest>()
+                }
+                responses {
+                    HttpStatusCode.OK {
+                        description = "Stage reordered successfully"
+                        schema = jsonSchema<SuccessResponse<AdminStageItemDto>>()
+                    }
+                }
+            }
+
             delete("/{id}") {
                 val principal = call.principal<AdminPrincipal>()
                 val id = call.parameters["id"] ?: return@delete call.failureRespond(HttpStatusCode.BadRequest, "شناسه مرحله الزامی است")
@@ -143,7 +207,9 @@ fun Route.adminStageRouting(
                     action = "STAGE_DELETE",
                     targetType = "STAGE",
                     targetId = id,
-                    detailsJson = """{"stageId":"$id"}"""
+                    detailsJson = buildJsonObject {
+                        put("stageId", id)
+                    }.toString()
                 )
 
                 call.successRespond(mapOf("deleted" to true), message = "مرحله با موفقیت حذف شد")
@@ -166,3 +232,4 @@ fun Route.adminStageRouting(
         }
     }
 }
+

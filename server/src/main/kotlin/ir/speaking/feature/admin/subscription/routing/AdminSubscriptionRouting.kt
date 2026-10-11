@@ -18,6 +18,8 @@ import ir.speaking.feature.admin.auth.AdminPrincipal
 import ir.speaking.feature.admin.model.AdminSubscriptionGrantRequest
 import ir.speaking.feature.admin.model.AdminSubscriptionItemDto
 import ir.speaking.feature.admin.subscription.service.AdminSubscriptionService
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.util.UUID
 
 @OptIn(ExperimentalKtorApi::class)
@@ -77,7 +79,12 @@ fun Route.adminSubscriptionRouting(
                     action = "SUBSCRIPTION_GRANT_MANUAL",
                     targetType = "USER",
                     targetId = userId.toString(),
-                    detailsJson = """{"planType":"${granted.planType}","durationDays":${request.durationDays},"expiresAt":"${granted.expiresAt}","reason":"${request.reason ?: ""}"}"""
+                    detailsJson = buildJsonObject {
+                        put("planType", granted.planType)
+                        put("durationDays", request.durationDays)
+                        put("expiresAt", granted.expiresAt)
+                        put("reason", request.reason ?: "")
+                    }.toString()
                 )
 
                 call.successRespond(granted, message = "اشتراک با موفقیت اعطا شد")
@@ -118,7 +125,9 @@ fun Route.adminSubscriptionRouting(
                     action = "SUBSCRIPTION_CANCEL",
                     targetType = "SUBSCRIPTION",
                     targetId = subId.toString(),
-                    detailsJson = """{"subscriptionId":"$subId"}"""
+                    detailsJson = buildJsonObject {
+                        put("subscriptionId", subId.toString())
+                    }.toString()
                 )
 
                 call.successRespond(mapOf("cancelled" to true), message = "اشتراک با موفقیت لغو شد")

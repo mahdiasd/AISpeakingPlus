@@ -1,136 +1,110 @@
 package ir.aispeaking.chat
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
+import ir.aispeaking.sharedui.Res
+import ir.aispeaking.sharedui.ic_lamp
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
+import ir.aispeaking.sharedui.ui.game.GameModal
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.fa
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun HintConfirmDialog(
+    visible: Boolean = true,
     hintsUsedCount: Int,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-            Card(
+    GameModal(visible = visible, onDismiss = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(22.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .background(Game.Gold.copy(alpha = 0.16f), CircleShape)
+                    .border(1.5.dp, Game.Gold.copy(alpha = 0.6f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_lamp),
+                    contentDescription = null,
+                    tint = Game.Gold,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            GameText(text = "راهنما می‌خوای؟", size = 20.sp, bold = true, align = TextAlign.Center)
+            GameText(
+                text = "یک جمله مناسب برای ادامه گفتگو بهت پیشنهاد می‌دهیم تا گیر نکنی.",
+                size = 14.sp,
+                lineHeight = 22.sp,
+                color = Game.TextSecondary,
+                align = TextAlign.Center
+            )
+
+            val shape = RoundedCornerShape(16.dp)
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1E2230)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    .background(Game.Gold.copy(alpha = 0.1f), shape)
+                    .border(1.dp, Game.Gold.copy(alpha = 0.35f), shape)
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Icon
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .background(Color(0xFFFBBF24).copy(alpha = 0.15f), shape = CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("💡", fontSize = 28.sp)
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Text(
-                        text = "راهنمای مکالمه",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                GameText(text = "نکته مهم", size = 13.sp, bold = true, color = Game.Gold)
+                GameText(
+                    text = "هر بار گرفتن راهنما از ستاره‌های این مرحله کم می‌کند. برای گرفتن ۳ ستاره، بدون راهنما و بدون خطا جلو برو.",
+                    size = 13.sp,
+                    lineHeight = 21.sp,
+                    color = Game.TextPrimary
+                )
+                if (hintsUsedCount > 0) {
+                    GameText(
+                        text = "تا الان ${hintsUsedCount.fa()} بار راهنما گرفته‌ای.",
+                        size = 12.sp,
+                        color = Game.Sky
                     )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = "استفاده از راهنما جمله‌ای مناسب و طبیعی برای پاسخ به هم‌صحبت را به شما پیشنهاد می‌دهد.",
-                        color = Color(0xFF94A3B8),
-                        fontSize = 13.sp,
-                        lineHeight = 20.sp,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Notice box explaining calculation
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        color = Color(0xFF2C3248).copy(alpha = 0.8f)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(
-                                text = "⚠️ نحوه محاسبه امتیاز:",
-                                color = Color(0xFFFBBF24),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "هر بار دریافت راهنما در نتیجه نهایی محاسبه می‌شود. برای دریافت ۳ ستاره کامل طلایی در این مرحله، نباید از راهنما استفاده کنید.",
-                                color = Color(0xFFE2E8F0),
-                                fontSize = 12.sp,
-                                lineHeight = 18.sp
-                            )
-                            if (hintsUsedCount > 0) {
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = "تعداد راهنماهای استفاده‌شده تاکنون: $hintsUsedCount",
-                                    color = Color(0xFF38BDF8),
-                                    fontSize = 11.sp
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF94A3B8))
-                        ) {
-                            Text("انصراف", fontSize = 13.sp)
-                        }
-
-                        Button(
-                            onClick = onConfirm,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1))
-                        ) {
-                            Text("دریافت راهنما", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
                 }
             }
+
+            GameButton(
+                text = "بله، راهنما بده",
+                onClick = onConfirm,
+                modifier = Modifier.fillMaxWidth(),
+                style = GameButtonStyle.Gold
+            )
+            GameButton(
+                text = "فعلاً نه",
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                style = GameButtonStyle.Glass,
+                height = 46.dp,
+                textSize = 14.sp
+            )
         }
     }
 }

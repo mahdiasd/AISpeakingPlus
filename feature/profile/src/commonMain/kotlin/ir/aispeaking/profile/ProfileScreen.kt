@@ -1,7 +1,13 @@
 package ir.aispeaking.profile
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,36 +16,32 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ir.aispeaking.sharedui.Res
-import ir.aispeaking.sharedui.ic_exit
-import ir.aispeaking.sharedui.ui.core.button.AppBackButton
-import ir.aispeaking.sharedui.ui.core.button.AppTopBarIconButton
 import ir.aispeaking.profile.component.AchievementStatsCard
 import ir.aispeaking.profile.component.AvatarPickerDialog
 import ir.aispeaking.profile.component.EditNickNameDialog
@@ -48,6 +50,13 @@ import ir.aispeaking.profile.component.LevelPickerBottomSheet
 import ir.aispeaking.profile.component.ProfileHeaderCard
 import ir.aispeaking.profile.component.SignOutConfirmDialog
 import ir.aispeaking.profile.component.SubscriptionCard
+import ir.aispeaking.sharedui.Res
+import ir.aispeaking.sharedui.ic_back
+import ir.aispeaking.sharedui.ic_exit
+import ir.aispeaking.sharedui.ic_user
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.utils.lifecycle.OnResume
 import org.jetbrains.compose.resources.painterResource
 
@@ -69,223 +78,241 @@ fun ProfileScreen(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(Color(0xFF070B19))
+                .background(Color(0xFF0F1015))
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
-                // Top App Bar
+                // Top Navigation Bar matching the sleek mockup
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    AppBackButton(onClick = onNavigateBack)
-
-                    Text(
-                        text = "حساب کاربری",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    // Right action: Sign out or spacer
-                    if (!uiState.isGuest) {
-                        AppTopBarIconButton(
-                            icon = Res.drawable.ic_exit,
-                            onClick = { viewModel.onSignOutClicked() },
-                            contentDescription = "Sign Out",
-                            tint = Color(0xFFEF4444),
-                            borderColor = Color(0x44EF4444)
+                    // Right side in RTL: Circular Back Button (chevron right) + Page Title
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        val backInteraction = remember { MutableInteractionSource() }
+                        val backPressed by backInteraction.collectIsPressedAsState()
+                        val backScale by animateFloatAsState(
+                            targetValue = if (backPressed) 0.92f else 1f,
+                            animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+                            label = "back_btn_press"
                         )
-                    } else {
-                        Spacer(modifier = Modifier.size(38.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .graphicsLayer {
+                                    scaleX = backScale
+                                    scaleY = backScale
+                                }
+                                .clip(CircleShape)
+                                .background(Color(0x1AFFFFFF))
+                                .border(1.dp, Color(0x22FFFFFF), CircleShape)
+                                .clickable(
+                                    interactionSource = backInteraction,
+                                    indication = null,
+                                    onClick = onNavigateBack
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_back),
+                                contentDescription = "بازگشت",
+                                tint = Game.TextPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        GameText(
+                            text = "پروفایل کاربری",
+                            size = 18.sp,
+                            bold = true,
+                            color = Game.TextPrimary
+                        )
                     }
                 }
 
+                // Main Content
                 if (uiState.isLoading && uiState.user == null) {
-                    // Loading State
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
                             .weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator(
-                                color = Color(0xFF6366F1),
-                                modifier = Modifier.size(40.dp)
-                            )
-                            Spacer(modifier = Modifier.height(14.dp))
-                            Text(
-                                text = "در حال دریافت مشخصات...",
-                                color = Color(0xFFA5B4FC),
-                                fontSize = 13.sp
-                            )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            CircularProgressIndicator(color = Game.Mint, modifier = Modifier.size(38.dp))
+                            GameText(text = "در حال دریافت اطلاعات کاربر…", size = 13.sp, color = Game.TextSecondary)
                         }
                     }
                 } else if (uiState.user != null) {
                     val user = uiState.user!!
-                    val scrollState = rememberScrollState()
 
+                    // Scrollable Profile Content
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(scrollState)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        // 1. Profile Header
                         ProfileHeaderCard(
                             user = user,
                             onAvatarClick = { viewModel.onAvatarPickerClicked() },
                             onEditNameClick = { viewModel.onEditNameClicked() }
                         )
 
-                        // 2. Guest Banner if Guest
                         if (user.isGuest) {
-                            GuestBannerCard(
-                                onLoginClick = onNavigateToLogin
-                            )
+                            GuestBannerCard(onLoginClick = onNavigateToLogin)
                         }
 
-                        // 3. Subscription Status
                         SubscriptionCard(
                             subscription = user.subscription,
                             onUpgradeClick = onNavigateToSubscription
                         )
 
-                        // 4. Learning Achievements
                         AchievementStatsCard(
                             user = user,
                             onLevelClick = { viewModel.onLevelPickerClicked() }
                         )
 
-                        // 5. Sign Out Button for Logged-In Users
+                        // Sign-out Button right below stats cards
                         if (!user.isGuest) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Box(
+                            AppleSignOutButton(
+                                onClick = { viewModel.onSignOutClicked() },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0x11EF4444))
-                                    .border(1.dp, Color(0x33EF4444), RoundedCornerShape(16.dp))
-                                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(Res.drawable.ic_exit),
-                                            contentDescription = null,
-                                            tint = Color(0xFFEF4444),
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                        Text(
-                                            text = "خروج از حساب کاربری",
-                                            color = Color(0xFFFCA5A5),
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    }
-
-                                    Button(
-                                        onClick = { viewModel.onSignOutClicked() },
-                                        shape = RoundedCornerShape(10.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
-                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                            horizontal = 14.dp,
-                                            vertical = 4.dp
-                                        )
-                                    ) {
-                                        Text(
-                                            text = "خروج",
-                                            color = Color.White,
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                            }
+                                    .padding(top = 4.dp)
+                            )
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(20.dp).navigationBarsPadding())
                     }
                 } else if (uiState.errorMessage != null) {
-                    // Error State
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
                             .weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(24.dp)
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.padding(32.dp)
                         ) {
-                            Text(
+                            GameText(
                                 text = uiState.errorMessage ?: "خطایی رخ داد",
-                                color = Color(0xFFFCA5A5),
-                                fontSize = 14.sp
+                                size = 14.sp,
+                                lineHeight = 22.sp,
+                                color = Game.TextSecondary,
+                                align = TextAlign.Center
                             )
-                            Spacer(modifier = Modifier.height(14.dp))
-                            Button(
+                            GameButton(
+                                text = "تلاش دوباره",
                                 onClick = { viewModel.refresh() },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1))
-                            ) {
-                                Text(text = "تلاش مجدد", color = Color.White)
-                            }
+                                modifier = Modifier.width(200.dp)
+                            )
                         }
                     }
                 }
             }
 
-            // Dialogs
-            if (uiState.showAvatarPicker) {
-                AvatarPickerDialog(
-                    currentAvatar = uiState.user?.avatar ?: "avatar_g1",
-                    onAvatarSelected = { viewModel.onAvatarSelected(it) },
-                    onDismiss = { viewModel.onDismissDialogs() }
-                )
-            }
+            // In-frame Overlays
+            AvatarPickerDialog(
+                visible = uiState.showAvatarPicker,
+                currentAvatar = uiState.user?.avatar ?: "avatar_g1",
+                onAvatarSelected = { viewModel.onAvatarSelected(it) },
+                onDismiss = { viewModel.onDismissDialogs() }
+            )
 
-            if (uiState.showEditNameDialog) {
-                EditNickNameDialog(
-                    currentNickName = uiState.user?.nickName ?: "",
-                    onSave = { viewModel.onSaveNickName(it) },
-                    onDismiss = { viewModel.onDismissDialogs() }
-                )
-            }
+            EditNickNameDialog(
+                visible = uiState.showEditNameDialog,
+                currentNickName = uiState.user?.nickName ?: "",
+                onSave = { viewModel.onSaveNickName(it) },
+                onDismiss = { viewModel.onDismissDialogs() }
+            )
 
-            if (uiState.showSignOutDialog) {
-                SignOutConfirmDialog(
-                    onConfirm = {
-                        viewModel.onConfirmSignOut(onComplete = onNavigateToLogin)
-                    },
-                    onDismiss = { viewModel.onDismissDialogs() }
-                )
-            }
+            SignOutConfirmDialog(
+                visible = uiState.showSignOutDialog,
+                onConfirm = {
+                    viewModel.onConfirmSignOut(onComplete = onNavigateToLogin)
+                },
+                onDismiss = { viewModel.onDismissDialogs() }
+            )
 
-            if (uiState.showLevelPicker) {
-                LevelPickerBottomSheet(
-                    currentLevel = uiState.user?.languageLevel,
-                    onLevelSelected = { level ->
-                        viewModel.onSelectLanguageLevel(level)
-                    },
-                    onDismiss = { viewModel.onDismissDialogs() }
-                )
+            LevelPickerBottomSheet(
+                visible = uiState.showLevelPicker,
+                currentLevel = uiState.user?.languageLevel,
+                onLevelSelected = { level -> viewModel.onSelectLanguageLevel(level) },
+                onDismiss = { viewModel.onDismissDialogs() }
+            )
+        }
+    }
+}
+
+/**
+ * Apple-style destructive sign-out button:
+ * Frosted translucent crimson container with hairline border and spring press physics.
+ */
+@Composable
+private fun AppleSignOutButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+        label = "apple_sign_out_press"
+    )
+    val shape = RoundedCornerShape(18.dp)
+
+    Box(
+        modifier = modifier
+            .height(52.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
             }
+            .clip(shape)
+            .background(Color(0x1FFF453A))
+            .border(1.dp, Color(0x40FF453A), shape)
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_exit),
+                contentDescription = null,
+                tint = Game.Coral,
+                modifier = Modifier.size(18.dp)
+            )
+            GameText(
+                text = "خروج از حساب کاربری",
+                size = 14.sp,
+                bold = true,
+                color = Game.Coral
+            )
         }
     }
 }
@@ -299,14 +326,10 @@ private fun ProfileScreenPreview() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF0F172A)),
+                .background(Color(0xFF0F1015)),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "پیش‌نمایش صفحه پروفایل کاربری",
-                color = Color.White,
-                fontSize = 16.sp
-            )
+            GameText(text = "پیش‌نمایش صفحه پروفایل کاربری", size = 16.sp)
         }
     }
 }

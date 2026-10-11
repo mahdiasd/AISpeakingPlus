@@ -73,7 +73,7 @@ class UserProfileRoutingTest {
         // 3. Authenticate via OTP verify to obtain a valid JWT token
         val verifyRes = client.post("/api/v2/auth/otp/verify") {
             contentType(ContentType.Application.Json)
-            setBody("""{"mobile": "09121112233", "otpCode": "87799"}""")
+            setBody("""{"mobile": "09152413498", "otpCode": "87799"}""")
         }
         assertEquals(HttpStatusCode.OK, verifyRes.status)
         val verifyBody = json.parseToJsonElement(verifyRes.bodyAsText()).jsonObject
@@ -90,7 +90,7 @@ class UserProfileRoutingTest {
         val profileJson = json.parseToJsonElement(profileRes.bodyAsText()).jsonObject
         val profileData = profileJson["data"]?.jsonObject
         assertNotNull(profileData)
-        assertEquals("09121112233", profileData["phoneNumber"]?.jsonPrimitive?.content)
+        assertEquals("09152413498", profileData["phoneNumber"]?.jsonPrimitive?.content)
         assertTrue(profileData.containsKey("totalStars"))
         assertTrue(profileData.containsKey("score"))
         assertTrue(profileData.containsKey("completedStagesCount"))

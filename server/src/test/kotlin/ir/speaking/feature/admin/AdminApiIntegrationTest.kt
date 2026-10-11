@@ -84,9 +84,12 @@ class AdminApiIntegrationTest {
         val token = loginAndGetToken("admin@aispeaking.ir", "Admin@123456!")
         assertTrue(token.isNotBlank())
 
-        // 2. Valid login with alias credentials (admin / admin123)
-        val aliasToken = loginAndGetToken("admin", "admin123")
-        assertTrue(aliasToken.isNotBlank())
+        // 2. Removed hardcoded alias credentials (admin / admin123) -> 401 Unauthorized
+        val aliasLoginRes = client.post("/api/admin/auth/login") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"username":"admin","password":"admin123"}""")
+        }
+        assertEquals(HttpStatusCode.Unauthorized, aliasLoginRes.status)
 
         // 3. Invalid password -> 401 Unauthorized
         val badPasswordRes = client.post("/api/admin/auth/login") {
@@ -457,7 +460,7 @@ class AdminApiIntegrationTest {
         assertNotNull(grant1Data["grantedBy"]?.jsonPrimitive?.content)
         assertEquals("اشتراک آزمایشی ادمین", grant1Data["grantReason"]?.jsonPrimitive?.content)
 
-        // 4. Grant Second Subscription while First is Active (Extension check)
+        // 4. Grant Second Subscription while First is Active (Cumulative Extension check - Item 9)
         val grant2Res = client.post("/api/admin/users/$userId/subscriptions/grant") {
             header(HttpHeaders.Authorization, "Bearer $token")
             contentType(ContentType.Application.Json)
@@ -468,13 +471,14 @@ class AdminApiIntegrationTest {
         assertNotNull(grant2Data)
         val sub2Id = grant2Data["id"]!!.jsonPrimitive.content
         assertEquals("YEARLY", grant2Data["planType"]?.jsonPrimitive?.content)
+        assertEquals("ACTIVE", grant2Data["status"]?.jsonPrimitive?.content)
 
-        // Expiry of second subscription should be further than first
+        // Expiry of extended subscription should be further than initial expiry
         val exp1 = grant1Data["expiresAt"]!!.jsonPrimitive.content
         val exp2 = grant2Data["expiresAt"]!!.jsonPrimitive.content
-        assertTrue(exp2 > exp1, "Second extended subscription expiresAt ($exp2) should be after ($exp1)")
+        assertTrue(exp2 > exp1, "Extended subscription expiresAt ($exp2) should be after ($exp1)")
 
-        // 5. List subscriptions for user -> should now contain 2 subscriptions
+        // 5. List subscriptions for user -> both remain ACTIVE (previous is NOT marked EXPIRED)
         val userSubsRes = client.get("/api/admin/users/$userId/subscriptions") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
@@ -482,6 +486,7 @@ class AdminApiIntegrationTest {
         val userSubsData = json.parseToJsonElement(userSubsRes.bodyAsText()).jsonObject["data"]?.jsonArray
         assertNotNull(userSubsData)
         assertEquals(2, userSubsData.size)
+        assertTrue(userSubsData.all { it.jsonObject["status"]?.jsonPrimitive?.content == "ACTIVE" })
 
         // 6. Cancel Subscription
         val cancelRes = client.post("/api/admin/subscriptions/$sub1Id/cancel") {
@@ -667,6 +672,29 @@ class AdminApiIntegrationTest {
         }
         val shiftedOriginalData = json.parseToJsonElement(shiftedOriginalRes.bodyAsText()).jsonObject["data"]?.jsonObject
         assertEquals(101, shiftedOriginalData?.get("orderIndex")?.jsonPrimitive?.content?.toInt())
+
+        // 5b. Test reorder endpoint (/api/admin/stages/{stageId}/reorder) with direct swap and range shift
+        val swapOrderRes = client.post("/api/admin/stages/$collidingStageId/reorder") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+            contentType(ContentType.Application.Json)
+            setBody("""{"newOrderIndex": 101, "shiftSubsequent": false}""")
+        }
+        assertEquals(HttpStatusCode.OK, swapOrderRes.status)
+        val afterSwapOriginal = json.parseToJsonElement(
+            client.get("/api/admin/stages/$stageId") { header(HttpHeaders.Authorization, "Bearer $token") }.bodyAsText()
+        ).jsonObject["data"]?.jsonObject
+        assertEquals(100, afterSwapOriginal?.get("orderIndex")?.jsonPrimitive?.content?.toInt())
+
+        val shiftDownRes = client.post("/api/admin/stages/$stageId/reorder") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+            contentType(ContentType.Application.Json)
+            setBody("""{"newOrderIndex": 101, "shiftSubsequent": true}""")
+        }
+        assertEquals(HttpStatusCode.OK, shiftDownRes.status)
+        val afterShiftDownColliding = json.parseToJsonElement(
+            client.get("/api/admin/stages/$collidingStageId") { header(HttpHeaders.Authorization, "Bearer $token") }.bodyAsText()
+        ).jsonObject["data"]?.jsonObject
+        assertEquals(100, afterShiftDownColliding?.get("orderIndex")?.jsonPrimitive?.content?.toInt())
 
         // 6. List Stages with status filter
         val listPublishedRes = client.get("/api/admin/stages?status=PUBLISHED") {
