@@ -81,6 +81,13 @@ class UserRepo(
             ?.get(UserTable.status) == "SUSPENDED"
     }
 
+    suspend fun getUserLanguageLevel(userId: UUID): String? = suspendTransaction {
+        UserTable.selectAll()
+            .where { UserTable.id eq userId }
+            .firstOrNull()
+            ?.get(UserTable.languageLevel)
+    }
+
     suspend fun getDetailedUserProfile(userId: UUID): DetailedUserProfileResponse? {
         val userRow = suspendTransaction {
             UserTable.selectAll()

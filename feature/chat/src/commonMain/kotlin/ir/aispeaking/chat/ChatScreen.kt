@@ -125,6 +125,7 @@ fun ChatScreen(
             Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
                 ChatToolbar(
                     stage = stage,
+                    userLevel = uiState.userLevel,
                     turnsCount = uiState.turnsCount,
                     isFinishing = uiState.isSubmittingEvaluation,
                     onBackClick = onNavigateBack,

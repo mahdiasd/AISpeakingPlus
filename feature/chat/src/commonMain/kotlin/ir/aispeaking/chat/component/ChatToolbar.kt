@@ -1,15 +1,20 @@
 package ir.aispeaking.chat.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,6 +42,7 @@ import ir.aispeaking.sharedui.ui.them.AppTheme
 fun ChatToolbar(
     modifier: Modifier = Modifier,
     stage: Stage?,
+    userLevel: String? = null,
     turnsCount: Int = 0,
     isFinishing: Boolean = false,
     onBackClick: () -> Unit,
@@ -81,15 +87,35 @@ fun ChatToolbar(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    if (!stage?.characterName.isNullOrBlank()) {
-                        GameText(
-                            text = stage.characterName,
-                            size = 11.sp,
-                            color = Game.TextSecondary,
-                            latin = true,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (!stage?.characterName.isNullOrBlank()) {
+                            GameText(
+                                text = stage.characterName,
+                                size = 11.sp,
+                                color = Game.TextSecondary,
+                                latin = true,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        if (!userLevel.isNullOrBlank()) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color(0x265E5CE6))
+                                    .padding(horizontal = 6.dp, vertical = 1.dp)
+                            ) {
+                                GameText(
+                                    text = "سطح $userLevel",
+                                    size = 10.sp,
+                                    color = Color(0xFFA5A3F6),
+                                    bold = true
+                                )
+                            }
+                        }
                     }
                 }
             }

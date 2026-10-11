@@ -92,7 +92,8 @@ data class ChatMessageDto(
 
 @Serializable
 data class HintRequestDto(
-    val messages: List<ChatMessageDto>
+    val messages: List<ChatMessageDto>,
+    val userLevel: String? = null
 )
 
 @Serializable
@@ -199,7 +200,8 @@ data class LeaderboardResponseDto(
 @Serializable
 data class StageChatRequestDto(
     val message: String? = null,
-    val history: List<ChatMessageDto> = emptyList()
+    val history: List<ChatMessageDto> = emptyList(),
+    val userLevel: String? = null
 )
 
 @Serializable

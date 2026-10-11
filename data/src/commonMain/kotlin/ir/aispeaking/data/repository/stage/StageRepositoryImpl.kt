@@ -98,10 +98,12 @@ class StageRepositoryImpl(
 
     override suspend fun requestHint(
         stageId: String,
-        messages: List<Pair<String, String>>
+        messages: List<Pair<String, String>>,
+        userLevel: String?
     ): DataResult<HintSuggestion> {
         val requestDto = HintRequestDto(
-            messages = messages.map { ChatMessageDto(it.first, it.second) }
+            messages = messages.map { ChatMessageDto(it.first, it.second) },
+            userLevel = userLevel
         )
         val result = safeCall { stageApi.getHint(stageId, requestDto) }
         if (result !is DataResult.Success) return DataResult.Failure((result as DataResult.Failure).appError)
@@ -156,11 +158,13 @@ class StageRepositoryImpl(
     override suspend fun sendStageChatMessage(
         stageId: String,
         userMessage: String?,
-        history: List<Pair<String, String>>
+        history: List<Pair<String, String>>,
+        userLevel: String?
     ): DataResult<ir.aispeaking.domain.model.chat.StageChatTurnResult> {
         val requestDto = ir.aispeaking.network.model.stage.dto.StageChatRequestDto(
             message = userMessage,
-            history = history.map { ChatMessageDto(it.first, it.second) }
+            history = history.map { ChatMessageDto(it.first, it.second) },
+            userLevel = userLevel
         )
         val result = safeCall { stageApi.sendStageChatMessage(stageId, requestDto) }
         if (result !is DataResult.Success) return DataResult.Failure((result as DataResult.Failure).appError)

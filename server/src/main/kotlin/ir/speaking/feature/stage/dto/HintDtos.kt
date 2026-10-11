@@ -10,7 +10,8 @@ data class HintMessageRequest(
 
 @Serializable
 data class HintRequest(
-    val messages: List<HintMessageRequest> = emptyList()
+    val messages: List<HintMessageRequest> = emptyList(),
+    val userLevel: String? = null
 )
 
 @Serializable
