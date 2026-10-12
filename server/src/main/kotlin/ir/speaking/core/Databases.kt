@@ -52,7 +52,7 @@ fun configureDatabases() {
             if (allTables.isNotEmpty()) {
                 SchemaUtils.createMissingTablesAndColumns(*allTables)
             }
-            seedStagesIfEmpty()
+            seedOrSyncStages()
             seedSuperAdminIfEmpty()
         }
     } catch (e: Exception) {
@@ -86,7 +86,8 @@ fun seedOrSyncStages() {
     for (stage in StageSeedData.stages) {
         val existingById = StageTable.selectAll().where { StageTable.id eq stage.id }.firstOrNull()
         val existingByOrder = StageTable.selectAll().where { StageTable.orderIndex eq stage.orderIndex }.firstOrNull()
-        if (existingById == null && existingByOrder == null) {
+        val existing = existingById ?: existingByOrder
+        if (existing == null) {
             StageTable.insert {
                 it[id] = stage.id
                 it[orderIndex] = stage.orderIndex
@@ -106,10 +107,12 @@ fun seedOrSyncStages() {
                 it[maxTurns] = stage.maxTurns
                 it[status] = "PUBLISHED"
             }
-        } else if (existingById != null) {
-            val currentVoiceId = existingById[StageTable.voiceId]
-            if (currentVoiceId != stage.voiceId) {
-                StageTable.update({ StageTable.id eq stage.id }) {
+        } else {
+            val currentVoiceId = existing[StageTable.voiceId]
+            val currentGender = existing[StageTable.characterGender]
+            if (currentVoiceId != stage.voiceId || currentGender != stage.characterGender) {
+                val targetId = existing[StageTable.id]
+                StageTable.update({ StageTable.id eq targetId }) {
                     it[voiceId] = stage.voiceId
                     it[characterGender] = stage.characterGender
                 }

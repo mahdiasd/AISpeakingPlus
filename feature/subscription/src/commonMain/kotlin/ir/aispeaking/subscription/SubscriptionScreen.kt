@@ -117,6 +117,31 @@ fun SubscriptionScreen(
                     ) {
                         CircularProgressIndicator(color = Game.Gold, strokeWidth = 3.dp)
                     }
+                } else if (uiState.errorMessage != null && uiState.plans.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            GameText(
+                                text = uiState.errorMessage ?: "خطا در دریافت اطلاعات",
+                                size = 14.sp,
+                                color = Game.Coral,
+                                align = TextAlign.Center
+                            )
+                            GameButton(
+                                text = "تلاش مجدد",
+                                onClick = { viewModel.processIntent(SubscriptionIntent.LoadData) },
+                                style = GameButtonStyle.Primary
+                            )
+                        }
+                    }
                 } else {
                     Column(
                         modifier = Modifier

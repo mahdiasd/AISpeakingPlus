@@ -32,36 +32,6 @@ class SubscriptionViewModel(
     private val _effect = Channel<SubscriptionEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
-    private val defaultPlans = listOf(
-        SubscriptionPlan(
-            id = "plan-1m",
-            type = "1_MONTH",
-            titleFa = "اشتراک ۱ ماهه",
-            durationDays = 30,
-            priceTomans = 199_000L,
-            discountPercent = 0,
-            badge = null
-        ),
-        SubscriptionPlan(
-            id = "plan-3m",
-            type = "3_MONTHS",
-            titleFa = "اشتراک ۳ ماهه",
-            durationDays = 90,
-            priceTomans = 499_000L,
-            discountPercent = 15,
-            badge = "محبوب‌ترین"
-        ),
-        SubscriptionPlan(
-            id = "plan-6m",
-            type = "6_MONTHS",
-            titleFa = "اشتراک ۶ ماهه",
-            durationDays = 180,
-            priceTomans = 899_000L,
-            discountPercent = 25,
-            badge = "بهترین ارزش"
-        )
-    )
-
     init {
         loadData()
     }
@@ -83,11 +53,14 @@ class SubscriptionViewModel(
 
             // 1. Fetch available plans
             val plansResult = getSubscriptionPlansUseCase()
-            val loadedPlans = when (plansResult) {
-                is DataResult.Success -> {
-                    if (plansResult.data.isNotEmpty()) plansResult.data else defaultPlans
+            val (loadedPlans, plansError) = when (plansResult) {
+                is DataResult.Success -> plansResult.data to null
+                is DataResult.Failure -> {
+                    val errorMsg = plansResult.appError.getErrorMessage().ifBlank {
+                        "خطا در دریافت لیست پلن‌های اشتراک. لطفاً اتصال اینترنت خود را بررسی کنید."
+                    }
+                    emptyList<SubscriptionPlan>() to errorMsg
                 }
-                is DataResult.Failure -> defaultPlans
             }
 
             // 2. Fetch current status
@@ -101,7 +74,8 @@ class SubscriptionViewModel(
                 it.copy(
                     isLoading = false,
                     plans = loadedPlans,
-                    selectedPlanId = if (loadedPlans.any { p -> p.id == it.selectedPlanId }) it.selectedPlanId else (loadedPlans.getOrNull(1)?.id ?: loadedPlans.firstOrNull()?.id ?: "plan-3m"),
+                    selectedPlanId = if (loadedPlans.any { p -> p.id == it.selectedPlanId }) it.selectedPlanId else (loadedPlans.getOrNull(1)?.id ?: loadedPlans.firstOrNull()?.id ?: ""),
+                    errorMessage = plansError,
                     currentStatus = currentStatus
                 )
             }
