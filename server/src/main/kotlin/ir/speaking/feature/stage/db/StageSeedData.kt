@@ -41,7 +41,7 @@ Target Achieved Criterion: The user has selected a meal, chosen a drink, and ans
             characterName = "Flight Attendant Emily",
             characterAvatarUrl = null,
             characterGender = "Woman",
-            voiceId = "bf_alice",
+            voiceId = "bf_emma",
             initialSpeaker = "Model",
             maxTurns = 10
         ),
@@ -89,7 +89,7 @@ Target Achieved Criterion: The user has described their luggage features and pro
             characterName = "Agent Sophie",
             characterAvatarUrl = null,
             characterGender = "Woman",
-            voiceId = "bf_lily",
+            voiceId = "bf_isabella",
             initialSpeaker = "Model",
             maxTurns = 10
         ),
@@ -113,7 +113,7 @@ Target Achieved Criterion: The user has requested an Oyster card, agreed on a to
             characterName = "Station Assistant Liam",
             characterAvatarUrl = null,
             characterGender = "Man",
-            voiceId = "bm_daniel",
+            voiceId = "bm_lewis",
             initialSpeaker = "Model",
             maxTurns = 10
         ),
@@ -137,7 +137,7 @@ Target Achieved Criterion: The user has given their name/booking details, collec
             characterName = "Warden Mrs. Jenkins",
             characterAvatarUrl = null,
             characterGender = "Woman",
-            voiceId = "bf_alice",
+            voiceId = "bf_emma",
             initialSpeaker = "Model",
             maxTurns = 10
         ),
@@ -185,7 +185,7 @@ Target Achieved Criterion: The user has requested a prepaid/no-contract SIM card
             characterName = "Advisor James",
             characterAvatarUrl = null,
             characterGender = "Man",
-            voiceId = "bm_daniel",
+            voiceId = "bm_george",
             initialSpeaker = "Model",
             maxTurns = 10
         ),
@@ -209,7 +209,7 @@ Target Achieved Criterion: The user has asked for the location of at least one g
             characterName = "Assistant Chloe",
             characterAvatarUrl = null,
             characterGender = "Woman",
-            voiceId = "bf_lily",
+            voiceId = "bf_isabella",
             initialSpeaker = "Model",
             maxTurns = 10
         ),
@@ -257,7 +257,7 @@ Target Achieved Criterion: The user has presented their student reference/detail
             characterName = "Ambassador Sophie",
             characterAvatarUrl = null,
             characterGender = "Woman",
-            voiceId = "bf_alice",
+            voiceId = "bf_emma",
             initialSpeaker = "Model",
             maxTurns = 10
         ),
@@ -305,7 +305,7 @@ Target Achieved Criterion: The user has specified their coffee and snack order, 
             characterName = "Barista Jack",
             characterAvatarUrl = null,
             characterGender = "Man",
-            voiceId = "bm_daniel",
+            voiceId = "bm_lewis",
             initialSpeaker = "Model",
             maxTurns = 10
         ),
@@ -353,7 +353,7 @@ Target Achieved Criterion: The user has articulated their illness symptoms, conf
             characterName = "Dr. Watson",
             characterAvatarUrl = null,
             characterGender = "Woman",
-            voiceId = "bf_alice",
+            voiceId = "bf_emma",
             initialSpeaker = "Model",
             maxTurns = 12
         ),

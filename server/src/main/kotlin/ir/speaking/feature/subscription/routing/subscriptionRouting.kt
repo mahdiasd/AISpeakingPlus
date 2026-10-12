@@ -53,6 +53,30 @@ data class SubscribeResponseDto(
     val message: String
 )
 
+val PROMO_DISCOUNTS = mapOf(
+    "GOLD20" to 20,
+    "NOWRUZ" to 25,
+    "AISPEAKING" to 30,
+    "VIP" to 15,
+    "WELCOME10" to 10,
+    "VIP30" to 30,
+    "FREE100" to 100,
+    "SPEAK50" to 50,
+    "TEST" to 15
+)
+
+@Serializable
+data class ValidatePromoRequestDto(
+    val promoCode: String
+)
+
+@Serializable
+data class ValidatePromoResponseDto(
+    val promoCode: String,
+    val discountPercent: Int,
+    val message: String
+)
+
 @OptIn(ExperimentalKtorApi::class)
 fun Application.subscriptionRouting() {
     val subscriptionRepo by inject<SubscriptionRepo>()
@@ -101,6 +125,49 @@ fun Application.subscriptionRouting() {
                     }
                     HttpStatusCode.InternalServerError {
                         description = "Server error"
+                        schema = jsonSchema<FailureResponse>()
+                    }
+                }
+            }
+
+            post("/promo/validate") {
+                val request = try {
+                    call.receive<ValidatePromoRequestDto>()
+                } catch (_: Exception) {
+                    call.failureRespond(HttpStatusCode.BadRequest, "کد تخفیف وارد شده معتبر نیست")
+                    return@post
+                }
+
+                val normalized = request.promoCode.trim().uppercase()
+                val discount = PROMO_DISCOUNTS[normalized]
+                if (discount != null) {
+                    call.successRespond(
+                        ValidatePromoResponseDto(
+                            promoCode = normalized,
+                            discountPercent = discount,
+                            message = "کد تخفیف $discount٪ با موفقیت اعمال شد"
+                        ),
+                        message = "کد تخفیف معتبر است"
+                    )
+                } else {
+                    call.failureRespond(HttpStatusCode.BadRequest, "کد تخفیف واردشده نامعتبر یا منقضی است")
+                }
+            }.describe {
+                tag("Subscriptions")
+                summary = "Validate Promo Code"
+                description = "Validate a promo discount code and get its discount percentage"
+                requestBody {
+                    description = "Promo code payload"
+                    required = true
+                    schema = jsonSchema<ValidatePromoRequestDto>()
+                }
+                responses {
+                    HttpStatusCode.OK {
+                        description = "Promo code is valid"
+                        schema = jsonSchema<SuccessResponse<ValidatePromoResponseDto>>()
+                    }
+                    HttpStatusCode.BadRequest {
+                        description = "Promo code is invalid or expired"
                         schema = jsonSchema<FailureResponse>()
                     }
                 }
@@ -176,8 +243,7 @@ fun Application.subscriptionRouting() {
 
                     val normalizedPromo = request.promoCode?.trim()?.uppercase()?.takeIf { it.isNotEmpty() }
                     if (normalizedPromo != null) {
-                        val validPromoCodes = setOf("GOLD20", "WELCOME10", "VIP30", "FREE100", "SPEAK50", "TEST", "NOWRUZ", "AISPEAKING", "VIP")
-                        if (normalizedPromo !in validPromoCodes) {
+                        if (normalizedPromo !in PROMO_DISCOUNTS) {
                             call.failureRespond(HttpStatusCode.BadRequest, "کد تخفیف وارد شده معتبر نیست")
                             return@post
                         }

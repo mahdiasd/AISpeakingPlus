@@ -106,6 +106,14 @@ fun seedOrSyncStages() {
                 it[maxTurns] = stage.maxTurns
                 it[status] = "PUBLISHED"
             }
+        } else if (existingById != null) {
+            val currentVoiceId = existingById[StageTable.voiceId]
+            if (currentVoiceId != stage.voiceId) {
+                StageTable.update({ StageTable.id eq stage.id }) {
+                    it[voiceId] = stage.voiceId
+                    it[characterGender] = stage.characterGender
+                }
+            }
         }
     }
 }
