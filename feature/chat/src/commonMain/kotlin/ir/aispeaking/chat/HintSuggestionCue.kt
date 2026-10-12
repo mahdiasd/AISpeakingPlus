@@ -26,6 +26,7 @@ import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_close
 import ir.aispeaking.sharedui.ic_done
 import ir.aispeaking.sharedui.ic_lamp
+import ir.aispeaking.sharedui.ic_refresh
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameChip
 import ir.aispeaking.sharedui.ui.game.GameText
@@ -39,6 +40,7 @@ fun HintSuggestionCue(
     errorMessage: String? = null,
     onApplySuggestion: (String) -> Unit,
     onDismiss: () -> Unit,
+    onRetry: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val isError = !errorMessage.isNullOrBlank()
@@ -89,6 +91,15 @@ fun HintSuggestionCue(
                         color = Game.Coral,
                         modifier = Modifier.fillMaxWidth()
                     )
+                    if (onRetry != null) {
+                        GameChip(
+                            text = "تلاش مجدد",
+                            icon = Res.drawable.ic_refresh,
+                            accent = Game.Gold,
+                            active = true,
+                            onClick = onRetry
+                        )
+                    }
                 } else {
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                         GameText(

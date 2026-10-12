@@ -14,18 +14,22 @@ import ir.aispeaking.domain.model.stage.EvaluationSession
 import ir.aispeaking.domain.model.stage.GrammarErrorDetail
 import ir.aispeaking.domain.model.stage.LocalGuestProgress
 import ir.aispeaking.domain.model.stage.Stage
+import ir.aispeaking.domain.model.stt.SttStreamEvent
 import ir.aispeaking.domain.repository.stage.StageRepository
 import ir.aispeaking.domain.usecase.auth.GetCurrentAccessTierUseCase
 import ir.aispeaking.domain.usecase.stage.GetStageDetailUseCase
 import ir.aispeaking.domain.usecase.stage.RequestStageHintUseCase
 import ir.aispeaking.domain.usecase.stage.SendStageChatMessageUseCase
 import ir.aispeaking.domain.usecase.stage.SubmitStageEvaluationUseCase
+import ir.aispeaking.domain.usecase.stt.CloseSttSessionUseCase
+import ir.aispeaking.domain.usecase.stt.StreamSpeechToTextUseCase
 import ir.aispeaking.domain.usecase.user.GetUserProfileUseCase
 import ir.aispeaking.chat.audio.StageAudioController
 import ir.aispeaking.chat.component.ChatInputMode
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,7 +73,9 @@ class ChatViewModel(
     private val submitStageEvaluationUseCase: SubmitStageEvaluationUseCase,
     private val stageRepository: StageRepository,
     private val audioController: StageAudioController,
-    private val getUserProfileUseCase: GetUserProfileUseCase
+    private val getUserProfileUseCase: GetUserProfileUseCase,
+    private val streamSpeechToTextUseCase: StreamSpeechToTextUseCase,
+    private val closeSttSessionUseCase: CloseSttSessionUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -77,6 +83,7 @@ class ChatViewModel(
 
     private var currentStageId: String = ""
     private var currentTier: AccessTier = AccessTier.GUEST
+    private var sttStreamJob: Job? = null
 
     fun initStage(stageId: String, tier: AccessTier? = null) {
         if (currentStageId == stageId && _uiState.value.stage != null) return
@@ -416,6 +423,28 @@ class ChatViewModel(
         if (start) {
             audioController.stopVoice()
             _uiState.update { it.copy(isRecording = true) }
+
+            sttStreamJob?.cancel()
+            sttStreamJob = viewModelScope.launch {
+                try {
+                    streamSpeechToTextUseCase().collect { event ->
+                        when (event) {
+                            is SttStreamEvent.PartialTranscript -> {
+                                if (event.text.isNotBlank()) {
+                                    _uiState.update { it.copy(messageText = event.text) }
+                                }
+                            }
+                            is SttStreamEvent.FinalTranscript -> {
+                                if (event.text.isNotBlank()) {
+                                    _uiState.update { it.copy(messageText = event.text) }
+                                }
+                            }
+                            else -> Unit
+                        }
+                    }
+                } catch (_: Exception) {}
+            }
+
             audioController.startRecording(
                 onSpeechRecognized = { text ->
                     _uiState.update { it.copy(messageText = text) }
@@ -423,11 +452,25 @@ class ChatViewModel(
                 onSilenceDetected = {
                     // 5-second silence detected -> auto pause & stop recording
                     audioController.stopRecording()
+                    sttStreamJob?.cancel()
+                    sttStreamJob = null
+                    viewModelScope.launch {
+                        try {
+                            closeSttSessionUseCase()
+                        } catch (_: Exception) {}
+                    }
                     _uiState.update { it.copy(isRecording = false) }
                 }
             )
         } else {
             audioController.stopRecording()
+            sttStreamJob?.cancel()
+            sttStreamJob = null
+            viewModelScope.launch {
+                try {
+                    closeSttSessionUseCase()
+                } catch (_: Exception) {}
+            }
             _uiState.update { it.copy(isRecording = false) }
         }
     }
@@ -439,6 +482,13 @@ class ChatViewModel(
     fun setInputMode(mode: ChatInputMode) {
         if (mode == ChatInputMode.TEXT && _uiState.value.isRecording) {
             audioController.stopRecording()
+            sttStreamJob?.cancel()
+            sttStreamJob = null
+            viewModelScope.launch {
+                try {
+                    closeSttSessionUseCase()
+                } catch (_: Exception) {}
+            }
             _uiState.update { it.copy(isRecording = false, inputMode = mode) }
         } else {
             _uiState.update { it.copy(inputMode = mode) }
@@ -464,6 +514,13 @@ class ChatViewModel(
 
         if (stateSnapshot.isRecording) {
             audioController.stopRecording()
+            sttStreamJob?.cancel()
+            sttStreamJob = null
+            viewModelScope.launch {
+                try {
+                    closeSttSessionUseCase()
+                } catch (_: Exception) {}
+            }
             _uiState.update { it.copy(isRecording = false) }
         }
 
@@ -509,7 +566,7 @@ class ChatViewModel(
                         )
                     )
 
-                    val isTurnGoalCompleted = turn.objectiveCompleted || turn.finishTaskIndexes.isNotEmpty()
+                    val isTurnGoalCompleted = turn.objectiveCompleted
                     val isGoalCompleted = isTurnGoalCompleted || _uiState.value.isObjectiveCompleted
 
                     _uiState.update { state ->
@@ -532,7 +589,7 @@ class ChatViewModel(
                         translatedMessage = turn.translatedMessage,
                         audioUrl = turn.audioUrl,
                         objectiveCompleted = isTurnGoalCompleted,
-                        finishTaskIndexes = turn.finishTaskIndexes
+                        finishTaskIndexes = emptyList()
                     )
 
                     val maxTurns = _uiState.value.stage?.maxTurns ?: 12
@@ -681,7 +738,7 @@ class ChatViewModel(
             _uiState.update { it.copy(isSubmittingEvaluation = true) }
             val hasAiCompletionInChatList = _uiState.value.chats
                 .filterIsInstance<Chat.Ai>()
-                .any { it.objectiveCompleted || !it.finishTaskIndexes.isNullOrEmpty() }
+                .any { it.objectiveCompleted }
             val isGoalDone = _uiState.value.isObjectiveCompleted || hasAiCompletionInChatList
 
             val dialogue = _uiState.value.chats.mapNotNull {
@@ -854,6 +911,13 @@ class ChatViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        sttStreamJob?.cancel()
+        sttStreamJob = null
+        viewModelScope.launch {
+            try {
+                closeSttSessionUseCase()
+            } catch (_: Exception) {}
+        }
         audioController.stopVoice()
         audioController.stopRecording()
     }
