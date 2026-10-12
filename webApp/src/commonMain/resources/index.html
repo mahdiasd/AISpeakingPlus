@@ -43,7 +43,7 @@
                     window._isAudioPlaying = false;
                     return;
                 }
-                var fullUrl = url.startsWith("http") ? url : (window.location.origin.replace(":8081", ":8080") + url);
+                var fullUrl = (url.startsWith("http://") || url.startsWith("https://")) ? url : (window.location.origin + (url.startsWith("/") ? url : "/" + url));
                 window._isAudioPlaying = true;
                 this.audio = new Audio(fullUrl);
                 var self = this;
