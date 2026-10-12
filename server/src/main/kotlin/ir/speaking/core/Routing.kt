@@ -36,7 +36,7 @@ fun Application.configureRouting() {
     routing {
         staticResources("/resources/stages", "static/stages") {
             modify { _, call ->
-                call.response.headers.append(HttpHeaders.CacheControl, "public, max-age=2592000, immutable")
+                call.response.headers.append(HttpHeaders.CacheControl, "public, max-age=86400, must-revalidate")
             }
         }
         staticResources("/resources", "static")
