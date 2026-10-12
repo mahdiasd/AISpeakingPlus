@@ -22,15 +22,21 @@
 
 ---
 
-### ۲. هاردکد تسک‌های مرحله به `listOf(0, 1)` در سرور
-* **فایل**:
+### ۲. فیلد زائد و هاردکد تسک‌های مرحله به `listOf(0, 1)` در سرور و کلاینت
+* **فایل‌ها**:
   * [`server/src/main/kotlin/ir/speaking/feature/stage/service/StageChatService.kt`](file:///Users/mahdi/StudioProjects/AISpeakingPlus/server/src/main/kotlin/ir/speaking/feature/stage/service/StageChatService.kt#L85)
+  * [`feature/chat/src/commonMain/kotlin/ir/aispeaking/chat/ChatViewModel.kt`](file:///Users/mahdi/StudioProjects/AISpeakingPlus/feature/chat/src/commonMain/kotlin/ir/aispeaking/chat/ChatViewModel.kt)
+  * مدل‌ها و DTOهای مربوطه در server، network، domain، data
 * **شرح مشکل**:
   * در خط ۸۵ سرویس چت آمده است:
     ```kotlin
     finishTaskIndexes = if (turnResult.isObjectiveDone) listOf(0, 1) else emptyList()
     ```
-  * ایجنت فرض کرده که تمام مراحل صرفاً دو تسک دارند (شاخص‌های ۰ و ۱) و به صورت هاردکد در صورت تحقق هدف، این دو شاخص را به کلاینت بازمی‌گرداند؛ در حالی که هر مرحله ممکن است تعداد یا عناوین تسک متفاوتی داشته باشد یا نیازمند پیشرفت مرحله‌به‌مرحله باشد.
+  * **ماهیت مشکل**: مراحل اپلیکیشن ساختار تسک‌های چندگانه عددی ندارند؛ منطق ارزیابی مراحل بر اساس «هدف کلی سناریو» (Mission Objective) است که اتمام آن به صورت ساختاریافته توسط خود مدل هوش مصنوعی (LLM) ارزیابی شده و با بولین `objectiveCompleted` تعیین می‌شود.
+  * فیلد `finishTaskIndexes` یک فیلد قدیمی و زائد (Legacy) بوده که ایجنت قبلی به جای حذف آن، مقدار صوری و ساختگی `listOf(0, 1)` را هاردکد کرده است.
+* **اقدام لازم**:
+  * این فیلد زائد و مقادیر هاردکد شده آن باید از منطق سرور و کلاینت پاکسازی شوند.
+  * وضعیت اتمام مرحله هم در فرانت و هم در بک‌اند منحصراً بر پایه فیلد استاندارد `objectiveCompleted` که از مدل LLM دریافت می‌شود مدیریت گردد و تمامی وابستگی‌ها به این آرایه تزیینی حذف شود.
 
 ---
 
