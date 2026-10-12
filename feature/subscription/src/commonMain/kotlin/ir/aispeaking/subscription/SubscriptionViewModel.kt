@@ -3,10 +3,12 @@ package ir.aispeaking.subscription
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.aispeaking.domain.model.data_result.DataResult
+import ir.aispeaking.domain.model.error.getErrorMessage
 import ir.aispeaking.domain.model.stage.SubscriptionPlan
 import ir.aispeaking.domain.usecase.stage.CheckSubscriptionStatusUseCase
 import ir.aispeaking.domain.usecase.stage.GetSubscriptionPlansUseCase
 import ir.aispeaking.domain.usecase.stage.SubscribePlanUseCase
+import ir.aispeaking.domain.usecase.stage.ValidatePromoCodeUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +22,8 @@ import org.koin.core.annotation.Factory
 class SubscriptionViewModel(
     private val getSubscriptionPlansUseCase: GetSubscriptionPlansUseCase,
     private val checkSubscriptionStatusUseCase: CheckSubscriptionStatusUseCase,
-    private val subscribePlanUseCase: SubscribePlanUseCase
+    private val subscribePlanUseCase: SubscribePlanUseCase,
+    private val validatePromoCodeUseCase: ValidatePromoCodeUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SubscriptionUiState())
@@ -120,7 +123,7 @@ class SubscriptionViewModel(
     }
 
     private fun applyPromoCode() {
-        val rawCode = _uiState.value.promoCodeInput.trim().uppercase()
+        val rawCode = _uiState.value.promoCodeInput.trim()
         if (rawCode.isBlank()) {
             _uiState.update {
                 it.copy(
@@ -131,34 +134,33 @@ class SubscriptionViewModel(
             return
         }
 
-        val discountPercent = when (rawCode) {
-            "GOLD20" -> 20
-            "NOWRUZ" -> 25
-            "AISPEAKING" -> 30
-            "VIP" -> 15
-            "WELCOME10" -> 10
-            "VIP30" -> 30
-            "FREE100" -> 100
-            "SPEAK50" -> 50
-            "TEST" -> 15
-            else -> null
-        }
-
-        if (discountPercent != null) {
-            _uiState.update {
-                it.copy(
-                    appliedDiscountPercent = discountPercent,
-                    promoFeedbackMessage = "کد تخفیف $discountPercent٪ با موفقیت اعمال شد",
-                    isPromoError = false
-                )
-            }
-        } else {
-            _uiState.update {
-                it.copy(
-                    appliedDiscountPercent = 0,
-                    promoFeedbackMessage = "کد تخفیف واردشده نامعتبر یا منقضی است",
-                    isPromoError = true
-                )
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val result = validatePromoCodeUseCase(rawCode)
+            when (result) {
+                is DataResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            appliedDiscountPercent = result.data.discountPercent,
+                            promoFeedbackMessage = result.data.message,
+                            isPromoError = false
+                        )
+                    }
+                }
+                is DataResult.Failure -> {
+                    val errorMsg = result.appError.getErrorMessage().ifBlank {
+                        "کد تخفیف واردشده نامعتبر یا منقضی است"
+                    }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            appliedDiscountPercent = 0,
+                            promoFeedbackMessage = errorMsg,
+                            isPromoError = true
+                        )
+                    }
+                }
             }
         }
     }

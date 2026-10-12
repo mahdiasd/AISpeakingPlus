@@ -2,11 +2,13 @@ package ir.aispeaking.data.repository.stage
 
 import ir.aispeaking.data.utils.safeCall
 import ir.aispeaking.domain.model.data_result.DataResult
+import ir.aispeaking.domain.model.stage.PromoValidationResult
 import ir.aispeaking.domain.model.stage.SubscriptionPlan
 import ir.aispeaking.domain.model.stage.SubscriptionStatus
 import ir.aispeaking.domain.repository.stage.SubscriptionRepository
 import ir.aispeaking.network.api.stage.SubscriptionApi
 import ir.aispeaking.network.model.stage.dto.SubscribeRequestDto
+import ir.aispeaking.network.model.stage.dto.ValidatePromoRequestDto
 import org.koin.core.annotation.Single
 
 @Single
@@ -69,6 +71,23 @@ class SubscriptionRepositoryImpl(
             remainingDays = result.data.remainingDays
         )
         return DataResult.Success(status)
+    }
+
+    override suspend fun validatePromo(promoCode: String): DataResult<PromoValidationResult> {
+        val result = safeCall {
+            subscriptionApi.validatePromo(ValidatePromoRequestDto(promoCode = promoCode))
+        }
+        if (result !is DataResult.Success) {
+            return DataResult.Failure((result as DataResult.Failure).appError)
+        }
+
+        return DataResult.Success(
+            PromoValidationResult(
+                promoCode = result.data.promoCode,
+                discountPercent = result.data.discountPercent,
+                message = result.data.message
+            )
+        )
     }
 }
 

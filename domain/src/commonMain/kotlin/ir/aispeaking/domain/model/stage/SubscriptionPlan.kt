@@ -20,3 +20,10 @@ data class SubscriptionStatus(
     val expiresAt: String? = null,
     val remainingDays: Int = 0
 )
+
+@Serializable
+data class PromoValidationResult(
+    val promoCode: String,
+    val discountPercent: Int,
+    val message: String
+)

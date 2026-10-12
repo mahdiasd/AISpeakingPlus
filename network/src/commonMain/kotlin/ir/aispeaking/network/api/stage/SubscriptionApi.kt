@@ -14,6 +14,8 @@ import ir.aispeaking.network.model.stage.dto.SubscribeRequestDto
 import ir.aispeaking.network.model.stage.dto.SubscribeResponseDto
 import ir.aispeaking.network.model.stage.dto.SubscriptionPlanDto
 import ir.aispeaking.network.model.stage.dto.SubscriptionStatusDto
+import ir.aispeaking.network.model.stage.dto.ValidatePromoRequestDto
+import ir.aispeaking.network.model.stage.dto.ValidatePromoResponseDto
 import org.koin.core.annotation.Single
 
 @Single
@@ -32,6 +34,13 @@ class SubscriptionApi(
 
     suspend fun subscribe(request: SubscribeRequestDto): NetworkResponse<SubscribeResponseDto> {
         return client.post("$baseUrl/api/v2/subscriptions/subscribe") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body()
+    }
+
+    suspend fun validatePromo(request: ValidatePromoRequestDto): NetworkResponse<ValidatePromoResponseDto> {
+        return client.post("$baseUrl/api/v2/subscriptions/promo/validate") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()

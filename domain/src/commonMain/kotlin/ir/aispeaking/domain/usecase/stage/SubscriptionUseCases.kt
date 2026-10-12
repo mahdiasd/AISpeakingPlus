@@ -1,6 +1,7 @@
 package ir.aispeaking.domain.usecase.stage
 
 import ir.aispeaking.domain.model.data_result.DataResult
+import ir.aispeaking.domain.model.stage.PromoValidationResult
 import ir.aispeaking.domain.model.stage.SubscriptionPlan
 import ir.aispeaking.domain.model.stage.SubscriptionStatus
 import ir.aispeaking.domain.repository.stage.SubscriptionRepository
@@ -26,4 +27,12 @@ class SubscribePlanUseCase(
 ) {
     suspend operator fun invoke(planId: String, promoCode: String? = null): DataResult<SubscriptionStatus> =
         repository.subscribe(planId = planId, promoCode = promoCode)
+}
+
+@Factory
+class ValidatePromoCodeUseCase(
+    private val repository: SubscriptionRepository
+) {
+    suspend operator fun invoke(promoCode: String): DataResult<PromoValidationResult> =
+        repository.validatePromo(promoCode = promoCode)
 }

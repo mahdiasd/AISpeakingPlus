@@ -2,6 +2,7 @@ package ir.aispeaking.domain.usecase.stage
 
 import ir.aispeaking.domain.model.data_result.DataResult
 import ir.aispeaking.domain.model.error.NetworkError
+import ir.aispeaking.domain.model.stage.PromoValidationResult
 import ir.aispeaking.domain.model.stage.SubscriptionPlan
 import ir.aispeaking.domain.model.stage.SubscriptionStatus
 import ir.aispeaking.domain.repository.stage.SubscriptionRepository
@@ -42,6 +43,21 @@ class SubscribePlanUseCaseTest {
                 DataResult.Failure(NetworkError.InternalServer(message = "Failed to subscribe"))
             }
         }
+
+        override suspend fun validatePromo(promoCode: String): DataResult<PromoValidationResult> {
+            lastPromoCode = promoCode
+            return if (shouldSucceed && promoCode == "GOLD20") {
+                DataResult.Success(
+                    PromoValidationResult(
+                        promoCode = "GOLD20",
+                        discountPercent = 20,
+                        message = "کد تخفیف ۲۰٪ با موفقیت اعمال شد"
+                    )
+                )
+            } else {
+                DataResult.Failure(NetworkError.BadRequest(message = "کد تخفیف واردشده نامعتبر یا منقضی است"))
+            }
+        }
     }
 
     @Test
@@ -68,5 +84,27 @@ class SubscribePlanUseCaseTest {
         assertIs<DataResult.Failure<SubscriptionStatus>>(result)
         assertEquals("plan-1m", fakeRepo.lastPlanId)
         assertEquals(null, fakeRepo.lastPromoCode)
+    }
+
+    @Test
+    fun testValidatePromoCodeSuccess() = runTest {
+        val fakeRepo = FakeSubscriptionRepository(shouldSucceed = true)
+        val useCase = ValidatePromoCodeUseCase(fakeRepo)
+
+        val result = useCase("GOLD20")
+
+        assertIs<DataResult.Success<PromoValidationResult>>(result)
+        assertEquals(20, result.data.discountPercent)
+        assertEquals("GOLD20", result.data.promoCode)
+    }
+
+    @Test
+    fun testValidatePromoCodeFailure() = runTest {
+        val fakeRepo = FakeSubscriptionRepository(shouldSucceed = false)
+        val useCase = ValidatePromoCodeUseCase(fakeRepo)
+
+        val result = useCase("INVALID")
+
+        assertIs<DataResult.Failure<PromoValidationResult>>(result)
     }
 }
