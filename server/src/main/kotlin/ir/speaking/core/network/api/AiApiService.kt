@@ -15,11 +15,11 @@ import org.koin.core.annotation.Single
 import kotlin.time.Duration.Companion.seconds
 
 @Single
-class AiApiService(
+open class AiApiService(
     private val aiClientManager: AiClientManager
 ) {
 
-    fun streamRequest(
+    open fun streamRequest(
         messages: List<ChatMessage>,
         responseFormat: ChatResponseFormat = ChatResponseFormat.JsonObject,
     ): Flow<String> = flow {
@@ -65,7 +65,7 @@ class AiApiService(
         }
     }
 
-    suspend fun requestRaw(
+    open suspend fun requestRaw(
         messages: List<ChatMessage>,
         responseFormat: ChatResponseFormat = ChatResponseFormat.JsonObject,
     ): Result<String> {

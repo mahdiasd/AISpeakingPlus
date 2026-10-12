@@ -217,7 +217,8 @@ fun ChatScreen(
                         viewModel.setInputMode(ChatInputMode.TEXT)
                         viewModel.dismissHint()
                     },
-                    onDismiss = { viewModel.dismissHint() }
+                    onDismiss = { viewModel.dismissHint() },
+                    onRetry = { viewModel.requestHint() }
                 )
 
                 ChatBottomBar(

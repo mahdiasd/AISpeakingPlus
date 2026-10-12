@@ -51,4 +51,9 @@ sealed class AppException(
         override val message: String = ErrorMessage.NO_ACTIVE_SUBSCRIPTION,
         val statusCode: HttpStatusCode = HttpStatusCode.PaymentRequired
     ) : AppException(httpStatusCode = statusCode, message = message)
+
+    data class ExternalServiceError(
+        override val message: String = "خطا در برقراری ارتباط با سرویس هوش مصنوعی. لطفاً دوباره تلاش کنید.",
+        val statusCode: HttpStatusCode = HttpStatusCode.BadGateway
+    ) : AppException(httpStatusCode = statusCode, message = message)
 }

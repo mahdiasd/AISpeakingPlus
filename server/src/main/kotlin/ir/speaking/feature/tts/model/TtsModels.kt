@@ -42,6 +42,9 @@ object KokoroVoices {
 
     fun findById(id: Int): TtsVoiceInfo =
         ALL.firstOrNull { it.id == id } ?: ALL.first()
+
+    fun findByCode(code: String?): TtsVoiceInfo? =
+        ALL.firstOrNull { it.code.equals(code, ignoreCase = true) }
 }
 
 @Serializable

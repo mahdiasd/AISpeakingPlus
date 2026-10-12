@@ -106,9 +106,8 @@ fun LevelUpOverlayNotification(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    // TODO replace icon for star
-                    painter = painterResource(Res.drawable.ic_done),
-                    contentDescription = "Gift Icon",
+                    painter = painterResource(Res.drawable.ic_star),
+                    contentDescription = "Star Icon",
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )

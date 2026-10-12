@@ -7,8 +7,10 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.testing.*
+import ir.speaking.core.configureRoutingException
 import ir.speaking.core.configureTestDatabases
 import ir.speaking.core.configureTestSecurity
+import ir.speaking.feature.stage.dto.StageChatRequest
 import ir.speaking.feature.stage.repository.StageRepository
 import ir.speaking.feature.stage.routing.stageRouting
 import ir.speaking.feature.stage_progress.repository.StageProgressRepo
@@ -17,6 +19,8 @@ import ir.speaking.feature.user.repository.UserRepo
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import com.aallam.openai.api.chat.ChatMessage
+import com.aallam.openai.api.chat.ChatResponseFormat
 import ir.speaking.core.network.api.AiApiService
 import ir.speaking.core.network.di.AiClientManager
 import ir.speaking.feature.stage.dto.HintRequest
@@ -65,6 +69,7 @@ class StageRoutingTest {
                 )
             }
             configureTestSecurity()
+            configureRoutingException()
             configureTestDatabases()
             stageRouting()
         }
@@ -90,6 +95,14 @@ class StageRoutingTest {
     @Test
     fun `test stage hint adapts suggestion based on user CEFR level`() = testApplication {
         val jsonConfig = Json { ignoreUnknownKeys = true }
+        val mockAiService = object : AiApiService(AiClientManager()) {
+            override suspend fun requestRaw(
+                messages: List<ChatMessage>,
+                responseFormat: ChatResponseFormat
+            ): Result<String> {
+                return Result.success("""{"suggestion_en":"Can I have water please?","explanation_fa":"می‌توانید خیلی ساده آب درخواست کنید."}""")
+            }
+        }
         application {
             this@application.install(ContentNegotiation) {
                 json(jsonConfig)
@@ -109,7 +122,7 @@ class StageRoutingTest {
                                 )
                             )
                         }
-                        single { AiApiService(AiClientManager()) }
+                        single<AiApiService> { mockAiService }
                         single {
                             StageChatService(
                                 stageRepository = get(),
@@ -122,6 +135,7 @@ class StageRoutingTest {
                 )
             }
             configureTestSecurity()
+            configureRoutingException()
             configureTestDatabases()
             stageRouting()
         }
@@ -138,30 +152,143 @@ class StageRoutingTest {
             setBody(HintRequest(messages = emptyList(), userLevel = "A1"))
         }
 
-        if (a1Response.status == HttpStatusCode.OK) {
-            val a1Body = a1Response.bodyAsText()
-            val a1Json = jsonConfig.parseToJsonElement(a1Body).jsonObject
-            val a1Data = a1Json["data"]?.jsonObject
-            val a1Suggestion = a1Data?.get("suggestionEn")?.jsonPrimitive?.content.orEmpty()
-            val a1Explanation = a1Data?.get("explanationFa")?.jsonPrimitive?.content.orEmpty()
-            assertTrue(a1Suggestion.isNotBlank(), "A1 suggestion should not be blank")
-            assertTrue(a1Explanation.isNotBlank(), "A1 explanation should not be blank")
+        assertEquals(HttpStatusCode.OK, a1Response.status)
+        val a1Body = a1Response.bodyAsText()
+        val a1Json = jsonConfig.parseToJsonElement(a1Body).jsonObject
+        val a1Data = a1Json["data"]?.jsonObject
+        val a1Suggestion = a1Data?.get("suggestionEn")?.jsonPrimitive?.content.orEmpty()
+        val a1Explanation = a1Data?.get("explanationFa")?.jsonPrimitive?.content.orEmpty()
+        assertTrue(a1Suggestion.isNotBlank(), "A1 suggestion should not be blank")
+        assertTrue(a1Explanation.isNotBlank(), "A1 explanation should not be blank")
+    }
+
+    @Test
+    fun `test stage chat returns BadGateway on AI service failure without fallback`() = testApplication {
+        val jsonConfig = Json { ignoreUnknownKeys = true }
+        val failingAiService = object : AiApiService(AiClientManager()) {
+            override suspend fun requestRaw(
+                messages: List<ChatMessage>,
+                responseFormat: ChatResponseFormat
+            ): Result<String> {
+                return Result.failure(java.net.ConnectException("Connection to AI model failed"))
+            }
+        }
+        application {
+            this@application.install(ContentNegotiation) {
+                json(jsonConfig)
+            }
+            this@application.install(Koin) {
+                modules(
+                    module {
+                        single { StageRepository() }
+                        single { StageProgressRepo() }
+                        single { SubscriptionRepo() }
+                        single { UserRepo(subscriptionRepo = get()) }
+                        single {
+                            TtsService(
+                                TtsConfig.fromEnv().copy(
+                                    enabled = false,
+                                    cacheDir = System.getProperty("java.io.tmpdir")
+                                )
+                            )
+                        }
+                        single<AiApiService> { failingAiService }
+                        single {
+                            StageChatService(
+                                stageRepository = get(),
+                                ttsService = get(),
+                                aiApiService = get(),
+                                userRepo = get()
+                            )
+                        }
+                    }
+                )
+            }
+            configureTestSecurity()
+            configureRoutingException()
+            configureTestDatabases()
+            stageRouting()
         }
 
-        // Request hint for stage 1 with B2 level
-        val b2Response = client.post("/api/v2/stages/stage-01-inflight-london/hint") {
+        val client = createClient {
+            install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
+                json(jsonConfig)
+            }
+        }
+
+        val response = client.post("/api/v2/stages/stage-01-inflight-london/chat") {
             contentType(ContentType.Application.Json)
-            setBody(HintRequest(messages = emptyList(), userLevel = "B2"))
+            setBody(StageChatRequest(message = "Hello, I am arriving in London for university"))
         }
 
-        if (b2Response.status == HttpStatusCode.OK) {
-            val b2Body = b2Response.bodyAsText()
-            val b2Json = jsonConfig.parseToJsonElement(b2Body).jsonObject
-            val b2Data = b2Json["data"]?.jsonObject
-            val b2Suggestion = b2Data?.get("suggestionEn")?.jsonPrimitive?.content.orEmpty()
-            val b2Explanation = b2Data?.get("explanationFa")?.jsonPrimitive?.content.orEmpty()
-            assertTrue(b2Suggestion.isNotBlank(), "B2 suggestion should not be blank")
-            assertTrue(b2Explanation.isNotBlank(), "B2 explanation should not be blank")
+        // On AI failure, the server MUST return 502 Bad Gateway and strictly MUST NOT return 200 with fake fallback
+        assertEquals(HttpStatusCode.BadGateway, response.status)
+        val body = response.bodyAsText()
+        assertTrue(body.contains("خطا در برقراری ارتباط با هوش مصنوعی"))
+    }
+
+    @Test
+    fun `test stage starter greeting returns BadGateway on AI service failure without fallback`() = testApplication {
+        val jsonConfig = Json { ignoreUnknownKeys = true }
+        val failingAiService = object : AiApiService(AiClientManager()) {
+            override suspend fun requestRaw(
+                messages: List<ChatMessage>,
+                responseFormat: ChatResponseFormat
+            ): Result<String> {
+                return Result.failure(java.net.ConnectException("Connection to AI model failed"))
+            }
         }
+        application {
+            this@application.install(ContentNegotiation) {
+                json(jsonConfig)
+            }
+            this@application.install(Koin) {
+                modules(
+                    module {
+                        single { StageRepository() }
+                        single { StageProgressRepo() }
+                        single { SubscriptionRepo() }
+                        single { UserRepo(subscriptionRepo = get()) }
+                        single {
+                            TtsService(
+                                TtsConfig.fromEnv().copy(
+                                    enabled = false,
+                                    cacheDir = System.getProperty("java.io.tmpdir")
+                                )
+                            )
+                        }
+                        single<AiApiService> { failingAiService }
+                        single {
+                            StageChatService(
+                                stageRepository = get(),
+                                ttsService = get(),
+                                aiApiService = get(),
+                                userRepo = get()
+                            )
+                        }
+                    }
+                )
+            }
+            configureTestSecurity()
+            configureRoutingException()
+            configureTestDatabases()
+            stageRouting()
+        }
+
+        val client = createClient {
+            install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
+                json(jsonConfig)
+            }
+        }
+
+        val response = client.post("/api/v2/stages/stage-01-inflight-london/chat") {
+            contentType(ContentType.Application.Json)
+            setBody(StageChatRequest(message = ""))
+        }
+
+        // On initial starter greeting AI failure, the server MUST return 502 Bad Gateway and NOT 200 with fake fallback
+        assertEquals(HttpStatusCode.BadGateway, response.status)
+        val body = response.bodyAsText()
+        assertTrue(body.contains("خطا در برقراری ارتباط با هوش مصنوعی"))
     }
 }

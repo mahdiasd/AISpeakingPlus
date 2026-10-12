@@ -169,6 +169,18 @@ data class SubscribeResponseDto(
 )
 
 @Serializable
+data class ValidatePromoRequestDto(
+    val promoCode: String
+)
+
+@Serializable
+data class ValidatePromoResponseDto(
+    val promoCode: String,
+    val discountPercent: Int,
+    val message: String
+)
+
+@Serializable
 data class LeaderboardItemDto(
     val rank: Int,
     val userId: String,
