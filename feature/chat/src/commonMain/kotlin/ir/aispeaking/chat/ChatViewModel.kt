@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import ir.aispeaking.domain.model.chat.AiVoiceState
 import ir.aispeaking.domain.model.chat.Chat
 import ir.aispeaking.domain.model.chat.ChatStatus
+import ir.aispeaking.domain.model.chat.StageChatStreamEvent
 import ir.aispeaking.domain.model.data_result.DataResult
 import ir.aispeaking.domain.model.error.getErrorMessage
 import ir.aispeaking.domain.model.stage.AccessTier
@@ -155,6 +156,10 @@ class ChatViewModel(
     private fun requestInitialAiGreeting(stageId: String) {
         viewModelScope.launch {
             val level = _uiState.value.userLevel
+            val aiUid = "ai_init_${Clock.System.now().toEpochMilliseconds()}"
+            var accumulatedText = ""
+            var isDone = false
+
             _uiState.update {
                 it.copy(
                     chats = kotlinx.collections.immutable.persistentListOf(Chat.WaitingForAi),
@@ -162,28 +167,85 @@ class ChatViewModel(
                 )
             }
 
-            when (val result = sendStageChatMessageUseCase(stageId, userMessage = null, history = emptyList(), userLevel = level)) {
-                is DataResult.Success -> {
-                    val d = result.data
-                    val aiUid = "ai_init_${Clock.System.now().toEpochMilliseconds()}"
-                    streamAiResponse(
-                        aiUid = aiUid,
-                        fullMessage = d.message,
-                        translatedMessage = d.translatedMessage,
-                        audioUrl = d.audioUrl
-                    )
+            try {
+                stageRepository.streamStageChatMessage(
+                    stageId = stageId,
+                    userMessage = null,
+                    history = emptyList(),
+                    userLevel = level
+                ).collect { event ->
+                    when (event) {
+                        is StageChatStreamEvent.Chunk -> {
+                            accumulatedText += event.delta
+                            _uiState.update { state ->
+                                val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi }
+                                val existingIndex = withoutWaiting.indexOfFirst { it.uid == aiUid }
+                                val updatedChats = if (existingIndex != -1) {
+                                    withoutWaiting.map { chat ->
+                                        if (chat.uid == aiUid && chat is Chat.Ai) chat.copy(message = accumulatedText) else chat
+                                    }
+                                } else {
+                                    withoutWaiting + Chat.Ai(
+                                        uid = aiUid,
+                                        message = accumulatedText,
+                                        voiceState = AiVoiceState.Stopped
+                                    )
+                                }
+                                state.copy(
+                                    chats = updatedChats.toImmutableList(),
+                                    isModelSpeaking = true
+                                )
+                            }
+                        }
+                        is StageChatStreamEvent.Done -> {
+                            isDone = true
+                            val d = event.payload
+                            val hasAudio = !d.audioUrl.isNullOrBlank()
+                            val finalAiChat = Chat.Ai(
+                                uid = aiUid,
+                                message = if (accumulatedText.isNotBlank()) accumulatedText else d.message,
+                                translatedMessage = d.translatedMessage,
+                                voiceState = if (hasAudio) AiVoiceState.Playing else AiVoiceState.Stopped,
+                                audioUrl = d.audioUrl,
+                                objectiveCompleted = d.objectiveCompleted,
+                                finishTaskIndexes = d.finishTaskIndexes.toImmutableList()
+                            )
+
+                            _uiState.update { state ->
+                                val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi }
+                                val existingIndex = withoutWaiting.indexOfFirst { it.uid == aiUid }
+                                val updatedChats = if (existingIndex != -1) {
+                                    withoutWaiting.map { if (it.uid == aiUid) finalAiChat else it }
+                                } else {
+                                    withoutWaiting + finalAiChat
+                                }
+                                state.copy(
+                                    chats = updatedChats.toImmutableList(),
+                                    isModelSpeaking = false,
+                                    currentlyPlayingUid = if (hasAudio) aiUid else null
+                                )
+                            }
+
+                            if (hasAudio) {
+                                audioController.playVoice(d.audioUrl) {
+                                    onVoicePlaybackEnded(aiUid)
+                                }
+                            }
+                        }
+                        is StageChatStreamEvent.Error -> {
+                        }
+                    }
                 }
-                is DataResult.Failure -> {
-                    val errorMsg = result.appError.getErrorMessage().ifBlank {
-                        "خطا در شروع مکالمه با هوش مصنوعی. لطفاً دوباره تلاش کنید."
-                    }
-                    _uiState.update {
-                        it.copy(
-                            chats = kotlinx.collections.immutable.persistentListOf(),
-                            isModelSpeaking = false,
-                            stageLoadError = errorMsg
-                        )
-                    }
+            } catch (_: Exception) {
+            }
+
+            if (!isDone && accumulatedText.isBlank()) {
+                _uiState.update {
+                    it.copy(
+                        chats = kotlinx.collections.immutable.persistentListOf(),
+                        isModelSpeaking = false,
+                        stageLoadError = "خطا در شروع مکالمه با هوش مصنوعی. لطفاً دوباره تلاش کنید."
+                    )
                 }
             }
         }
@@ -439,119 +501,127 @@ class ChatViewModel(
                     }
                 }
 
-            when (val result = sendStageChatMessageUseCase(currentStageId, content, history, _uiState.value.userLevel)) {
-                is DataResult.Success -> {
-                    val turn = result.data
-
-                    // Update user chat with AI grammar check result, and now show AI waiting/typing indicator
-                    val answeredUserChat = userChat.copy(
-                        status = ChatStatus.Answered(
-                            grammar = turn.grammarFeedbackFa,
-                            correctedSentence = turn.correctedSentence,
-                            hasGrammarError = turn.hasGrammarError || turn.grammarFeedbackFa.isNotBlank()
-                        )
-                    )
-
-                    val isTurnGoalCompleted = turn.objectiveCompleted
-                    val isGoalCompleted = isTurnGoalCompleted || _uiState.value.isObjectiveCompleted
-
-                    _uiState.update { state ->
-                        val updated = state.chats.map {
-                            if (it.uid == userUid) answeredUserChat else it
-                        }
-                        state.copy(
-                            chats = (updated + Chat.WaitingForAi).toImmutableList(),
-                            isModelSpeaking = true,
-                            isObjectiveCompleted = isGoalCompleted
-                        )
-                    }
-
-                    delay(700)
-
-                    val aiUid = "ai_${Clock.System.now().toEpochMilliseconds()}"
-                    streamAiResponse(
-                        aiUid = aiUid,
-                        fullMessage = turn.message,
-                        translatedMessage = turn.translatedMessage,
-                        audioUrl = turn.audioUrl,
-                        objectiveCompleted = isTurnGoalCompleted,
-                        finishTaskIndexes = emptyList()
-                    )
-
-                    val maxTurns = _uiState.value.stage?.maxTurns ?: 12
-                    if (isGoalCompleted || _uiState.value.turnsCount >= maxTurns) {
-                        delay(900)
-                        submitEvaluation()
-                    }
-                }
-                is DataResult.Failure -> {
-                    // Mark as failed
-                    val failedUserChat = userChat.copy(status = ChatStatus.Failed)
-                    _uiState.update { state ->
-                        val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi }
-                        val updated = withoutWaiting.map {
-                            if (it.uid == userUid) failedUserChat else it
-                        }
-                        state.copy(
-                            chats = updated.toImmutableList(),
-                            isModelSpeaking = false,
-                            turnsCount = (state.turnsCount - 1).coerceAtLeast(0)
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun streamAiResponse(
-        aiUid: String,
-        fullMessage: String,
-        translatedMessage: String?,
-        audioUrl: String?,
-        objectiveCompleted: Boolean = false,
-        finishTaskIndexes: List<Int> = emptyList()
-    ) {
-        val hasAudio = !audioUrl.isNullOrBlank()
-        val initialAiChat = Chat.Ai(
-            uid = aiUid,
-            message = "",
-            translatedMessage = translatedMessage,
-            voiceState = if (hasAudio) AiVoiceState.Playing else AiVoiceState.Stopped,
-            audioUrl = audioUrl,
-            objectiveCompleted = objectiveCompleted,
-            finishTaskIndexes = finishTaskIndexes.toImmutableList()
-        )
-
-        _uiState.update { state ->
-            val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi }
-            state.copy(
-                chats = (withoutWaiting + initialAiChat).toImmutableList(),
-                isModelSpeaking = false,
-                currentlyPlayingUid = if (hasAudio) aiUid else null
-            )
-        }
-
-        if (hasAudio) {
-            audioController.playVoice(audioUrl) {
-                onVoicePlaybackEnded(aiUid)
-            }
-        }
-
-        // Progressive word-by-word streaming effect
-        val words = fullMessage.split(" ")
-        var accumulated = ""
-        for (i in words.indices) {
-            accumulated += (if (i == 0) "" else " ") + words[i]
             _uiState.update { state ->
                 state.copy(
-                    chats = state.chats.map { chat ->
-                        if (chat.uid == aiUid && chat is Chat.Ai) {
-                            chat.copy(message = accumulated)
-                        } else chat
-                    }.toImmutableList()
+                    chats = (state.chats + Chat.WaitingForAi).toImmutableList(),
+                    isModelSpeaking = true
                 )
             }
-            delay(40)
+
+            val aiUid = "ai_${Clock.System.now().toEpochMilliseconds()}"
+            var accumulatedText = ""
+            var isDone = false
+            var streamError: String? = null
+
+            try {
+                stageRepository.streamStageChatMessage(
+                    stageId = currentStageId,
+                    userMessage = content,
+                    history = history,
+                    userLevel = _uiState.value.userLevel
+                ).collect { event ->
+                    when (event) {
+                        is StageChatStreamEvent.Chunk -> {
+                            accumulatedText += event.delta
+                            _uiState.update { state ->
+                                val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi }
+                                val existingIndex = withoutWaiting.indexOfFirst { it.uid == aiUid }
+                                val updatedChats = if (existingIndex != -1) {
+                                    withoutWaiting.map { chat ->
+                                        if (chat.uid == aiUid && chat is Chat.Ai) chat.copy(message = accumulatedText) else chat
+                                    }
+                                } else {
+                                    withoutWaiting + Chat.Ai(
+                                        uid = aiUid,
+                                        message = accumulatedText,
+                                        voiceState = AiVoiceState.Stopped
+                                    )
+                                }
+                                state.copy(
+                                    chats = updatedChats.toImmutableList(),
+                                    isModelSpeaking = true
+                                )
+                            }
+                        }
+                        is StageChatStreamEvent.Done -> {
+                            isDone = true
+                            val turn = event.payload
+                            val answeredUserChat = userChat.copy(
+                                status = ChatStatus.Answered(
+                                    grammar = turn.grammarFeedbackFa,
+                                    correctedSentence = turn.correctedSentence,
+                                    hasGrammarError = turn.hasGrammarError || turn.grammarFeedbackFa.isNotBlank()
+                                )
+                            )
+
+                            val isTurnGoalCompleted = turn.objectiveCompleted
+                            val isGoalCompleted = isTurnGoalCompleted || _uiState.value.isObjectiveCompleted
+                            val hasAudio = !turn.audioUrl.isNullOrBlank()
+
+                            val finalAiChat = Chat.Ai(
+                                uid = aiUid,
+                                message = if (accumulatedText.isNotBlank()) accumulatedText else turn.message,
+                                translatedMessage = turn.translatedMessage,
+                                voiceState = if (hasAudio) AiVoiceState.Playing else AiVoiceState.Stopped,
+                                audioUrl = turn.audioUrl,
+                                objectiveCompleted = isTurnGoalCompleted,
+                                finishTaskIndexes = turn.finishTaskIndexes.toImmutableList()
+                            )
+
+                            _uiState.update { state ->
+                                val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi }
+                                val withUser = withoutWaiting.map { if (it.uid == userUid) answeredUserChat else it }
+                                val existingIndex = withUser.indexOfFirst { it.uid == aiUid }
+                                val updatedChats = if (existingIndex != -1) {
+                                    withUser.map { if (it.uid == aiUid) finalAiChat else it }
+                                } else {
+                                    withUser + finalAiChat
+                                }
+                                state.copy(
+                                    chats = updatedChats.toImmutableList(),
+                                    isModelSpeaking = false,
+                                    currentlyPlayingUid = if (hasAudio) aiUid else null,
+                                    isObjectiveCompleted = isGoalCompleted
+                                )
+                            }
+
+                            if (hasAudio) {
+                                audioController.playVoice(turn.audioUrl) {
+                                    onVoicePlaybackEnded(aiUid)
+                                }
+                            }
+
+                            val maxTurns = _uiState.value.stage?.maxTurns ?: 12
+                            if (isGoalCompleted || _uiState.value.turnsCount >= maxTurns) {
+                                delay(900)
+                                submitEvaluation()
+                            }
+                        }
+                        is StageChatStreamEvent.Error -> {
+                            streamError = event.message
+                        }
+                    }
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                streamError = e.message ?: "خطا در ارتباط با سرور"
+            }
+
+            if (!isDone && accumulatedText.isBlank()) {
+                val failedUserChat = userChat.copy(status = ChatStatus.Failed)
+                _uiState.update { state ->
+                    val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi && it.uid != aiUid }
+                    val updated = withoutWaiting.map {
+                        if (it.uid == userUid) failedUserChat else it
+                    }
+                    state.copy(
+                        chats = updated.toImmutableList(),
+                        isModelSpeaking = false,
+                        turnsCount = (state.turnsCount - 1).coerceAtLeast(0)
+                    )
+                }
+            }
         }
     }
 

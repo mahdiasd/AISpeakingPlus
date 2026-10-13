@@ -23,6 +23,7 @@ import ir.speaking.feature.stage.repository.StageRepository
 import ir.speaking.feature.subscription.interceptor.enforceNotSuspended
 import ir.speaking.feature.subscription.interceptor.enforceStageAccess
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import org.koin.ktor.ext.inject
 import java.util.*
 
@@ -232,6 +233,79 @@ fun Application.stageRouting() {
                         HttpStatusCode.OK {
                             description = "Chat turn processed successfully"
                             schema = jsonSchema<SuccessResponse<ir.speaking.feature.stage.dto.StageChatResponse>>()
+                        }
+                    }
+                }
+
+                post("/{stageId}/chat/stream") {
+                    val stageId = call.parameters["stageId"]
+                    if (stageId.isNullOrBlank()) {
+                        call.failureRespond(HttpStatusCode.BadRequest, "Stage ID is required")
+                        return@post
+                    }
+
+                    val principal = call.principal<JWTPrincipal>()
+                    val uidString = principal?.payload?.getClaim("uid")?.asString()
+                    val userId = uidString?.let { try { UUID.fromString(it) } catch (_: Exception) { null } }
+
+                    val stage = stageRepository.getStageDetail(stageId, userId)
+                    if (!call.enforceStageAccess(stage, userId)) return@post
+
+                    val request = try {
+                        call.receive<ir.speaking.feature.stage.dto.StageChatRequest>()
+                    } catch (_: Exception) {
+                        ir.speaking.feature.stage.dto.StageChatRequest()
+                    }
+
+                    val sseJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+
+                    call.response.cacheControl(CacheControl.NoCache(null))
+                    call.response.header(HttpHeaders.Connection, "keep-alive")
+                    call.response.header("X-Accel-Buffering", "no")
+                    call.respondTextWriter(contentType = ContentType.Text.EventStream) {
+                        try {
+                            val finalResponse = stageChatService.processChatTurnStream(
+                                stageId = stageId,
+                                userId = userId,
+                                request = request,
+                                onChunk = { delta ->
+                                    val chunkObj = ir.speaking.feature.stage.dto.StageChatStreamServerEvent(
+                                        type = "chunk",
+                                        delta = delta
+                                    )
+                                    val chunkJson = sseJson.encodeToString(chunkObj)
+                                    write("data: $chunkJson\n\n")
+                                    flush()
+                                }
+                            )
+
+                            val doneObj = ir.speaking.feature.stage.dto.StageChatStreamServerEvent(
+                                type = "done",
+                                payload = ir.speaking.feature.stage.dto.StageChatStreamDonePayload(
+                                    message = finalResponse.message,
+                                    translatedMessage = finalResponse.translatedMessage,
+                                    hasGrammarError = finalResponse.hasGrammarError,
+                                    correctedSentence = finalResponse.correctedSentence,
+                                    grammarFeedbackFa = finalResponse.grammarFeedbackFa,
+                                    objectiveCompleted = finalResponse.objectiveCompleted,
+                                    audioUrl = finalResponse.audioUrl,
+                                    finishTaskIndexes = finalResponse.finishTaskIndexes
+                                )
+                            )
+                            val doneJson = sseJson.encodeToString(doneObj)
+                            write("data: $doneJson\n\n")
+                            flush()
+                        } catch (e: Exception) {
+                            val errorMsg = (e as? ir.speaking.core.exeptions.AppException)?.message
+                                ?: e.message
+                                ?: "خطا در ارتباط با هوش مصنوعی"
+                            val errorObj = ir.speaking.feature.stage.dto.StageChatStreamServerEvent(
+                                type = "error",
+                                message = errorMsg
+                            )
+                            val errorJson = sseJson.encodeToString(errorObj)
+                            write("data: $errorJson\n\n")
+                            flush()
                         }
                     }
                 }

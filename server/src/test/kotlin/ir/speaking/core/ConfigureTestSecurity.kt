@@ -28,6 +28,11 @@ fun Application.configureTestSecurity() {
                     .build()
             )
             validate { credential ->
+                val jti = credential.payload.id ?: credential.payload.getClaim("jti")?.asString()
+                if (!jti.isNullOrBlank() && ir.speaking.feature.user.service.AuthService.isBlacklisted(jti)) {
+                    return@validate null
+                }
+
                 val uid = credential.payload.getClaim("uid")?.asString()
                 if (!uid.isNullOrBlank()) {
                     val userId = try { java.util.UUID.fromString(uid) } catch (_: Exception) { null }

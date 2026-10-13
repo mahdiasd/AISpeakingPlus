@@ -96,6 +96,11 @@ fun Application.configureSecurity() {
                     .build()
             )
             validate { credential ->
+                val jti = credential.payload.id ?: credential.payload.getClaim("jti")?.asString()
+                if (!jti.isNullOrBlank() && ir.speaking.feature.user.service.AuthService.isBlacklisted(jti)) {
+                    return@validate null
+                }
+
                 val uid = credential.payload.getClaim("uid")?.asString()
                 if (!uid.isNullOrBlank()) {
                     val userId = try { UUID.fromString(uid) } catch (_: Exception) { null }
@@ -142,6 +147,7 @@ fun generateToken(call: ApplicationCall, uid: String, adminToken: Boolean = fals
     val expirationTime = Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30))
 
     val token = JWT.create()
+        .withJWTId(UUID.randomUUID().toString())
         .withAudience(if (adminToken) "admin-$jwtAudience" else jwtAudience)
         .withIssuer(if (adminToken) "admin-$issuer" else issuer)
         .withClaim("uid", uid)
@@ -159,6 +165,7 @@ fun generateToken(routing: Route, uid: String, adminToken: Boolean = false): Str
     val expirationTime = Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30))
 
     val token = JWT.create()
+        .withJWTId(UUID.randomUUID().toString())
         .withAudience(if (adminToken) "admin-$jwtAudience" else jwtAudience)
         .withIssuer(if (adminToken) "admin-$issuer" else issuer)
         .withClaim("uid", uid)
@@ -176,6 +183,7 @@ fun generateAdminToken(call: ApplicationCall, id: UUID, username: String, fullNa
     val expirationTime = Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30))
 
     return JWT.create()
+        .withJWTId(UUID.randomUUID().toString())
         .withAudience("admin-$jwtAudience")
         .withIssuer("admin-$issuer")
         .withClaim("uid", id.toString())

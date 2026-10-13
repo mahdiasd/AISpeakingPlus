@@ -36,4 +36,8 @@ class AuthApi(
     suspend fun getMe(): NetworkResponse<UserProfileDto> {
         return client.get("$baseUrl/api/v2/auth/me").body()
     }
+
+    suspend fun logout(): NetworkResponse<Map<String, Boolean>> {
+        return client.post("$baseUrl/api/v2/auth/logout").body()
+    }
 }

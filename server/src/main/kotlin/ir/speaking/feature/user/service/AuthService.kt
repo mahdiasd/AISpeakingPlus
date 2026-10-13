@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class RateLimitExceededException(message: String) : RuntimeException(message)
 class AccountSuspendedException(message: String) : RuntimeException(message)
+class AccountBlockedException(message: String) : RuntimeException(message)
 
 @Single
 class AuthService(
@@ -33,9 +34,27 @@ class AuthService(
         const val BYPASS_MOBILE = "09152413498"
         const val BYPASS_OTP = "87799"
         const val OTP_TTL_SECONDS = 120L
+        const val OTP_COOLDOWN_SECONDS = 60L
+        const val MAX_FAILED_ATTEMPTS = 3
+        const val BLOCK_DURATION_MINUTES = 5L
+        const val ATTEMPTS_EXPIRATION_MINUTES = 5L
         const val RATE_LIMIT_MAX_REQUESTS = 5
         const val RATE_LIMIT_WINDOW_MINUTES = 15L
         const val RATE_LIMIT_WINDOW_MILLIS = RATE_LIMIT_WINDOW_MINUTES * 60 * 1000L
+
+        private val globalTokenBlacklist = ConcurrentHashMap<String, Long>()
+        @Volatile
+        private var globalInstance: AuthService? = null
+
+        fun isBlacklisted(jti: String): Boolean {
+            globalInstance?.let { return it.isTokenBlacklisted(jti) }
+            val exp = globalTokenBlacklist[jti] ?: return false
+            return exp > System.currentTimeMillis()
+        }
+    }
+
+    init {
+        globalInstance = this
     }
 
     private val logger = LoggerFactory.getLogger("ir.speaking.feature.auth")
@@ -43,6 +62,10 @@ class AuthService(
     // Fallback in-memory caches used only when Redis daemon is unreachable (e.g., local/CI unit tests)
     private val otpCache = ConcurrentHashMap<String, Pair<String, Long>>()
     private val rateLimitCache = ConcurrentHashMap<String, MutableList<Long>>()
+    private val cooldownCache = ConcurrentHashMap<String, Long>()
+    private val attemptsCache = ConcurrentHashMap<String, Pair<Int, Long>>()
+    private val blockedCache = ConcurrentHashMap<String, Long>()
+    private val tokenBlacklistCache = ConcurrentHashMap<String, Long>()
 
     suspend fun sendOtp(mobile: String): SendOtpResponse {
         val cleanMobile = mobile.trim()
@@ -52,10 +75,19 @@ class AuthService(
             return SendOtpResponse(mobile = cleanMobile, expiresInSeconds = OTP_TTL_SECONDS.toInt())
         }
 
+        if (isMobileBlocked(cleanMobile)) {
+            throw AccountBlockedException("این شماره به دلیل تلاش‌های مکرر ناموفق مسدود شده است. لطفاً ۵ دقیقه دیگر دوباره تلاش کنید.")
+        }
+
+        if (isMobileInCooldown(cleanMobile)) {
+            throw RateLimitExceededException("لطفاً ۶۰ ثانیه قبل از درخواست مجدد صبر کنید")
+        }
+
         checkAndIncrementRateLimit(cleanMobile)
 
         val otpCode = smsApiService.generateOTP(5)
         storeOtpCode(cleanMobile, otpCode)
+        setMobileCooldown(cleanMobile, OTP_COOLDOWN_SECONDS)
         logger.info("OTP generated for {} (valid for {}s)", cleanMobile, OTP_TTL_SECONDS)
 
         try {
@@ -65,6 +97,154 @@ class AuthService(
         }
 
         return SendOtpResponse(mobile = cleanMobile, expiresInSeconds = OTP_TTL_SECONDS.toInt())
+    }
+
+    fun isMobileBlocked(mobile: String): Boolean {
+        if (mobile == BYPASS_MOBILE) return false
+        try {
+            if (redissonClient != null) {
+                val isBlocked = redissonClient.getBucket<String>("auth:blocked:$mobile").isExists
+                if (isBlocked) return true
+            }
+        } catch (e: Exception) {
+            logger.warn("Redis check blocked failed for {}: {}", mobile, e.message)
+        }
+        val blockedUntil = blockedCache[mobile] ?: return false
+        if (blockedUntil > System.currentTimeMillis()) {
+            return true
+        } else {
+            blockedCache.remove(mobile)
+            return false
+        }
+    }
+
+    fun isMobileInCooldown(mobile: String): Boolean {
+        if (mobile == BYPASS_MOBILE) return false
+        try {
+            if (redissonClient != null) {
+                val inCooldown = redissonClient.getBucket<String>("auth:cooldown:$mobile").isExists
+                if (inCooldown) return true
+            }
+        } catch (e: Exception) {
+            logger.warn("Redis check cooldown failed for {}: {}", mobile, e.message)
+        }
+        val cooldownUntil = cooldownCache[mobile] ?: return false
+        if (cooldownUntil > System.currentTimeMillis()) {
+            return true
+        } else {
+            cooldownCache.remove(mobile)
+            return false
+        }
+    }
+
+    private fun setMobileCooldown(mobile: String, seconds: Long = OTP_COOLDOWN_SECONDS) {
+        if (mobile == BYPASS_MOBILE) return
+        try {
+            redissonClient?.getBucket<String>("auth:cooldown:$mobile")
+                ?.set("active", Duration.ofSeconds(seconds))
+        } catch (e: Exception) {
+            logger.warn("Redis set cooldown failed for {}: {}", mobile, e.message)
+        }
+        cooldownCache[mobile] = System.currentTimeMillis() + (seconds * 1000L)
+    }
+
+    private fun recordFailedAttempt(mobile: String): Int {
+        if (mobile == BYPASS_MOBILE) return 0
+        var redisCount: Int? = null
+        try {
+            if (redissonClient != null) {
+                val counter = redissonClient.getAtomicLong("auth:attempts:$mobile")
+                val current = counter.incrementAndGet()
+                if (current == 1L) {
+                    counter.expire(Duration.ofMinutes(ATTEMPTS_EXPIRATION_MINUTES))
+                }
+                redisCount = current.toInt()
+            }
+        } catch (e: Exception) {
+            logger.warn("Redis record failed attempt failed for {}: {}", mobile, e.message)
+        }
+
+        val now = System.currentTimeMillis()
+        val expiry = now + (ATTEMPTS_EXPIRATION_MINUTES * 60 * 1000L)
+        val updatedCount = attemptsCache.compute(mobile) { _, current ->
+            if (current == null || current.second < now) {
+                Pair(1, expiry)
+            } else {
+                Pair(current.first + 1, expiry)
+            }
+        }?.first ?: 1
+
+        return redisCount ?: updatedCount
+    }
+
+    private fun blockMobile(mobile: String, minutes: Long = BLOCK_DURATION_MINUTES) {
+        if (mobile == BYPASS_MOBILE) return
+        try {
+            if (redissonClient != null) {
+                redissonClient.getBucket<String>("auth:blocked:$mobile")
+                    .set("blocked", Duration.ofMinutes(minutes))
+                redissonClient.getAtomicLong("auth:attempts:$mobile").delete()
+            }
+        } catch (e: Exception) {
+            logger.warn("Redis block mobile failed for {}: {}", mobile, e.message)
+        }
+        blockedCache[mobile] = System.currentTimeMillis() + (minutes * 60 * 1000L)
+        attemptsCache.remove(mobile)
+    }
+
+    private fun clearMobileAttemptsAndCooldown(mobile: String) {
+        try {
+            redissonClient?.getAtomicLong("auth:attempts:$mobile")?.delete()
+            redissonClient?.getBucket<String>("auth:cooldown:$mobile")?.delete()
+        } catch (e: Exception) {
+            logger.warn("Redis clear attempts and cooldown failed for {}: {}", mobile, e.message)
+        }
+        attemptsCache.remove(mobile)
+        cooldownCache.remove(mobile)
+    }
+
+    fun blacklistToken(jti: String, ttlSeconds: Long) {
+        if (jti.isBlank()) return
+        val effectiveTtl = if (ttlSeconds > 0) ttlSeconds else 3600L
+        try {
+            redissonClient?.getBucket<String>("auth:token_blacklist:$jti")
+                ?.set("blacklisted", Duration.ofSeconds(effectiveTtl))
+        } catch (e: Exception) {
+            logger.warn("Redis token blacklist failed for jti {}: {}", jti, e.message)
+        }
+        val expiresAt = System.currentTimeMillis() + (effectiveTtl * 1000L)
+        tokenBlacklistCache[jti] = expiresAt
+        globalTokenBlacklist[jti] = expiresAt
+    }
+
+    fun isTokenBlacklisted(jti: String): Boolean {
+        if (jti.isBlank()) return false
+        try {
+            if (redissonClient != null) {
+                val exists = redissonClient.getBucket<String>("auth:token_blacklist:$jti").isExists
+                if (exists) return true
+            }
+        } catch (e: Exception) {
+            logger.warn("Redis token blacklist check failed for jti {}: {}", jti, e.message)
+        }
+        val expiresAt = tokenBlacklistCache[jti] ?: globalTokenBlacklist[jti] ?: return false
+        if (expiresAt > System.currentTimeMillis()) {
+            return true
+        } else {
+            tokenBlacklistCache.remove(jti)
+            globalTokenBlacklist.remove(jti)
+            return false
+        }
+    }
+
+    fun resetCachesForTesting() {
+        otpCache.clear()
+        rateLimitCache.clear()
+        cooldownCache.clear()
+        attemptsCache.clear()
+        blockedCache.clear()
+        tokenBlacklistCache.clear()
+        globalTokenBlacklist.clear()
     }
 
     private fun checkAndIncrementRateLimit(mobile: String) {
@@ -160,15 +340,34 @@ class AuthService(
         val cleanMobile = mobile.trim()
         val cleanCode = otpCode.trim()
 
-        val isValidCode = if (cleanMobile == BYPASS_MOBILE) {
-            cleanCode == BYPASS_OTP || verifyAndConsumeStoredOtp(cleanMobile, cleanCode)
-        } else {
-            verifyAndConsumeStoredOtp(cleanMobile, cleanCode)
+        if (cleanMobile == BYPASS_MOBILE) {
+            val isValidCode = cleanCode == BYPASS_OTP || verifyAndConsumeStoredOtp(cleanMobile, cleanCode)
+            if (!isValidCode) {
+                return null
+            }
+            if (userRepo.isUserSuspendedByMobile(cleanMobile)) {
+                throw AccountSuspendedException("حساب کاربری شما تعلیق شده است.")
+            }
+            val user = userRepo.findOrCreateUserByMobile(cleanMobile)
+            val token = tokenGenerator(user.id)
+            return AuthResponse(token = token, user = user)
         }
 
+        if (isMobileBlocked(cleanMobile)) {
+            throw AccountBlockedException("این شماره به دلیل ۳ تلاش ناموفق به مدت ۵ دقیقه مسدود شده است.")
+        }
+
+        val isValidCode = verifyAndConsumeStoredOtp(cleanMobile, cleanCode)
         if (!isValidCode) {
+            val attempts = recordFailedAttempt(cleanMobile)
+            if (attempts >= MAX_FAILED_ATTEMPTS) {
+                blockMobile(cleanMobile, BLOCK_DURATION_MINUTES)
+                throw AccountBlockedException("تعداد تلاش‌های ناموفق بیش از ۳ بار بوده است. شماره شما به مدت ۵ دقیقه مسدود شد.")
+            }
             return null
         }
+
+        clearMobileAttemptsAndCooldown(cleanMobile)
 
         if (userRepo.isUserSuspendedByMobile(cleanMobile)) {
             throw AccountSuspendedException("حساب کاربری شما تعلیق شده است.")

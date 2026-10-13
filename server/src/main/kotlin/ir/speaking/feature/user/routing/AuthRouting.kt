@@ -102,6 +102,12 @@ fun Application.authRouting() {
 
                 val response = try {
                     authService.sendOtp(mobileNumber)
+                } catch (e: ir.speaking.feature.user.service.AccountBlockedException) {
+                    call.failureRespond(
+                        HttpStatusCode.TooManyRequests,
+                        e.message ?: "این شماره به دلیل تلاش‌های ناموفق مکرر مسدود شده است"
+                    )
+                    return@post
                 } catch (e: ir.speaking.feature.user.service.RateLimitExceededException) {
                     call.failureRespond(
                         HttpStatusCode.TooManyRequests,
@@ -224,6 +230,9 @@ fun Application.authRouting() {
                         otpCode = otpCode,
                         tokenGenerator = { uid -> generateToken(call = call, uid = uid) }
                     )
+                } catch (e: ir.speaking.feature.user.service.AccountBlockedException) {
+                    call.failureRespond(HttpStatusCode.TooManyRequests, e.message ?: "این شماره مسدود شده است")
+                    return@post
                 } catch (e: ir.speaking.feature.user.service.AccountSuspendedException) {
                     call.failureRespond(HttpStatusCode.Forbidden, e.message ?: "حساب کاربری شما تعلیق شده است")
                     return@post
@@ -264,6 +273,39 @@ fun Application.authRouting() {
             }
 
             authenticate(MyConstant.USER_JWT_NAME) {
+                post("/logout") {
+                    val principal = call.principal<JWTPrincipal>()
+                    val payload = principal?.payload
+                    val jti = payload?.id ?: payload?.getClaim("jti")?.asString()
+                    val expiresAt = payload?.expiresAt
+
+                    if (!jti.isNullOrBlank()) {
+                        val remainingSeconds = if (expiresAt != null) {
+                            val diff = (expiresAt.time - System.currentTimeMillis()) / 1000
+                            if (diff > 0) diff else 60L
+                        } else {
+                            3600L
+                        }
+                        authService.blacklistToken(jti, remainingSeconds)
+                    }
+
+                    call.successRespond(mapOf("logged_out" to true), message = "خروج با موفقیت انجام شد.")
+                }.describe {
+                    tag("Auth")
+                    summary = "Logout user"
+                    description = "Blacklist current JWT token in Redis and invalidate user session"
+                    responses {
+                        HttpStatusCode.OK {
+                            description = "Logged out successfully"
+                            schema = jsonSchema<SuccessResponse<Map<String, Boolean>>>()
+                        }
+                        HttpStatusCode.Unauthorized {
+                            description = "Authentication required or invalid token"
+                            schema = jsonSchema<FailureResponse>()
+                        }
+                    }
+                }
+
                 get("/me") {
                     val userId = try {
                         call.getUserUid()

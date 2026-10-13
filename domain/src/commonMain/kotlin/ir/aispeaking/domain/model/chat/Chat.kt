@@ -53,3 +53,9 @@ data class StageChatTurnResult(
     val finishTaskIndexes: List<Int> = emptyList()
 )
 
+sealed class StageChatStreamEvent {
+    data class Chunk(val delta: String) : StageChatStreamEvent()
+    data class Done(val payload: StageChatTurnResult) : StageChatStreamEvent()
+    data class Error(val message: String) : StageChatStreamEvent()
+}
+

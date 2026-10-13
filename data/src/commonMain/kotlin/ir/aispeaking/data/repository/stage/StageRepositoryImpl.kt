@@ -182,5 +182,45 @@ class StageRepositoryImpl(
             )
         )
     }
+
+    override fun streamStageChatMessage(
+        stageId: String,
+        userMessage: String?,
+        history: List<Pair<String, String>>,
+        userLevel: String?
+    ): kotlinx.coroutines.flow.Flow<ir.aispeaking.domain.model.chat.StageChatStreamEvent> = kotlinx.coroutines.flow.flow {
+        val requestDto = ir.aispeaking.network.model.stage.dto.StageChatRequestDto(
+            message = userMessage,
+            history = history.map { ChatMessageDto(it.first, it.second) },
+            userLevel = userLevel
+        )
+        stageApi.streamStageChatMessage(stageId, requestDto).collect { event ->
+            when (event) {
+                is ir.aispeaking.network.model.stage.dto.StageChatStreamEvent.Chunk -> {
+                    emit(ir.aispeaking.domain.model.chat.StageChatStreamEvent.Chunk(event.delta))
+                }
+                is ir.aispeaking.network.model.stage.dto.StageChatStreamEvent.Done -> {
+                    val p = event.payload
+                    emit(
+                        ir.aispeaking.domain.model.chat.StageChatStreamEvent.Done(
+                            ir.aispeaking.domain.model.chat.StageChatTurnResult(
+                                message = p.message,
+                                translatedMessage = p.translatedMessage,
+                                audioUrl = p.audioUrl,
+                                hasGrammarError = p.hasGrammarError,
+                                correctedSentence = p.correctedSentence,
+                                grammarFeedbackFa = p.grammarFeedbackFa,
+                                objectiveCompleted = p.objectiveCompleted,
+                                finishTaskIndexes = p.finishTaskIndexes
+                            )
+                        )
+                    )
+                }
+                is ir.aispeaking.network.model.stage.dto.StageChatStreamEvent.Error -> {
+                    emit(ir.aispeaking.domain.model.chat.StageChatStreamEvent.Error(event.message))
+                }
+            }
+        }
+    }
 }
 

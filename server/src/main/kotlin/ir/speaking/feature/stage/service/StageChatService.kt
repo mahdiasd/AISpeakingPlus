@@ -27,8 +27,14 @@ class StageChatService(
     private val stageRepository: StageRepository,
     private val ttsService: TtsService,
     private val aiApiService: AiApiService,
-    private val userRepo: UserRepo = UserRepo()
+    private val userRepo: UserRepo
 ) {
+    constructor(
+        stageRepository: StageRepository,
+        ttsService: TtsService,
+        aiApiService: AiApiService
+    ) : this(stageRepository, ttsService, aiApiService, UserRepo())
+
     private val logger = LoggerFactory.getLogger(StageChatService::class.java)
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -75,6 +81,67 @@ class StageChatService(
             userMessage = userMessage,
             history = history,
             level = normalizedLevel
+        )
+
+        val audioUrl = trySynthesize(turnResult.reply, voiceSid)
+
+        return StageChatResponse(
+            message = turnResult.reply,
+            translatedMessage = turnResult.translation,
+            audioUrl = audioUrl,
+            hasGrammarError = turnResult.hasGrammarError,
+            correctedSentence = turnResult.correctedSentence,
+            grammarFeedbackFa = turnResult.grammarFeedback,
+            objectiveCompleted = turnResult.isObjectiveDone,
+            finishTaskIndexes = emptyList()
+        )
+    }
+
+    suspend fun processChatTurnStream(
+        stageId: String,
+        userId: UUID?,
+        request: StageChatRequest,
+        onChunk: suspend (String) -> Unit
+    ): StageChatResponse {
+        val stage = stageRepository.getStageDetail(stageId, userId)
+        val userMessage = request.message?.trim().orEmpty()
+        val history = request.history
+
+        val resolvedUserLevel = request.userLevel?.trim()?.takeIf { it.isNotBlank() }
+            ?: (if (userId != null) userRepo.getUserLanguageLevel(userId) else null)
+            ?: "A1"
+        val normalizedLevel = resolvedUserLevel.uppercase()
+
+        val voiceSid = KokoroVoices.findByCode(stage?.voiceId)?.id
+            ?: when (stage?.characterGender?.lowercase()) {
+                "man", "male" -> 9 // bm_george
+                else -> 7 // bf_emma
+            }
+
+        // If userMessage is empty, this is the AI starter greeting turn
+        if (userMessage.isEmpty()) {
+            val (initialGreeting, initialTranslation) = generateAiStarterTurnStream(stage, normalizedLevel, onChunk)
+            val audioUrl = trySynthesize(initialGreeting, voiceSid)
+
+            return StageChatResponse(
+                message = initialGreeting,
+                translatedMessage = initialTranslation,
+                audioUrl = audioUrl,
+                hasGrammarError = false,
+                correctedSentence = null,
+                grammarFeedbackFa = "",
+                objectiveCompleted = false,
+                finishTaskIndexes = emptyList()
+            )
+        }
+
+        // Generate response and evaluate grammar via AI stream
+        val turnResult = generateAiChatTurnStream(
+            stage = stage,
+            userMessage = userMessage,
+            history = history,
+            level = normalizedLevel,
+            onChunk = onChunk
         )
 
         val audioUrl = trySynthesize(turnResult.reply, voiceSid)
@@ -347,6 +414,320 @@ class StageChatService(
             logger.error("Error in generateHint: ${e.message}", e)
             throw AppException.ExternalServiceError("خطا در دریافت راهنما از هوش مصنوعی. لطفاً دوباره تلاش کنید.")
         }
+    }
+
+    private suspend fun generateAiStarterTurnStream(
+        stage: StageDetailResponse?,
+        level: String = "A1",
+        onChunk: suspend (String) -> Unit
+    ): Pair<String, String?> {
+        return try {
+            val systemPrompt = buildString {
+                appendLine("You are an interactive conversational English learning assistant acting as a character in an English speaking simulation scenario.")
+                appendLine("Current Stage: ${stage?.title ?: "English Speaking Stage"}")
+                appendLine("Character Name: ${stage?.characterName ?: "Character"}")
+                appendLine("Character Persona & Behavior: ${stage?.characterBehavior ?: "Friendly and helpful conversational partner"}")
+                appendLine("Stage Target Objective: ${stage?.targetObjective ?: "Practice natural English conversation"}")
+                appendLine()
+                append(buildCefrDirectives(level))
+                appendLine()
+                appendLine("Task:")
+                appendLine("Generate the OPENING greeting message from '${stage?.characterName ?: "Character"}' to start the conversation with the user in this scenario.")
+                appendLine("The greeting MUST strictly match the learner's English level ($level) in vocabulary and sentence structure.")
+                appendLine("Keep it natural, in-character, and concise (1 to 2 sentences max).")
+                appendLine("Also provide a natural Persian translation.")
+                appendLine("IMPORTANT: 'reply' MUST be the very first property in the returned JSON object.")
+                appendLine("ALWAYS return valid JSON matching this schema:")
+                appendLine("{\n  \"reply\": \"Opening greeting in English\",\n  \"translation\": \"ترجمه فارسی پیام آغازین\"\n}")
+            }
+
+            val chatMessages = listOf(ChatMessage(role = ChatRole.System, content = systemPrompt))
+            val parser = ReplyStreamParser(onChunk)
+
+            try {
+                aiApiService.streamRequest(chatMessages, com.aallam.openai.api.chat.ChatResponseFormat.JsonObject).collect { chunk ->
+                    parser.feed(chunk)
+                }
+            } catch (e: Exception) {
+                if (e is AppException) throw e
+                logger.warn("Streaming AI starter failed, attempting raw fallback: ${e.message}")
+            }
+
+            val rawText = parser.getAccumulated().trim()
+            if (rawText.isNotEmpty()) {
+                val cleanJson = cleanJsonResponse(rawText)
+                val jsonObject = json.parseToJsonElement(cleanJson).jsonObject
+                val reply = jsonObject["reply"]?.jsonPrimitive?.content?.trim().orEmpty()
+                val translation = jsonObject["translation"]?.jsonPrimitive?.content?.trim().orEmpty()
+                if (reply.isNotEmpty()) {
+                    parser.finish(reply)
+                    return Pair(reply, translation.ifEmpty { null })
+                }
+            }
+
+            val rawResult = aiApiService.requestRaw(chatMessages)
+            if (rawResult.isSuccess) {
+                val cleanJson = cleanJsonResponse(rawResult.getOrNull().orEmpty())
+                val jsonObject = json.parseToJsonElement(cleanJson).jsonObject
+                val reply = jsonObject["reply"]?.jsonPrimitive?.content?.trim().orEmpty()
+                val translation = jsonObject["translation"]?.jsonPrimitive?.content?.trim().orEmpty()
+                if (reply.isNotEmpty()) {
+                    parser.finish(reply)
+                    return Pair(reply, translation.ifEmpty { null })
+                }
+            }
+
+            throw AppException.ExternalServiceError("خطا در برقراری ارتباط با هوش مصنوعی. لطفاً دوباره تلاش کنید.")
+        } catch (e: Exception) {
+            if (e is AppException) throw e
+            logger.error("Error in generateAiStarterTurnStream: ${e.message}", e)
+            throw AppException.ExternalServiceError("خطا در برقراری ارتباط با هوش مصنوعی. لطفاً دوباره تلاش کنید.")
+        }
+    }
+
+    private suspend fun generateAiChatTurnStream(
+        stage: StageDetailResponse?,
+        userMessage: String,
+        history: List<StageChatMessageDto>,
+        level: String = "A1",
+        onChunk: suspend (String) -> Unit
+    ): ChatTurnResult {
+        return try {
+            val systemPrompt = buildString {
+                appendLine("You are an interactive conversational English learning assistant acting as a character in an English speaking simulation scenario.")
+                appendLine("Current Stage: ${stage?.title ?: "English Speaking Stage"}")
+                appendLine("Character Name: ${stage?.characterName ?: "Character"}")
+                appendLine("Character Persona & Behavior: ${stage?.characterBehavior ?: "Friendly and helpful conversational partner"}")
+                appendLine("Stage Target Objective: ${stage?.targetObjective ?: "Practice natural English conversation"}")
+                appendLine()
+                append(buildCefrDirectives(level))
+                appendLine()
+                appendLine("Instructions:")
+                appendLine("1. Reply in-character as '${stage?.characterName ?: "Character"}' in spoken-style English strictly tailored to CEFR level $level. Keep your character reply concise (1 to 2 sentences) and conversational.")
+                appendLine("2. Provide a fluent, natural Persian translation ('translation') for your English reply.")
+                appendLine("3. Critically examine the user's latest message for English grammar, vocabulary, preposition, or phrasing errors suited to level $level:")
+                appendLine("   - Pay close attention to word boundaries: never report words as glued or concatenated if standard spaces or punctuation separate them. Only report genuine spelling, grammar, preposition, or phrasing errors.")
+                appendLine("   - If the user made ANY mistake: set 'has_grammar_error': true, provide the corrected English sentence in 'corrected_sentence' (matched to level $level), and provide a helpful, polite explanation in Persian ('grammar_feedback') explaining the issue simply and constructively.")
+                appendLine("   - If the user's sentence is grammatically correct and natural: set 'has_grammar_error': false, 'corrected_sentence': null, and 'grammar_feedback': \"\".")
+                appendLine("4. Stage Objective Completion & Wrap-up:")
+                appendLine("   - Assess whether the user's latest response has completed the stage target objective ('${stage?.targetObjective ?: ""}').")
+                appendLine("   - If the goal is met or the scenario has reached its natural conclusion:")
+                appendLine("     * Wrap up the conversation in-character in English at level $level (e.g. warmly state that everything is sorted/completed for this stage and congratulate or wish them well).")
+                appendLine("     * Provide the corresponding natural Persian translation in 'translation'.")
+                appendLine("     * Set 'objective_completed': true.")
+                appendLine("   - If the conversation is still ongoing and the objective is not yet reached, set 'objective_completed': false.")
+                appendLine("5. IMPORTANT: 'reply' MUST be the very first property in the returned JSON object.")
+                appendLine("6. ALWAYS return valid JSON matching this schema:")
+                appendLine("{\n  \"reply\": \"English reply here\",\n  \"translation\": \"ترجمه فارسی پاسخ\",\n  \"has_grammar_error\": false,\n  \"corrected_sentence\": null,\n  \"grammar_feedback\": \"توضیح فارسی اشکال گرامری یا رشته خالی در صورت صحت\",\n  \"objective_completed\": false\n}")
+            }
+
+            val chatMessages = mutableListOf<ChatMessage>()
+            chatMessages.add(ChatMessage(role = ChatRole.System, content = systemPrompt))
+
+            val sanitizedHistory = history.filterIndexed { index, item ->
+                !(index == history.lastIndex && item.role.equals("User", ignoreCase = true) && item.content.trim().equals(userMessage.trim(), ignoreCase = true))
+            }.takeLast(6)
+
+            for (item in sanitizedHistory) {
+                val role = if (item.role.equals("User", ignoreCase = true)) ChatRole.User else ChatRole.Assistant
+                chatMessages.add(ChatMessage(role = role, content = item.content))
+            }
+
+            chatMessages.add(ChatMessage(role = ChatRole.User, content = userMessage))
+
+            val parser = ReplyStreamParser(onChunk)
+
+            try {
+                aiApiService.streamRequest(chatMessages, com.aallam.openai.api.chat.ChatResponseFormat.JsonObject).collect { chunk ->
+                    parser.feed(chunk)
+                }
+            } catch (e: Exception) {
+                if (e is AppException) throw e
+                logger.warn("Streaming AI chat turn failed, attempting raw fallback: ${e.message}")
+            }
+
+            val rawText = parser.getAccumulated().trim()
+            if (rawText.isNotEmpty()) {
+                val cleanJson = cleanJsonResponse(rawText)
+                val jsonObject = json.parseToJsonElement(cleanJson).jsonObject
+
+                val reply = jsonObject["reply"]?.jsonPrimitive?.content?.trim().orEmpty()
+                val translation = jsonObject["translation"]?.jsonPrimitive?.content?.trim().orEmpty()
+                val grammarAnalysisObj = try { jsonObject["grammar_analysis"]?.jsonObject } catch (_: Exception) { null }
+                val grammarFeedback = jsonObject["grammar_feedback"]?.jsonPrimitive?.content?.trim()
+                    ?: grammarAnalysisObj?.get("error_details")?.jsonPrimitive?.content?.trim()
+                    ?: ""
+                val hasGrammarError = jsonObject["has_grammar_error"]?.jsonPrimitive?.booleanOrNull
+                    ?: grammarAnalysisObj?.get("has_error")?.jsonPrimitive?.booleanOrNull
+                    ?: grammarFeedback.isNotEmpty()
+                val rawCorrected = jsonObject["corrected_sentence"]?.jsonPrimitive?.content?.trim()
+                    ?: grammarAnalysisObj?.get("corrected_sentence")?.jsonPrimitive?.content?.trim()
+                val correctedSentence = rawCorrected?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
+                val objectiveCompleted = jsonObject["objective_completed"]?.jsonPrimitive?.booleanOrNull ?: false
+
+                if (reply.isNotEmpty()) {
+                    parser.finish(reply)
+                    return ChatTurnResult(
+                        reply = reply,
+                        translation = translation.ifEmpty { null },
+                        isObjectiveDone = objectiveCompleted,
+                        hasGrammarError = hasGrammarError,
+                        correctedSentence = if (hasGrammarError) correctedSentence else null,
+                        grammarFeedback = if (hasGrammarError) grammarFeedback else ""
+                    )
+                }
+            }
+
+            val rawResult = aiApiService.requestRaw(chatMessages)
+            if (rawResult.isSuccess) {
+                val cleanJson = cleanJsonResponse(rawResult.getOrNull().orEmpty())
+                val jsonObject = json.parseToJsonElement(cleanJson).jsonObject
+
+                val reply = jsonObject["reply"]?.jsonPrimitive?.content?.trim().orEmpty()
+                val translation = jsonObject["translation"]?.jsonPrimitive?.content?.trim().orEmpty()
+                val grammarAnalysisObj = try { jsonObject["grammar_analysis"]?.jsonObject } catch (_: Exception) { null }
+                val grammarFeedback = jsonObject["grammar_feedback"]?.jsonPrimitive?.content?.trim()
+                    ?: grammarAnalysisObj?.get("error_details")?.jsonPrimitive?.content?.trim()
+                    ?: ""
+                val hasGrammarError = jsonObject["has_grammar_error"]?.jsonPrimitive?.booleanOrNull
+                    ?: grammarAnalysisObj?.get("has_error")?.jsonPrimitive?.booleanOrNull
+                    ?: grammarFeedback.isNotEmpty()
+                val rawCorrected = jsonObject["corrected_sentence"]?.jsonPrimitive?.content?.trim()
+                    ?: grammarAnalysisObj?.get("corrected_sentence")?.jsonPrimitive?.content?.trim()
+                val correctedSentence = rawCorrected?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
+                val objectiveCompleted = jsonObject["objective_completed"]?.jsonPrimitive?.booleanOrNull ?: false
+
+                if (reply.isNotEmpty()) {
+                    parser.finish(reply)
+                    return ChatTurnResult(
+                        reply = reply,
+                        translation = translation.ifEmpty { null },
+                        isObjectiveDone = objectiveCompleted,
+                        hasGrammarError = hasGrammarError,
+                        correctedSentence = if (hasGrammarError) correctedSentence else null,
+                        grammarFeedback = if (hasGrammarError) grammarFeedback else ""
+                    )
+                }
+            }
+
+            throw AppException.ExternalServiceError("خطا در برقراری ارتباط با هوش مصنوعی. لطفاً دوباره تلاش کنید.")
+        } catch (e: Exception) {
+            if (e is AppException) throw e
+            logger.error("Error in generateAiChatTurnStream: ${e.message}", e)
+            throw AppException.ExternalServiceError("خطا در برقراری ارتباط با هوش مصنوعی. لطفاً دوباره تلاش کنید.")
+        }
+    }
+}
+
+class ReplyStreamParser(
+    private val onChunk: suspend (String) -> Unit
+) {
+    private val accumulated = StringBuilder()
+    private var inReply = false
+    private var replyFinished = false
+    private var emittedLength = 0
+
+    suspend fun feed(chunk: String) {
+        accumulated.append(chunk)
+        if (replyFinished) return
+
+        val text = accumulated.toString()
+        if (!inReply) {
+            val replyKeyIndex = text.indexOf("\"reply\"")
+            if (replyKeyIndex != -1) {
+                val colonIndex = text.indexOf(':', replyKeyIndex + 7)
+                if (colonIndex != -1) {
+                    val openQuoteIndex = text.indexOf('"', colonIndex + 1)
+                    if (openQuoteIndex != -1) {
+                        inReply = true
+                        processReplyContent(text.substring(openQuoteIndex + 1))
+                    }
+                }
+            }
+        } else {
+            val replyStartIndex = findReplyStartInAccumulated()
+            if (replyStartIndex != -1) {
+                processReplyContent(text.substring(replyStartIndex))
+            }
+        }
+    }
+
+    private fun findReplyStartInAccumulated(): Int {
+        val replyKeyIndex = accumulated.indexOf("\"reply\"")
+        if (replyKeyIndex == -1) return -1
+        val colonIndex = accumulated.indexOf(':', replyKeyIndex + 7)
+        if (colonIndex == -1) return -1
+        val openQuoteIndex = accumulated.indexOf('"', colonIndex + 1)
+        if (openQuoteIndex == -1) return -1
+        return openQuoteIndex + 1
+    }
+
+    private suspend fun processReplyContent(rawReplySoFar: String) {
+        var isEscaped = false
+        var closeQuoteIndex = -1
+        for (i in rawReplySoFar.indices) {
+            val c = rawReplySoFar[i]
+            if (c == '\\' && !isEscaped) {
+                isEscaped = true
+                continue
+            }
+            if (c == '"' && !isEscaped) {
+                closeQuoteIndex = i
+                break
+            }
+            isEscaped = false
+        }
+
+        val currentReplyText = if (closeQuoteIndex != -1) {
+            replyFinished = true
+            rawReplySoFar.substring(0, closeQuoteIndex)
+        } else {
+            rawReplySoFar
+        }
+
+        val unescaped = unescapeJsonString(currentReplyText)
+        if (unescaped.length > emittedLength) {
+            val delta = unescaped.substring(emittedLength)
+            emittedLength = unescaped.length
+            if (delta.isNotEmpty()) {
+                onChunk(delta)
+            }
+        }
+    }
+
+    suspend fun finish(finalReply: String) {
+        val trimmed = finalReply.trim()
+        if (emittedLength == 0 && trimmed.isNotEmpty()) {
+            onChunk(trimmed)
+            emittedLength = trimmed.length
+        }
+    }
+
+    fun getAccumulated(): String = accumulated.toString()
+
+    private fun unescapeJsonString(str: String): String {
+        val sb = StringBuilder()
+        var i = 0
+        while (i < str.length) {
+            val c = str[i]
+            if (c == '\\' && i + 1 < str.length) {
+                when (str[i + 1]) {
+                    '"' -> { sb.append('"'); i += 2 }
+                    '\\' -> { sb.append('\\'); i += 2 }
+                    '/' -> { sb.append('/'); i += 2 }
+                    'b' -> { sb.append('\b'); i += 2 }
+                    'f' -> { sb.append('\u000c'); i += 2 }
+                    'n' -> { sb.append('\n'); i += 2 }
+                    'r' -> { sb.append('\r'); i += 2 }
+                    't' -> { sb.append('\t'); i += 2 }
+                    else -> { sb.append(c); i++ }
+                }
+            } else {
+                sb.append(c)
+                i++
+            }
+        }
+        return sb.toString()
     }
 }
 
