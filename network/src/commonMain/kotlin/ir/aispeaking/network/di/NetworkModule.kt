@@ -8,6 +8,7 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -52,6 +53,8 @@ fun provideKtor(tokenPreferences: TokenPreferences): HttpClient {
         install(WebSockets) {
             pingIntervalMillis = 20_000
         }
+
+        install(SSE)
 
         install(ContentNegotiation) {
             json(Json {

@@ -1,6 +1,7 @@
 package ir.aispeaking.domain.repository.stage
 
 import ir.aispeaking.domain.model.data_result.DataResult
+import ir.aispeaking.domain.model.error.getErrorMessage
 import ir.aispeaking.domain.model.stage.AccessTier
 import ir.aispeaking.domain.model.stage.LocalGuestProgress
 import ir.aispeaking.domain.model.stage.Stage
@@ -22,5 +23,22 @@ interface StageRepository {
         objectiveCompleted: Boolean = false
     ): DataResult<ir.aispeaking.domain.model.stage.EvaluationSession>
     suspend fun sendStageChatMessage(stageId: String, userMessage: String?, history: List<Pair<String, String>>, userLevel: String? = null): DataResult<ir.aispeaking.domain.model.chat.StageChatTurnResult>
+
+    fun streamStageChatMessage(
+        stageId: String,
+        userMessage: String?,
+        history: List<Pair<String, String>>,
+        userLevel: String? = null
+    ): kotlinx.coroutines.flow.Flow<ir.aispeaking.domain.model.chat.StageChatStreamEvent> = kotlinx.coroutines.flow.flow {
+        when (val result = sendStageChatMessage(stageId, userMessage, history, userLevel)) {
+            is DataResult.Success -> {
+                emit(ir.aispeaking.domain.model.chat.StageChatStreamEvent.Chunk(result.data.message))
+                emit(ir.aispeaking.domain.model.chat.StageChatStreamEvent.Done(result.data))
+            }
+            is DataResult.Failure -> {
+                emit(ir.aispeaking.domain.model.chat.StageChatStreamEvent.Error(result.appError.getErrorMessage()))
+            }
+        }
+    }
 }
 

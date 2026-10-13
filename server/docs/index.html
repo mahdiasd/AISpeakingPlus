@@ -1450,6 +1450,9 @@
                       <a href="#api-AdminUsers-apiAdminUsersUserIdStatusPost">apiAdminUsersUserIdStatusPost</a>
                     </li>
                   <li class="nav-header" data-group="Auth"><a href="#api-Auth">API Methods - Auth</a></li>
+                    <li data-group="Auth" data-name="apiV2AuthLogoutPost" class="">
+                      <a href="#api-Auth-apiV2AuthLogoutPost">apiV2AuthLogoutPost</a>
+                    </li>
                     <li data-group="Auth" data-name="apiV2AuthMeGet" class="">
                       <a href="#api-Auth-apiV2AuthMeGet">apiV2AuthMeGet</a>
                     </li>
@@ -1471,6 +1474,9 @@
                     </li>
                     <li data-group="Default" data-name="apiV1TtsSpeakHead" class="">
                       <a href="#api-Default-apiV1TtsSpeakHead">apiV1TtsSpeakHead</a>
+                    </li>
+                    <li data-group="Default" data-name="apiV2StagesStageIdChatStreamPost" class="">
+                      <a href="#api-Default-apiV2StagesStageIdChatStreamPost">apiV2StagesStageIdChatStreamPost</a>
                     </li>
                     <li data-group="Default" data-name="apiV2TtsAudioFilenameHead" class="">
                       <a href="#api-Default-apiV2TtsAudioFilenameHead">apiV2TtsAudioFilenameHead</a>
@@ -7138,6 +7144,333 @@ except ApiException as e:
                   </section>
                 <section id="api-Auth">
                   <h1>Auth</h1>
+                    <div id="api-Auth-apiV2AuthLogoutPost">
+                      <article id="api-Auth-apiV2AuthLogoutPost-0" data-group="User" data-name="apiV2AuthLogoutPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2AuthLogoutPost</h1>
+                          <p>Logout user</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Blacklist current JWT token in Redis and invalidate user session</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v2/auth/logout</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Auth-apiV2AuthLogoutPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Auth-apiV2AuthLogoutPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Auth-apiV2AuthLogoutPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Auth-apiV2AuthLogoutPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Auth-apiV2AuthLogoutPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Auth-apiV2AuthLogoutPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Auth-apiV2AuthLogoutPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Auth-apiV2AuthLogoutPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Auth-apiV2AuthLogoutPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Auth-apiV2AuthLogoutPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Auth-apiV2AuthLogoutPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Auth-apiV2AuthLogoutPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+"//api/v2/auth/logout"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Auth-apiV2AuthLogoutPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AuthApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AuthApi apiInstance = new AuthApi();
+        try {
+            Object result = apiInstance.apiV2AuthLogoutPost();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#apiV2AuthLogoutPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Auth-apiV2AuthLogoutPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AuthApi;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        AuthApi apiInstance = new AuthApi();
+        try {
+            Object result = apiInstance.apiV2AuthLogoutPost();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#apiV2AuthLogoutPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Auth-apiV2AuthLogoutPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Auth-apiV2AuthLogoutPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+
+AuthApi *apiInstance = [[AuthApi alloc] init];
+
+// Logout user
+[apiInstance apiV2AuthLogoutPostWithCompletionHandler: 
+              ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-apiV2AuthLogoutPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AuthApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiV2AuthLogoutPost(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Auth-apiV2AuthLogoutPost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Auth-apiV2AuthLogoutPost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2AuthLogoutPostExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AuthApi();
+
+            try
+            {
+                // Logout user
+                Object result = apiInstance.apiV2AuthLogoutPost();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AuthApi.apiV2AuthLogoutPost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-apiV2AuthLogoutPost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAuthApi();
+
+try {
+    $result = $api_instance->apiV2AuthLogoutPost();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AuthApi->apiV2AuthLogoutPost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-apiV2AuthLogoutPost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AuthApi;
+
+
+my $api_instance = WWW::SwaggerClient::AuthApi->new();
+
+eval { 
+    my $result = $api_instance->apiV2AuthLogoutPost();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AuthApi->apiV2AuthLogoutPost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-apiV2AuthLogoutPost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AuthApi()
+
+try: 
+    # Logout user
+    api_response = api_instance.api_v2_auth_logout_post()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AuthApi->apiV2AuthLogoutPost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Logged out successfully </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2AuthLogoutPost-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2AuthLogoutPost-200-schema">
+                                  <div id='responses-apiV2AuthLogoutPost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Logged out successfully",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "additionalProperties" : { }
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2AuthLogoutPost-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2AuthLogoutPost-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2AuthLogoutPost-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 401 - Authentication required or invalid token </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2AuthLogoutPost-401-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2AuthLogoutPost-401-schema">
+                                  <div id='responses-apiV2AuthLogoutPost-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Authentication required or invalid token",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2AuthLogoutPost-401-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2AuthLogoutPost-401-schema-401');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2AuthLogoutPost-401-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
                     <div id="api-Auth-apiV2AuthMeGet">
                       <article id="api-Auth-apiV2AuthMeGet-0" data-group="User" data-name="apiV2AuthMeGet" data-version="0">
                         <div class="pull-left">
@@ -9300,6 +9633,248 @@ except ApiException as e:
 
                           <h2>Parameters</h2>
 
+
+
+
+
+
+                          <h2>Responses</h2>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Default-apiV2StagesStageIdChatStreamPost">
+                      <article id="api-Default-apiV2StagesStageIdChatStreamPost-0" data-group="User" data-name="apiV2StagesStageIdChatStreamPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2StagesStageIdChatStreamPost</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v2/stages/{stageId}/chat/stream</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Default-apiV2StagesStageIdChatStreamPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Default-apiV2StagesStageIdChatStreamPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Default-apiV2StagesStageIdChatStreamPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV2StagesStageIdChatStreamPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV2StagesStageIdChatStreamPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Default-apiV2StagesStageIdChatStreamPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV2StagesStageIdChatStreamPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV2StagesStageIdChatStreamPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Default-apiV2StagesStageIdChatStreamPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Default-apiV2StagesStageIdChatStreamPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Default-apiV2StagesStageIdChatStreamPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Default-apiV2StagesStageIdChatStreamPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+ -H "Authorization: Bearer [[accessToken]]"\
+"//api/v2/stages/{stageId}/chat/stream"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Default-apiV2StagesStageIdChatStreamPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.DefaultApi;
+
+import java.io.File;
+import java.util.*;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        DefaultApi apiInstance = new DefaultApi();
+         stageId = ; //  | 
+        try {
+            apiInstance.apiV2StagesStageIdChatStreamPost(stageId);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV2StagesStageIdChatStreamPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Default-apiV2StagesStageIdChatStreamPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        DefaultApi apiInstance = new DefaultApi();
+         stageId = ; //  | 
+        try {
+            apiInstance.apiV2StagesStageIdChatStreamPost(stageId);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV2StagesStageIdChatStreamPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Default-apiV2StagesStageIdChatStreamPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Default-apiV2StagesStageIdChatStreamPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+ *stageId = ; // 
+
+DefaultApi *apiInstance = [[DefaultApi alloc] init];
+
+[apiInstance apiV2StagesStageIdChatStreamPostWith:stageId
+              completionHandler: ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV2StagesStageIdChatStreamPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.DefaultApi()
+var stageId = ; // {{}} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.apiV2StagesStageIdChatStreamPost(stageId, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Default-apiV2StagesStageIdChatStreamPost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Default-apiV2StagesStageIdChatStreamPost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2StagesStageIdChatStreamPostExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new DefaultApi();
+            var stageId = new (); //  | 
+
+            try
+            {
+                apiInstance.apiV2StagesStageIdChatStreamPost(stageId);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling DefaultApi.apiV2StagesStageIdChatStreamPost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV2StagesStageIdChatStreamPost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiDefaultApi();
+$stageId = ; //  | 
+
+try {
+    $api_instance->apiV2StagesStageIdChatStreamPost($stageId);
+} catch (Exception $e) {
+    echo 'Exception when calling DefaultApi->apiV2StagesStageIdChatStreamPost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV2StagesStageIdChatStreamPost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::DefaultApi;
+
+
+my $api_instance = WWW::SwaggerClient::DefaultApi->new();
+my $stageId = ; #  | 
+
+eval { 
+    $api_instance->apiV2StagesStageIdChatStreamPost(stageId => $stageId);
+};
+if ($@) {
+    warn "Exception when calling DefaultApi->apiV2StagesStageIdChatStreamPost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV2StagesStageIdChatStreamPost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.DefaultApi()
+stageId =  #  | 
+
+try: 
+    api_instance.api_v2_stages_stage_id_chat_stream_post(stageId)
+except ApiException as e:
+    print("Exception when calling DefaultApi->apiV2StagesStageIdChatStreamPost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">stageId*</td>
+                                  <td>
+                                  
+                                  
+                                      <div id="d2e199_apiV2StagesStageIdChatStreamPost_stageId">
+                                          <div class="json-schema-view">
+                                              <div class="primitive">
+                                                  <span class="type">
+                                                      
+                                                  </span>
+                                  
+                                              </div>
+                                                  <div class="inner required">
+                                                      Required
+                                                  </div>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  </tr>
+                            </table>
 
 
 

@@ -63,9 +63,15 @@ class AuthRepositoryImpl(
 
     override suspend fun logout(): DataResult<Unit> {
         return try {
+            try {
+                authApi.logout()
+            } catch (_: Throwable) {
+                // Best-effort remote token invalidation
+            }
             clearSharedPreferences.clear()
             DataResult.Success(Unit)
         } catch (e: Throwable) {
+            clearSharedPreferences.clear()
             DataResult.Failure(
                 ir.aispeaking.domain.model.error.NetworkError.Unknown(message = e.message ?: "Logout failed")
             )
