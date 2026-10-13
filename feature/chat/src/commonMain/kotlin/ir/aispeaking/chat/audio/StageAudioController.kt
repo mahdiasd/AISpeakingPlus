@@ -4,6 +4,8 @@ import kotlinx.coroutines.*
 import org.koin.core.annotation.Single
 
 interface StageAudioController {
+    var onAudioChunkCaptured: ((ByteArray) -> Unit)?
+
     fun playVoice(url: String?, onEnded: () -> Unit)
     fun stopVoice()
     fun isVoicePlaying(): Boolean
@@ -18,10 +20,13 @@ interface StageAudioController {
 
 @Single
 class DefaultStageAudioController : StageAudioController {
+    override var onAudioChunkCaptured: ((ByteArray) -> Unit)? = null
+
     private var isPlayingState = false
     private var isRecordingState = false
     private var currentOnEnded: (() -> Unit)? = null
     private var silenceJob: Job? = null
+    private var currentOnSilenceDetected: (() -> Unit)? = null
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     // Platform callback bridges (can be set by platform host like Web/Android)
@@ -29,6 +34,14 @@ class DefaultStageAudioController : StageAudioController {
     var onPlatformStopVoice: (() -> Unit)? = null
     var onPlatformStartRecording: (((String) -> Unit, () -> Unit) -> Unit)? = null
     var onPlatformStopRecording: (() -> Unit)? = null
+
+    fun dispatchAudioChunk(bytes: ByteArray) {
+        onAudioChunkCaptured?.invoke(bytes)
+    }
+
+    fun notifyVoiceActivity() {
+        currentOnSilenceDetected?.let { resetSilenceTimer(it) }
+    }
 
     override fun playVoice(url: String?, onEnded: () -> Unit) {
         stopVoice()
@@ -73,8 +86,11 @@ class DefaultStageAudioController : StageAudioController {
         onSpeechRecognized: (String) -> Unit,
         onSilenceDetected: () -> Unit
     ) {
+        val savedChunkCallback = onAudioChunkCaptured
         stopRecording()
+        onAudioChunkCaptured = savedChunkCallback
         isRecordingState = true
+        currentOnSilenceDetected = onSilenceDetected
 
         resetSilenceTimer(onSilenceDetected)
 
@@ -104,6 +120,7 @@ class DefaultStageAudioController : StageAudioController {
     }
 
     fun onSpeechReceived(text: String, onSpeechRecognized: (String) -> Unit, onSilenceDetected: () -> Unit) {
+        currentOnSilenceDetected = onSilenceDetected
         resetSilenceTimer(onSilenceDetected)
         onSpeechRecognized(text)
     }
@@ -112,6 +129,8 @@ class DefaultStageAudioController : StageAudioController {
         isRecordingState = false
         silenceJob?.cancel()
         silenceJob = null
+        currentOnSilenceDetected = null
+        onAudioChunkCaptured = null
         onPlatformStopRecording?.invoke()
     }
 

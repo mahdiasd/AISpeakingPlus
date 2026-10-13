@@ -1,11 +1,12 @@
-@file:OptIn(kotlin.js.ExperimentalWasmJsInterop::class)
+@file:OptIn(kotlin.js.ExperimentalWasmJsInterop::class, kotlin.io.encoding.ExperimentalEncodingApi::class)
 
 package ir.aispeaking.web
 
 import ir.aispeaking.chat.audio.DefaultStageAudioController
 import kotlinx.coroutines.*
+import kotlin.io.encoding.Base64
 
-// External JS functions for WasmJs browser runtime
+// External JS functions for WasmJs / JS browser runtime
 @JsFun("(url) => window.aiSpeakingAudio ? window.aiSpeakingAudio.play(url) : null")
 private external fun jsPlayAudio(url: String)
 
@@ -26,6 +27,12 @@ private external fun jsGetSpeechTranscript(): String
 
 @JsFun("() => !!(window.aiSpeakingSpeech && window.aiSpeakingSpeech.isRecording)")
 private external fun jsIsSpeechRecording(): Boolean
+
+@JsFun("() => window.aiSpeakingSpeech ? window.aiSpeakingSpeech.drainPcmChunks() : ''")
+private external fun jsDrainPcmChunks(): String
+
+@JsFun("() => !!(window.aiSpeakingSpeech && window.aiSpeakingSpeech.hasVoiceActivity && window.aiSpeakingSpeech.hasVoiceActivity())")
+private external fun jsHasVoiceActivity(): Boolean
 
 private val bridgeScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
@@ -69,8 +76,8 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
                 var graceElapsedMs = 0
                 val maxGraceMs = 3000
                 while (!jsIsSpeechRecording() && graceElapsedMs < maxGraceMs && isActive) {
-                    delay(100)
-                    graceElapsedMs += 100
+                    delay(50)
+                    graceElapsedMs += 50
                 }
 
                 // If recording failed to start (e.g. permission denied or unsupported), notify controller and exit
@@ -79,25 +86,59 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
                     return@launch
                 }
 
-                // 2. Active recording loop: poll transcript while recording is active
+                // 2. Active recording loop: drain PCM chunks and stream to controller
                 while (isActive) {
                     if (!jsIsSpeechRecording()) {
                         // Short grace check to absorb momentary restarts between utterances
-                        delay(250)
+                        delay(150)
                         if (!jsIsSpeechRecording()) {
                             break
                         }
                     }
 
-                    delay(150)
+                    // Drain binary PCM audio chunks captured from Web Audio API
+                    val chunksPayload = jsDrainPcmChunks()
+                    if (chunksPayload.isNotEmpty()) {
+                        val chunks = chunksPayload.split('|')
+                        for (base64Chunk in chunks) {
+                            if (base64Chunk.isNotBlank()) {
+                                try {
+                                    val bytes = Base64.decode(base64Chunk)
+                                    controller.onAudioChunkCaptured?.invoke(bytes)
+                                } catch (_: Throwable) {}
+                            }
+                        }
+                    }
+
+                    // Reset silence timer on controller if voice activity detected
+                    if (jsHasVoiceActivity()) {
+                        controller.notifyVoiceActivity()
+                    }
+
+                    // Poll secondary speech transcript (from SpeechRecognition fallback if active)
                     val currentText = jsGetSpeechTranscript()
                     if (currentText.isNotEmpty() && currentText != lastText) {
                         lastText = currentText
                         onSpeech(currentText)
                     }
+
+                    delay(40)
                 }
 
-                // 3. Flush any final transcript accumulated
+                // 3. Flush any final PCM chunks and transcript accumulated
+                val remainingPayload = jsDrainPcmChunks()
+                if (remainingPayload.isNotEmpty()) {
+                    val chunks = remainingPayload.split('|')
+                    for (base64Chunk in chunks) {
+                        if (base64Chunk.isNotBlank()) {
+                            try {
+                                val bytes = Base64.decode(base64Chunk)
+                                controller.onAudioChunkCaptured?.invoke(bytes)
+                            } catch (_: Throwable) {}
+                        }
+                    }
+                }
+
                 val finalText = jsGetSpeechTranscript()
                 if (finalText.isNotEmpty() && finalText != lastText) {
                     onSpeech(finalText)
@@ -110,6 +151,18 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
 
         controller.onPlatformStopRecording = {
             jsStopSpeech()
+            val remainingPayload = jsDrainPcmChunks()
+            if (remainingPayload.isNotEmpty()) {
+                val chunks = remainingPayload.split('|')
+                for (base64Chunk in chunks) {
+                    if (base64Chunk.isNotBlank()) {
+                        try {
+                            val bytes = Base64.decode(base64Chunk)
+                            controller.onAudioChunkCaptured?.invoke(bytes)
+                        } catch (_: Throwable) {}
+                    }
+                }
+            }
             val finalText = jsGetSpeechTranscript()
             if (finalText.isNotEmpty()) {
                 currentOnSpeech?.invoke(finalText)
@@ -122,3 +175,4 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
         // Fallback gracefully on non-browser / test runs
     }
 }
+

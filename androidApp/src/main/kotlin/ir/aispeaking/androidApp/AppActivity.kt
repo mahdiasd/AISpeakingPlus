@@ -1,14 +1,19 @@
 package ir.aispeaking.androidApp
 
+import android.Manifest
 import android.app.Activity
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import ir.aispeaking.navigation.AppNavigation
 import ir.aispeaking.navigation.di.initKoin
@@ -20,6 +25,50 @@ import org.koin.core.context.GlobalContext
 
 class AppActivity : ComponentActivity() {
     private var audioBridge: AndroidAudioBridge? = null
+    private var pendingRecordAudioCallback: ((Boolean) -> Unit)? = null
+
+    private val recordAudioPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        val cb = pendingRecordAudioCallback
+        pendingRecordAudioCallback = null
+        cb?.invoke(isGranted)
+    }
+
+    private fun checkAndRequestRecordAudioPermission(onResult: (Boolean) -> Unit) {
+        val currentPermission = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.RECORD_AUDIO
+        )
+        if (currentPermission == PackageManager.PERMISSION_GRANTED) {
+            onResult(true)
+        } else {
+            pendingRecordAudioCallback = onResult
+            try {
+                recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            } catch (_: Exception) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.RECORD_AUDIO),
+                    RECORD_AUDIO_REQUEST_CODE
+                )
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == RECORD_AUDIO_REQUEST_CODE) {
+            val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            val cb = pendingRecordAudioCallback
+            pendingRecordAudioCallback = null
+            cb?.invoke(granted)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,7 +77,13 @@ class AppActivity : ComponentActivity() {
             val audioController = GlobalContext.get().getOrNull<DefaultStageAudioController>()
                 ?: (GlobalContext.get().getOrNull<StageAudioController>() as? DefaultStageAudioController)
             if (audioController != null) {
-                audioBridge = AndroidAudioBridge(this, audioController).apply {
+                audioBridge = AndroidAudioBridge(
+                    context = this,
+                    controller = audioController,
+                    onRequestRecordPermission = { callback ->
+                        checkAndRequestRecordAudioPermission(callback)
+                    }
+                ).apply {
                     attach()
                 }
             }
@@ -48,7 +103,12 @@ class AppActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        audioBridge?.stopRecordingAudio()
         audioBridge?.stopAudio()
+    }
+
+    companion object {
+        private const val RECORD_AUDIO_REQUEST_CODE = 2001
     }
 }
 

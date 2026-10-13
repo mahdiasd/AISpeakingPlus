@@ -22,6 +22,7 @@ import ir.aispeaking.domain.usecase.stage.RequestStageHintUseCase
 import ir.aispeaking.domain.usecase.stage.SendStageChatMessageUseCase
 import ir.aispeaking.domain.usecase.stage.SubmitStageEvaluationUseCase
 import ir.aispeaking.domain.usecase.stt.CloseSttSessionUseCase
+import ir.aispeaking.domain.usecase.stt.SendAudioChunkUseCase
 import ir.aispeaking.domain.usecase.stt.StreamSpeechToTextUseCase
 import ir.aispeaking.domain.usecase.user.GetUserProfileUseCase
 import ir.aispeaking.chat.audio.StageAudioController
@@ -29,6 +30,7 @@ import ir.aispeaking.chat.component.ChatInputMode
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,6 +56,7 @@ data class ChatUiState(
     val currentHintSuggestion: String? = null,
     val currentHintExplanation: String? = null,
     val hintError: String? = null,
+    val sttError: String? = null,
     val showEvaluationDialog: Boolean = false,
     val isObjectiveCompleted: Boolean = false,
     val showFinishConfirmDialog: Boolean = false,
@@ -75,6 +78,7 @@ class ChatViewModel(
     private val audioController: StageAudioController,
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val streamSpeechToTextUseCase: StreamSpeechToTextUseCase,
+    private val sendAudioChunkUseCase: SendAudioChunkUseCase,
     private val closeSttSessionUseCase: CloseSttSessionUseCase
 ) : ViewModel() {
 
@@ -239,27 +243,89 @@ class ChatViewModel(
     fun toggleRecording(start: Boolean) {
         if (start) {
             audioController.stopVoice()
-            _uiState.update { it.copy(isRecording = true) }
+            _uiState.update { it.copy(isRecording = true, sttError = null, hintError = null) }
+
+            audioController.onAudioChunkCaptured = { pcm16Bytes ->
+                viewModelScope.launch {
+                    sendAudioChunkUseCase(pcm16Bytes)
+                }
+            }
 
             sttStreamJob?.cancel()
             sttStreamJob = viewModelScope.launch {
+                var sessionFinalizedText = ""
                 try {
                     streamSpeechToTextUseCase().collect { event ->
                         when (event) {
+                            is SttStreamEvent.Ready -> {
+                                audioController.onAudioChunkCaptured = { pcm16Bytes ->
+                                    viewModelScope.launch {
+                                        sendAudioChunkUseCase(pcm16Bytes)
+                                    }
+                                }
+                            }
                             is SttStreamEvent.PartialTranscript -> {
                                 if (event.text.isNotBlank()) {
-                                    _uiState.update { it.copy(messageText = event.text) }
+                                    val combined = if (sessionFinalizedText.isEmpty()) {
+                                        event.text
+                                    } else {
+                                        "$sessionFinalizedText ${event.text}"
+                                    }
+                                    _uiState.update { it.copy(messageText = combined) }
                                 }
                             }
                             is SttStreamEvent.FinalTranscript -> {
                                 if (event.text.isNotBlank()) {
-                                    _uiState.update { it.copy(messageText = event.text) }
+                                    sessionFinalizedText = if (sessionFinalizedText.isEmpty()) {
+                                        event.text
+                                    } else {
+                                        "$sessionFinalizedText ${event.text}"
+                                    }
+                                    _uiState.update { it.copy(messageText = sessionFinalizedText) }
                                 }
                             }
-                            else -> Unit
+                            is SttStreamEvent.Error -> {
+                                stopRecordingSession()
+                                val errorMsg = event.message.ifBlank {
+                                    "خطا در سرویس تشخیص گفتار. لطفاً دوباره تلاش کنید."
+                                }
+                                _uiState.update {
+                                    it.copy(
+                                        isRecording = false,
+                                        sttError = errorMsg,
+                                        hintError = errorMsg
+                                    )
+                                }
+                            }
+                            is SttStreamEvent.Disconnected -> {
+                                if (_uiState.value.isRecording) {
+                                    stopRecordingSession()
+                                    val errorMsg = "اتصال وب‌سوکت تشخیص گفتار قطع شد."
+                                    _uiState.update {
+                                        it.copy(
+                                            isRecording = false,
+                                            sttError = errorMsg,
+                                            hintError = errorMsg
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
-                } catch (_: Exception) {}
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    stopRecordingSession()
+                    val errorMsg = e.message?.takeIf { it.isNotBlank() }
+                        ?: "خطا در ارتباط با سرویس تشخیص گفتار."
+                    _uiState.update {
+                        it.copy(
+                            isRecording = false,
+                            sttError = errorMsg,
+                            hintError = errorMsg
+                        )
+                    }
+                }
             }
 
             audioController.startRecording(
@@ -268,27 +334,25 @@ class ChatViewModel(
                 },
                 onSilenceDetected = {
                     // 5-second silence detected -> auto pause & stop recording
-                    audioController.stopRecording()
-                    sttStreamJob?.cancel()
-                    sttStreamJob = null
-                    viewModelScope.launch {
-                        try {
-                            closeSttSessionUseCase()
-                        } catch (_: Exception) {}
-                    }
+                    stopRecordingSession()
                     _uiState.update { it.copy(isRecording = false) }
                 }
             )
         } else {
-            audioController.stopRecording()
-            sttStreamJob?.cancel()
-            sttStreamJob = null
-            viewModelScope.launch {
-                try {
-                    closeSttSessionUseCase()
-                } catch (_: Exception) {}
-            }
+            stopRecordingSession()
             _uiState.update { it.copy(isRecording = false) }
+        }
+    }
+
+    private fun stopRecordingSession() {
+        audioController.onAudioChunkCaptured = null
+        audioController.stopRecording()
+        sttStreamJob?.cancel()
+        sttStreamJob = null
+        viewModelScope.launch {
+            try {
+                closeSttSessionUseCase()
+            } catch (_: Exception) {}
         }
     }
 
@@ -298,14 +362,7 @@ class ChatViewModel(
 
     fun setInputMode(mode: ChatInputMode) {
         if (mode == ChatInputMode.TEXT && _uiState.value.isRecording) {
-            audioController.stopRecording()
-            sttStreamJob?.cancel()
-            sttStreamJob = null
-            viewModelScope.launch {
-                try {
-                    closeSttSessionUseCase()
-                } catch (_: Exception) {}
-            }
+            stopRecordingSession()
             _uiState.update { it.copy(isRecording = false, inputMode = mode) }
         } else {
             _uiState.update { it.copy(inputMode = mode) }
@@ -330,14 +387,7 @@ class ChatViewModel(
         if (content.isBlank()) return
 
         if (stateSnapshot.isRecording) {
-            audioController.stopRecording()
-            sttStreamJob?.cancel()
-            sttStreamJob = null
-            viewModelScope.launch {
-                try {
-                    closeSttSessionUseCase()
-                } catch (_: Exception) {}
-            }
+            stopRecordingSession()
             _uiState.update { it.copy(isRecording = false) }
         }
 
@@ -544,7 +594,8 @@ class ChatViewModel(
             it.copy(
                 currentHintSuggestion = null,
                 currentHintExplanation = null,
-                hintError = null
+                hintError = null,
+                sttError = null
             )
         }
     }
@@ -729,14 +780,7 @@ class ChatViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        sttStreamJob?.cancel()
-        sttStreamJob = null
-        viewModelScope.launch {
-            try {
-                closeSttSessionUseCase()
-            } catch (_: Exception) {}
-        }
+        stopRecordingSession()
         audioController.stopVoice()
-        audioController.stopRecording()
     }
 }

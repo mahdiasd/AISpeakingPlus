@@ -48,7 +48,7 @@ fun Application.sttRouting() {
     routing {
         // v2 Route with OpenAPI describe
         route("/api/v2/stt") {
-            authenticate(MyConstant.USER_JWT_NAME, MyConstant.ADMIN_JWT_NAME) {
+            authenticate(MyConstant.USER_JWT_NAME, MyConstant.ADMIN_JWT_NAME, optional = true) {
                 webSocket("/live") {
                     handleSttSession(sttService)
                 }.describe {
@@ -103,7 +103,7 @@ fun Application.sttRouting() {
 
         // v1 Legacy route preserved for backward compatibility
         route("/api/v1/stt") {
-            authenticate(MyConstant.USER_JWT_NAME, MyConstant.ADMIN_JWT_NAME) {
+            authenticate(MyConstant.USER_JWT_NAME, MyConstant.ADMIN_JWT_NAME, optional = true) {
                 webSocket {
                     handleSttSession(sttService)
                 }
@@ -113,9 +113,15 @@ fun Application.sttRouting() {
 }
 
 private suspend fun DefaultWebSocketServerSession.handleSttSession(sttService: SttService) {
-    val userId = call.getUserUidOrNull() ?: call.principal<AdminPrincipal>()?.id ?: UUID.randomUUID()
-    sttLogger.info("STT WebSocket connected from {} (user={})",
-        call.request.local.remoteHost, userId)
+    val authenticatedUid = call.getUserUidOrNull() ?: call.principal<AdminPrincipal>()?.id
+    val userId = authenticatedUid ?: UUID.randomUUID()
+    val isGuest = authenticatedUid == null
+    sttLogger.info(
+        "STT WebSocket connected from {} (user={}, guest={})",
+        call.request.local.remoteHost,
+        userId,
+        isGuest
+    )
 
     // Try to acquire one of the limited concurrent stream slots.
     val stream = sttService.tryAcquireStream()
@@ -179,9 +185,11 @@ private suspend fun handleBinaryFrame(
     send: suspend (SttMessage) -> Unit,
     onPartial: (String) -> Unit,
 ) {
+    sttLogger.info("Received Frame.Binary with {} bytes", frame.data.size)
     val samples = frame.data.toShortArraySamples()
     if (samples.isEmpty()) return
     sttService.acceptWaveform(stream, samples)
+    sttLogger.info("acceptWaveform processed {} samples", samples.size)
 
     // Decode as far as the model is ready; then read the current hypothesis.
     sttService.decodeIfReady(stream)
