@@ -32,6 +32,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -88,6 +89,8 @@ class ChatViewModel(
     private var currentStageId: String = ""
     private var currentTier: AccessTier = AccessTier.GUEST
     private var sttStreamJob: Job? = null
+    private var audioChunkChannel: Channel<ByteArray>? = null
+    private var audioSenderJob: Job? = null
 
     fun initStage(stageId: String, tier: AccessTier? = null) {
         if (currentStageId == stageId && _uiState.value.stage != null) return
@@ -245,10 +248,24 @@ class ChatViewModel(
             audioController.stopVoice()
             _uiState.update { it.copy(isRecording = true, sttError = null, hintError = null) }
 
-            audioController.onAudioChunkCaptured = { pcm16Bytes ->
-                viewModelScope.launch {
-                    sendAudioChunkUseCase(pcm16Bytes)
+            audioSenderJob?.cancel()
+            audioChunkChannel?.close()
+            val chunkChannel = Channel<ByteArray>(capacity = Channel.BUFFERED)
+            audioChunkChannel = chunkChannel
+
+            audioSenderJob = viewModelScope.launch {
+                for (chunk in chunkChannel) {
+                    try {
+                        sendAudioChunkUseCase(chunk)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                    }
                 }
+            }
+
+            audioController.onAudioChunkCaptured = { pcm16Bytes ->
+                audioChunkChannel?.trySend(pcm16Bytes)
             }
 
             sttStreamJob?.cancel()
@@ -259,9 +276,7 @@ class ChatViewModel(
                         when (event) {
                             is SttStreamEvent.Ready -> {
                                 audioController.onAudioChunkCaptured = { pcm16Bytes ->
-                                    viewModelScope.launch {
-                                        sendAudioChunkUseCase(pcm16Bytes)
-                                    }
+                                    audioChunkChannel?.trySend(pcm16Bytes)
                                 }
                             }
                             is SttStreamEvent.PartialTranscript -> {
@@ -347,6 +362,10 @@ class ChatViewModel(
     private fun stopRecordingSession() {
         audioController.onAudioChunkCaptured = null
         audioController.stopRecording()
+        audioChunkChannel?.close()
+        audioChunkChannel = null
+        audioSenderJob?.cancel()
+        audioSenderJob = null
         sttStreamJob?.cancel()
         sttStreamJob = null
         viewModelScope.launch {
