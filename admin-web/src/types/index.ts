@@ -205,3 +205,64 @@ export type SttWsMessage =
   | { type: 'final'; text: string }
   | { type: 'error'; message: string };
 
+// Promo / Discount Code Models
+export type DiscountType = 'PERCENTAGE' | 'FIXED_AMOUNT';
+
+export interface PromoCodeItem {
+  id: string;
+  code: string;
+  title?: string | null;
+  discountType: DiscountType;
+  discountValue: number;
+  maxDiscountCap?: number | null;
+  minOrderAmount?: number | null;
+  applicablePlans: string[];
+  maxUses?: number | null;
+  usedCount: number;
+  isOncePerUser: boolean;
+  startsAt?: string | null;
+  expiresAt?: string | null;
+  isActive: boolean;
+  isExpired: boolean;
+  createdAt: string;
+}
+
+export interface PromoCodeUpsertPayload {
+  code: string;
+  title?: string;
+  discountType: DiscountType;
+  discountValue: number;
+  maxDiscountCap?: number | null;
+  minOrderAmount?: number | null;
+  applicablePlans?: string[];
+  maxUses?: number | null;
+  isOncePerUser?: boolean;
+  startsAt?: string | null;
+  expiresAt?: string | null;
+  isActive?: boolean;
+}
+
+export interface PromoRedemptionItem {
+  id: string;
+  userId: string;
+  phoneNumber: string;
+  nickName?: string | null;
+  planId: string;
+  originalPrice: number;
+  discountAmount: number;
+  finalPrice: number;
+  redeemedAt: string;
+}
+
+export interface PromoStats {
+  totalCodes: number;
+  activeCodes: number;
+  totalRedemptions: number;
+  totalDiscountGiven: number;
+}
+
+export interface PromoListResponse {
+  items: PromoCodeItem[];
+  stats: PromoStats;
+}
+

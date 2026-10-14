@@ -7,6 +7,7 @@ import {
   History,
   ShieldCheck,
   AudioWaveform,
+  TicketPercent,
   X,
 } from 'lucide-react';
 
@@ -36,6 +37,11 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       to: '/admin/users',
       label: 'مدیریت کاربران',
       icon: Users,
+    },
+    {
+      to: '/admin/promo-codes',
+      label: 'کدهای تخفیف',
+      icon: TicketPercent,
     },
     {
       to: '/admin/audit-logs',

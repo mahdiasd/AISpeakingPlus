@@ -17,6 +17,10 @@ import {
   TtsSynthesizeResponse,
   SttTranscribeResponse,
   KOKORO_VOICES,
+  PromoCodeItem,
+  PromoCodeUpsertPayload,
+  PromoListResponse,
+  PromoRedemptionItem,
 } from '../types';
 
 const BASE_URL = '';
@@ -312,6 +316,52 @@ class ApiClient {
     const host = window.location.host;
     const token = this.getToken() || '';
     return `${protocol}//${host}/api/admin/stt/live?token=${encodeURIComponent(token)}`;
+  }
+
+  // Promo / Discount Codes
+  async getPromoCodes(search?: string, status?: string): Promise<PromoListResponse> {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (status && status !== 'ALL') params.append('status', status);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    const res = await this.request<PromoListResponse>(`/api/admin/promo-codes${qs}`);
+    return res.data;
+  }
+
+  async createPromoCode(payload: PromoCodeUpsertPayload): Promise<PromoCodeItem> {
+    const res = await this.request<PromoCodeItem>('/api/admin/promo-codes', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return res.data;
+  }
+
+  async updatePromoCode(id: string, payload: PromoCodeUpsertPayload): Promise<PromoCodeItem> {
+    const res = await this.request<PromoCodeItem>(`/api/admin/promo-codes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+    return res.data;
+  }
+
+  async togglePromoCodeStatus(id: string, isActive: boolean): Promise<PromoCodeItem> {
+    const res = await this.request<PromoCodeItem>(`/api/admin/promo-codes/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isActive }),
+    });
+    return res.data;
+  }
+
+  async deletePromoCode(id: string): Promise<boolean> {
+    const res = await this.request<{ deleted: boolean }>(`/api/admin/promo-codes/${id}`, {
+      method: 'DELETE',
+    });
+    return res.data?.deleted ?? true;
+  }
+
+  async getPromoRedemptions(id: string): Promise<PromoRedemptionItem[]> {
+    const res = await this.request<PromoRedemptionItem[]>(`/api/admin/promo-codes/${id}/redemptions`);
+    return res.data;
   }
 }
 
