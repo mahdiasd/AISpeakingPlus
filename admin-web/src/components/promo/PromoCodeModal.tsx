@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
+import { Switch } from '../ui/Switch';
 import { PromoCodeItem, PromoCodeUpsertPayload, DiscountType } from '../../types';
 import {
   Sparkles,
@@ -461,19 +462,11 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
               در صورت غیرفعال بودن، کاربران قادر به اعمال این کد نخواهند بود.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsActive(!isActive)}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-              isActive ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
-            }`}
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                isActive ? 'translate-x-5' : 'translate-x-0'
-              }`}
-            />
-          </button>
+          <Switch
+            checked={isActive}
+            onChange={setIsActive}
+            title={isActive ? 'فعال' : 'غیرفعال'}
+          />
         </div>
 
         {/* Footer Actions */}
