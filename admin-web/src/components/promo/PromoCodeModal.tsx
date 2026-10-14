@@ -145,6 +145,26 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
       return;
     }
 
+    if (maxDiscountCap && Number(maxDiscountCap) <= 0) {
+      setErrorMsg('سقف تخفیف باید عددی بزرگ‌تر از صفر باشد.');
+      return;
+    }
+
+    if (minOrderAmount && Number(minOrderAmount) < 0) {
+      setErrorMsg('حداقل مبلغ سفارش نمی‌تواند منفی باشد.');
+      return;
+    }
+
+    if (!isUnlimitedUses && maxUses && Number(maxUses) <= 0) {
+      setErrorMsg('حداکثر دفعات استفاده باید عددی بزرگ‌تر از صفر باشد.');
+      return;
+    }
+
+    if (startsAt && expiresAt && new Date(startsAt) >= new Date(expiresAt)) {
+      setErrorMsg('تاریخ و زمان انقضا باید پس از تاریخ و زمان شروع اعتبار باشد.');
+      return;
+    }
+
     const payload: PromoCodeUpsertPayload = {
       code: cleanCode,
       title: title.trim() || undefined,

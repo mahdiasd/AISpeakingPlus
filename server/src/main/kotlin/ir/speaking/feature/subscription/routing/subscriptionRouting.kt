@@ -234,10 +234,10 @@ fun Application.subscriptionRouting() {
                         return@post
                     }
 
-                    val (planType, durationDays) = when (request.planId) {
-                        "plan-1m" -> "1_MONTH" to 30
-                        "plan-3m" -> "3_MONTHS" to 90
-                        "plan-6m" -> "6_MONTHS" to 180
+                    val (planType, durationDays) = when (request.planId.trim()) {
+                        "plan-1m", "1_MONTH" -> "1_MONTH" to 30
+                        "plan-3m", "3_MONTHS" -> "3_MONTHS" to 90
+                        "plan-6m", "6_MONTHS" -> "6_MONTHS" to 180
                         else -> {
                             call.failureRespond(HttpStatusCode.BadRequest, "شناسه پلن انتخابی نامعتبر است")
                             return@post

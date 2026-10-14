@@ -173,4 +173,51 @@ class AdminPromoServiceTest {
         val list = promoService.getPromoCodes()
         assertFalse(list.items.any { it.code == "TEMPORARY10" })
     }
+
+    @Test
+    fun `test plan aliases normalization and validation constraints`() = runBlocking {
+        // Plan alias test
+        val req = AdminPromoCodeUpsertRequest(
+            code = "ALIAS10",
+            discountType = "PERCENTAGE",
+            discountValue = 10,
+            applicablePlans = listOf("1_MONTH"),
+            isActive = true
+        )
+        val created = promoService.createPromoCode(null, req)
+        assertNotNull(created)
+
+        // Validate using "plan-1m" alias
+        val validWithPlanId = promoService.validateForUserAndPlan("ALIAS10", planId = "plan-1m")
+        assertTrue(validWithPlanId.isValid)
+
+        // Validate using "1_MONTH" alias
+        val validWithEnum = promoService.validateForUserAndPlan("ALIAS10", planId = "1_MONTH")
+        assertTrue(validWithEnum.isValid)
+
+        // Invalid percentage > 100 should throw
+        var threwPercentage = false
+        try {
+            promoService.createPromoCode(null, req.copy(code = "INVALID101", discountValue = 101))
+        } catch (_: IllegalArgumentException) {
+            threwPercentage = true
+        }
+        assertTrue(threwPercentage)
+
+        // Invalid dates (expires before starts) should throw
+        var threwDates = false
+        try {
+            promoService.createPromoCode(
+                null,
+                req.copy(
+                    code = "INVALIDDATES",
+                    startsAt = "2026-10-15T12:00:00Z",
+                    expiresAt = "2026-10-10T12:00:00Z"
+                )
+            )
+        } catch (_: IllegalArgumentException) {
+            threwDates = true
+        }
+        assertTrue(threwDates)
+    }
 }

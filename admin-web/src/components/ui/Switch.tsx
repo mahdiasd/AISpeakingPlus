@@ -52,7 +52,7 @@ export const Switch: React.FC<SwitchProps> = ({
           onChange(!checked);
         }
       }}
-      className={`relative inline-flex shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 select-none active:scale-[0.96] ${
+      className={`box-border relative inline-flex shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 select-none active:scale-[0.96] ${
         isSm ? 'h-5 w-9' : 'h-6 w-11'
       } ${
         checked ? 'bg-emerald-600 dark:bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
@@ -61,7 +61,7 @@ export const Switch: React.FC<SwitchProps> = ({
       <span
         aria-hidden="true"
         style={thumbStyle}
-        className={`pointer-events-none inline-block rounded-full bg-white shadow-sm ring-0 ${
+        className={`box-border pointer-events-none inline-block rounded-full bg-white shadow-sm ring-0 ${
           isSm ? 'h-4 w-4' : 'h-5 w-5'
         }`}
       />

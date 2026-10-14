@@ -23,10 +23,20 @@ class AdminPromoService {
     private val planPrices = mapOf(
         "plan-1m" to 199_000L,
         "plan-3m" to 499_000L,
-        "plan-6m" to 899_000L
+        "plan-6m" to 899_000L,
+        "1_MONTH" to 199_000L,
+        "3_MONTHS" to 499_000L,
+        "6_MONTHS" to 899_000L
     )
 
-    fun getPlanPrice(planId: String): Long? = planPrices[planId]
+    fun normalizePlanId(id: String): String = when (id.uppercase().trim()) {
+        "1_MONTH", "PLAN-1M" -> "plan-1m"
+        "3_MONTHS", "PLAN-3M" -> "plan-3m"
+        "6_MONTHS", "PLAN-6M" -> "plan-6m"
+        else -> id.lowercase().trim()
+    }
+
+    fun getPlanPrice(planId: String): Long? = planPrices[planId] ?: planPrices[normalizePlanId(planId)]
 
     private fun parseInstantOrNull(str: String?): Instant? {
         if (str.isNullOrBlank()) return null
@@ -148,6 +158,12 @@ class AdminPromoService {
         val normalizedCode = req.code.trim().uppercase()
         require(normalizedCode.isNotEmpty()) { "کد تخفیف نمی‌تواند خالی باشد" }
         require(req.discountValue > 0) { "مقدار تخفیف باید بزرگ‌تر از صفر باشد" }
+        if (req.discountType.uppercase() == "PERCENTAGE") {
+            require(req.discountValue in 1..100) { "درصد تخفیف باید بین ۱ تا ۱۰۰ باشد" }
+        }
+        req.maxDiscountCap?.let { require(it > 0) { "سقف تخفیف باید بزرگ‌تر از صفر باشد" } }
+        req.minOrderAmount?.let { require(it >= 0) { "حداقل مبلغ سفارش نمی‌تواند منفی باشد" } }
+        req.maxUses?.let { require(it > 0) { "حداکثر دفعات استفاده باید بزرگ‌تر از صفر باشد" } }
 
         val existing = PromoCodeTable.selectAll()
             .where { (PromoCodeTable.code eq normalizedCode) and (PromoCodeTable.isDeleted eq false) }
@@ -157,9 +173,12 @@ class AdminPromoService {
             throw IllegalArgumentException("کد تخفیف «$normalizedCode» قبلاً ثبت شده است")
         }
 
-        val plansStr = if (req.applicablePlans.isEmpty()) "ALL" else req.applicablePlans.joinToString(",")
         val startsInstant = parseInstantOrNull(req.startsAt)
         val expiresInstant = parseInstantOrNull(req.expiresAt)
+        if (startsInstant != null && expiresInstant != null) {
+            require(expiresInstant > startsInstant) { "تاریخ و زمان انقضا باید پس از تاریخ شروع باشد" }
+        }
+        val plansStr = if (req.applicablePlans.isEmpty()) "ALL" else req.applicablePlans.joinToString(",")
         val now = Clock.System.now()
 
         val newId = PromoCodeTable.insertAndGetId {
@@ -199,6 +218,12 @@ class AdminPromoService {
         val normalizedCode = req.code.trim().uppercase()
         require(normalizedCode.isNotEmpty()) { "کد تخفیف نمی‌تواند خالی باشد" }
         require(req.discountValue > 0) { "مقدار تخفیف باید بزرگ‌تر از صفر باشد" }
+        if (req.discountType.uppercase() == "PERCENTAGE") {
+            require(req.discountValue in 1..100) { "درصد تخفیف باید بین ۱ تا ۱۰۰ باشد" }
+        }
+        req.maxDiscountCap?.let { require(it > 0) { "سقف تخفیف باید بزرگ‌تر از صفر باشد" } }
+        req.minOrderAmount?.let { require(it >= 0) { "حداقل مبلغ سفارش نمی‌تواند منفی باشد" } }
+        req.maxUses?.let { require(it > 0) { "حداکثر دفعات استفاده باید بزرگ‌تر از صفر باشد" } }
 
         // Check if code was modified and conflicts with another existing code
         val conflict = PromoCodeTable.selectAll()
@@ -209,9 +234,12 @@ class AdminPromoService {
             throw IllegalArgumentException("کد تخفیف «$normalizedCode» برای رکورد دیگری ثبت شده است")
         }
 
-        val plansStr = if (req.applicablePlans.isEmpty()) "ALL" else req.applicablePlans.joinToString(",")
         val startsInstant = parseInstantOrNull(req.startsAt)
         val expiresInstant = parseInstantOrNull(req.expiresAt)
+        if (startsInstant != null && expiresInstant != null) {
+            require(expiresInstant > startsInstant) { "تاریخ و زمان انقضا باید پس از تاریخ شروع باشد" }
+        }
+        val plansStr = if (req.applicablePlans.isEmpty()) "ALL" else req.applicablePlans.joinToString(",")
         val now = Clock.System.now()
 
         PromoCodeTable.update({ PromoCodeTable.id eq id }) {
@@ -389,10 +417,11 @@ class AdminPromoService {
         val applicableList = if (applicablePlansRaw == "ALL" || applicablePlansRaw.isBlank()) {
             emptyList()
         } else {
-            applicablePlansRaw.split(",").map { it.trim() }
+            applicablePlansRaw.split(",").map { normalizePlanId(it) }
         }
 
-        if (planId != null && applicableList.isNotEmpty() && planId !in applicableList) {
+        val normalizedInputPlan = planId?.let { normalizePlanId(it) }
+        if (normalizedInputPlan != null && applicableList.isNotEmpty() && normalizedInputPlan !in applicableList) {
             return@newSuspendedTransaction PromoValidationResult(
                 isValid = false,
                 promoCodeId = promoId,
@@ -402,7 +431,7 @@ class AdminPromoService {
         }
 
         // 6. Pricing & calculation
-        val originalPrice = planId?.let { getPlanPrice(it) } ?: 0L
+        val originalPrice = normalizedInputPlan?.let { getPlanPrice(it) } ?: (planId?.let { getPlanPrice(it) } ?: 0L)
         val minOrder = row[PromoCodeTable.minOrderAmount]
         if (minOrder != null && originalPrice > 0 && originalPrice < minOrder) {
             return@newSuspendedTransaction PromoValidationResult(

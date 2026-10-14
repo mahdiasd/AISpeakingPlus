@@ -5,6 +5,7 @@ import { PromoCodeItem, PromoCodeUpsertPayload, PromoStats } from '../types';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
+import { Switch } from '../components/ui/Switch';
 import { PromoCodeModal } from '../components/promo/PromoCodeModal';
 import { PromoRedemptionsModal } from '../components/promo/PromoRedemptionsModal';
 import {
@@ -459,25 +460,20 @@ export const PromoCodesPage: React.FC = () => {
                         )}
                       </td>
 
-                      {/* Status Toggle Switch */}
                       <td className="py-3.5 px-4 text-center">
-                        <button
-                          type="button"
-                          disabled={togglingId === item.id}
-                          onClick={() => handleToggleStatus(item)}
-                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${
-                            item.isActive && !isExpired
-                              ? 'bg-emerald-600'
-                              : 'bg-slate-300 dark:bg-slate-700'
-                          }`}
-                          title={item.isActive ? 'کلیک برای غیرفعال‌سازی' : 'کلیک برای فعال‌سازی'}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                              item.isActive && !isExpired ? 'translate-x-4' : 'translate-x-0'
-                            }`}
+                        <div className="flex justify-center items-center">
+                          <Switch
+                            size="sm"
+                            checked={item.isActive}
+                            disabled={togglingId === item.id}
+                            onChange={() => handleToggleStatus(item)}
+                            title={
+                              isExpired
+                                ? (item.isActive ? 'کد منقضی است (کلیک برای غیرفعال‌سازی)' : 'کد منقضی و غیرفعال است (کلیک برای فعال‌سازی)')
+                                : (item.isActive ? 'کلیک برای غیرفعال‌سازی' : 'کلیک برای فعال‌سازی')
+                            }
                           />
-                        </button>
+                        </div>
                       </td>
 
                       {/* Actions */}
