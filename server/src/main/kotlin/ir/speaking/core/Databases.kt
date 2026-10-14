@@ -6,6 +6,8 @@ import ir.speaking.feature.admin.db.AdminUserTable
 import ir.speaking.feature.stage.db.StageSeedData
 import ir.speaking.feature.stage.db.StageTable
 import ir.speaking.feature.stage_progress.db.StageProgressTable
+import ir.speaking.feature.subscription.db.PromoCodeRedemptionTable
+import ir.speaking.feature.subscription.db.PromoCodeTable
 import ir.speaking.feature.subscription.db.SubscriptionTable
 import ir.speaking.feature.user.db.UserTable
 import org.jetbrains.exposed.sql.Database
@@ -25,7 +27,9 @@ private val allTables = arrayOf<Table>(
     StageProgressTable,
     SubscriptionTable,
     AdminUserTable,
-    AdminAuditTable
+    AdminAuditTable,
+    PromoCodeTable,
+    PromoCodeRedemptionTable
 )
 
 fun configureDatabases() {

@@ -14,6 +14,7 @@ import ir.speaking.core.response.SuccessResponse
 import ir.speaking.core.response.failureRespond
 import ir.speaking.core.response.successRespond
 import ir.speaking.core.utils.MyConstant
+import ir.speaking.feature.admin.promo.service.AdminPromoService
 import ir.speaking.feature.subscription.repository.SubscriptionRepo
 import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
@@ -53,33 +54,27 @@ data class SubscribeResponseDto(
     val message: String
 )
 
-val PROMO_DISCOUNTS = mapOf(
-    "GOLD20" to 20,
-    "NOWRUZ" to 25,
-    "AISPEAKING" to 30,
-    "VIP" to 15,
-    "WELCOME10" to 10,
-    "VIP30" to 30,
-    "FREE100" to 100,
-    "SPEAK50" to 50,
-    "TEST" to 15
-)
-
 @Serializable
 data class ValidatePromoRequestDto(
-    val promoCode: String
+    val promoCode: String,
+    val planId: String? = null
 )
 
 @Serializable
 data class ValidatePromoResponseDto(
     val promoCode: String,
-    val discountPercent: Int,
+    val discountPercent: Int = 0,
+    val discountType: String = "PERCENTAGE",
+    val discountAmountTomans: Long = 0,
+    val originalPriceTomans: Long? = null,
+    val finalPriceTomans: Long? = null,
     val message: String
 )
 
 @OptIn(ExperimentalKtorApi::class)
 fun Application.subscriptionRouting() {
     val subscriptionRepo by inject<SubscriptionRepo>()
+    val adminPromoService = AdminPromoService()
 
     routing {
         route("/api/v2/subscriptions") {
@@ -138,19 +133,27 @@ fun Application.subscriptionRouting() {
                     return@post
                 }
 
-                val normalized = request.promoCode.trim().uppercase()
-                val discount = PROMO_DISCOUNTS[normalized]
-                if (discount != null) {
+                val result = adminPromoService.validateForUserAndPlan(
+                    code = request.promoCode,
+                    userId = null,
+                    planId = request.planId
+                )
+
+                if (result.isValid) {
                     call.successRespond(
                         ValidatePromoResponseDto(
-                            promoCode = normalized,
-                            discountPercent = discount,
-                            message = "کد تخفیف $discount٪ با موفقیت اعمال شد"
+                            promoCode = result.normalizedCode,
+                            discountPercent = result.discountPercent,
+                            discountType = result.discountType,
+                            discountAmountTomans = result.discountAmountTomans,
+                            originalPriceTomans = if (result.originalPriceTomans > 0) result.originalPriceTomans else null,
+                            finalPriceTomans = if (result.originalPriceTomans > 0) result.finalPriceTomans else null,
+                            message = result.message
                         ),
-                        message = "کد تخفیف معتبر است"
+                        message = result.message
                     )
                 } else {
-                    call.failureRespond(HttpStatusCode.BadRequest, "کد تخفیف واردشده نامعتبر یا منقضی است")
+                    call.failureRespond(HttpStatusCode.BadRequest, result.message)
                 }
             }.describe {
                 tag("Subscriptions")
@@ -242,11 +245,19 @@ fun Application.subscriptionRouting() {
                     }
 
                     val normalizedPromo = request.promoCode?.trim()?.uppercase()?.takeIf { it.isNotEmpty() }
+                    var promoValidation: AdminPromoService.PromoValidationResult? = null
+
                     if (normalizedPromo != null) {
-                        if (normalizedPromo !in PROMO_DISCOUNTS) {
-                            call.failureRespond(HttpStatusCode.BadRequest, "کد تخفیف وارد شده معتبر نیست")
+                        val validation = adminPromoService.validateForUserAndPlan(
+                            code = normalizedPromo,
+                            userId = userId,
+                            planId = request.planId
+                        )
+                        if (!validation.isValid) {
+                            call.failureRespond(HttpStatusCode.BadRequest, validation.message)
                             return@post
                         }
+                        promoValidation = validation
                     }
 
                     val info = subscriptionRepo.activateSubscription(
@@ -256,6 +267,18 @@ fun Application.subscriptionRouting() {
                         grantSource = if (normalizedPromo == null) "USER_PURCHASE" else "PROMO_PURCHASE",
                         reason = normalizedPromo?.let { "Purchased with promo code: $it" }
                     )
+
+                    if (promoValidation != null && promoValidation.promoCodeId != null) {
+                        adminPromoService.recordRedemption(
+                            promoCodeId = promoValidation.promoCodeId,
+                            userId = userId,
+                            subscriptionId = null,
+                            planId = request.planId,
+                            originalPrice = promoValidation.originalPriceTomans,
+                            discountAmount = promoValidation.discountAmountTomans,
+                            finalPrice = promoValidation.finalPriceTomans
+                        )
+                    }
 
                     call.successRespond(
                         SubscribeResponseDto(
