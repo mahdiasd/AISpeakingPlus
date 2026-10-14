@@ -6,19 +6,11 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.*
 import ir.speaking.core.exeptions.AppException
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 
@@ -54,26 +46,6 @@ fun String?.toUUID(exceptionMessage: String = "invalid uuid"): UUID {
         } catch (e: Exception) {
             throw AppException.BadRequest(exceptionMessage)
         }
-    }
-}
-
-/**
- * Extension function to convert an Instant to a human-readable string.
- *
- * @param zoneId The time zone to use for conversion (defaults to system's default).
- * @return A string like "August 20, 2025 at 3:45 PM".
- */
-fun Instant.toHumanReadable(zoneId: ZoneId = ZoneId.systemDefault()): String {
-    val zonedDateTime: ZonedDateTime = this.atZone(zoneId)
-    val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
-    return zonedDateTime.format(formatter)
-}
-
-fun String.toUUIDOrNull(): UUID? {
-    return try {
-        UUID.fromString(this)
-    } catch (e: Exception) {
-        null
     }
 }
 
@@ -118,26 +90,4 @@ fun ApplicationCall.getUserUidOrNull(): UUID? {
     } catch (ex: Exception) {
         null
     }
-}
-
-fun LocalDateTime.Companion.now(): LocalDateTime {
-    return java.time.LocalDateTime.now().toKotlinLocalDateTime()
-}
-
-fun LocalDate.Companion.of(year: Int, month: Int, day: Int): LocalDate {
-    return java.time.LocalDate.of(year, month, day).toKotlinLocalDate()
-}
-
-fun String.toLocalDateTime(): LocalDateTime {
-    return java.time.LocalDateTime.parse(
-        this,
-        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
-    ).toKotlinLocalDateTime()
-}
-
-fun String.toLocalDate(): LocalDate {
-    return java.time.LocalDate.parse(
-        this,
-        DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    ).toKotlinLocalDate()
 }
