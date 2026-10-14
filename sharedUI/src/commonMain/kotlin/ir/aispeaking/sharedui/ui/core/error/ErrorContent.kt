@@ -2,6 +2,7 @@ package ir.aispeaking.sharedui.ui.core.error
 
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,14 +20,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ir.aispeaking.sharedui.*
 
-import ir.aispeaking.sharedui.ui.core.divider.CustomSpacer
 import ir.aispeaking.sharedui.ui.core.icon.AppIcon
 import ir.aispeaking.sharedui.ui.core.text.BodyLargeBoldText
 import ir.aispeaking.sharedui.ui.core.text.BodyMediumText
 import ir.aispeaking.sharedui.ui.core.text.DualContentRow
-import ir.aispeaking.sharedui.*
-import ir.aispeaking.sharedui.*
-import ir.aispeaking.sharedui.*
 import ir.aispeaking.sharedui.ui.extension.LightDarkPreview
 import ir.aispeaking.sharedui.ui.extension.animateClickable
 import ir.aispeaking.sharedui.ui.them.AppTheme
@@ -56,7 +53,7 @@ fun ErrorContent(
             contentDescription = "Load list failed"
         )
 
-        CustomSpacer(Modifier.height(0.dp))
+        Spacer(Modifier.height(0.dp))
 
         BodyMediumText(
             Modifier
