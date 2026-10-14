@@ -752,6 +752,96 @@
     "sizeBytes" : { }
   }
 };
+            defs["AdminPromoCodeItemDto"] = {
+  "title" : "AdminPromoCodeItemDto",
+  "required" : [ "code", "createdAt", "discountType", "discountValue", "id" ],
+  "properties" : {
+    "id" : { },
+    "code" : { },
+    "title" : { },
+    "discountType" : { },
+    "discountValue" : { },
+    "maxDiscountCap" : { },
+    "minOrderAmount" : { },
+    "applicablePlans" : {
+      "items" : { }
+    },
+    "maxUses" : { },
+    "usedCount" : { },
+    "isOncePerUser" : { },
+    "startsAt" : { },
+    "expiresAt" : { },
+    "isActive" : { },
+    "isExpired" : { },
+    "createdAt" : { }
+  }
+};
+            defs["AdminPromoCodeUpsertRequest"] = {
+  "title" : "AdminPromoCodeUpsertRequest",
+  "required" : [ "code", "discountType", "discountValue" ],
+  "properties" : {
+    "code" : { },
+    "title" : { },
+    "discountType" : { },
+    "discountValue" : { },
+    "maxDiscountCap" : { },
+    "minOrderAmount" : { },
+    "applicablePlans" : {
+      "items" : { }
+    },
+    "maxUses" : { },
+    "isOncePerUser" : { },
+    "startsAt" : { },
+    "expiresAt" : { },
+    "isActive" : { }
+  }
+};
+            defs["AdminPromoListResponse"] = {
+  "title" : "AdminPromoListResponse",
+  "required" : [ "items", "stats" ],
+  "properties" : {
+    "items" : {
+      "items" : {
+        "$ref" : "#/components/schemas/AdminPromoCodeItemDto"
+      }
+    },
+    "stats" : {
+      "$ref" : "#/components/schemas/AdminPromoStatsDto"
+    }
+  }
+};
+            defs["AdminPromoRedemptionItemDto"] = {
+  "title" : "AdminPromoRedemptionItemDto",
+  "required" : [ "discountAmount", "finalPrice", "id", "originalPrice", "phoneNumber", "planId", "redeemedAt", "userId" ],
+  "properties" : {
+    "id" : { },
+    "userId" : { },
+    "phoneNumber" : { },
+    "nickName" : { },
+    "planId" : { },
+    "originalPrice" : { },
+    "discountAmount" : { },
+    "finalPrice" : { },
+    "redeemedAt" : { }
+  }
+};
+            defs["AdminPromoStatsDto"] = {
+  "title" : "AdminPromoStatsDto",
+  "required" : [ "activeCodes", "totalCodes", "totalDiscountGiven", "totalRedemptions" ],
+  "properties" : {
+    "totalCodes" : { },
+    "activeCodes" : { },
+    "totalRedemptions" : { },
+    "totalDiscountGiven" : { }
+  }
+};
+            defs["AdminPromoStatusToggleRequest"] = {
+  "title" : "AdminPromoStatusToggleRequest",
+  "required" : [ "isActive" ],
+  "properties" : {
+    "isActive" : { }
+  }
+};
             defs["AdminStageItemDto"] = {
   "title" : "AdminStageItemDto",
   "required" : [ "backgroundUrl", "briefing", "briefingFa", "characterGender", "characterName", "createdAt", "id", "initialSpeaker", "maxTurns", "orderIndex", "status", "targetObjective", "targetObjectiveFa", "title", "titleFa" ],
@@ -1354,15 +1444,20 @@
   "title" : "ValidatePromoRequestDto",
   "required" : [ "promoCode" ],
   "properties" : {
-    "promoCode" : { }
+    "promoCode" : { },
+    "planId" : { }
   }
 };
             defs["ValidatePromoResponseDto"] = {
   "title" : "ValidatePromoResponseDto",
-  "required" : [ "discountPercent", "message", "promoCode" ],
+  "required" : [ "message", "promoCode" ],
   "properties" : {
     "promoCode" : { },
     "discountPercent" : { },
+    "discountType" : { },
+    "discountAmountTomans" : { },
+    "originalPriceTomans" : { },
+    "finalPriceTomans" : { },
     "message" : { }
   }
 };
@@ -1412,6 +1507,25 @@
                   <li class="nav-header" data-group="AdminMedia"><a href="#api-AdminMedia">API Methods - AdminMedia</a></li>
                     <li data-group="AdminMedia" data-name="apiAdminMediaUploadPost" class="">
                       <a href="#api-AdminMedia-apiAdminMediaUploadPost">apiAdminMediaUploadPost</a>
+                    </li>
+                  <li class="nav-header" data-group="AdminPromoCodes"><a href="#api-AdminPromoCodes">API Methods - AdminPromoCodes</a></li>
+                    <li data-group="AdminPromoCodes" data-name="apiAdminPromoCodesGet" class="">
+                      <a href="#api-AdminPromoCodes-apiAdminPromoCodesGet">apiAdminPromoCodesGet</a>
+                    </li>
+                    <li data-group="AdminPromoCodes" data-name="apiAdminPromoCodesIdDelete" class="">
+                      <a href="#api-AdminPromoCodes-apiAdminPromoCodesIdDelete">apiAdminPromoCodesIdDelete</a>
+                    </li>
+                    <li data-group="AdminPromoCodes" data-name="apiAdminPromoCodesIdPut" class="">
+                      <a href="#api-AdminPromoCodes-apiAdminPromoCodesIdPut">apiAdminPromoCodesIdPut</a>
+                    </li>
+                    <li data-group="AdminPromoCodes" data-name="apiAdminPromoCodesIdRedemptionsGet" class="">
+                      <a href="#api-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet">apiAdminPromoCodesIdRedemptionsGet</a>
+                    </li>
+                    <li data-group="AdminPromoCodes" data-name="apiAdminPromoCodesIdStatusPatch" class="">
+                      <a href="#api-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch">apiAdminPromoCodesIdStatusPatch</a>
+                    </li>
+                    <li data-group="AdminPromoCodes" data-name="apiAdminPromoCodesPost" class="">
+                      <a href="#api-AdminPromoCodes-apiAdminPromoCodesPost">apiAdminPromoCodesPost</a>
                     </li>
                   <li class="nav-header" data-group="AdminStages"><a href="#api-AdminStages">API Methods - AdminStages</a></li>
                     <li data-group="AdminStages" data-name="apiAdminStagesGet" class="">
@@ -3173,6 +3287,2007 @@ except ApiException as e:
                                     </script>
                                   </div>
                                   <input id='responses-apiAdminMediaUploadPost-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                  </section>
+                <section id="api-AdminPromoCodes">
+                  <h1>AdminPromoCodes</h1>
+                    <div id="api-AdminPromoCodes-apiAdminPromoCodesGet">
+                      <article id="api-AdminPromoCodes-apiAdminPromoCodesGet-0" data-group="User" data-name="apiAdminPromoCodesGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminPromoCodesGet</h1>
+                          <p>List Promo Codes</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Get all promo codes with search and status filtering, including aggregate stats</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/admin/promo-codes</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminPromoCodes-apiAdminPromoCodesGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminPromoCodes-apiAdminPromoCodesGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+"//api/admin/promo-codes"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminPromoCodesApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminPromoCodesApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminPromoCodesApi apiInstance = new AdminPromoCodesApi();
+        try {
+            Object result = apiInstance.apiAdminPromoCodesGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminPromoCodesApi#apiAdminPromoCodesGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminPromoCodesApi;
+
+public class AdminPromoCodesApiExample {
+
+    public static void main(String[] args) {
+        AdminPromoCodesApi apiInstance = new AdminPromoCodesApi();
+        try {
+            Object result = apiInstance.apiAdminPromoCodesGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminPromoCodesApi#apiAdminPromoCodesGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+
+AdminPromoCodesApi *apiInstance = [[AdminPromoCodesApi alloc] init];
+
+// List Promo Codes
+[apiInstance apiAdminPromoCodesGetWithCompletionHandler: 
+              ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminPromoCodesApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminPromoCodesGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminPromoCodesGetExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminPromoCodesApi();
+
+            try
+            {
+                // List Promo Codes
+                Object result = apiInstance.apiAdminPromoCodesGet();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminPromoCodesApi.apiAdminPromoCodesGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminPromoCodesApi();
+
+try {
+    $result = $api_instance->apiAdminPromoCodesGet();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminPromoCodesApi->apiAdminPromoCodesGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminPromoCodesApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminPromoCodesApi->new();
+
+eval { 
+    my $result = $api_instance->apiAdminPromoCodesGet();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminPromoCodesApi->apiAdminPromoCodesGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminPromoCodesApi()
+
+try: 
+    # List Promo Codes
+    api_response = api_instance.api_admin_promo_codes_get()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminPromoCodesApi->apiAdminPromoCodesGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Promo codes list with stats </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminPromoCodesGet-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminPromoCodesGet-200-schema">
+                                  <div id='responses-apiAdminPromoCodesGet-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Promo codes list with stats",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AdminPromoListResponse"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminPromoCodesGet-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminPromoCodesGet-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminPromoCodesGet-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AdminPromoCodes-apiAdminPromoCodesIdDelete">
+                      <article id="api-AdminPromoCodes-apiAdminPromoCodesIdDelete-0" data-group="User" data-name="apiAdminPromoCodesIdDelete" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminPromoCodesIdDelete</h1>
+                          <p>Delete Promo Code</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Soft delete / archive a discount code</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="delete"><code><span class="pln">/api/admin/promo-codes/{id}</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X DELETE\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+"//api/admin/promo-codes/{id}"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminPromoCodesApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminPromoCodesApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminPromoCodesApi apiInstance = new AdminPromoCodesApi();
+         id = ; //  | Promo Code UUID
+        try {
+            Object result = apiInstance.apiAdminPromoCodesIdDelete(id);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminPromoCodesApi#apiAdminPromoCodesIdDelete");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminPromoCodesApi;
+
+public class AdminPromoCodesApiExample {
+
+    public static void main(String[] args) {
+        AdminPromoCodesApi apiInstance = new AdminPromoCodesApi();
+         id = ; //  | Promo Code UUID
+        try {
+            Object result = apiInstance.apiAdminPromoCodesIdDelete(id);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminPromoCodesApi#apiAdminPromoCodesIdDelete");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+ *id = ; // Promo Code UUID
+
+AdminPromoCodesApi *apiInstance = [[AdminPromoCodesApi alloc] init];
+
+// Delete Promo Code
+[apiInstance apiAdminPromoCodesIdDeleteWith:id
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminPromoCodesApi()
+var id = ; // {{}} Promo Code UUID
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminPromoCodesIdDelete(id, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminPromoCodesIdDeleteExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminPromoCodesApi();
+            var id = new (); //  | Promo Code UUID
+
+            try
+            {
+                // Delete Promo Code
+                Object result = apiInstance.apiAdminPromoCodesIdDelete(id);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminPromoCodesApi.apiAdminPromoCodesIdDelete: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminPromoCodesApi();
+$id = ; //  | Promo Code UUID
+
+try {
+    $result = $api_instance->apiAdminPromoCodesIdDelete($id);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminPromoCodesApi->apiAdminPromoCodesIdDelete: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminPromoCodesApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminPromoCodesApi->new();
+my $id = ; #  | Promo Code UUID
+
+eval { 
+    my $result = $api_instance->apiAdminPromoCodesIdDelete(id => $id);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminPromoCodesApi->apiAdminPromoCodesIdDelete: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdDelete-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminPromoCodesApi()
+id =  #  | Promo Code UUID
+
+try: 
+    # Delete Promo Code
+    api_response = api_instance.api_admin_promo_codes_id_delete(id)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminPromoCodesApi->apiAdminPromoCodesIdDelete: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">id*</td>
+                                  <td>
+                                  
+                                  
+                                      <div id="d2e199_apiAdminPromoCodesIdDelete_id">
+                                          <div class="json-schema-view">
+                                              <div class="primitive">
+                                                  <span class="type">
+                                                      
+                                                  </span>
+                                  
+                                                      <div class="inner description">
+                                                          Promo Code UUID
+                                                      </div>
+                                              </div>
+                                                  <div class="inner required">
+                                                      Required
+                                                  </div>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  </tr>
+                            </table>
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Promo code deleted </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminPromoCodesIdDelete-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminPromoCodesIdDelete-200-schema">
+                                  <div id='responses-apiAdminPromoCodesIdDelete-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Promo code deleted",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "additionalProperties" : { }
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminPromoCodesIdDelete-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminPromoCodesIdDelete-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminPromoCodesIdDelete-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AdminPromoCodes-apiAdminPromoCodesIdPut">
+                      <article id="api-AdminPromoCodes-apiAdminPromoCodesIdPut-0" data-group="User" data-name="apiAdminPromoCodesIdPut" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminPromoCodesIdPut</h1>
+                          <p>Update Promo Code</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Update an existing discount code</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="put"><code><span class="pln">/api/admin/promo-codes/{id}</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X PUT\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/admin/promo-codes/{id}"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminPromoCodesApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminPromoCodesApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminPromoCodesApi apiInstance = new AdminPromoCodesApi();
+         id = ; //  | Promo Code UUID
+        AdminPromoCodeUpsertRequest body = ; // AdminPromoCodeUpsertRequest | Updated promo code payload
+        try {
+            Object result = apiInstance.apiAdminPromoCodesIdPut(id, body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminPromoCodesApi#apiAdminPromoCodesIdPut");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminPromoCodesApi;
+
+public class AdminPromoCodesApiExample {
+
+    public static void main(String[] args) {
+        AdminPromoCodesApi apiInstance = new AdminPromoCodesApi();
+         id = ; //  | Promo Code UUID
+        AdminPromoCodeUpsertRequest body = ; // AdminPromoCodeUpsertRequest | Updated promo code payload
+        try {
+            Object result = apiInstance.apiAdminPromoCodesIdPut(id, body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminPromoCodesApi#apiAdminPromoCodesIdPut");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+ *id = ; // Promo Code UUID
+AdminPromoCodeUpsertRequest *body = ; // Updated promo code payload (optional)
+
+AdminPromoCodesApi *apiInstance = [[AdminPromoCodesApi alloc] init];
+
+// Update Promo Code
+[apiInstance apiAdminPromoCodesIdPutWith:id
+    body:body
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminPromoCodesApi()
+var id = ; // {{}} Promo Code UUID
+var opts = { 
+  'body':  // {{AdminPromoCodeUpsertRequest}} Updated promo code payload
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminPromoCodesIdPut(id, opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminPromoCodesIdPutExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminPromoCodesApi();
+            var id = new (); //  | Promo Code UUID
+            var body = new AdminPromoCodeUpsertRequest(); // AdminPromoCodeUpsertRequest | Updated promo code payload (optional) 
+
+            try
+            {
+                // Update Promo Code
+                Object result = apiInstance.apiAdminPromoCodesIdPut(id, body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminPromoCodesApi.apiAdminPromoCodesIdPut: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminPromoCodesApi();
+$id = ; //  | Promo Code UUID
+$body = ; // AdminPromoCodeUpsertRequest | Updated promo code payload
+
+try {
+    $result = $api_instance->apiAdminPromoCodesIdPut($id, $body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminPromoCodesApi->apiAdminPromoCodesIdPut: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminPromoCodesApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminPromoCodesApi->new();
+my $id = ; #  | Promo Code UUID
+my $body = WWW::SwaggerClient::Object::AdminPromoCodeUpsertRequest->new(); # AdminPromoCodeUpsertRequest | Updated promo code payload
+
+eval { 
+    my $result = $api_instance->apiAdminPromoCodesIdPut(id => $id, body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminPromoCodesApi->apiAdminPromoCodesIdPut: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdPut-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminPromoCodesApi()
+id =  #  | Promo Code UUID
+body =  # AdminPromoCodeUpsertRequest | Updated promo code payload (optional)
+
+try: 
+    # Update Promo Code
+    api_response = api_instance.api_admin_promo_codes_id_put(id, body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminPromoCodesApi->apiAdminPromoCodesIdPut: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">id*</td>
+                                  <td>
+                                  
+                                  
+                                      <div id="d2e199_apiAdminPromoCodesIdPut_id">
+                                          <div class="json-schema-view">
+                                              <div class="primitive">
+                                                  <span class="type">
+                                                      
+                                                  </span>
+                                  
+                                                      <div class="inner description">
+                                                          Promo Code UUID
+                                                      </div>
+                                              </div>
+                                                  <div class="inner required">
+                                                      Required
+                                                  </div>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  </tr>
+                            </table>
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Updated promo code payload",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/AdminPromoCodeUpsertRequest"
+      }
+    }
+  }
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiAdminPromoCodesIdPut_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiAdminPromoCodesIdPut_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Promo code updated successfully </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminPromoCodesIdPut-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminPromoCodesIdPut-200-schema">
+                                  <div id='responses-apiAdminPromoCodesIdPut-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Promo code updated successfully",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AdminPromoCodeItemDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminPromoCodesIdPut-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminPromoCodesIdPut-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminPromoCodesIdPut-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet">
+                      <article id="api-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0" data-group="User" data-name="apiAdminPromoCodesIdRedemptionsGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminPromoCodesIdRedemptionsGet</h1>
+                          <p>Get Promo Redemptions</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Get list of users who redeemed this promo code</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/admin/promo-codes/{id}/redemptions</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+"//api/admin/promo-codes/{id}/redemptions"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminPromoCodesApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminPromoCodesApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminPromoCodesApi apiInstance = new AdminPromoCodesApi();
+         id = ; //  | Promo Code UUID
+        try {
+            Object result = apiInstance.apiAdminPromoCodesIdRedemptionsGet(id);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminPromoCodesApi#apiAdminPromoCodesIdRedemptionsGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminPromoCodesApi;
+
+public class AdminPromoCodesApiExample {
+
+    public static void main(String[] args) {
+        AdminPromoCodesApi apiInstance = new AdminPromoCodesApi();
+         id = ; //  | Promo Code UUID
+        try {
+            Object result = apiInstance.apiAdminPromoCodesIdRedemptionsGet(id);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminPromoCodesApi#apiAdminPromoCodesIdRedemptionsGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+ *id = ; // Promo Code UUID
+
+AdminPromoCodesApi *apiInstance = [[AdminPromoCodesApi alloc] init];
+
+// Get Promo Redemptions
+[apiInstance apiAdminPromoCodesIdRedemptionsGetWith:id
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminPromoCodesApi()
+var id = ; // {{}} Promo Code UUID
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminPromoCodesIdRedemptionsGet(id, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminPromoCodesIdRedemptionsGetExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminPromoCodesApi();
+            var id = new (); //  | Promo Code UUID
+
+            try
+            {
+                // Get Promo Redemptions
+                Object result = apiInstance.apiAdminPromoCodesIdRedemptionsGet(id);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminPromoCodesApi.apiAdminPromoCodesIdRedemptionsGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminPromoCodesApi();
+$id = ; //  | Promo Code UUID
+
+try {
+    $result = $api_instance->apiAdminPromoCodesIdRedemptionsGet($id);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminPromoCodesApi->apiAdminPromoCodesIdRedemptionsGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminPromoCodesApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminPromoCodesApi->new();
+my $id = ; #  | Promo Code UUID
+
+eval { 
+    my $result = $api_instance->apiAdminPromoCodesIdRedemptionsGet(id => $id);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminPromoCodesApi->apiAdminPromoCodesIdRedemptionsGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdRedemptionsGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminPromoCodesApi()
+id =  #  | Promo Code UUID
+
+try: 
+    # Get Promo Redemptions
+    api_response = api_instance.api_admin_promo_codes_id_redemptions_get(id)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminPromoCodesApi->apiAdminPromoCodesIdRedemptionsGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">id*</td>
+                                  <td>
+                                  
+                                  
+                                      <div id="d2e199_apiAdminPromoCodesIdRedemptionsGet_id">
+                                          <div class="json-schema-view">
+                                              <div class="primitive">
+                                                  <span class="type">
+                                                      
+                                                  </span>
+                                  
+                                                      <div class="inner description">
+                                                          Promo Code UUID
+                                                      </div>
+                                              </div>
+                                                  <div class="inner required">
+                                                      Required
+                                                  </div>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  </tr>
+                            </table>
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - List of redemptions </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminPromoCodesIdRedemptionsGet-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminPromoCodesIdRedemptionsGet-200-schema">
+                                  <div id='responses-apiAdminPromoCodesIdRedemptionsGet-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "List of redemptions",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AdminPromoRedemptionItemDto"
+            }
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminPromoCodesIdRedemptionsGet-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminPromoCodesIdRedemptionsGet-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminPromoCodesIdRedemptionsGet-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch">
+                      <article id="api-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0" data-group="User" data-name="apiAdminPromoCodesIdStatusPatch" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminPromoCodesIdStatusPatch</h1>
+                          <p>Toggle Promo Status</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Activate or deactivate a promo code quickly</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="patch"><code><span class="pln">/api/admin/promo-codes/{id}/status</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X PATCH\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/admin/promo-codes/{id}/status"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminPromoCodesApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminPromoCodesApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminPromoCodesApi apiInstance = new AdminPromoCodesApi();
+         id = ; //  | Promo Code UUID
+        AdminPromoStatusToggleRequest body = ; // AdminPromoStatusToggleRequest | Active toggle payload
+        try {
+            Object result = apiInstance.apiAdminPromoCodesIdStatusPatch(id, body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminPromoCodesApi#apiAdminPromoCodesIdStatusPatch");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminPromoCodesApi;
+
+public class AdminPromoCodesApiExample {
+
+    public static void main(String[] args) {
+        AdminPromoCodesApi apiInstance = new AdminPromoCodesApi();
+         id = ; //  | Promo Code UUID
+        AdminPromoStatusToggleRequest body = ; // AdminPromoStatusToggleRequest | Active toggle payload
+        try {
+            Object result = apiInstance.apiAdminPromoCodesIdStatusPatch(id, body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminPromoCodesApi#apiAdminPromoCodesIdStatusPatch");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+ *id = ; // Promo Code UUID
+AdminPromoStatusToggleRequest *body = ; // Active toggle payload (optional)
+
+AdminPromoCodesApi *apiInstance = [[AdminPromoCodesApi alloc] init];
+
+// Toggle Promo Status
+[apiInstance apiAdminPromoCodesIdStatusPatchWith:id
+    body:body
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminPromoCodesApi()
+var id = ; // {{}} Promo Code UUID
+var opts = { 
+  'body':  // {{AdminPromoStatusToggleRequest}} Active toggle payload
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminPromoCodesIdStatusPatch(id, opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminPromoCodesIdStatusPatchExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminPromoCodesApi();
+            var id = new (); //  | Promo Code UUID
+            var body = new AdminPromoStatusToggleRequest(); // AdminPromoStatusToggleRequest | Active toggle payload (optional) 
+
+            try
+            {
+                // Toggle Promo Status
+                Object result = apiInstance.apiAdminPromoCodesIdStatusPatch(id, body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminPromoCodesApi.apiAdminPromoCodesIdStatusPatch: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminPromoCodesApi();
+$id = ; //  | Promo Code UUID
+$body = ; // AdminPromoStatusToggleRequest | Active toggle payload
+
+try {
+    $result = $api_instance->apiAdminPromoCodesIdStatusPatch($id, $body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminPromoCodesApi->apiAdminPromoCodesIdStatusPatch: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminPromoCodesApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminPromoCodesApi->new();
+my $id = ; #  | Promo Code UUID
+my $body = WWW::SwaggerClient::Object::AdminPromoStatusToggleRequest->new(); # AdminPromoStatusToggleRequest | Active toggle payload
+
+eval { 
+    my $result = $api_instance->apiAdminPromoCodesIdStatusPatch(id => $id, body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminPromoCodesApi->apiAdminPromoCodesIdStatusPatch: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesIdStatusPatch-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminPromoCodesApi()
+id =  #  | Promo Code UUID
+body =  # AdminPromoStatusToggleRequest | Active toggle payload (optional)
+
+try: 
+    # Toggle Promo Status
+    api_response = api_instance.api_admin_promo_codes_id_status_patch(id, body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminPromoCodesApi->apiAdminPromoCodesIdStatusPatch: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">id*</td>
+                                  <td>
+                                  
+                                  
+                                      <div id="d2e199_apiAdminPromoCodesIdStatusPatch_id">
+                                          <div class="json-schema-view">
+                                              <div class="primitive">
+                                                  <span class="type">
+                                                      
+                                                  </span>
+                                  
+                                                      <div class="inner description">
+                                                          Promo Code UUID
+                                                      </div>
+                                              </div>
+                                                  <div class="inner required">
+                                                      Required
+                                                  </div>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  </tr>
+                            </table>
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Active toggle payload",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/AdminPromoStatusToggleRequest"
+      }
+    }
+  }
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiAdminPromoCodesIdStatusPatch_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiAdminPromoCodesIdStatusPatch_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Status updated </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminPromoCodesIdStatusPatch-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminPromoCodesIdStatusPatch-200-schema">
+                                  <div id='responses-apiAdminPromoCodesIdStatusPatch-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Status updated",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AdminPromoCodeItemDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminPromoCodesIdStatusPatch-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminPromoCodesIdStatusPatch-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminPromoCodesIdStatusPatch-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AdminPromoCodes-apiAdminPromoCodesPost">
+                      <article id="api-AdminPromoCodes-apiAdminPromoCodesPost-0" data-group="User" data-name="apiAdminPromoCodesPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminPromoCodesPost</h1>
+                          <p>Create Promo Code</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Create a new discount code with limits and plan rules</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/admin/promo-codes</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminPromoCodes-apiAdminPromoCodesPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminPromoCodes-apiAdminPromoCodesPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminPromoCodes-apiAdminPromoCodesPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/admin/promo-codes"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminPromoCodesApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminPromoCodesApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminPromoCodesApi apiInstance = new AdminPromoCodesApi();
+        AdminPromoCodeUpsertRequest body = ; // AdminPromoCodeUpsertRequest | Promo code configuration
+        try {
+            Object result = apiInstance.apiAdminPromoCodesPost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminPromoCodesApi#apiAdminPromoCodesPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminPromoCodesApi;
+
+public class AdminPromoCodesApiExample {
+
+    public static void main(String[] args) {
+        AdminPromoCodesApi apiInstance = new AdminPromoCodesApi();
+        AdminPromoCodeUpsertRequest body = ; // AdminPromoCodeUpsertRequest | Promo code configuration
+        try {
+            Object result = apiInstance.apiAdminPromoCodesPost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminPromoCodesApi#apiAdminPromoCodesPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+AdminPromoCodeUpsertRequest *body = ; // Promo code configuration (optional)
+
+AdminPromoCodesApi *apiInstance = [[AdminPromoCodesApi alloc] init];
+
+// Create Promo Code
+[apiInstance apiAdminPromoCodesPostWith:body
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminPromoCodesApi()
+var opts = { 
+  'body':  // {{AdminPromoCodeUpsertRequest}} Promo code configuration
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminPromoCodesPost(opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesPost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesPost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminPromoCodesPostExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminPromoCodesApi();
+            var body = new AdminPromoCodeUpsertRequest(); // AdminPromoCodeUpsertRequest | Promo code configuration (optional) 
+
+            try
+            {
+                // Create Promo Code
+                Object result = apiInstance.apiAdminPromoCodesPost(body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminPromoCodesApi.apiAdminPromoCodesPost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesPost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminPromoCodesApi();
+$body = ; // AdminPromoCodeUpsertRequest | Promo code configuration
+
+try {
+    $result = $api_instance->apiAdminPromoCodesPost($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminPromoCodesApi->apiAdminPromoCodesPost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesPost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminPromoCodesApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminPromoCodesApi->new();
+my $body = WWW::SwaggerClient::Object::AdminPromoCodeUpsertRequest->new(); # AdminPromoCodeUpsertRequest | Promo code configuration
+
+eval { 
+    my $result = $api_instance->apiAdminPromoCodesPost(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminPromoCodesApi->apiAdminPromoCodesPost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminPromoCodes-apiAdminPromoCodesPost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminPromoCodesApi()
+body =  # AdminPromoCodeUpsertRequest | Promo code configuration (optional)
+
+try: 
+    # Create Promo Code
+    api_response = api_instance.api_admin_promo_codes_post(body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminPromoCodesApi->apiAdminPromoCodesPost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Promo code configuration",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/AdminPromoCodeUpsertRequest"
+      }
+    }
+  }
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiAdminPromoCodesPost_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiAdminPromoCodesPost_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Promo code created successfully </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminPromoCodesPost-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminPromoCodesPost-200-schema">
+                                  <div id='responses-apiAdminPromoCodesPost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Promo code created successfully",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AdminPromoCodeItemDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminPromoCodesPost-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminPromoCodesPost-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminPromoCodesPost-200-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 

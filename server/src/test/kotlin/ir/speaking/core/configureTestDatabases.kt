@@ -28,11 +28,41 @@ internal fun Application.configureTestDatabases(dropTables: Boolean = false) {
         try {
             transaction {
                 if (dropTables) {
-                    SchemaUtils.drop(StageProgressTable, SubscriptionTable, StageTable, UserTable, ir.speaking.feature.admin.db.AdminAuditTable, ir.speaking.feature.admin.db.AdminUserTable)
+                    SchemaUtils.drop(
+                        StageProgressTable,
+                        SubscriptionTable,
+                        StageTable,
+                        UserTable,
+                        ir.speaking.feature.admin.db.AdminAuditTable,
+                        ir.speaking.feature.admin.db.AdminUserTable,
+                        ir.speaking.feature.subscription.db.PromoCodeRedemptionTable,
+                        ir.speaking.feature.subscription.db.PromoCodeTable
+                    )
                 }
-                SchemaUtils.create(UserTable, StageTable, StageProgressTable, SubscriptionTable, ir.speaking.feature.admin.db.AdminUserTable, ir.speaking.feature.admin.db.AdminAuditTable)
+                SchemaUtils.create(
+                    UserTable,
+                    StageTable,
+                    StageProgressTable,
+                    SubscriptionTable,
+                    ir.speaking.feature.admin.db.AdminUserTable,
+                    ir.speaking.feature.admin.db.AdminAuditTable,
+                    ir.speaking.feature.subscription.db.PromoCodeTable,
+                    ir.speaking.feature.subscription.db.PromoCodeRedemptionTable
+                )
                 seedSuperAdminIfEmpty()
                 seedOrSyncStages()
+                if (ir.speaking.feature.subscription.db.PromoCodeTable.selectAll().where { ir.speaking.feature.subscription.db.PromoCodeTable.code eq "GOLD20" }.empty()) {
+                    ir.speaking.feature.subscription.db.PromoCodeTable.insert {
+                        it[code] = "GOLD20"
+                        it[title] = "Test Promo Code"
+                        it[discountType] = "PERCENTAGE"
+                        it[discountValue] = 20
+                        it[applicablePlans] = "ALL"
+                        it[isOncePerUser] = false
+                        it[isActive] = true
+                        it[isDeleted] = false
+                    }
+                }
             }
         } catch (e: Exception) {
             println("Test DB setup failed: ${e.message}")

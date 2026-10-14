@@ -1,14 +1,5 @@
 <resources>
-    <string name="cyclone">Cyclone</string>
-    <string name="open_github">Open github</string>
-    <string name="run">Run</string>
-    <string name="stop">Stop</string>
-    <string name="theme">Theme</string>
-
-    <string name="app_name">AI Speaking</string>
-    <string name="splash_title">Dahi System</string>
-    <string name="splash_description">Remote Support and Repair</string>
-    <string name="splash_loading_text">Receiving Information</string>
+    <string name="app_name">AI Speaking Plus</string>
     <string name="try_again">Try Again</string>
 
     <!--  Invalidate Errors  -->
@@ -30,8 +21,6 @@
     <!--  MainScreen  -->
     <string name="profile">Profile</string>
     <string name="scenarios">Scenarios</string>
-    <string name="challenge">Challenge</string>
-    <string name="lightener">Lightener</string>
     <string name="my_scores">Roadmap</string>
 
     <!--  AvatarListDialog  -->
@@ -122,13 +111,10 @@
     <string name="translation_dialog_example">Example</string>
     <string name="text_copied">Text Copied</string>
 
-    <string name="translations_created">Saved to lightener. Good job!</string>
     <string name="example">Example</string>
     <string name="not_now">Not now</string>
     <string name="delete">Delete</string>
     <string name="exit">Exit</string>
-    <string name="add_to_lightener">Add to lightener</string>
-    <string name="in_lightener">In Lightener</string>
 
     <string name="subscription">subscription</string>
     <string name="choose_the_application_theme">Pick the app theme you like.</string>
@@ -142,8 +128,6 @@
     <string name="unauthorized_content_description">Log in to unlock your personalized speaking practice.</string>
     <string name="necessary_permission">Necessary Permission</string>
     <string name="request_permissions">"Tap Continue and choose 'While using the app' for each"</string>
-    <string name="guide">راهنمای اپلیکیشن</string>
-    <string name="guide_dialog_exit">بستن راهنمای اپلیکیشن</string>
 
 
     <!--Auth-->
@@ -194,7 +178,6 @@
 
     <string name="top_users_title">Top Ten</string>
     <string name="daily_word_title">Daily Word Question</string>
-    <string name="daily_challenge">Daily Scenario Challenge</string>
     <string name="btn_word_answer_accept">Send Answer</string>
     <string name="no_daily_word_exist">Sorry, no daily word for today.</string>
     <string name="show_more">Show More</string>
@@ -273,13 +256,6 @@
     <string name="english_level_second_title_fa">برای تعیین سطح زبانت باید به ده تا سوال جواب بدی تا بهت بگیم زبانت در چه سطحی هست</string>
     <string name="english_level_second_title_persian">Please answer 10 questions to find your English level.</string>
     <string name="english_level_second_title_persian_fa">برای تعیین سطح زبانت باید به ده تا سوال جواب بدی تا بهت بگیم زبانت در چه سطحی هست</string>
-
-    <!-- Lightener -->
-    <string name="delete_dialog_message">Are you sure you want to delete this item?</string>
-    <string name="delete_dialog_title">Delete</string>
-    <string name="empty_lightener">No words here yet. Please add words from chats. Just pick a text or word.</string>
-    <string name="lightener_toolbar_title">Lightener</string>
-    <string name="search_hint">Please search…</string>
 
     <!-- Onboarding -->
     <string name="onboarding_body_1">Practice English in fun, interactive stories.</string>

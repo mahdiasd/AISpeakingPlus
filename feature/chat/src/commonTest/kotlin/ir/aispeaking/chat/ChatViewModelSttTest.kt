@@ -20,7 +20,6 @@ import ir.aispeaking.domain.repository.user.UserProfileRepository
 import ir.aispeaking.domain.usecase.auth.GetCurrentAccessTierUseCase
 import ir.aispeaking.domain.usecase.stage.GetStageDetailUseCase
 import ir.aispeaking.domain.usecase.stage.RequestStageHintUseCase
-import ir.aispeaking.domain.usecase.stage.SendStageChatMessageUseCase
 import ir.aispeaking.domain.usecase.stage.SubmitStageEvaluationUseCase
 import ir.aispeaking.domain.usecase.stt.CloseSttSessionUseCase
 import ir.aispeaking.domain.usecase.stt.SendAudioChunkUseCase
@@ -178,7 +177,6 @@ class ChatViewModelSttTest {
         viewModel = ChatViewModel(
             getStageDetailUseCase = GetStageDetailUseCase(stageRepo),
             getCurrentAccessTierUseCase = GetCurrentAccessTierUseCase(authRepo),
-            sendStageChatMessageUseCase = SendStageChatMessageUseCase(stageRepo),
             requestStageHintUseCase = RequestStageHintUseCase(stageRepo),
             submitStageEvaluationUseCase = SubmitStageEvaluationUseCase(stageRepo),
             stageRepository = stageRepo,
