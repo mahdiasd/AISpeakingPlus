@@ -11,7 +11,7 @@ fun main() {
     initKoin()
     application {
         Window(
-            title = "AiSpeakingMultiplatform",
+            title = "AI Speaking Plus",
             state = rememberWindowState(width = 430.dp, height = 880.dp),
             onCloseRequest = ::exitApplication,
         ) {
