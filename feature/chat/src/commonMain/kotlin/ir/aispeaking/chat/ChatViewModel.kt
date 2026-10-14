@@ -20,7 +20,6 @@ import ir.aispeaking.domain.repository.stage.StageRepository
 import ir.aispeaking.domain.usecase.auth.GetCurrentAccessTierUseCase
 import ir.aispeaking.domain.usecase.stage.GetStageDetailUseCase
 import ir.aispeaking.domain.usecase.stage.RequestStageHintUseCase
-import ir.aispeaking.domain.usecase.stage.SendStageChatMessageUseCase
 import ir.aispeaking.domain.usecase.stage.SubmitStageEvaluationUseCase
 import ir.aispeaking.domain.usecase.stt.CloseSttSessionUseCase
 import ir.aispeaking.domain.usecase.stt.SendAudioChunkUseCase
@@ -73,7 +72,6 @@ data class ChatUiState(
 class ChatViewModel(
     private val getStageDetailUseCase: GetStageDetailUseCase,
     private val getCurrentAccessTierUseCase: GetCurrentAccessTierUseCase,
-    private val sendStageChatMessageUseCase: SendStageChatMessageUseCase,
     private val requestStageHintUseCase: RequestStageHintUseCase,
     private val submitStageEvaluationUseCase: SubmitStageEvaluationUseCase,
     private val stageRepository: StageRepository,
