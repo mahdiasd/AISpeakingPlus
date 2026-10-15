@@ -100,22 +100,41 @@ class ApiClient {
       headers,
     });
 
-    if (response.status === 401) {
-      this.setToken(null);
-      if (window.location.pathname !== '/admin/login') {
-        window.location.href = '/admin/login';
-      }
-      throw new ApiError('نشست کاری شما منقضی شده است. لطفاً دوباره وارد شوید.', 401);
-    }
-
     let json: any;
     try {
       json = await response.json();
     } catch (e) {
       if (!response.ok) {
+        if (response.status === 401) {
+          const isLogin = endpoint.includes('/login');
+          if (!isLogin) {
+            this.setToken(null);
+            if (window.location.pathname !== '/admin/login') {
+              window.location.href = '/admin/login';
+            }
+            throw new ApiError('نشست کاری شما منقضی شده است. لطفاً دوباره وارد شوید.', 401);
+          }
+          throw new ApiError('نام کاربری یا رمز عبور نامعتبر است', 401);
+        }
         throw new ApiError(`خطای سرور: ${response.statusText}`, response.status);
       }
       return { data: null as unknown as T };
+    }
+
+    if (response.status === 401) {
+      const isLogin = endpoint.includes('/login');
+      if (!isLogin) {
+        this.setToken(null);
+        if (window.location.pathname !== '/admin/login') {
+          window.location.href = '/admin/login';
+        }
+      }
+      const errorMsg =
+        json?.errorMessage ||
+        (isLogin
+          ? (json?.message || 'نام کاربری یا رمز عبور نامعتبر است')
+          : 'نشست کاری شما منقضی شده است. لطفاً دوباره وارد شوید.');
+      throw new ApiError(errorMsg, json?.errorCode || 401);
     }
 
     if (!response.ok) {

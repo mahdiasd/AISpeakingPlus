@@ -58,6 +58,9 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Modal Dialog */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title || undefined}
         className={`relative w-full ${maxWidths[maxWidth]} rounded-2xl bg-white border border-slate-200 dark:bg-[#111726] dark:border-slate-800 shadow-2xl dark:shadow-[0_24px_60px_rgba(0,0,0,0.8),inset_0_1px_0_0_rgba(255,255,255,0.07)] z-10 overflow-hidden transition-all animate-in zoom-in-95 duration-200 my-8`}
       >
         {(title || Boolean(onClose)) && (
