@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { TtsVoiceInfo, TtsSynthesizeResponse } from '../types';
-import { encodeWav, float32ToInt16, decodeAndResampleTo16k } from '../utils/audio';
+import { encodeWav, float32ToInt16, decodeAndResampleTo16k, downsampleBuffer } from '../utils/audio';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import {
@@ -352,10 +352,18 @@ export const VoiceLabPage: React.FC = () => {
       });
       mediaStreamRef.current = stream;
 
-      // 2. Setup AudioContext at 16000Hz (Native format required by sherpa-onnx)
+      // 2. Setup AudioContext (safely fallback if 16000 is not supported natively by hardware)
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      const audioCtx = new AudioCtx({ sampleRate: 16000 });
+      let audioCtx: AudioContext;
+      try {
+        audioCtx = new AudioCtx({ sampleRate: 16000 });
+      } catch {
+        audioCtx = new AudioCtx();
+      }
       audioContextRef.current = audioCtx;
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
 
       const source = audioCtx.createMediaStreamSource(stream);
 
@@ -421,15 +429,19 @@ export const VoiceLabPage: React.FC = () => {
         setSttStatus('listening');
       }
 
-      // Process PCM audio frames
+      // Process PCM audio frames with explicit 16kHz linear downsampling
       processor.onaudioprocess = (e) => {
-        const inputData = e.inputBuffer.getChannelData(0);
-        // Save copy for recorded audio WAV
-        recordedBuffersRef.current.push(new Float32Array(inputData));
+        const rawInput = e.inputBuffer.getChannelData(0);
+        const sourceRate = audioCtx.sampleRate || 16000;
+        const downsampled = downsampleBuffer(rawInput, sourceRate, 16000);
+        if (downsampled.length === 0) return;
 
-        // If WebSocket is open and ready, send binary PCM16 frame
+        // Save copy of 16kHz audio for recorded WAV
+        recordedBuffersRef.current.push(new Float32Array(downsampled));
+
+        // If WebSocket is open and ready, send binary PCM16 frame (16kHz mono)
         if (sttWsRef.current && sttWsRef.current.readyState === WebSocket.OPEN) {
-          const pcm16 = float32ToInt16(inputData);
+          const pcm16 = float32ToInt16(downsampled);
           sttWsRef.current.send(pcm16.buffer);
         }
       };
@@ -467,7 +479,30 @@ export const VoiceLabPage: React.FC = () => {
   };
 
   const stopRecording = async () => {
-    // Flatten recorded samples
+    // If WebSocket is active, notify server of stop to flush remaining hypothesis
+    if (sttWsRef.current && sttWsRef.current.readyState === WebSocket.OPEN) {
+      try {
+        sttWsRef.current.send(JSON.stringify({ type: 'stop' }));
+      } catch {}
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+
+    // Preserve any active live partial before cleanup so it's not lost
+    let finalSpokenText = '';
+    setLivePartial((currentPartial) => {
+      if (currentPartial && currentPartial.trim()) {
+        finalSpokenText = currentPartial.trim();
+        setFinalTranscripts((prev) => {
+          if (!prev.includes(finalSpokenText)) {
+            return [...prev, finalSpokenText];
+          }
+          return prev;
+        });
+      }
+      return '';
+    });
+
+    // Flatten recorded samples (already at 16000Hz)
     const totalSamples = recordedBuffersRef.current.reduce((acc, curr) => acc + curr.length, 0);
     const merged = new Float32Array(totalSamples);
     let offset = 0;
@@ -479,7 +514,7 @@ export const VoiceLabPage: React.FC = () => {
     // Stop streams & sockets
     stopRecordingCleanup();
 
-    // Create WAV Blob
+    // Create 16kHz WAV Blob
     if (merged.length > 0) {
       const wavBlob = encodeWav(merged, 16000);
       setRecordedAudioBlob(wavBlob);
@@ -492,8 +527,11 @@ export const VoiceLabPage: React.FC = () => {
       }
 
       // If in Loopback mode, trigger TTS on recognized text
-      if (activeTab === 'loopback' && loopbackText.trim()) {
-        triggerLoopbackTts(loopbackText.trim());
+      if (activeTab === 'loopback') {
+        const textToLoop = finalSpokenText || loopbackText.trim() || finalTranscripts.join(' ');
+        if (textToLoop.trim()) {
+          triggerLoopbackTts(textToLoop.trim());
+        }
       }
     }
   };

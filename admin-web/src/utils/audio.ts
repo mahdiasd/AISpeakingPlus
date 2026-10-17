@@ -53,6 +53,38 @@ export function encodeWav(samples: Float32Array, sampleRate: number = 16000): Bl
 }
 
 /**
+ * Downsamples a Float32Array from source sample rate (e.g. 44100 or 48000 Hz) to target sample rate (e.g. 16000 Hz).
+ */
+export function downsampleBuffer(
+  buffer: Float32Array,
+  sourceRate: number,
+  targetRate: number = 16000
+): Float32Array {
+  if (sourceRate === targetRate || buffer.length === 0) {
+    return buffer;
+  }
+  const ratio = sourceRate / targetRate;
+  const newLength = Math.round(buffer.length / ratio);
+  const result = new Float32Array(newLength);
+  let offsetResult = 0;
+  let offsetBuffer = 0;
+
+  while (offsetResult < result.length) {
+    const nextOffsetBuffer = Math.round((offsetResult + 1) * ratio);
+    let accum = 0;
+    let count = 0;
+    for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+      accum += buffer[i];
+      count++;
+    }
+    result[offsetResult] = count > 0 ? accum / count : 0;
+    offsetResult++;
+    offsetBuffer = nextOffsetBuffer;
+  }
+  return result;
+}
+
+/**
  * Converts Float32Array audio samples into an Int16Array (little-endian signed 16-bit PCM).
  */
 export function float32ToInt16(samples: Float32Array): Int16Array {

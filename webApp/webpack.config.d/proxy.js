@@ -24,7 +24,9 @@
             secure: false,
             changeOrigin: true,
             logLevel: "debug",
-            ws: true
+            ws: true,
+            timeout: 120000,
+            proxyTimeout: 120000
         },
         {
             context: ["/resources/**", "/uploads/**"],

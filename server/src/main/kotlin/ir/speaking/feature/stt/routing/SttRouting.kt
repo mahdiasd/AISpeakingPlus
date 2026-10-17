@@ -144,17 +144,32 @@ private suspend fun DefaultWebSocketServerSession.handleSttSession(sttService: S
 
         for (frame in incoming) {
             when (frame) {
-                is Frame.Binary -> handleBinaryFrame(sttService, stream, frame,
+                is Frame.Binary -> handleBinaryFrame(
+                    sttService = sttService,
+                    stream = stream,
+                    frame = frame,
                     send = { msg -> sendText(msg) },
+                    currentPartial = lastPartialText,
                     onPartial = { newText ->
-                        if (newText != lastPartialText) {
-                            lastPartialText = newText
-                        }
+                        lastPartialText = newText
                     },
                 )
                 is Frame.Text -> {
-                    // A text frame could be used as a control message in the future
-                    // (e.g. "stop"). For now we simply ignore it.
+                    val textContent = frame.readText().trim()
+                    if (textContent.contains("stop", ignoreCase = true) || textContent.contains("finish", ignoreCase = true)) {
+                        sttLogger.info("Client requested STT stop/finish via text frame")
+                        try {
+                            sttService.inputFinished(stream)
+                            sttService.decodeIfReady(stream)
+                            val finalRemaining = sttService.getText(stream)
+                            if (finalRemaining.isNotBlank()) {
+                                sendText(SttMessage.FinalTranscript(finalRemaining))
+                                lastPartialText = ""
+                            }
+                        } catch (e: Throwable) {
+                            sttLogger.warn("Error finalizing stream on stop frame: {}", e.message)
+                        }
+                    }
                 }
                 is Frame.Close -> {
                     sttLogger.info("STT client closed the connection")
@@ -163,6 +178,17 @@ private suspend fun DefaultWebSocketServerSession.handleSttSession(sttService: S
                 else -> { /* Ping/Pong are handled by the WebSocket plugin */ }
             }
         }
+
+        // Flush any remaining decoded text at end of stream
+        try {
+            sttService.inputFinished(stream)
+            sttService.decodeIfReady(stream)
+            val finalRemaining = sttService.getText(stream)
+            if (finalRemaining.isNotBlank()) {
+                sttLogger.info("Flushing final text on session end: {}", finalRemaining)
+                sendText(SttMessage.FinalTranscript(finalRemaining))
+            }
+        } catch (_: Throwable) {}
     } catch (e: Throwable) {
         sttLogger.error("STT WebSocket error from {}", call.request.local.remoteHost, e)
     } finally {
@@ -183,13 +209,12 @@ private suspend fun handleBinaryFrame(
     stream: com.k2fsa.sherpa.onnx.OnlineStream,
     frame: Frame.Binary,
     send: suspend (SttMessage) -> Unit,
+    currentPartial: String,
     onPartial: (String) -> Unit,
 ) {
-    sttLogger.info("Received Frame.Binary with {} bytes", frame.data.size)
     val samples = frame.data.toShortArraySamples()
     if (samples.isEmpty()) return
     sttService.acceptWaveform(stream, samples)
-    sttLogger.info("acceptWaveform processed {} samples", samples.size)
 
     // Decode as far as the model is ready; then read the current hypothesis.
     sttService.decodeIfReady(stream)
@@ -204,8 +229,10 @@ private suspend fun handleBinaryFrame(
         }
         sttService.reset(stream)
     } else if (text.isNotBlank()) {
-        send(SttMessage.PartialTranscript(text))
-        onPartial(text)
+        if (text != currentPartial) {
+            send(SttMessage.PartialTranscript(text))
+            onPartial(text)
+        }
     }
 }
 

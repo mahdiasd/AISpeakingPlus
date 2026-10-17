@@ -47,21 +47,37 @@ data class SttConfig(
             fun envFloat(name: String, default: Float): Float =
                 System.getenv(name)?.toFloatOrNull() ?: default
 
+            val candidateModelDirs = listOfNotNull(
+                System.getenv("STT_MODEL_DIR"),
+                java.io.File("models/sherpa-onnx-streaming-zipformer-en-2023-06-21").takeIf { it.exists() }?.absolutePath,
+                java.io.File("models/sherpa-onnx-streaming-zipformer-en-2023-06-26").takeIf { it.exists() }?.absolutePath,
+                java.io.File("../models/sherpa-onnx-streaming-zipformer-en-2023-06-21").takeIf { it.exists() }?.absolutePath,
+                java.io.File("../models/sherpa-onnx-streaming-zipformer-en-2023-06-26").takeIf { it.exists() }?.absolutePath,
+                java.io.File("server/models/sherpa-onnx-streaming-zipformer-en-2023-06-21").takeIf { it.exists() }?.absolutePath,
+                java.io.File("server/models/sherpa-onnx-streaming-zipformer-en-2023-06-26").takeIf { it.exists() }?.absolutePath,
+                java.io.File(System.getProperty("user.home"), "models/sherpa-onnx-streaming-zipformer-en-2023-06-21").takeIf { it.exists() }?.absolutePath,
+                java.io.File(System.getProperty("user.home"), "models/sherpa-onnx-streaming-zipformer-en-2023-06-26").takeIf { it.exists() }?.absolutePath,
+                "/app/models/sherpa-onnx-streaming-zipformer-en-2023-06-21",
+                "/app/models/sherpa-onnx-streaming-zipformer-en-2023-06-26"
+            )
+            val resolvedModelDir = candidateModelDirs.firstOrNull { java.io.File(it).isDirectory }
+                ?: candidateModelDirs.firstOrNull()
+                ?: "models/sherpa-onnx-streaming-zipformer-en-2023-06-21"
+
             return SttConfig(
-                modelDir = System.getenv("STT_MODEL_DIR")
-                    ?: "/app/models/sherpa-onnx-streaming-zipformer-en-2023-06-21",
+                modelDir = resolvedModelDir,
                 maxConcurrentStreams = envInt("STT_MAX_STREAMS", 2),
                 numThreads = envInt("STT_NUM_THREADS", 1),
                 sampleRate = envInt("STT_SAMPLE_RATE", 16000),
-                rule1MustContainNonSilence = envBool("STT_RULE1_NON_SILENCE", false),
-                rule1MinTrailingSilence = envFloat("STT_RULE1_TRAILING", 2.4f),
+                rule1MustContainNonSilence = envBool("STT_RULE1_NON_SILENCE", true),
+                rule1MinTrailingSilence = envFloat("STT_RULE1_TRAILING", 3.0f),
                 rule1MinUtteranceLength = envFloat("STT_RULE1_UTTERANCE", 0.0f),
                 rule2MustContainNonSilence = envBool("STT_RULE2_NON_SILENCE", true),
-                rule2MinTrailingSilence = envFloat("STT_RULE2_TRAILING", 1.4f),
+                rule2MinTrailingSilence = envFloat("STT_RULE2_TRAILING", 2.0f),
                 rule2MinUtteranceLength = envFloat("STT_RULE2_UTTERANCE", 0.0f),
                 rule3MustContainNonSilence = envBool("STT_RULE3_NON_SILENCE", false),
                 rule3MinTrailingSilence = envFloat("STT_RULE3_TRAILING", 0.0f),
-                rule3MinUtteranceLength = envFloat("STT_RULE3_UTTERANCE", 20.0f),
+                rule3MinUtteranceLength = envFloat("STT_RULE3_UTTERANCE", 30.0f),
             )
         }
     }
