@@ -24,6 +24,7 @@ open class AiApiService(
         responseFormat: ChatResponseFormat = ChatResponseFormat.JsonObject,
     ): Flow<String> = flow {
         val (primaryModel, fallbackModel) = aiClientManager.getActiveModels()
+        var emittedAny = false
         try {
             val openAi = aiClientManager.getOpenAiClient()
             val chatCompletionRequest = ChatCompletionRequest(
@@ -39,12 +40,17 @@ open class AiApiService(
             ).collect { chunk ->
                 val content = chunk.choices.firstOrNull()?.delta?.content
                 if (!content.isNullOrEmpty()) {
+                    emittedAny = true
                     emit(content)
                 }
             }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
-            PrintHelper.warning("Primary model streaming failed: ${e.message}. Trying fallback $fallbackModel")
+            if (emittedAny) {
+                PrintHelper.warning("Primary model streaming failed after emitting chunks: ${e.message}")
+                throw e
+            }
+            PrintHelper.warning("Primary model streaming failed before emitting: ${e.message}. Trying fallback $fallbackModel")
             val openAi = aiClientManager.getOpenAiClient()
             val chatCompletionRequest = ChatCompletionRequest(
                 responseFormat = responseFormat,
