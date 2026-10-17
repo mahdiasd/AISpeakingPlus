@@ -196,6 +196,9 @@ class StageRepositoryImpl(
         )
         stageApi.streamStageChatMessage(stageId, requestDto).collect { event ->
             when (event) {
+                is ir.aispeaking.network.model.stage.dto.StageChatStreamEvent.Connected -> {
+                    emit(ir.aispeaking.domain.model.chat.StageChatStreamEvent.Connected)
+                }
                 is ir.aispeaking.network.model.stage.dto.StageChatStreamEvent.Chunk -> {
                     emit(ir.aispeaking.domain.model.chat.StageChatStreamEvent.Chunk(event.delta))
                 }

@@ -54,6 +54,7 @@ data class StageChatTurnResult(
 )
 
 sealed class StageChatStreamEvent {
+    data object Connected : StageChatStreamEvent()
     data class Chunk(val delta: String) : StageChatStreamEvent()
     data class Done(val payload: StageChatTurnResult) : StageChatStreamEvent()
     data class Error(val message: String) : StageChatStreamEvent()

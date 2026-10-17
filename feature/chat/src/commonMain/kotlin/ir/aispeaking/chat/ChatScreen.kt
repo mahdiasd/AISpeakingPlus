@@ -400,7 +400,6 @@ private fun TypingBubble(
                 )
             }
         }
-        GameText(text = "در حال پاسخ…", size = 11.sp, color = Game.TextSecondary)
     }
 }
 

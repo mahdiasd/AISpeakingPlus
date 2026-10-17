@@ -68,6 +68,7 @@ class StageApi(
                 setBody(request)
             }
         ) {
+            emit(StageChatStreamEvent.Connected)
             incoming.collect { event ->
                 val data = event.data?.trim()
                 if (!data.isNullOrEmpty()) {
