@@ -215,6 +215,10 @@
                     }
 
                     try {
+                        if (self.audioContext.state === 'suspended') {
+                            self.audioContext.resume();
+                        }
+
                         self.audioInputSource = self.audioContext.createMediaStreamSource(stream);
                         self.audioProcessor = self.audioContext.createScriptProcessor(2048, 1, 1);
 
@@ -248,8 +252,13 @@
                             self._pcmChunkQueue.push(b64Chunk);
                         };
 
+                        var zeroGain = self.audioContext.createGain();
+                        zeroGain.gain.value = 0;
+                        self.zeroGain = zeroGain;
+
                         self.audioInputSource.connect(self.audioProcessor);
-                        self.audioProcessor.connect(self.audioContext.destination);
+                        self.audioProcessor.connect(zeroGain);
+                        zeroGain.connect(self.audioContext.destination);
                         self.isRecording = true;
                     } catch(err) {
                         console.error("[aiSpeakingSpeech] Web Audio processing graph error:", err);
@@ -408,6 +417,11 @@
                         this.audioProcessor.onaudioprocess = null;
                     } catch(e) {}
                     this.audioProcessor = null;
+                }
+
+                if (this.zeroGain) {
+                    try { this.zeroGain.disconnect(); } catch(e) {}
+                    this.zeroGain = null;
                 }
 
                 if (this.audioInputSource) {

@@ -27,6 +27,7 @@ import java.io.File
 class SttService(
     private val config: SttConfig
 ) {
+    private val logger = org.slf4j.LoggerFactory.getLogger(SttService::class.java)
     private val recognizer: OnlineRecognizer
     private val limiter: StreamConcurrencyLimiter =
         StreamConcurrencyLimiter(config.maxConcurrentStreams)
@@ -36,11 +37,12 @@ class SttService(
     val activeStreams: Int get() = limiter.active
 
     init {
-        val modelDir = File(config.modelDir)
-        require(modelDir.isDirectory) {
-            "STT model directory not found: ${config.modelDir}. " +
-                "Download the streaming-zipformer-en-2023-06-21 (int8) model first."
-        }
+        val modelDir = findValidModelDir()
+            ?: throw IllegalArgumentException(
+                "STT model directory not found or incomplete: ${config.modelDir}. " +
+                "Ensure encoder, decoder, joiner (.onnx/.int8.onnx) and tokens.txt are present."
+            )
+        logger.info("Using STT model directory: {}", modelDir.absolutePath)
 
         // Locate the transducer model files. The naming convention for the
         // 2023-06-21 release is:
@@ -51,13 +53,16 @@ class SttService(
         // We resolve them dynamically so the service also works if a newer
         // model with a different epoch/avg suffix is dropped in.
         val encoder = findModel(modelDir, "encoder", ".int8.onnx", ".onnx")
-            ?: throw IllegalArgumentException("encoder .onnx not found in ${config.modelDir}")
-        val decoder = findModel(modelDir, "decoder", ".onnx")
-            ?: throw IllegalArgumentException("decoder .onnx not found in ${config.modelDir}")
+            ?: throw IllegalArgumentException("encoder .onnx not found in ${modelDir.absolutePath}")
+        val decoder = findModel(modelDir, "decoder", ".onnx", ".int8.onnx")
+            ?: throw IllegalArgumentException("decoder .onnx not found in ${modelDir.absolutePath}")
         val joiner = findModel(modelDir, "joiner", ".int8.onnx", ".onnx")
-            ?: throw IllegalArgumentException("joiner .onnx not found in ${config.modelDir}")
+            ?: throw IllegalArgumentException("joiner .onnx not found in ${modelDir.absolutePath}")
         val tokens = File(modelDir, "tokens.txt")
-        require(tokens.isFile) { "tokens.txt not found in ${config.modelDir}" }
+        require(tokens.isFile) { "tokens.txt not found in ${modelDir.absolutePath}" }
+
+        logger.info("Resolved STT models:\n  encoder={}\n  decoder={}\n  joiner={}\n  tokens={}",
+            encoder, decoder, joiner, tokens.absolutePath)
 
         val transducer = OnlineTransducerModelConfig.builder()
             .setEncoder(encoder)
@@ -69,7 +74,7 @@ class SttService(
             .setTransducer(transducer)
             .setTokens(tokens.absolutePath)
             .setNumThreads(config.numThreads)
-            .setDebug(false)
+            .setDebug(true)
             .setProvider("cpu")
             .build()
 
@@ -157,10 +162,19 @@ class SttService(
     }
 
     /** Runs decode steps while the stream has enough data ready. */
-    fun decodeIfReady(stream: OnlineStream) {
+    fun decodeIfReady(stream: OnlineStream): Int {
+        var count = 0
         while (recognizer.isReady(stream)) {
             recognizer.decode(stream)
+            count++
         }
+        return count
+    }
+
+    fun isReady(stream: OnlineStream): Boolean = recognizer.isReady(stream)
+
+    fun decode(stream: OnlineStream) {
+        recognizer.decode(stream)
     }
 
     /** Transcribes a complete audio waveform (samples at 16kHz) and returns the recognized text. */
@@ -169,26 +183,51 @@ class SttService(
         return try {
             val chunkSize = 3200 // 200ms chunks @ 16kHz
             var offset = 0
+            val fullResult = StringBuilder()
+            var chunkIndex = 0
             while (offset < samples.size) {
                 val end = (offset + chunkSize).coerceAtMost(samples.size)
                 val chunk = samples.copyOfRange(offset, end)
                 acceptWaveform(stream, chunk)
-                decodeIfReady(stream)
+                val decodes = decodeIfReady(stream)
+                val raw = recognizer.getResult(stream)
+                val currentT = raw.text?.trim() ?: ""
+                val endp = isEndpoint(stream)
+                logger.debug("transcribeWaveform chunk {}: decodes={}, text='{}', isEndpoint={}", chunkIndex, decodes, currentT, endp)
+                if (endp) {
+                    val segmentText = getText(stream)
+                    if (segmentText.isNotBlank()) {
+                        if (fullResult.isNotEmpty()) fullResult.append(" ")
+                        fullResult.append(segmentText)
+                    }
+                    reset(stream)
+                }
                 offset = end
+                chunkIndex++
             }
             inputFinished(stream)
             decodeIfReady(stream)
-            getText(stream)
-        } catch (_: Throwable) {
+            val remaining = getText(stream)
+            logger.debug("transcribeWaveform inputFinished: remaining='{}'", remaining)
+            if (remaining.isNotBlank()) {
+                if (fullResult.isNotEmpty()) fullResult.append(" ")
+                fullResult.append(remaining)
+            }
+            formatTranscript(fullResult.toString().trim())
+        } catch (e: Throwable) {
+            logger.error("transcribeWaveform error", e)
             null
         } finally {
             releaseStream(stream)
         }
     }
 
-    /** Returns the current partial/interim transcription text. */
+    /** Returns the current partial/interim transcription text formatted with natural sentence casing. */
     fun getText(stream: OnlineStream): String =
-        recognizer.getResult(stream).text.trim()
+        formatTranscript(recognizer.getResult(stream).text.trim())
+
+    fun getRawResult(stream: OnlineStream): com.k2fsa.sherpa.onnx.OnlineRecognizerResult =
+        recognizer.getResult(stream)
 
     /** Returns true when the endpoint detector fires (utterance boundary). */
     fun isEndpoint(stream: OnlineStream): Boolean =
@@ -200,16 +239,94 @@ class SttService(
     }
 
     private fun findModel(dir: File, prefix: String, vararg suffixes: String): String? {
-        // Try exact prefixes first (e.g. "encoder") with the given suffixes,
-        // preferring the first suffix (int8).
         for (suffix in suffixes) {
             dir.listFiles()?.forEach { f ->
                 val n = f.name.lowercase()
                 if (n.startsWith(prefix) && n.endsWith(suffix)) {
+                    if (suffix == ".onnx" && n.endsWith(".int8.onnx")) {
+                        return@forEach
+                    }
                     return f.absolutePath
                 }
             }
         }
         return null
+    }
+
+    private fun findValidModelDir(): File? {
+        val candidates = listOf(
+            File(config.modelDir),
+            File("models/sherpa-onnx-streaming-zipformer-en-2023-06-21"),
+            File("models/sherpa-onnx-streaming-zipformer-en-2023-06-26"),
+            File("../models/sherpa-onnx-streaming-zipformer-en-2023-06-21"),
+            File("../models/sherpa-onnx-streaming-zipformer-en-2023-06-26"),
+            File("server/models/sherpa-onnx-streaming-zipformer-en-2023-06-21"),
+            File("server/models/sherpa-onnx-streaming-zipformer-en-2023-06-26"),
+            File(System.getProperty("user.home"), "models/sherpa-onnx-streaming-zipformer-en-2023-06-21"),
+            File(System.getProperty("user.home"), "models/sherpa-onnx-streaming-zipformer-en-2023-06-26"),
+            File("/app/models/sherpa-onnx-streaming-zipformer-en-2023-06-21"),
+            File("/app/models/sherpa-onnx-streaming-zipformer-en-2023-06-26")
+        )
+        return candidates.firstOrNull { isValidModelDir(it) }
+    }
+
+    private fun isValidModelDir(dir: File): Boolean {
+        if (!dir.exists() || !dir.isDirectory) return false
+        val encoder = findModel(dir, "encoder", ".int8.onnx", ".onnx")
+        val decoder = findModel(dir, "decoder", ".int8.onnx", ".onnx")
+        val joiner = findModel(dir, "joiner", ".int8.onnx", ".onnx")
+        val tokens = File(dir, "tokens.txt")
+        return encoder != null && decoder != null && joiner != null && tokens.isFile
+    }
+
+    companion object {
+        private val PROPER_NOUNS = setOf(
+            "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+            "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december",
+            "english", "persian", "iran", "tehran", "london", "uk", "usa", "america", "american", "british",
+            "french", "german", "spanish", "chinese", "japanese", "paris", "europe", "asia", "doctor", "mr", "mrs", "miss"
+        )
+
+        private val ALL_CAPS_ACRONYMS = setOf(
+            "ok", "ai", "tv", "id", "pc", "cd", "dvd", "usb", "gps", "ceo", "vip", "stt", "tts"
+        )
+
+        /**
+         * Converts all-caps raw ASR transcript output into natural English sentence casing,
+         * capitalizing the first word of sentences, pronoun 'I', contractions ('I'm', etc.),
+         * proper nouns, and recognized acronyms.
+         */
+        fun formatTranscript(raw: String): String {
+            if (raw.isBlank()) return raw
+            val tokens = raw.trim().split(Regex("\\s+"))
+            if (tokens.isEmpty()) return ""
+
+            val result = StringBuilder()
+            var capitalizeNext = true
+
+            for (token in tokens) {
+                if (token.isEmpty()) continue
+                if (result.isNotEmpty()) result.append(" ")
+
+                val wordOnly = token.trimEnd('.', ',', '!', '?', ';', ':')
+                val trailingPunct = token.substring(wordOnly.length)
+                val lowerWord = wordOnly.lowercase()
+
+                val formattedWord = when {
+                    ALL_CAPS_ACRONYMS.contains(lowerWord) -> lowerWord.uppercase()
+                    lowerWord == "i" -> "I"
+                    lowerWord.startsWith("i'") -> "I'" + lowerWord.substring(2)
+                    capitalizeNext || PROPER_NOUNS.contains(lowerWord) -> {
+                        lowerWord.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                    }
+                    else -> lowerWord
+                }
+
+                result.append(formattedWord).append(trailingPunct)
+                capitalizeNext = trailingPunct.any { it == '.' || it == '!' || it == '?' }
+            }
+
+            return result.toString()
+        }
     }
 }

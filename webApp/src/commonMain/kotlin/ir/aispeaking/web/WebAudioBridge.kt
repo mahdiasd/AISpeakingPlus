@@ -101,9 +101,10 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
                     if (chunksPayload.isNotEmpty()) {
                         val chunks = chunksPayload.split('|')
                         for (base64Chunk in chunks) {
-                            if (base64Chunk.isNotBlank()) {
+                            val trimmed = base64Chunk.trim()
+                            if (trimmed.isNotEmpty()) {
                                 try {
-                                    val bytes = Base64.decode(base64Chunk)
+                                    val bytes = Base64.decode(trimmed)
                                     controller.onAudioChunkCaptured?.invoke(bytes)
                                 } catch (_: Throwable) {}
                             }
@@ -130,9 +131,10 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
                 if (remainingPayload.isNotEmpty()) {
                     val chunks = remainingPayload.split('|')
                     for (base64Chunk in chunks) {
-                        if (base64Chunk.isNotBlank()) {
+                        val trimmed = base64Chunk.trim()
+                        if (trimmed.isNotEmpty()) {
                             try {
-                                val bytes = Base64.decode(base64Chunk)
+                                val bytes = Base64.decode(trimmed)
                                 controller.onAudioChunkCaptured?.invoke(bytes)
                             } catch (_: Throwable) {}
                         }
@@ -155,9 +157,10 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
             if (remainingPayload.isNotEmpty()) {
                 val chunks = remainingPayload.split('|')
                 for (base64Chunk in chunks) {
-                    if (base64Chunk.isNotBlank()) {
+                    val trimmed = base64Chunk.trim()
+                    if (trimmed.isNotEmpty()) {
                         try {
-                            val bytes = Base64.decode(base64Chunk)
+                            val bytes = Base64.decode(trimmed)
                             controller.onAudioChunkCaptured?.invoke(bytes)
                         } catch (_: Throwable) {}
                     }
