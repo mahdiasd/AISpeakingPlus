@@ -270,4 +270,22 @@ class ChatViewModelSttTest {
         assertFalse(viewModel.uiState.value.isRecording)
         assertNull(audioController.onAudioChunkCaptured)
     }
+
+    @Test
+    fun testManualSubmitEvaluationShowsDialogImmediatelyAndStopsVoice() = runTest {
+        viewModel.initStage("stage-1")
+        advanceUntilIdle()
+
+        // Start playing voice
+        audioController.playVoice("http://example.com/audio.wav") {}
+        assertTrue(audioController.isVoicePlaying())
+
+        // User manually triggers finish conversation
+        viewModel.submitEvaluation()
+        advanceUntilIdle()
+
+        // Voice must be stopped immediately and finish dialog shown
+        assertFalse(audioController.isVoicePlaying(), "Voice must stop when user manually finishes conversation")
+        assertTrue(viewModel.uiState.value.showFinishConfirmDialog, "Finish dialog must be shown immediately on manual submit")
+    }
 }

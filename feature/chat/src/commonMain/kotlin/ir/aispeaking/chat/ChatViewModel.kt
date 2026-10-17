@@ -583,16 +583,39 @@ class ChatViewModel(
                                 )
                             }
 
+                            val maxTurns = _uiState.value.stage?.maxTurns ?: 12
+                            val shouldAutoComplete = isGoalCompleted || _uiState.value.turnsCount >= maxTurns
+
                             if (hasAudio) {
+                                var hasAutoFinished = false
+                                val triggerAutoFinish = {
+                                    if (!hasAutoFinished) {
+                                        hasAutoFinished = true
+                                        viewModelScope.launch {
+                                            delay(500)
+                                            submitEvaluation()
+                                        }
+                                    }
+                                }
+
                                 audioController.playVoice(turn.audioUrl) {
                                     onVoicePlaybackEnded(aiUid)
+                                    if (shouldAutoComplete) {
+                                        triggerAutoFinish()
+                                    }
                                 }
-                            }
 
-                            val maxTurns = _uiState.value.stage?.maxTurns ?: 12
-                            if (isGoalCompleted || _uiState.value.turnsCount >= maxTurns) {
-                                delay(900)
-                                submitEvaluation()
+                                if (shouldAutoComplete) {
+                                    viewModelScope.launch {
+                                        delay(25000)
+                                        triggerAutoFinish()
+                                    }
+                                }
+                            } else {
+                                if (shouldAutoComplete) {
+                                    delay(900)
+                                    submitEvaluation()
+                                }
                             }
                         }
                         is StageChatStreamEvent.Error -> {
@@ -688,8 +711,9 @@ class ChatViewModel(
     }
 
     fun submitEvaluation() {
+        audioController.stopVoice()
         val stageId = _uiState.value.stage?.id ?: return
-        if (_uiState.value.isSubmittingEvaluation) return
+        if (_uiState.value.isSubmittingEvaluation || _uiState.value.showFinishConfirmDialog) return
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmittingEvaluation = true) }
             val hasAiCompletionInChatList = _uiState.value.chats
