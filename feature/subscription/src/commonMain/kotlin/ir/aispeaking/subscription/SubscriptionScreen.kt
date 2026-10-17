@@ -61,12 +61,19 @@ fun SubscriptionScreen(
     val scrollState = rememberScrollState()
     var toast by remember { mutableStateOf<String?>(null) }
 
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is SubscriptionEffect.NavigateBack -> onNavigateBack()
                 is SubscriptionEffect.SubscriptionActivated -> onSubscriptionSuccess()
                 is SubscriptionEffect.ShowSnackbar -> toast = effect.message
+                is SubscriptionEffect.OpenWebUrl -> {
+                    try {
+                        uriHandler.openUri(effect.url)
+                    } catch (_: Exception) {}
+                }
             }
         }
     }
@@ -217,7 +224,11 @@ fun SubscriptionScreen(
                         }
                     }
                     GameButton(
-                        text = "خرید اشتراک و شروع یادگیری",
+                        text = if (uiState.isPurchasing) {
+                            uiState.purchaseProgressMessage ?: "در حال اتصال به درگاه..."
+                        } else {
+                            "خرید اشتراک و شروع یادگیری"
+                        },
                         onClick = { viewModel.processIntent(SubscriptionIntent.PurchaseSelectedPlan) },
                         modifier = Modifier.fillMaxWidth(),
                         style = GameButtonStyle.Gold,

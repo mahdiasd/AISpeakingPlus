@@ -16,6 +16,10 @@ import ir.aispeaking.network.model.stage.dto.SubscriptionPlanDto
 import ir.aispeaking.network.model.stage.dto.SubscriptionStatusDto
 import ir.aispeaking.network.model.stage.dto.ValidatePromoRequestDto
 import ir.aispeaking.network.model.stage.dto.ValidatePromoResponseDto
+import ir.aispeaking.network.model.stage.dto.DirectCheckoutRequestDto
+import ir.aispeaking.network.model.stage.dto.DirectCheckoutResponseDto
+import ir.aispeaking.network.model.stage.dto.VerifyMarketPurchaseRequestDto
+import ir.aispeaking.network.model.stage.dto.VerifyMarketPurchaseResponseDto
 import org.koin.core.annotation.Single
 
 @Single
@@ -40,7 +44,21 @@ class SubscriptionApi(
     }
 
     suspend fun validatePromo(request: ValidatePromoRequestDto): NetworkResponse<ValidatePromoResponseDto> {
-        return client.post("$baseUrl/api/v2/subscriptions/promo/validate") {
+        return client.post("$baseUrl/api/v2/subscriptions/validate-promo") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body()
+    }
+
+    suspend fun verifyMarketPurchase(request: VerifyMarketPurchaseRequestDto): NetworkResponse<VerifyMarketPurchaseResponseDto> {
+        return client.post("$baseUrl/api/v2/subscriptions/verify-market-purchase") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body()
+    }
+
+    suspend fun directCheckout(request: DirectCheckoutRequestDto): NetworkResponse<DirectCheckoutResponseDto> {
+        return client.post("$baseUrl/api/v2/subscriptions/direct-checkout") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()

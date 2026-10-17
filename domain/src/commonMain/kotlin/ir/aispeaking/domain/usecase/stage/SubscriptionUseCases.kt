@@ -36,3 +36,54 @@ class ValidatePromoCodeUseCase(
     suspend operator fun invoke(promoCode: String): DataResult<PromoValidationResult> =
         repository.validatePromo(promoCode = promoCode)
 }
+
+@Factory
+class VerifyMarketPurchaseUseCase(
+    private val repository: SubscriptionRepository
+) {
+    suspend operator fun invoke(
+        market: String,
+        planId: String,
+        sku: String,
+        purchaseToken: String,
+        orderId: String? = null,
+        developerPayload: String? = null,
+        promoCode: String? = null
+    ): DataResult<SubscriptionStatus> = repository.verifyMarketPurchase(
+        market = market,
+        planId = planId,
+        sku = sku,
+        purchaseToken = purchaseToken,
+        orderId = orderId,
+        developerPayload = developerPayload,
+        promoCode = promoCode
+    )
+}
+
+@Factory
+class ValidateMarketPromoUseCase(
+    private val repository: SubscriptionRepository
+) {
+    suspend operator fun invoke(
+        promoCode: String,
+        planId: String,
+        market: String
+    ): DataResult<PromoValidationResult> = repository.validateMarketPromo(
+        promoCode = promoCode,
+        planId = planId,
+        market = market
+    )
+}
+
+@Factory
+class CreateDirectCheckoutUseCase(
+    private val repository: SubscriptionRepository
+) {
+    suspend operator fun invoke(
+        planId: String,
+        promoCode: String? = null
+    ): DataResult<ir.aispeaking.domain.model.stage.DirectCheckoutResult> = repository.createDirectCheckout(
+        planId = planId,
+        promoCode = promoCode
+    )
+}

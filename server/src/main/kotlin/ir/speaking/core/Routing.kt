@@ -113,6 +113,7 @@ fun Application.configureRouting() {
  */
 fun sanitizeOpenApiForApidog(rawJson: String): String {
     var sanitized = rawJson
+        .replace(Regex(""""openapi"\s*:\s*"3\.1\.\d+""""), "\"openapi\":\"3.0.3\"")
         .replace("\"openapi\":\"3.1.1\"", "\"openapi\":\"3.0.3\"")
         .replace("\"openapi\": \"3.1.1\"", "\"openapi\": \"3.0.3\"")
 

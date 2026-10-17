@@ -7,6 +7,7 @@ import ir.speaking.feature.stage.db.StageSeedData
 import ir.speaking.feature.stage.db.StageTable
 import ir.speaking.feature.stage_progress.db.StageProgressTable
 import ir.speaking.feature.subscription.db.PromoCodeRedemptionTable
+import ir.speaking.feature.subscription.db.MarketPaymentTable
 import ir.speaking.feature.subscription.db.PromoCodeTable
 import ir.speaking.feature.subscription.db.SubscriptionTable
 import ir.speaking.feature.user.db.UserTable
@@ -29,7 +30,8 @@ private val allTables = arrayOf<Table>(
     AdminUserTable,
     AdminAuditTable,
     PromoCodeTable,
-    PromoCodeRedemptionTable
+    PromoCodeRedemptionTable,
+    MarketPaymentTable
 )
 
 fun configureDatabases() {
