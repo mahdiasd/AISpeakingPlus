@@ -350,6 +350,11 @@ class StageChatService(
         if (text.endsWith("```")) {
             text = text.removeSuffix("```").trim()
         }
+        val firstBrace = text.indexOf('{')
+        val lastBrace = text.lastIndexOf('}')
+        if (firstBrace != -1 && lastBrace > firstBrace) {
+            text = text.substring(firstBrace, lastBrace + 1)
+        }
         return text.trim()
     }
 
@@ -548,33 +553,37 @@ class StageChatService(
 
             val rawText = parser.getAccumulated().trim()
             if (rawText.isNotEmpty()) {
-                val cleanJson = cleanJsonResponse(rawText)
-                val jsonObject = json.parseToJsonElement(cleanJson).jsonObject
+                try {
+                    val cleanJson = cleanJsonResponse(rawText)
+                    val jsonObject = json.parseToJsonElement(cleanJson).jsonObject
 
-                val reply = jsonObject["reply"]?.jsonPrimitive?.content?.trim().orEmpty()
-                val translation = jsonObject["translation"]?.jsonPrimitive?.content?.trim().orEmpty()
-                val grammarAnalysisObj = try { jsonObject["grammar_analysis"]?.jsonObject } catch (_: Exception) { null }
-                val grammarFeedback = jsonObject["grammar_feedback"]?.jsonPrimitive?.content?.trim()
-                    ?: grammarAnalysisObj?.get("error_details")?.jsonPrimitive?.content?.trim()
-                    ?: ""
-                val hasGrammarError = jsonObject["has_grammar_error"]?.jsonPrimitive?.booleanOrNull
-                    ?: grammarAnalysisObj?.get("has_error")?.jsonPrimitive?.booleanOrNull
-                    ?: grammarFeedback.isNotEmpty()
-                val rawCorrected = jsonObject["corrected_sentence"]?.jsonPrimitive?.content?.trim()
-                    ?: grammarAnalysisObj?.get("corrected_sentence")?.jsonPrimitive?.content?.trim()
-                val correctedSentence = rawCorrected?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
-                val objectiveCompleted = jsonObject["objective_completed"]?.jsonPrimitive?.booleanOrNull ?: false
+                    val reply = jsonObject["reply"]?.jsonPrimitive?.content?.trim().orEmpty()
+                    val translation = jsonObject["translation"]?.jsonPrimitive?.content?.trim().orEmpty()
+                    val grammarAnalysisObj = try { jsonObject["grammar_analysis"]?.jsonObject } catch (_: Exception) { null }
+                    val grammarFeedback = jsonObject["grammar_feedback"]?.jsonPrimitive?.content?.trim()
+                        ?: grammarAnalysisObj?.get("error_details")?.jsonPrimitive?.content?.trim()
+                        ?: ""
+                    val hasGrammarError = jsonObject["has_grammar_error"]?.jsonPrimitive?.booleanOrNull
+                        ?: grammarAnalysisObj?.get("has_error")?.jsonPrimitive?.booleanOrNull
+                        ?: grammarFeedback.isNotEmpty()
+                    val rawCorrected = jsonObject["corrected_sentence"]?.jsonPrimitive?.content?.trim()
+                        ?: grammarAnalysisObj?.get("corrected_sentence")?.jsonPrimitive?.content?.trim()
+                    val correctedSentence = rawCorrected?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
+                    val objectiveCompleted = jsonObject["objective_completed"]?.jsonPrimitive?.booleanOrNull ?: false
 
-                if (reply.isNotEmpty()) {
-                    parser.finish(reply)
-                    return ChatTurnResult(
-                        reply = reply,
-                        translation = translation.ifEmpty { null },
-                        isObjectiveDone = objectiveCompleted,
-                        hasGrammarError = hasGrammarError,
-                        correctedSentence = if (hasGrammarError) correctedSentence else null,
-                        grammarFeedback = if (hasGrammarError) grammarFeedback else ""
-                    )
+                    if (reply.isNotEmpty()) {
+                        parser.finish(reply)
+                        return ChatTurnResult(
+                            reply = reply,
+                            translation = translation.ifEmpty { null },
+                            isObjectiveDone = objectiveCompleted,
+                            hasGrammarError = hasGrammarError,
+                            correctedSentence = if (hasGrammarError) correctedSentence else null,
+                            grammarFeedback = if (hasGrammarError) grammarFeedback else ""
+                        )
+                    }
+                } catch (e: Exception) {
+                    logger.warn("Parsing accumulated stream response failed (${e.message}), attempting raw fallback")
                 }
             }
 
@@ -700,6 +709,12 @@ class ReplyStreamParser(
         if (emittedLength == 0 && trimmed.isNotEmpty()) {
             onChunk(trimmed)
             emittedLength = trimmed.length
+        } else if (trimmed.length > emittedLength) {
+            val delta = trimmed.substring(emittedLength)
+            if (delta.isNotEmpty()) {
+                onChunk(delta)
+                emittedLength = trimmed.length
+            }
         }
     }
 

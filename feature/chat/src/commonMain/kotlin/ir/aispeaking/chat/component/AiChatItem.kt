@@ -2,8 +2,19 @@ package ir.aispeaking.chat.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,8 +22,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +36,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.AnnotatedString
@@ -42,6 +58,7 @@ import ir.aispeaking.sharedui.ui.game.GameChip
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * One message from the AI character. The English text is the hero; translation, audio and copy
@@ -126,13 +143,7 @@ fun AiChatItem(
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         when (chat.voiceState) {
                             AiVoiceState.PendingToPlay -> GameChip(text = "در حال آماده‌سازی", accent = Game.Mint)
-                            AiVoiceState.Playing -> GameChip(
-                                text = "توقف صدا",
-                                icon = Res.drawable.ic_speaker_off,
-                                accent = Game.Mint,
-                                active = true,
-                                onClick = onStopVoice
-                            )
+                            AiVoiceState.Playing -> PlayingVoiceChip(onClick = onStopVoice)
                             AiVoiceState.Stopped -> if (!chat.audioUrl.isNullOrBlank()) {
                                 GameChip(
                                     text = "پخش صدا",
@@ -163,6 +174,96 @@ fun AiChatItem(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayingVoiceChip(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 450f),
+        label = "playing_voice_press"
+    )
+    val shape = RoundedCornerShape(50)
+
+    val transition = rememberInfiniteTransition(label = "audio_wave_pulse")
+    val bar1 by transition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(450, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bar1"
+    )
+    val bar2 by transition.animateFloat(
+        initialValue = 0.9f,
+        targetValue = 0.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(380, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bar2"
+    )
+    val bar3 by transition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 0.95f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(420, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bar3"
+    )
+    val bar4 by transition.animateFloat(
+        initialValue = 0.7f,
+        targetValue = 0.25f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(350, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bar4"
+    )
+
+    Row(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(shape)
+            .background(Game.Mint.copy(alpha = 0.28f))
+            .border(1.dp, Game.Mint.copy(alpha = 0.75f), shape)
+            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_speaker_off),
+            contentDescription = "توقف صدا",
+            tint = Game.Mint,
+            modifier = Modifier.size(15.dp)
+        )
+        Row(
+            modifier = Modifier.height(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            val bars = listOf(bar1, bar2, bar3, bar4)
+            bars.forEach { barVal ->
+                Box(
+                    modifier = Modifier
+                        .width(2.5.dp)
+                        .height((4 + 10 * barVal).dp)
+                        .background(Game.Mint, RoundedCornerShape(1.dp))
+                )
             }
         }
     }

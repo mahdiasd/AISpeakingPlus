@@ -173,6 +173,7 @@ class ChatViewModel(
                     userLevel = level
                 ).collect { event ->
                     when (event) {
+                        is StageChatStreamEvent.Connected -> Unit
                         is StageChatStreamEvent.Chunk -> {
                             accumulatedText += event.delta
                             _uiState.update { state ->
@@ -499,13 +500,6 @@ class ChatViewModel(
                     }
                 }
 
-            _uiState.update { state ->
-                state.copy(
-                    chats = (state.chats + Chat.WaitingForAi).toImmutableList(),
-                    isModelSpeaking = true
-                )
-            }
-
             val aiUid = "ai_${Clock.System.now().toEpochMilliseconds()}"
             var accumulatedText = ""
             var isDone = false
@@ -519,6 +513,18 @@ class ChatViewModel(
                     userLevel = _uiState.value.userLevel
                 ).collect { event ->
                     when (event) {
+                        is StageChatStreamEvent.Connected -> {
+                            _uiState.update { state ->
+                                if (state.chats.none { it is Chat.WaitingForAi }) {
+                                    state.copy(
+                                        chats = (state.chats + Chat.WaitingForAi).toImmutableList(),
+                                        isModelSpeaking = true
+                                    )
+                                } else {
+                                    state.copy(isModelSpeaking = true)
+                                }
+                            }
+                        }
                         is StageChatStreamEvent.Chunk -> {
                             accumulatedText += event.delta
                             _uiState.update { state ->
