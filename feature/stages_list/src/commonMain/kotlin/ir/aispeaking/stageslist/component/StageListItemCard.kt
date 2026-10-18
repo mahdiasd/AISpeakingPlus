@@ -73,8 +73,9 @@ fun StageListItemCard(
         label = "stageItemScale"
     )
 
+    val isDark = ir.aispeaking.sharedui.ui.them.AppTheme.isDark
     val accent = when {
-        isActiveCurrentStage -> Game.Mint
+        isActiveCurrentStage -> Game.Blue
         stage.lockStatus == StageLockStatus.LOCKED_SUBSCRIPTION -> Game.Gold
         stage.lockStatus == StageLockStatus.LOCKED_REGISTRATION -> Game.Violet
         isLocked -> Game.TextMuted
@@ -110,11 +111,11 @@ fun StageListItemCard(
                     .padding(top = 12.dp)
                     .size(if (isActiveCurrentStage) 44.dp else 38.dp)
                     .background(
-                        if (isLocked) Brush.linearGradient(listOf(Color(0xFF2C2C2E), Color(0xFF1C1C1E)))
+                        if (isLocked) (if (isDark) Brush.linearGradient(listOf(Color(0xFF2C2C2E), Color(0xFF1C1C1E))) else Brush.linearGradient(listOf(Color(0xFFE5E7EB), Color(0xFFD1D5DB))))
                         else Brush.linearGradient(listOf(accent, accent.copy(alpha = 0.7f))),
                         CircleShape
                     )
-                    .border(1.5.dp, if (isActiveCurrentStage) Color.White else accent.copy(alpha = 0.4f), CircleShape),
+                    .border(1.5.dp, if (isActiveCurrentStage) (if (isDark) Color.White else Game.Blue) else accent.copy(alpha = 0.4f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 when (stage.lockStatus) {
@@ -134,7 +135,7 @@ fun StageListItemCard(
                         text = stage.orderIndex.fa(),
                         size = 15.sp,
                         bold = true,
-                        color = if (isActiveCurrentStage) Color(0xFF07080A) else Color.White
+                        color = Color.White
                     )
                 }
             }
@@ -153,7 +154,7 @@ fun StageListItemCard(
                 )
                 .border(
                     if (isActiveCurrentStage) 2.dp else 1.dp,
-                    if (isActiveCurrentStage) Game.Mint else Game.Stroke,
+                    if (isActiveCurrentStage) Game.Blue else Game.Stroke,
                     shape
                 )
                 .clickable(
@@ -201,7 +202,7 @@ fun StageListItemCard(
                 when {
                     isActiveCurrentStage -> GameChip(
                         text = "ادامه از اینجا",
-                        accent = Game.Mint,
+                        accent = Game.Blue,
                         active = true
                     )
                     stage.lockStatus == StageLockStatus.LOCKED_SUBSCRIPTION -> GameChip(

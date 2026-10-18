@@ -22,11 +22,17 @@ import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_crown
 import org.jetbrains.compose.resources.painterResource
 
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.them.AppTheme
+
 @Composable
 fun SubscriptionHeader(
     currentStatus: SubscriptionStatus?,
     modifier: Modifier = Modifier
 ) {
+    val isDark = AppTheme.isDark
+
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -64,43 +70,47 @@ fun SubscriptionHeader(
         Spacer(modifier = Modifier.height(18.dp))
 
         // Main Title
-        Text(
+        GameText(
             text = "دسترسی نامحدود به سفر داستانی",
-            color = Color.White,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center
+            color = Game.TextPrimary,
+            size = 22.sp,
+            bold = true,
+            align = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         // Subtitle
-        Text(
+        GameText(
             text = "تمامی مراحل، سناریوهای پیشرفته و هوش مصنوعی بدون وقفه را آنلاک کنید",
-            color = Color(0xFFB7C0E0),
-            fontSize = 13.sp,
+            color = Game.TextSecondary,
+            size = 13.sp,
             lineHeight = 22.sp,
-            textAlign = TextAlign.Center,
+            align = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
         // Active Subscription Reminder Card if user is already subscriber
         if (currentStatus?.isSubscriber == true) {
             Spacer(modifier = Modifier.height(16.dp))
+            val cardBg = if (isDark) {
+                Brush.horizontalGradient(listOf(Color(0xFF2E1065), Color(0xFF1B2550)))
+            } else {
+                Brush.horizontalGradient(listOf(Color(0xFFFFFBEB), Color(0xFFFEF3C7)))
+            }
+            val cardBorder = if (isDark) {
+                Brush.horizontalGradient(listOf(Color(0xFFFFC83D), Color(0xFF7C3AED)))
+            } else {
+                Brush.horizontalGradient(listOf(Color(0xFFF59E0B), Color(0xFFD97706)))
+            }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(Color(0xFF2E1065), Color(0xFF1B2550))
-                        )
-                    )
+                    .background(cardBg)
                     .border(
                         width = 1.dp,
-                        brush = Brush.horizontalGradient(
-                            listOf(Color(0xFFFFC83D), Color(0xFF7C3AED))
-                        ),
+                        brush = cardBorder,
                         shape = RoundedCornerShape(16.dp)
                     )
                     .padding(14.dp)
@@ -114,16 +124,16 @@ fun SubscriptionHeader(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(
+                        GameText(
                             text = "شما دارای اشتراک فعال هستید",
-                            color = Color(0xFFFFC83D),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
+                            color = if (isDark) Color(0xFFFFC83D) else Color(0xFFB45309),
+                            size = 13.sp,
+                            bold = true
                         )
-                        Text(
+                        GameText(
                             text = "خرید پلن جدید به انتهای روزهای باقیمانده شما اضافه خواهد شد.",
-                            color = Color(0xFFCBD5E1),
-                            fontSize = 11.sp
+                            color = Game.TextSecondary,
+                            size = 11.sp
                         )
                     }
 
@@ -133,11 +143,11 @@ fun SubscriptionHeader(
                             .background(Color(0x33FFD700))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
-                        Text(
+                        GameText(
                             text = "${formatToPersian(currentStatus.remainingDays)} روز باقیمانده",
-                            color = Color(0xFFFFC83D),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
+                            color = if (isDark) Color(0xFFFFC83D) else Color(0xFFB45309),
+                            size = 12.sp,
+                            bold = true
                         )
                     }
                 }

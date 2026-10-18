@@ -153,12 +153,12 @@ private fun BrandPanel() {
                 Box(
                     Modifier
                         .size(8.dp)
-                        .background(Game.Mint, CircleShape)
+                        .background(Game.Blue, CircleShape)
                 )
                 GameText(
                     text = "برای بهترین تجربه، روی موبایل باز کن",
                     size = 13.sp,
-                    color = Game.Mint
+                    color = Game.Blue
                 )
             }
         }

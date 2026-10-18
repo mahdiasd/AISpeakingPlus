@@ -172,15 +172,22 @@ fun LoginScreen(
         label = "CharY"
     )
 
+    val isDark = AppTheme.isDark
+    val bgBrush = if (isDark) {
+        Brush.verticalGradient(
+            listOf(Color(0xFF1B1F4B), Color(0xFF0E1433), Game.Ink)
+        )
+    } else {
+        Brush.verticalGradient(
+            listOf(Color(0xFFEBF4FF), Color(0xFFF4F6F9), Color(0xFFFFFFFF))
+        )
+    }
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        listOf(Color(0xFF1B1F4B), Color(0xFF0E1433), Game.Ink)
-                    )
-                ),
+                .background(bgBrush),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -489,8 +496,8 @@ private fun OtpDigitBoxes(
                             val isFocused = code.length == index || (index == boxCount - 1 && code.length >= boxCount)
                             val borderColor = when {
                                 isError -> Game.Coral
-                                isFocused -> Game.Gold
-                                char.isNotEmpty() -> Game.Gold.copy(alpha = 0.5f)
+                                isFocused -> Game.Blue
+                                char.isNotEmpty() -> Game.Blue.copy(alpha = 0.5f)
                                 else -> Game.StrokeStrong
                             }
                             val shape = RoundedCornerShape(16.dp)
@@ -498,7 +505,7 @@ private fun OtpDigitBoxes(
                                 modifier = Modifier
                                     .size(width = 50.dp, height = 60.dp)
                                     .clip(shape)
-                                    .background(if (isFocused) Game.PanelRaised else Game.InkSoft)
+                                    .background(if (isFocused) Game.PanelRaised else Game.Panel)
                                     .border(if (isFocused) 2.dp else 1.dp, borderColor, shape),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -529,7 +536,7 @@ private fun OtpResendSection(
             GameChip(
                 text = "ارسال دوباره کد",
                 icon = Res.drawable.ic_refresh,
-                accent = Game.Mint,
+                accent = Game.Blue,
                 onClick = onResendOtp
             )
         } else {

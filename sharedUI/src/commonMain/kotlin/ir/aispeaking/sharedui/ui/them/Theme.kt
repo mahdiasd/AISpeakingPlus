@@ -151,6 +151,8 @@ fun AppTheme(
         labelSmall = baseStyle
     )
 
+    val m3ColorScheme = createMaterialColorScheme(colorScheme, isDark)
+
     CompositionLocalProvider(
         LocalIsDarkTheme provides isDark,
         LocalThemeMode provides themeMode,
@@ -161,6 +163,7 @@ fun AppTheme(
         androidx.compose.material3.LocalTextStyle provides baseStyle
     ) {
         androidx.compose.material3.MaterialTheme(
+            colorScheme = m3ColorScheme,
             typography = m3Typography
         ) {
             content()

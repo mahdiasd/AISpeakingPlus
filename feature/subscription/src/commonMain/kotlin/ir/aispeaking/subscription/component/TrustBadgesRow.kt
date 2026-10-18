@@ -13,6 +13,9 @@ import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_done
 import org.jetbrains.compose.resources.painterResource
 
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameText
+
 @Composable
 fun TrustBadgesRow(
     modifier: Modifier = Modifier
@@ -39,13 +42,13 @@ private fun TrustBadgeItem(
         Icon(
             painter = painterResource(Res.drawable.ic_done),
             contentDescription = null,
-            tint = Color(0xFF10B981),
+            tint = Game.Blue,
             modifier = Modifier.size(13.dp)
         )
-        Text(
+        GameText(
             text = text,
-            color = Color(0xFFB7C0E0),
-            fontSize = 11.sp
+            color = Game.TextSecondary,
+            size = 11.sp
         )
     }
 }

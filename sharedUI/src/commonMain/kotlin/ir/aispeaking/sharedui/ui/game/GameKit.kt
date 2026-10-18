@@ -170,9 +170,33 @@ fun GameButton(
         label = "apple_button_press",
     )
     val shape = RoundedCornerShape(16.dp)
-    val top = if (enabled) style.top else Color(0xFF2C2C2E)
-    val bottom = if (enabled) style.bottom else Color(0xFF232326)
-    val content = if (enabled) style.content else Game.TextMuted
+    val isDark = AppTheme.isDark
+    val (top, bottom, content) = when {
+        !enabled -> Triple(
+            if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E7EB),
+            if (isDark) Color(0xFF232326) else Color(0xFFD1D5DB),
+            Game.TextMuted
+        )
+        style == GameButtonStyle.Glass && !isDark -> Triple(
+            Color(0xFFF2F4F7),
+            Color(0xFFE5E7EB),
+            Color(0xFF111318)
+        )
+        style == GameButtonStyle.Primary && !isDark -> Triple(
+            Color(0xFF007AFF),
+            Color(0xFF0066CC),
+            Color.White
+        )
+        else -> Triple(style.top, style.bottom, style.content)
+    }
+
+    val borderColor = if (isDark) {
+        if (style == GameButtonStyle.Glass) Color.White.copy(alpha = if (enabled) 0.22f else 0.08f)
+        else Color.White.copy(alpha = if (enabled) 0.16f else 0.06f)
+    } else {
+        if (style == GameButtonStyle.Glass) Color.Black.copy(alpha = if (enabled) 0.12f else 0.05f)
+        else Color.Black.copy(alpha = if (enabled) 0.08f else 0.03f)
+    }
 
     Box(
         modifier = modifier
@@ -183,12 +207,7 @@ fun GameButton(
             }
             .clip(shape)
             .background(Brush.verticalGradient(listOf(top, bottom)))
-            .border(
-                1.dp,
-                if (style == GameButtonStyle.Glass) Color.White.copy(alpha = if (enabled) 0.22f else 0.08f)
-                else Color.White.copy(alpha = if (enabled) 0.16f else 0.06f),
-                shape
-            )
+            .border(1.dp, borderColor, shape)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
@@ -238,9 +257,11 @@ fun GameIconButton(
     size: Dp = 40.dp,
     iconSize: Dp = 20.dp,
     tint: Color = Game.TextPrimary,
-    container: Color = Color(0x22FFFFFF),
+    container: Color = Color.Unspecified,
     border: Color = Game.Stroke,
 ) {
+    val isDark = AppTheme.isDark
+    val resolvedContainer = if (container != Color.Unspecified) container else if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -256,7 +277,7 @@ fun GameIconButton(
                 scaleY = scale
             }
             .clip(CircleShape)
-            .background(container)
+            .background(resolvedContainer)
             .border(1.dp, border, CircleShape)
             .clickable(interactionSource = interaction, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
@@ -277,11 +298,14 @@ fun GameChip(
     modifier: Modifier = Modifier,
     icon: DrawableResource? = null,
     accent: Color = Game.TextSecondary,
-    container: Color = Color(0xEB181A22),
-    border: Color = Color(0x33FFFFFF),
+    container: Color = Color.Unspecified,
+    border: Color = Color.Unspecified,
     active: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
+    val isDark = AppTheme.isDark
+    val resolvedContainer = if (container != Color.Unspecified) container else if (isDark) Color(0xEB181A22) else Color(0xFFF2F4F7)
+    val resolvedBorder = if (border != Color.Unspecified) border else if (isDark) Color(0x33FFFFFF) else Color(0x14000000)
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -297,8 +321,8 @@ fun GameChip(
                 scaleY = scale
             }
             .clip(shape)
-            .background(if (active) accent.copy(alpha = 0.28f) else container)
-            .border(1.dp, if (active) accent.copy(alpha = 0.75f) else border, shape)
+            .background(if (active) accent.copy(alpha = if (isDark) 0.28f else 0.14f) else resolvedContainer)
+            .border(1.dp, if (active) accent.copy(alpha = 0.75f) else resolvedBorder, shape)
             .then(
                 if (onClick != null) {
                     Modifier.clickable(interactionSource = interaction, indication = null, onClick = onClick)
@@ -384,9 +408,10 @@ fun GameProgressBar(
     progress: Float,
     modifier: Modifier = Modifier,
     height: Dp = 8.dp,
-    color: Color = Game.Mint,
-    track: Color = Color(0x33FFFFFF),
+    color: Color = Game.Blue,
+    track: Color = Color.Unspecified,
 ) {
+    val resolvedTrack = if (track != Color.Unspecified) track else if (AppTheme.isDark) Color(0x33FFFFFF) else Color(0x1A000000)
     val animated by animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
         animationSpec = tween(350),
@@ -396,7 +421,7 @@ fun GameProgressBar(
         modifier = modifier
             .height(height)
             .clip(CircleShape)
-            .background(track)
+            .background(resolvedTrack)
     ) {
         Box(
             modifier = Modifier
@@ -421,8 +446,9 @@ fun GameStars(
     spacing: Dp = 4.dp,
     animate: Boolean = false,
     earnedTint: Color = Game.Gold,
-    emptyTint: Color = Color(0x55FFFFFF),
+    emptyTint: Color = Color.Unspecified,
 ) {
+    val resolvedEmptyTint = if (emptyTint != Color.Unspecified) emptyTint else if (AppTheme.isDark) Color(0x55FFFFFF) else Color(0x28000000)
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(spacing), verticalAlignment = Alignment.CenterVertically) {
         repeat(total) { index ->
             val earned = index < stars
@@ -437,7 +463,7 @@ fun GameStars(
             Icon(
                 painter = painterResource(if (earned) Res.drawable.ic_star else Res.drawable.ic_star_outline),
                 contentDescription = null,
-                tint = if (earned) earnedTint else emptyTint,
+                tint = if (earned) earnedTint else resolvedEmptyTint,
                 modifier = Modifier
                     .size(size)
                     .graphicsLayer {
@@ -708,7 +734,7 @@ fun GameTextField(
                 val borderColor = when {
                     isError -> Game.Coral
                     focused -> accent.copy(alpha = 0.85f)
-                    else -> Color(0x22FFFFFF)
+                    else -> Game.Stroke
                 }
                 Row(
                     modifier = Modifier

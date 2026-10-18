@@ -11,6 +11,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameText
+
 @Composable
 fun PromoCodeInputRow(
     promoCode: String,
@@ -33,22 +36,22 @@ fun PromoCodeInputRow(
                 value = promoCode,
                 onValueChange = onPromoCodeChanged,
                 placeholder = {
-                    Text(
+                    GameText(
                         text = "کد تخفیف دارید؟",
-                        color = Color(0xFF7F8AB3),
-                        fontSize = 13.sp
+                        color = Game.TextMuted,
+                        size = 13.sp
                     )
                 },
                 singleLine = true,
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedContainerColor = Color(0xFF1B2550),
-                    unfocusedContainerColor = Color(0xFF1B2550),
-                    focusedBorderColor = Color(0xFF818CF8),
-                    unfocusedBorderColor = Color(0xFF2A3262),
-                    cursorColor = Color(0xFF818CF8)
+                    focusedTextColor = Game.TextPrimary,
+                    unfocusedTextColor = Game.TextPrimary,
+                    focusedContainerColor = Game.PanelRaised,
+                    unfocusedContainerColor = Game.Panel,
+                    focusedBorderColor = Game.Blue,
+                    unfocusedBorderColor = Game.Stroke,
+                    cursorColor = Game.Blue
                 ),
                 modifier = Modifier.weight(1f)
             )
@@ -57,26 +60,27 @@ fun PromoCodeInputRow(
                 onClick = onApplyClicked,
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2A3262)
+                    containerColor = Game.Blue,
+                    contentColor = Color.White
                 ),
                 contentPadding = PaddingValues(horizontal = 20.dp),
                 modifier = Modifier.height(54.dp)
             ) {
-                Text(
+                GameText(
                     text = "اعمال",
                     color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+                    size = 14.sp,
+                    bold = true
                 )
             }
         }
 
         feedbackMessage?.let { msg ->
-            Text(
+            GameText(
                 text = msg,
-                color = if (isError) Color(0xFFF87171) else Color(0xFF34D399),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
+                color = if (isError) Game.Coral else Game.Blue,
+                size = 12.sp,
+                bold = true,
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
         }

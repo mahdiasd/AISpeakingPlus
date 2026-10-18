@@ -113,10 +113,10 @@ fun AvatarPickerDialog(
                             modifier = Modifier
                                 .size(64.dp)
                                 .clip(CircleShape)
-                                .background(if (isSelected) Game.Violet.copy(alpha = 0.28f) else Color(0x14FFFFFF))
+                                .background(if (isSelected) Game.Blue.copy(alpha = 0.22f) else if (ir.aispeaking.sharedui.ui.them.AppTheme.isDark) Color(0x14FFFFFF) else Color(0x0A000000))
                                 .border(
                                     width = if (isSelected) 2.5.dp else 1.dp,
-                                    color = if (isSelected) Game.Mint else Game.Stroke,
+                                    color = if (isSelected) Game.Blue else Game.Stroke,
                                     shape = CircleShape
                                 ),
                             contentAlignment = Alignment.Center
@@ -137,14 +137,14 @@ fun AvatarPickerDialog(
                                     .offset(x = 2.dp, y = 2.dp)
                                     .size(20.dp)
                                     .clip(CircleShape)
-                                    .background(Game.Mint)
+                                    .background(Game.Blue)
                                     .border(1.5.dp, Game.PanelSolid, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     painter = painterResource(Res.drawable.ic_done),
                                     contentDescription = null,
-                                    tint = Color.Black,
+                                    tint = Color.White,
                                     modifier = Modifier.size(12.dp)
                                 )
                             }

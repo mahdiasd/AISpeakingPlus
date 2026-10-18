@@ -92,8 +92,8 @@ fun StageBriefingDialog(
                     size = 32.dp,
                     iconSize = 14.dp,
                     tint = Game.TextSecondary,
-                    container = Color(0x1FFFFFFF),
-                    border = Color(0x14FFFFFF)
+                    container = Color.Unspecified,
+                    border = Game.Stroke
                 )
             }
 
@@ -130,7 +130,7 @@ fun StageBriefingDialog(
                             Box(
                                 modifier = Modifier
                                     .size(7.dp)
-                                    .background(Game.Mint, CircleShape)
+                                    .background(Game.Blue, CircleShape)
                             )
                             GameText(
                                 text = "${stage.characterName} · AI Partner",
@@ -150,8 +150,8 @@ fun StageBriefingDialog(
             val targetEn = stage.targetObjective.takeIf { stage.targetObjectiveFa.isNotBlank() && it.isNotBlank() }
             AppleInsetCard(
                 icon = Res.drawable.ic_done,
-                iconTint = Game.Mint,
-                badgeBg = Game.Mint.copy(alpha = 0.16f),
+                iconTint = Game.Blue,
+                badgeBg = Game.Blue.copy(alpha = 0.16f),
                 title = "هدف این مکالمه",
                 body = targetFa,
                 latinSubtext = targetEn
@@ -166,15 +166,6 @@ fun StageBriefingDialog(
                     title = "سناریو و موقعیت",
                     body = stage.briefingFa
                 )
-            }
-
-            // Quick Info Tags
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                QuickTag(text = "مکالمه صوتی و متنی", modifier = Modifier.weight(1f))
-                QuickTag(text = "امتیاز تا ۳ ستاره", modifier = Modifier.weight(1f))
             }
         }
 
@@ -216,12 +207,13 @@ private fun AppleInsetCard(
     latinSubtext: String? = null
 ) {
     val shape = RoundedCornerShape(16.dp)
+    val isDark = ir.aispeaking.sharedui.ui.them.AppTheme.isDark
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
             .background(Game.PanelRaised)
-            .border(1.dp, Color(0x18FFFFFF), shape)
+            .border(1.dp, Game.Stroke, shape)
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -264,7 +256,7 @@ private fun AppleInsetCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0x14FFFFFF))
+                        .background(if (isDark) Color(0x14FFFFFF) else Color(0x0A000000))
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     GameText(
@@ -277,27 +269,6 @@ private fun AppleInsetCard(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun QuickTag(
-    text: String,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color(0x12FFFFFF))
-            .padding(vertical = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        GameText(
-            text = text,
-            size = 11.sp,
-            color = Game.TextSecondary,
-            align = TextAlign.Center
-        )
     }
 }
 

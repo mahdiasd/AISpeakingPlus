@@ -22,6 +22,10 @@ import ir.aispeaking.sharedui.ic_done
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
+import androidx.compose.foundation.border
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameText
+
 private data class BenefitItem(
     val title: String,
     val icon: DrawableResource,
@@ -43,36 +47,38 @@ fun SubscriptionBenefitsList(
         BenefitItem(
             title = "مکالمه نامحدود و بدون وقفه با هوش مصنوعی",
             icon = Res.drawable.ic_star,
-            iconTint = Color(0xFF818CF8),
-            containerBg = Color(0x33818CF8)
+            iconTint = Color(0xFF5E5CE6),
+            containerBg = Color(0x285E5CE6)
         ),
         BenefitItem(
             title = "تحلیل هوشمند جملات و فیدبک اصلاح تلفظ",
             icon = Res.drawable.ic_done,
-            iconTint = Color(0xFF34D399),
-            containerBg = Color(0x3334D399)
+            iconTint = Color(0xFF007AFF),
+            containerBg = Color(0x22007AFF)
         ),
         BenefitItem(
             title = "سرعت فوق‌العاده بالا روی سرورهای اختصاصی VIP",
             icon = Res.drawable.ic_points,
             iconTint = Color(0xFFF472B6),
-            containerBg = Color(0x33F472B6)
+            containerBg = Color(0x28F472B6)
         )
     )
 
+    val shape = RoundedCornerShape(20.dp)
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFF111833))
+            .clip(shape)
+            .background(Game.PanelSolid)
+            .border(1.dp, Game.Stroke, shape)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text(
+        GameText(
             text = "مزایای اختصاصی اشتراک ویژه",
-            color = Color.White,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold,
+            color = Game.TextPrimary,
+            size = 15.sp,
+            bold = true,
             modifier = Modifier.padding(bottom = 2.dp)
         )
 
@@ -96,11 +102,10 @@ fun SubscriptionBenefitsList(
                     )
                 }
 
-                Text(
+                GameText(
                     text = item.title,
-                    color = Color(0xFFE2E8F0),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium
+                    color = Game.TextPrimary,
+                    size = 13.sp
                 )
             }
         }

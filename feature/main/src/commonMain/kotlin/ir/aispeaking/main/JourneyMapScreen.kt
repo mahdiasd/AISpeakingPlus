@@ -153,7 +153,7 @@ fun JourneyMapScreen(
                                 .align(Alignment.BottomCenter)
                                 .background(
                                     Brush.verticalGradient(
-                                        listOf(Color.Transparent, Color(0x99050816), Game.ScrimBottom)
+                                        listOf(Color.Transparent, Game.ScrimBottom.copy(alpha = 0.5f), Game.ScrimBottom)
                                     )
                                 )
                         )
@@ -351,7 +351,7 @@ private fun StageCard(
                     text = "مرحله ${stageNumber.fa()} از ${totalStages.fa()}",
                     size = 12.sp,
                     bold = true,
-                    color = Game.Mint
+                    color = Game.Blue
                 )
                 GameStars(stars = stars, size = 22.dp, spacing = 2.dp)
             }

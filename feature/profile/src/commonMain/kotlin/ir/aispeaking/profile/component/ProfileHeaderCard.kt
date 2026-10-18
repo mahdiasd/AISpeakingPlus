@@ -171,7 +171,7 @@ fun ProfileHeaderCard(
                                 modifier = Modifier
                                     .size(5.dp)
                                     .clip(CircleShape)
-                                    .background(Game.Mint)
+                                    .background(Game.Blue)
                             )
                         }
                     } else {

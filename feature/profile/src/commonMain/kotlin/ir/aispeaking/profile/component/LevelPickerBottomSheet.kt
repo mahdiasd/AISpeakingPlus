@@ -46,44 +46,55 @@ data class CefrLevelInfo(
     val accentColor: Color
 )
 
-private val CEFR_LEVELS = listOf(
-    CefrLevelInfo(
-        code = "A1",
-        titleFa = "مبتدی (Beginner)",
-        descriptionFa = "آشنایی با کلمات ساده، معرفی خود و اصطلاحات روزمره",
-        accentColor = Game.Sky
-    ),
-    CefrLevelInfo(
-        code = "A2",
-        titleFa = "پیش‌متوسط (Elementary)",
-        descriptionFa = "درک عبارات پرکاربرد و مکالمات ساده پیرامون کارهای روزانه",
-        accentColor = Game.Mint
-    ),
-    CefrLevelInfo(
-        code = "B1",
-        titleFa = "متوسط (Intermediate)",
-        descriptionFa = "مکالمه در موقعیت‌های سفر، کار و بیان تجربیات و اهداف",
-        accentColor = Game.Blue
-    ),
-    CefrLevelInfo(
-        code = "B2",
-        titleFa = "فوق‌متوسط (Upper-Intermediate)",
-        descriptionFa = "صحبت روان و موثر در بحث‌های فنی، اجتماعی و تخصصی",
-        accentColor = Game.Violet
-    ),
-    CefrLevelInfo(
-        code = "C1",
-        titleFa = "پیشرفته (Advanced)",
-        descriptionFa = "درک آسان مفاهیم پیچیده و کاربرد منعطف و خلاقانه زبان",
-        accentColor = Game.Gold
-    ),
-    CefrLevelInfo(
-        code = "C2",
-        titleFa = "مسلط / بومی (Mastery)",
-        descriptionFa = "تسلط کامل، دقیق، سریع و بی‌وقفه در تمامی ابعاد زبان",
-        accentColor = Game.GoldDeep
-    )
-)
+@Composable
+fun rememberCefrLevels(): List<CefrLevelInfo> {
+    val sky = Game.Sky
+    val blue = Game.Blue
+    val violet = Game.Violet
+    val indigo = Color(0xFF5E5CE6)
+    val gold = Game.Gold
+    val goldDeep = Game.GoldDeep
+    return remember(sky, blue, violet, indigo, gold, goldDeep) {
+        listOf(
+            CefrLevelInfo(
+                code = "A1",
+                titleFa = "مبتدی (Beginner)",
+                descriptionFa = "آشنایی با کلمات ساده، معرفی خود و اصطلاحات روزمره",
+                accentColor = sky
+            ),
+            CefrLevelInfo(
+                code = "A2",
+                titleFa = "پیش‌متوسط (Elementary)",
+                descriptionFa = "درک عبارات پرکاربرد و مکالمات ساده پیرامون کارهای روزانه",
+                accentColor = blue
+            ),
+            CefrLevelInfo(
+                code = "B1",
+                titleFa = "متوسط (Intermediate)",
+                descriptionFa = "مکالمه در موقعیت‌های سفر، کار و بیان تجربیات و اهداف",
+                accentColor = violet
+            ),
+            CefrLevelInfo(
+                code = "B2",
+                titleFa = "فوق‌متوسط (Upper-Intermediate)",
+                descriptionFa = "صحبت روان و موثر در بحث‌های فنی، اجتماعی و تخصصی",
+                accentColor = indigo
+            ),
+            CefrLevelInfo(
+                code = "C1",
+                titleFa = "پیشرفته (Advanced)",
+                descriptionFa = "درک آسان مفاهیم پیچیده و کاربرد منعطف و خلاقانه زبان",
+                accentColor = gold
+            ),
+            CefrLevelInfo(
+                code = "C2",
+                titleFa = "مسلط / بومی (Mastery)",
+                descriptionFa = "تسلط کامل، دقیق، سریع و بی‌وقفه در تمامی ابعاد زبان",
+                accentColor = goldDeep
+            )
+        )
+    }
+}
 
 @Composable
 fun LevelPickerBottomSheet(
@@ -94,6 +105,7 @@ fun LevelPickerBottomSheet(
     modifier: Modifier = Modifier
 ) {
     val activeLevelCode = (currentLevel?.takeIf { it.isNotBlank() } ?: "A1").uppercase()
+    val levels = rememberCefrLevels()
 
     GameSheet(visible = visible, onDismiss = onDismiss, modifier = modifier) {
         Column(
@@ -118,7 +130,7 @@ fun LevelPickerBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(CEFR_LEVELS, key = { it.code }) { levelInfo ->
+                items(levels, key = { it.code }) { levelInfo ->
                     val isSelected = levelInfo.code.equals(activeLevelCode, ignoreCase = true)
                     LevelOptionCard(
                         levelInfo = levelInfo,
@@ -228,7 +240,7 @@ private fun LevelOptionCard(
                     Icon(
                         painter = painterResource(Res.drawable.ic_done),
                         contentDescription = "Selected",
-                        tint = Color.Black,
+                        tint = if (levelInfo.accentColor == Game.Gold) Color.Black else Color.White,
                         modifier = Modifier.size(14.dp)
                     )
                 }

@@ -125,13 +125,18 @@ fun SplashScreen(
         label = "FloatY"
     )
 
+    val isDark = AppTheme.isDark
+    val bgBrush = if (isDark) {
+        Brush.verticalGradient(listOf(Color(0xFF1B1F4B), Color(0xFF0E1433), Game.Ink))
+    } else {
+        Brush.verticalGradient(listOf(Color(0xFFEBF4FF), Color(0xFFF4F6F9), Color(0xFFFFFFFF)))
+    }
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(listOf(Color(0xFF1B1F4B), Color(0xFF0E1433), Game.Ink))
-                ),
+                .background(bgBrush),
             contentAlignment = Alignment.Center
         ) {
             Box(
@@ -157,7 +162,7 @@ fun SplashScreen(
                                 .clip(CircleShape)
                                 .background(
                                     Brush.radialGradient(
-                                        listOf(Game.Violet.copy(alpha = 0.45f), Color.Transparent)
+                                        listOf(Game.Violet.copy(alpha = if (isDark) 0.45f else 0.2f), Color.Transparent)
                                     )
                                 )
                         )
@@ -193,7 +198,7 @@ fun SplashScreen(
                         text = "مکالمه انگلیسی، مثل یک ماجراجویی",
                         size = 16.sp,
                         bold = true,
-                        color = Game.Mint,
+                        color = Game.Blue,
                         align = TextAlign.Center
                     )
 

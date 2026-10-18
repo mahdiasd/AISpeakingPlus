@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ir.aispeaking.sharedui.ui.them.AppTheme
 
 /**
  * 2026 Apple Liquid Glass Design System tokens & primitives for AISpeakingPlus Chat.
@@ -68,22 +70,60 @@ object AppleChatTheme {
     val CoralDeep = Color(0xFFD70015)
     val CoralGlow = Color(0x33FF453A)
 
-    // Liquid Glass Materials (visionOS & iOS 26 dark translucent surfaces)
-    val GlassPanel = Color(0xD9161826)
-    val GlassPanelRaised = Color(0xE6202438)
-    val GlassPanelElevated = Color(0xF2272B42)
-    val GlassPanelSolid = Color(0xFF1C1F2E)
-    val BubbleAi = Color(0xD91D2030)
+    // Liquid Glass Materials (visionOS & iOS 26 translucent surfaces)
+    val GlassPanel: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xD9161826) else Color(0xEEFFFFFF)
+
+    val GlassPanelRaised: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xE6202438) else Color(0xF5F7FAFC)
+
+    val GlassPanelElevated: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xF2272B42) else Color(0xFFFFFFFF)
+
+    val GlassPanelSolid: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xFF1C1F2E) else Color(0xFFFFFFFF)
+
+    val BubbleAi: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xD91D2030) else Color(0xF2F2F4F7)
 
     // Specular Light Rims (simulates light refraction along glass edges)
-    val SpecularStrokeBrush = Brush.verticalGradient(
-        listOf(Color(0x59FFFFFF), Color(0x1AFFFFFF))
-    )
-    val SubtleStrokeBrush = Brush.verticalGradient(
-        listOf(Color(0x33FFFFFF), Color(0x0DFFFFFF))
-    )
-    val SpecularBorderColor = Color(0x38FFFFFF)
-    val SubtleBorderColor = Color(0x1FFFFFFF)
+    val SpecularStrokeBrush: Brush
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) {
+            Brush.verticalGradient(listOf(Color(0x59FFFFFF), Color(0x1AFFFFFF)))
+        } else {
+            Brush.verticalGradient(listOf(Color(0x22000000), Color(0x0A000000)))
+        }
+
+    val SubtleStrokeBrush: Brush
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) {
+            Brush.verticalGradient(listOf(Color(0x33FFFFFF), Color(0x0DFFFFFF)))
+        } else {
+            Brush.verticalGradient(listOf(Color(0x14000000), Color(0x05000000)))
+        }
+
+    val SpecularBorderColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0x38FFFFFF) else Color(0x1F000000)
+
+    val SubtleBorderColor: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0x1FFFFFFF) else Color(0x14000000)
 
     // User Bubble
     val UserBubbleBrush = Brush.linearGradient(

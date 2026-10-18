@@ -29,6 +29,10 @@ import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_done
 import org.jetbrains.compose.resources.painterResource
 
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.them.AppTheme
+
 @Composable
 fun PlanSelectionCard(
     plan: SubscriptionPlan,
@@ -37,6 +41,7 @@ fun PlanSelectionCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = AppTheme.isDark
     val dailyPrice = (finalPriceTomans / plan.durationDays.coerceAtLeast(1))
     val isDiscounted = finalPriceTomans < plan.priceTomans || plan.discountPercent > 0
 
@@ -45,18 +50,24 @@ fun PlanSelectionCard(
         label = "border_width"
     )
 
+    val targetBgColor = if (isDark) {
+        if (isSelected) Game.PanelRaised else Game.PanelSolid
+    } else {
+        if (isSelected) Color(0xFFF0F6FF) else Color(0xFFFFFFFF)
+    }
+
     val animatedBgColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0xFF1B2550) else Color(0xFF1B2550),
+        targetValue = targetBgColor,
         label = "bg_color"
     )
 
     val borderBrush = if (isSelected) {
         Brush.horizontalGradient(
-            colors = listOf(Color(0xFF8C6CFF), Color(0xFF8C6CFF), Color(0xFFEC4899))
+            colors = listOf(Color(0xFF007AFF), Color(0xFF5E5CE6))
         )
     } else {
         Brush.linearGradient(
-            colors = listOf(Color(0xFF2A3262), Color(0xFF1B2550))
+            colors = listOf(Game.Stroke, Game.Stroke)
         )
     }
 
@@ -68,7 +79,7 @@ fun PlanSelectionCard(
                     Modifier.shadow(
                         elevation = 8.dp,
                         shape = RoundedCornerShape(18.dp),
-                        spotColor = Color(0xFF8C6CFF)
+                        spotColor = if (isDark) Color(0xFF5E5CE6) else Color(0x33007AFF)
                     )
                 } else Modifier
             )
@@ -101,17 +112,17 @@ fun PlanSelectionCard(
                         .background(
                             if (isSelected) {
                                 Brush.linearGradient(
-                                    listOf(Color(0xFF8C6CFF), Color(0xFF8C6CFF))
+                                    listOf(Color(0xFF007AFF), Color(0xFF5E5CE6))
                                 )
                             } else {
                                 Brush.linearGradient(
-                                    listOf(Color(0x33475569), Color(0x33475569))
+                                    listOf(Game.Panel, Game.Panel)
                                 )
                             }
                         )
                         .border(
                             width = 1.5.dp,
-                            color = if (isSelected) Color(0xFFB7C0E0) else Color(0xFF40497A),
+                            color = if (isSelected) Color(0xFF007AFF) else Game.StrokeStrong,
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -132,18 +143,18 @@ fun PlanSelectionCard(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
+                        GameText(
                             text = plan.titleFa,
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            color = Game.TextPrimary,
+                            size = 16.sp,
+                            bold = true
                         )
 
                         plan.badge?.let { badgeText ->
                             val badgeGradient = if (badgeText.contains("محبوب")) {
-                                listOf(Color(0xFFFFC83D), Color(0xFFFFC83D))
+                                listOf(Color(0xFFFFD60A), Color(0xFFFF9500))
                             } else {
-                                listOf(Color(0xFF10B981), Color(0xFF059669))
+                                listOf(Color(0xFF007AFF), Color(0xFF5856D6))
                             }
                             Box(
                                 modifier = Modifier
@@ -151,29 +162,28 @@ fun PlanSelectionCard(
                                     .background(Brush.horizontalGradient(badgeGradient))
                                     .padding(horizontal = 7.dp, vertical = 2.dp)
                             ) {
-                                Text(
+                                GameText(
                                     text = badgeText,
-                                    color = Color.Black,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.ExtraBold
+                                    color = if (badgeText.contains("محبوب")) Color.Black else Color.White,
+                                    size = 11.sp,
+                                    bold = true
                                 )
                             }
                         }
                     }
 
                     // Duration info
-                    Text(
+                    GameText(
                         text = "${formatToPersian(plan.durationDays)} روز دسترسی نامحدود",
-                        color = Color(0xFFB7C0E0),
-                        fontSize = 12.sp
+                        color = Game.TextSecondary,
+                        size = 12.sp
                     )
 
                     // Daily breakdown
-                    Text(
+                    GameText(
                         text = "روزی ${formatToPersian(dailyPrice)} تومان",
-                        color = if (isSelected) Color(0xFFB7C0E0) else Color(0xFF7F8AB3),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium
+                        color = Game.TextMuted,
+                        size = 11.sp
                     )
                 }
             }
@@ -188,16 +198,16 @@ fun PlanSelectionCard(
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text(
+                    GameText(
                         text = formatToPersian(finalPriceTomans),
-                        color = if (isSelected) Color(0xFFFFC83D) else Color.White,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold
+                        color = if (isSelected) (if (isDark) Color(0xFFFFD60A) else Color(0xFF007AFF)) else Game.TextPrimary,
+                        size = 17.sp,
+                        bold = true
                     )
-                    Text(
+                    GameText(
                         text = "تومان",
-                        color = Color(0xFFB7C0E0),
-                        fontSize = 11.sp
+                        color = Game.TextSecondary,
+                        size = 11.sp
                     )
                 }
 
@@ -205,8 +215,9 @@ fun PlanSelectionCard(
                 if (isDiscounted && finalPriceTomans != plan.priceTomans) {
                     Text(
                         text = "${formatToPersian(plan.priceTomans)} تومان",
-                        color = Color(0xFF7F8AB3),
+                        color = Game.TextMuted,
                         fontSize = 11.sp,
+                        fontFamily = AppTheme.typography.persianRegular,
                         textDecoration = TextDecoration.LineThrough
                     )
                 }
@@ -216,14 +227,14 @@ fun PlanSelectionCard(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0x2210B981))
+                            .background(Color(0xFF007AFF).copy(alpha = if (isDark) 0.22f else 0.12f))
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        Text(
+                        GameText(
                             text = "${formatToPersian(plan.discountPercent)}٪ تخفیف",
-                            color = Color(0xFF10B981),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
+                            color = Color(0xFF007AFF),
+                            size = 11.sp,
+                            bold = true
                         )
                     }
                 }
