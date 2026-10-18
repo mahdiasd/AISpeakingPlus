@@ -4,9 +4,25 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import ir.aispeaking.sharedui.ui.model.theme_mode.ThemeMode
+
+val LocalIsDarkTheme = staticCompositionLocalOf { true }
+val LocalThemeMode = staticCompositionLocalOf<ThemeMode> { ThemeMode.System }
 
 object AppTheme {
+    val isDark: Boolean
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalIsDarkTheme.current
+
+    val themeMode: ThemeMode
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalThemeMode.current
+
     val colors: AppColor
         @Composable
         @ReadOnlyComposable
@@ -55,7 +71,7 @@ private val LightColorScheme = AppColor(
     onSuccess = OnSuccessLight,
     shadow = ShadowLight,
 
-    // رنگ‌های کاستوم
+    // Custom UI containers
     aiChatContainer = AiChatContainerLight,
     userChatContainer = UserChatContainerLight,
     points = PointsColor,
@@ -97,11 +113,18 @@ private val DarkColorScheme = AppColor(
 
 @Composable
 fun AppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: ThemeMode = ThemeController.themeMode.collectAsState().value,
     content: @Composable () -> Unit,
 ) {
+    val systemInDark = isSystemInDarkTheme()
+    val isDark = when (themeMode) {
+        ThemeMode.System -> systemInDark
+        ThemeMode.Dark -> true
+        ThemeMode.Light -> false
+    }
+
     val colorScheme = when {
-        darkTheme -> DarkColorScheme
+        isDark -> DarkColorScheme
         else -> LightColorScheme
     }
 
@@ -129,6 +152,8 @@ fun AppTheme(
     )
 
     CompositionLocalProvider(
+        LocalIsDarkTheme provides isDark,
+        LocalThemeMode provides themeMode,
         LocalColor provides colorScheme,
         LocalDimensions provides AppDimensions(),
         LocalShapes provides AppShapes(),
@@ -141,5 +166,13 @@ fun AppTheme(
             content()
         }
     }
+}
 
+@Composable
+fun AppTheme(
+    darkTheme: Boolean,
+    content: @Composable () -> Unit,
+) {
+    val mode = if (darkTheme) ThemeMode.Dark else ThemeMode.Light
+    AppTheme(themeMode = mode, content = content)
 }

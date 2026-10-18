@@ -16,7 +16,7 @@ fun main() {
             onCloseRequest = ::exitApplication,
         ) {
             window.minimumSize = Dimension(350, 600)
-            AppTheme(true) {
+            AppTheme {
                 AppNavigation()
             }
         }

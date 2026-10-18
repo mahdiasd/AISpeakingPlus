@@ -96,13 +96,13 @@ class AppActivity : ComponentActivity() {
             }
         } catch (_: Throwable) {}
 
-        // The app is a dark, full-bleed game UI: keep system bar icons light on transparent bars.
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+            statusBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
         )
         setContent {
-            AppTheme(darkTheme = true) {
+            AppTheme {
+                ThemeChanged(AppTheme.isDark)
                 AppNavigation()
             }
         }
@@ -138,8 +138,8 @@ private fun ThemeChanged(isDark: Boolean) {
     LaunchedEffect(isDark) {
         val window = (view.context as Activity).window
         WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = isDark
-            isAppearanceLightNavigationBars = isDark
+            isAppearanceLightStatusBars = !isDark
+            isAppearanceLightNavigationBars = !isDark
         }
     }
 }

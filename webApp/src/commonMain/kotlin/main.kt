@@ -56,7 +56,7 @@ fun main() {
     } catch (_: Throwable) {}
 
     ComposeViewport {
-        AppTheme(true) {
+        AppTheme {
             // Apple-style dark ambient backdrop shown around the phone frame on large screens.
             Box(
                 modifier = Modifier
