@@ -1010,6 +1010,23 @@
     }
   }
 };
+            defs["DirectCheckoutRequest"] = {
+  "title" : "DirectCheckoutRequest",
+  "required" : [ "planId" ],
+  "properties" : {
+    "planId" : { },
+    "promoCode" : { }
+  }
+};
+            defs["DirectCheckoutResponse"] = {
+  "title" : "DirectCheckoutResponse",
+  "required" : [ "amountTomans", "paymentUrl", "transactionId" ],
+  "properties" : {
+    "paymentUrl" : { },
+    "transactionId" : { },
+    "amountTomans" : { }
+  }
+};
             defs["EvaluationRequest"] = {
   "title" : "EvaluationRequest",
   "properties" : {
@@ -1445,7 +1462,8 @@
   "required" : [ "promoCode" ],
   "properties" : {
     "promoCode" : { },
-    "planId" : { }
+    "planId" : { },
+    "market" : { }
   }
 };
             defs["ValidatePromoResponseDto"] = {
@@ -1458,7 +1476,34 @@
     "discountAmountTomans" : { },
     "originalPriceTomans" : { },
     "finalPriceTomans" : { },
+    "dynamicDiscountToken" : { },
+    "bonusDays" : { },
+    "userMessage" : { },
     "message" : { }
+  }
+};
+            defs["VerifyMarketPurchaseRequest"] = {
+  "title" : "VerifyMarketPurchaseRequest",
+  "required" : [ "market", "planId", "purchaseToken", "sku" ],
+  "properties" : {
+    "market" : { },
+    "planId" : { },
+    "sku" : { },
+    "purchaseToken" : { },
+    "orderId" : { },
+    "developerPayload" : { },
+    "promoCode" : { }
+  }
+};
+            defs["VerifyMarketPurchaseResponseData"] = {
+  "title" : "VerifyMarketPurchaseResponseData",
+  "required" : [ "expiresAt", "isSubscriber", "planType", "remainingDays", "transactionId" ],
+  "properties" : {
+    "isSubscriber" : { },
+    "planType" : { },
+    "expiresAt" : { },
+    "remainingDays" : { },
+    "transactionId" : { }
   }
 };
             defs["VerifyOtpRequest"] = {
@@ -1643,6 +1688,9 @@
                       <a href="#api-Stages-apiV2StagesStageIdHintPost">apiV2StagesStageIdHintPost</a>
                     </li>
                   <li class="nav-header" data-group="Subscriptions"><a href="#api-Subscriptions">API Methods - Subscriptions</a></li>
+                    <li data-group="Subscriptions" data-name="apiV2SubscriptionsDirectCheckoutPost" class="">
+                      <a href="#api-Subscriptions-apiV2SubscriptionsDirectCheckoutPost">apiV2SubscriptionsDirectCheckoutPost</a>
+                    </li>
                     <li data-group="Subscriptions" data-name="apiV2SubscriptionsPlansGet" class="">
                       <a href="#api-Subscriptions-apiV2SubscriptionsPlansGet">apiV2SubscriptionsPlansGet</a>
                     </li>
@@ -1654,6 +1702,12 @@
                     </li>
                     <li data-group="Subscriptions" data-name="apiV2SubscriptionsSubscribePost" class="">
                       <a href="#api-Subscriptions-apiV2SubscriptionsSubscribePost">apiV2SubscriptionsSubscribePost</a>
+                    </li>
+                    <li data-group="Subscriptions" data-name="apiV2SubscriptionsValidatePromoPost" class="">
+                      <a href="#api-Subscriptions-apiV2SubscriptionsValidatePromoPost">apiV2SubscriptionsValidatePromoPost</a>
+                    </li>
+                    <li data-group="Subscriptions" data-name="apiV2SubscriptionsVerifyMarketPurchasePost" class="">
+                      <a href="#api-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost">apiV2SubscriptionsVerifyMarketPurchasePost</a>
                     </li>
                   <li class="nav-header" data-group="System"><a href="#api-System">API Methods - System</a></li>
                     <li data-group="System" data-name="healthGet" class="">
@@ -17908,6 +17962,437 @@ except ApiException as e:
                   </section>
                 <section id="api-Subscriptions">
                   <h1>Subscriptions</h1>
+                    <div id="api-Subscriptions-apiV2SubscriptionsDirectCheckoutPost">
+                      <article id="api-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0" data-group="User" data-name="apiV2SubscriptionsDirectCheckoutPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2SubscriptionsDirectCheckoutPost</h1>
+                          <p>Create Direct Web Payment</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Generate a direct payment gateway URL for sideload or web clients</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v2/subscriptions/direct-checkout</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/v2/subscriptions/direct-checkout"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.SubscriptionsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class SubscriptionsApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        SubscriptionsApi apiInstance = new SubscriptionsApi();
+        DirectCheckoutRequest body = ; // DirectCheckoutRequest | Direct checkout request payload
+        try {
+            Object result = apiInstance.apiV2SubscriptionsDirectCheckoutPost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling SubscriptionsApi#apiV2SubscriptionsDirectCheckoutPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.SubscriptionsApi;
+
+public class SubscriptionsApiExample {
+
+    public static void main(String[] args) {
+        SubscriptionsApi apiInstance = new SubscriptionsApi();
+        DirectCheckoutRequest body = ; // DirectCheckoutRequest | Direct checkout request payload
+        try {
+            Object result = apiInstance.apiV2SubscriptionsDirectCheckoutPost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling SubscriptionsApi#apiV2SubscriptionsDirectCheckoutPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+DirectCheckoutRequest *body = ; // Direct checkout request payload
+
+SubscriptionsApi *apiInstance = [[SubscriptionsApi alloc] init];
+
+// Create Direct Web Payment
+[apiInstance apiV2SubscriptionsDirectCheckoutPostWith:body
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.SubscriptionsApi()
+var body = ; // {{DirectCheckoutRequest}} Direct checkout request payload
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiV2SubscriptionsDirectCheckoutPost(body, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2SubscriptionsDirectCheckoutPostExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new SubscriptionsApi();
+            var body = new DirectCheckoutRequest(); // DirectCheckoutRequest | Direct checkout request payload
+
+            try
+            {
+                // Create Direct Web Payment
+                Object result = apiInstance.apiV2SubscriptionsDirectCheckoutPost(body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling SubscriptionsApi.apiV2SubscriptionsDirectCheckoutPost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiSubscriptionsApi();
+$body = ; // DirectCheckoutRequest | Direct checkout request payload
+
+try {
+    $result = $api_instance->apiV2SubscriptionsDirectCheckoutPost($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling SubscriptionsApi->apiV2SubscriptionsDirectCheckoutPost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::SubscriptionsApi;
+
+
+my $api_instance = WWW::SwaggerClient::SubscriptionsApi->new();
+my $body = WWW::SwaggerClient::Object::DirectCheckoutRequest->new(); # DirectCheckoutRequest | Direct checkout request payload
+
+eval { 
+    my $result = $api_instance->apiV2SubscriptionsDirectCheckoutPost(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling SubscriptionsApi->apiV2SubscriptionsDirectCheckoutPost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsDirectCheckoutPost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.SubscriptionsApi()
+body =  # DirectCheckoutRequest | Direct checkout request payload
+
+try: 
+    # Create Direct Web Payment
+    api_response = api_instance.api_v2_subscriptions_direct_checkout_post(body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling SubscriptionsApi->apiV2SubscriptionsDirectCheckoutPost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Direct checkout request payload",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/DirectCheckoutRequest"
+      }
+    }
+  },
+  "required" : true
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiV2SubscriptionsDirectCheckoutPost_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiV2SubscriptionsDirectCheckoutPost_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Direct payment URL generated successfully </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsDirectCheckoutPost-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsDirectCheckoutPost-200-schema">
+                                  <div id='responses-apiV2SubscriptionsDirectCheckoutPost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Direct payment URL generated successfully",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/DirectCheckoutResponse"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsDirectCheckoutPost-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsDirectCheckoutPost-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsDirectCheckoutPost-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 400 - Invalid request payload </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsDirectCheckoutPost-400-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsDirectCheckoutPost-400-schema">
+                                  <div id='responses-apiV2SubscriptionsDirectCheckoutPost-400-schema-400' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Invalid request payload",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsDirectCheckoutPost-400-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsDirectCheckoutPost-400-schema-400');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsDirectCheckoutPost-400-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 401 - Authentication required or invalid token </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsDirectCheckoutPost-401-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsDirectCheckoutPost-401-schema">
+                                  <div id='responses-apiV2SubscriptionsDirectCheckoutPost-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Authentication required or invalid token",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsDirectCheckoutPost-401-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsDirectCheckoutPost-401-schema-401');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsDirectCheckoutPost-401-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
                     <div id="api-Subscriptions-apiV2SubscriptionsPlansGet">
                       <article id="api-Subscriptions-apiV2SubscriptionsPlansGet-0" data-group="User" data-name="apiV2SubscriptionsPlansGet" data-version="0">
                         <div class="pull-left">
@@ -18231,12 +18716,12 @@ except ApiException as e:
                       <article id="api-Subscriptions-apiV2SubscriptionsPromoValidatePost-0" data-group="User" data-name="apiV2SubscriptionsPromoValidatePost" data-version="0">
                         <div class="pull-left">
                           <h1>apiV2SubscriptionsPromoValidatePost</h1>
-                          <p>Validate Promo Code</p>
+                          <p>Validate Promo Code (Legacy Alias)</p>
                         </div>
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Validate a promo discount code and get its discount percentage</p>
+                        <p class="marked">Legacy alias for validate-promo</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v2/subscriptions/promo/validate</span></code></pre>
@@ -18317,7 +18802,7 @@ public class SubscriptionsApiExample {
 
 SubscriptionsApi *apiInstance = [[SubscriptionsApi alloc] init];
 
-// Validate Promo Code
+// Validate Promo Code (Legacy Alias)
 [apiInstance apiV2SubscriptionsPromoValidatePostWith:body
               completionHandler: ^(Object output, NSError* error) {
                             if (output) {
@@ -18369,7 +18854,7 @@ namespace Example
 
             try
             {
-                // Validate Promo Code
+                // Validate Promo Code (Legacy Alias)
                 Object result = apiInstance.apiV2SubscriptionsPromoValidatePost(body);
                 Debug.WriteLine(result);
             }
@@ -18428,7 +18913,7 @@ api_instance = swagger_client.SubscriptionsApi()
 body =  # ValidatePromoRequestDto | Promo code payload
 
 try: 
-    # Validate Promo Code
+    # Validate Promo Code (Legacy Alias)
     api_response = api_instance.api_v2_subscriptions_promo_validate_post(body)
     pprint(api_response)
 except ApiException as e:
@@ -19450,6 +19935,858 @@ except ApiException as e:
                                     </script>
                                   </div>
                                   <input id='responses-apiV2SubscriptionsSubscribePost-500-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Subscriptions-apiV2SubscriptionsValidatePromoPost">
+                      <article id="api-Subscriptions-apiV2SubscriptionsValidatePromoPost-0" data-group="User" data-name="apiV2SubscriptionsValidatePromoPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2SubscriptionsValidatePromoPost</h1>
+                          <p>Validate Promo Code</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Validate a promo discount code for a market and plan</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v2/subscriptions/validate-promo</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/v2/subscriptions/validate-promo"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.SubscriptionsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class SubscriptionsApiExample {
+
+    public static void main(String[] args) {
+        
+        SubscriptionsApi apiInstance = new SubscriptionsApi();
+        ValidatePromoRequestDto body = ; // ValidatePromoRequestDto | Promo code payload with optional market identifier
+        try {
+            Object result = apiInstance.apiV2SubscriptionsValidatePromoPost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling SubscriptionsApi#apiV2SubscriptionsValidatePromoPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.SubscriptionsApi;
+
+public class SubscriptionsApiExample {
+
+    public static void main(String[] args) {
+        SubscriptionsApi apiInstance = new SubscriptionsApi();
+        ValidatePromoRequestDto body = ; // ValidatePromoRequestDto | Promo code payload with optional market identifier
+        try {
+            Object result = apiInstance.apiV2SubscriptionsValidatePromoPost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling SubscriptionsApi#apiV2SubscriptionsValidatePromoPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">ValidatePromoRequestDto *body = ; // Promo code payload with optional market identifier
+
+SubscriptionsApi *apiInstance = [[SubscriptionsApi alloc] init];
+
+// Validate Promo Code
+[apiInstance apiV2SubscriptionsValidatePromoPostWith:body
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+
+var api = new AiSpeakingPlusApi.SubscriptionsApi()
+var body = ; // {{ValidatePromoRequestDto}} Promo code payload with optional market identifier
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiV2SubscriptionsValidatePromoPost(body, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2SubscriptionsValidatePromoPostExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new SubscriptionsApi();
+            var body = new ValidatePromoRequestDto(); // ValidatePromoRequestDto | Promo code payload with optional market identifier
+
+            try
+            {
+                // Validate Promo Code
+                Object result = apiInstance.apiV2SubscriptionsValidatePromoPost(body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling SubscriptionsApi.apiV2SubscriptionsValidatePromoPost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiSubscriptionsApi();
+$body = ; // ValidatePromoRequestDto | Promo code payload with optional market identifier
+
+try {
+    $result = $api_instance->apiV2SubscriptionsValidatePromoPost($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling SubscriptionsApi->apiV2SubscriptionsValidatePromoPost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::SubscriptionsApi;
+
+my $api_instance = WWW::SwaggerClient::SubscriptionsApi->new();
+my $body = WWW::SwaggerClient::Object::ValidatePromoRequestDto->new(); # ValidatePromoRequestDto | Promo code payload with optional market identifier
+
+eval { 
+    my $result = $api_instance->apiV2SubscriptionsValidatePromoPost(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling SubscriptionsApi->apiV2SubscriptionsValidatePromoPost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsValidatePromoPost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.SubscriptionsApi()
+body =  # ValidatePromoRequestDto | Promo code payload with optional market identifier
+
+try: 
+    # Validate Promo Code
+    api_response = api_instance.api_v2_subscriptions_validate_promo_post(body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling SubscriptionsApi->apiV2SubscriptionsValidatePromoPost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Promo code payload with optional market identifier",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ValidatePromoRequestDto"
+      }
+    }
+  },
+  "required" : true
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiV2SubscriptionsValidatePromoPost_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiV2SubscriptionsValidatePromoPost_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Promo code is valid </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsValidatePromoPost-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsValidatePromoPost-200-schema">
+                                  <div id='responses-apiV2SubscriptionsValidatePromoPost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Promo code is valid",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ValidatePromoResponseDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsValidatePromoPost-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsValidatePromoPost-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsValidatePromoPost-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 400 - Promo code is invalid or expired </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsValidatePromoPost-400-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsValidatePromoPost-400-schema">
+                                  <div id='responses-apiV2SubscriptionsValidatePromoPost-400-schema-400' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Promo code is invalid or expired",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsValidatePromoPost-400-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsValidatePromoPost-400-schema-400');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsValidatePromoPost-400-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost">
+                      <article id="api-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0" data-group="User" data-name="apiV2SubscriptionsVerifyMarketPurchasePost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2SubscriptionsVerifyMarketPurchasePost</h1>
+                          <p>Verify Market Purchase</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Verify market purchase token (Cafe Bazaar / Myket) server-to-server and activate subscription</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v2/subscriptions/verify-market-purchase</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/v2/subscriptions/verify-market-purchase"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.SubscriptionsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class SubscriptionsApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        SubscriptionsApi apiInstance = new SubscriptionsApi();
+        VerifyMarketPurchaseRequest body = ; // VerifyMarketPurchaseRequest | Market purchase token and details
+        try {
+            Object result = apiInstance.apiV2SubscriptionsVerifyMarketPurchasePost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling SubscriptionsApi#apiV2SubscriptionsVerifyMarketPurchasePost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.SubscriptionsApi;
+
+public class SubscriptionsApiExample {
+
+    public static void main(String[] args) {
+        SubscriptionsApi apiInstance = new SubscriptionsApi();
+        VerifyMarketPurchaseRequest body = ; // VerifyMarketPurchaseRequest | Market purchase token and details
+        try {
+            Object result = apiInstance.apiV2SubscriptionsVerifyMarketPurchasePost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling SubscriptionsApi#apiV2SubscriptionsVerifyMarketPurchasePost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+VerifyMarketPurchaseRequest *body = ; // Market purchase token and details (optional)
+
+SubscriptionsApi *apiInstance = [[SubscriptionsApi alloc] init];
+
+// Verify Market Purchase
+[apiInstance apiV2SubscriptionsVerifyMarketPurchasePostWith:body
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.SubscriptionsApi()
+var opts = { 
+  'body':  // {{VerifyMarketPurchaseRequest}} Market purchase token and details
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiV2SubscriptionsVerifyMarketPurchasePost(opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2SubscriptionsVerifyMarketPurchasePostExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new SubscriptionsApi();
+            var body = new VerifyMarketPurchaseRequest(); // VerifyMarketPurchaseRequest | Market purchase token and details (optional) 
+
+            try
+            {
+                // Verify Market Purchase
+                Object result = apiInstance.apiV2SubscriptionsVerifyMarketPurchasePost(body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling SubscriptionsApi.apiV2SubscriptionsVerifyMarketPurchasePost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiSubscriptionsApi();
+$body = ; // VerifyMarketPurchaseRequest | Market purchase token and details
+
+try {
+    $result = $api_instance->apiV2SubscriptionsVerifyMarketPurchasePost($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling SubscriptionsApi->apiV2SubscriptionsVerifyMarketPurchasePost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::SubscriptionsApi;
+
+
+my $api_instance = WWW::SwaggerClient::SubscriptionsApi->new();
+my $body = WWW::SwaggerClient::Object::VerifyMarketPurchaseRequest->new(); # VerifyMarketPurchaseRequest | Market purchase token and details
+
+eval { 
+    my $result = $api_instance->apiV2SubscriptionsVerifyMarketPurchasePost(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling SubscriptionsApi->apiV2SubscriptionsVerifyMarketPurchasePost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsVerifyMarketPurchasePost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.SubscriptionsApi()
+body =  # VerifyMarketPurchaseRequest | Market purchase token and details (optional)
+
+try: 
+    # Verify Market Purchase
+    api_response = api_instance.api_v2_subscriptions_verify_market_purchase_post(body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling SubscriptionsApi->apiV2SubscriptionsVerifyMarketPurchasePost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Market purchase token and details",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/VerifyMarketPurchaseRequest"
+      }
+    }
+  }
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiV2SubscriptionsVerifyMarketPurchasePost_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiV2SubscriptionsVerifyMarketPurchasePost_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Market purchase verified and subscription activated successfully </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsVerifyMarketPurchasePost-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsVerifyMarketPurchasePost-200-schema">
+                                  <div id='responses-apiV2SubscriptionsVerifyMarketPurchasePost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Market purchase verified and subscription activated successfully",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/VerifyMarketPurchaseResponseData"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsVerifyMarketPurchasePost-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsVerifyMarketPurchasePost-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsVerifyMarketPurchasePost-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 400 - Invalid purchase token or verification failed </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsVerifyMarketPurchasePost-400-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsVerifyMarketPurchasePost-400-schema">
+                                  <div id='responses-apiV2SubscriptionsVerifyMarketPurchasePost-400-schema-400' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Invalid purchase token or verification failed",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsVerifyMarketPurchasePost-400-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsVerifyMarketPurchasePost-400-schema-400');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsVerifyMarketPurchasePost-400-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 409 - Duplicate or already used purchase token </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsVerifyMarketPurchasePost-409-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsVerifyMarketPurchasePost-409-schema">
+                                  <div id='responses-apiV2SubscriptionsVerifyMarketPurchasePost-409-schema-409' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Duplicate or already used purchase token",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsVerifyMarketPurchasePost-409-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsVerifyMarketPurchasePost-409-schema-409');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsVerifyMarketPurchasePost-409-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 401 - Authentication required or invalid token </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2SubscriptionsVerifyMarketPurchasePost-401-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2SubscriptionsVerifyMarketPurchasePost-401-schema">
+                                  <div id='responses-apiV2SubscriptionsVerifyMarketPurchasePost-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Authentication required or invalid token",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2SubscriptionsVerifyMarketPurchasePost-401-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2SubscriptionsVerifyMarketPurchasePost-401-schema-401');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2SubscriptionsVerifyMarketPurchasePost-401-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 
