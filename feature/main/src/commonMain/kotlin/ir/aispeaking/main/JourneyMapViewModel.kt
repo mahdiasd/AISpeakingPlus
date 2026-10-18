@@ -14,6 +14,11 @@ import ir.aispeaking.domain.usecase.auth.VerifyOtpUseCase
 import ir.aispeaking.domain.usecase.stage.GetJourneyLeaderboardUseCase
 import ir.aispeaking.domain.usecase.stage.GetStagesUseCase
 import ir.aispeaking.domain.usecase.stage.SyncGuestProgressUseCase
+import ir.aispeaking.utils.analytics.AnalyticsTracker
+import ir.aispeaking.utils.analytics.AnalyticsEvents
+import ir.aispeaking.utils.analytics.logLogin
+import ir.aispeaking.utils.analytics.logSignUp
+import ir.aispeaking.utils.analytics.logStageLockedClick
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -73,7 +78,8 @@ class JourneyMapViewModel(
     private val getCurrentAccessTierUseCase: GetCurrentAccessTierUseCase,
     private val sendOtpUseCase: SendOtpUseCase,
     private val verifyOtpUseCase: VerifyOtpUseCase,
-    private val getJourneyLeaderboardUseCase: GetJourneyLeaderboardUseCase
+    private val getJourneyLeaderboardUseCase: GetJourneyLeaderboardUseCase,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(JourneyMapUiState())
@@ -138,6 +144,20 @@ class JourneyMapViewModel(
             _uiState.update { it.copy(isRegisterLoading = true, registerError = null) }
             when (val result = verifyOtpUseCase(cleanPhone, cleanOtp)) {
                 is DataResult.Success -> {
+                    val user = result.data
+                    analyticsTracker.setUserId(user.uid)
+                    analyticsTracker.logSignUp(
+                        userId = user.uid,
+                        method = "otp_journey_modal",
+                        platform = "android",
+                        userLevel = user.languageLevel.ifBlank { "A1" }
+                    )
+                    analyticsTracker.logLogin(
+                        userId = user.uid,
+                        method = "otp_journey_modal",
+                        platform = "android",
+                        userLevel = user.languageLevel.ifBlank { "A1" }
+                    )
                     _uiState.update {
                         it.copy(
                             isRegisterLoading = false,
@@ -165,6 +185,7 @@ class JourneyMapViewModel(
     }
 
     fun openLeaderboard() {
+        analyticsTracker.logEvent(AnalyticsEvents.EVENT_LEADERBOARD_OPENED)
         viewModelScope.launch {
             when (val result = getJourneyLeaderboardUseCase()) {
                 is DataResult.Success -> {
@@ -242,15 +263,42 @@ class JourneyMapViewModel(
     fun onStageClicked(stage: Stage) {
         when (stage.lockStatus) {
             StageLockStatus.UNLOCKED -> {
+                analyticsTracker.logEvent(
+                    AnalyticsEvents.EVENT_STAGE_OPENED,
+                    mapOf(
+                        AnalyticsEvents.PARAM_STAGE_ID to stage.id,
+                        AnalyticsEvents.PARAM_STAGE_TITLE to stage.title,
+                        AnalyticsEvents.PARAM_STAGE_ORDER to stage.orderIndex,
+                        AnalyticsEvents.PARAM_ACCESS_TIER to _uiState.value.currentTier.name
+                    )
+                )
                 _uiState.update { it.copy(selectedStageForBriefing = stage) }
             }
             StageLockStatus.LOCKED_REGISTRATION -> {
+                analyticsTracker.logStageLockedClick(
+                    stageId = stage.id,
+                    stageTitle = stage.title,
+                    stageOrder = stage.orderIndex,
+                    lockStatus = stage.lockStatus.name
+                )
                 _uiState.update { it.copy(selectedStageForRegister = stage, registerStep = 1, registerError = null) }
             }
             StageLockStatus.LOCKED_SUBSCRIPTION -> {
+                analyticsTracker.logStageLockedClick(
+                    stageId = stage.id,
+                    stageTitle = stage.title,
+                    stageOrder = stage.orderIndex,
+                    lockStatus = stage.lockStatus.name
+                )
                 _uiState.update { it.copy(selectedStageForPaywall = stage) }
             }
             StageLockStatus.LOCKED_PREVIOUS_STAGE -> {
+                analyticsTracker.logStageLockedClick(
+                    stageId = stage.id,
+                    stageTitle = stage.title,
+                    stageOrder = stage.orderIndex,
+                    lockStatus = stage.lockStatus.name
+                )
                 _uiState.update { it.copy(snackbarMessage = "برای باز شدن این مرحله، مرحله قبل را تکمیل کنید.") }
             }
         }
@@ -262,6 +310,7 @@ class JourneyMapViewModel(
     }
 
     fun onSubscriptionCtaClicked() {
+        analyticsTracker.logEvent("journey_subscription_cta_clicked")
         val stageForPaywall = _uiState.value.stages.firstOrNull { it.lockStatus == StageLockStatus.LOCKED_SUBSCRIPTION }
             ?: _uiState.value.currentStage
             ?: _uiState.value.stages.firstOrNull()

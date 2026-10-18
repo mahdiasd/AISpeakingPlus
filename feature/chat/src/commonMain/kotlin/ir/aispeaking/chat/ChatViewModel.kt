@@ -27,6 +27,11 @@ import ir.aispeaking.domain.usecase.stt.StreamSpeechToTextUseCase
 import ir.aispeaking.domain.usecase.user.GetUserProfileUseCase
 import ir.aispeaking.chat.audio.StageAudioController
 import ir.aispeaking.chat.component.ChatInputMode
+import ir.aispeaking.utils.analytics.AnalyticsTracker
+import ir.aispeaking.utils.analytics.AnalyticsEvents
+import ir.aispeaking.utils.analytics.logStageOpened
+import ir.aispeaking.utils.analytics.logStageCompleted
+import ir.aispeaking.utils.crashlytics.CrashReporter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -79,7 +84,9 @@ class ChatViewModel(
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val streamSpeechToTextUseCase: StreamSpeechToTextUseCase,
     private val sendAudioChunkUseCase: SendAudioChunkUseCase,
-    private val closeSttSessionUseCase: CloseSttSessionUseCase
+    private val closeSttSessionUseCase: CloseSttSessionUseCase,
+    private val analyticsTracker: AnalyticsTracker,
+    private val crashReporter: CrashReporter
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -108,6 +115,17 @@ class ChatViewModel(
             when (val result = getStageDetailUseCase(stageId, resolvedTier)) {
                 is DataResult.Success -> {
                     val stage = result.data
+                    analyticsTracker.logStageOpened(
+                        stageId = stage.id,
+                        stageTitle = stage.title,
+                        stageOrder = stage.orderIndex,
+                        userLevel = userLevel,
+                        accessTier = resolvedTier.name
+                    )
+                    crashReporter.setCustomKey("current_stage_id", stage.id)
+                    crashReporter.setCustomKey("current_stage_title", stage.title)
+                    crashReporter.log("Stage loaded: ${stage.id} - ${stage.title}")
+
                     _uiState.update {
                         it.copy(
                             stage = stage,
@@ -132,6 +150,14 @@ class ChatViewModel(
                     }
                 }
                 is DataResult.Failure -> {
+                    analyticsTracker.logEvent(
+                        "stage_load_failed",
+                        mapOf(
+                            AnalyticsEvents.PARAM_STAGE_ID to stageId,
+                            AnalyticsEvents.PARAM_ERROR to result.appError.getErrorMessage()
+                        )
+                    )
+                    crashReporter.log("Stage load failed for $stageId")
                     _uiState.update {
                         it.copy(
                             stage = null,
@@ -472,6 +498,15 @@ class ChatViewModel(
         val content = stateSnapshot.messageText.trim()
         if (content.isBlank()) return
 
+        analyticsTracker.logEvent(
+            AnalyticsEvents.EVENT_CHAT_MESSAGE_SENT,
+            mapOf(
+                AnalyticsEvents.PARAM_STAGE_ID to currentStageId,
+                AnalyticsEvents.PARAM_INPUT_MODE to stateSnapshot.inputMode.name,
+                AnalyticsEvents.PARAM_TURNS_COUNT to stateSnapshot.turnsCount
+            )
+        )
+
         if (stateSnapshot.isRecording) {
             stopRecordingSession()
             _uiState.update { it.copy(isRecording = false) }
@@ -668,6 +703,10 @@ class ChatViewModel(
 
     fun requestHint() {
         val stageId = _uiState.value.stage?.id ?: return
+        analyticsTracker.logEvent(
+            AnalyticsEvents.EVENT_HINT_REQUESTED,
+            mapOf(AnalyticsEvents.PARAM_STAGE_ID to stageId)
+        )
         viewModelScope.launch {
             _uiState.update { it.copy(isRequestingHint = true, hintError = null) }
             val dialogue = _uiState.value.chats.mapNotNull {
@@ -845,6 +884,17 @@ class ChatViewModel(
             if (currentTier == AccessTier.GUEST && session.objectiveCompleted) {
                 saveGuestProgress(stageId, session.calculatedStars, session.score)
             }
+
+            analyticsTracker.logStageCompleted(
+                stageId = stageId,
+                stageTitle = _uiState.value.stage?.title ?: "",
+                score = session.score,
+                stars = session.calculatedStars,
+                turnsCount = turnsCount,
+                hintsUsed = hintsCount,
+                passed = session.objectiveCompleted
+            )
+            crashReporter.log("Stage evaluation completed: $stageId, stars: ${session.calculatedStars}, score: ${session.score}")
 
             _uiState.update {
                 it.copy(

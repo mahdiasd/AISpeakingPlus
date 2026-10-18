@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "160657659274",
+    "project_id": "aispeaking-132a3",
+    "storage_bucket": "aispeaking-132a3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:160657659274:android:a6d6246e37d27a2ffc6473",
+        "android_client_info": {
+          "package_name": "ir.aispeaking"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCPIOcvS-Nc5i1mBICoXGECxau4zFzGnw8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -7,6 +7,11 @@ import ir.aispeaking.domain.model.error.getErrorMessage
 import ir.aispeaking.domain.usecase.auth.SendOtpUseCase
 import ir.aispeaking.domain.usecase.auth.VerifyOtpUseCase
 import ir.aispeaking.domain.usecase.stage.SyncGuestProgressUseCase
+import ir.aispeaking.utils.analytics.AnalyticsTracker
+import ir.aispeaking.utils.analytics.AnalyticsEvents
+import ir.aispeaking.utils.analytics.logLogin
+import ir.aispeaking.utils.analytics.logSignUp
+import ir.aispeaking.utils.crashlytics.CrashReporter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -22,7 +27,9 @@ import org.koin.core.annotation.Factory
 class LoginViewModel(
     private val sendOtpUseCase: SendOtpUseCase,
     private val verifyOtpUseCase: VerifyOtpUseCase,
-    private val syncGuestProgressUseCase: SyncGuestProgressUseCase
+    private val syncGuestProgressUseCase: SyncGuestProgressUseCase,
+    private val analyticsTracker: AnalyticsTracker,
+    private val crashReporter: CrashReporter
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -142,13 +149,48 @@ class LoginViewModel(
             when (val result = verifyOtpUseCase(phone, otp)) {
                 is DataResult.Success -> {
                     timerJob?.cancel()
+                    val user = result.data
+                    val level = user.languageLevel.ifBlank { "A1" }
+
+                    // Track Analytics & Crashlytics
+                    analyticsTracker.setUserId(user.uid)
+                    analyticsTracker.setUserProperty(AnalyticsEvents.USER_PROP_PLATFORM, "android")
+                    analyticsTracker.setUserProperty(AnalyticsEvents.USER_PROP_LANGUAGE_LEVEL, level)
+
+                    // Track signup if new account, and login
+                    if (user.score == 0 && user.nickName.isBlank()) {
+                        analyticsTracker.logSignUp(
+                            userId = user.uid,
+                            method = "otp",
+                            platform = "android",
+                            userLevel = level
+                        )
+                    }
+                    analyticsTracker.logLogin(
+                        userId = user.uid,
+                        method = "otp",
+                        platform = "android",
+                        userLevel = level
+                    )
+
+                    crashReporter.setUserId(user.uid)
+                    crashReporter.setCustomKey("user_level", level)
+                    crashReporter.log("User authenticated via OTP: ${user.uid}")
+
                     runCatching { syncGuestProgressUseCase() }
                     _uiState.update { it.copy(isLoading = false) }
-                    _effect.send(LoginEffect.LoginSuccess(result.data))
+                    _effect.send(LoginEffect.LoginSuccess(user))
                     _effect.send(LoginEffect.NavigateToMain)
                 }
                 is DataResult.Failure -> {
                     val errorMsg = result.appError.getErrorMessage().ifBlank { "کد تایید اشتباه است یا منقضی شده است" }
+                    analyticsTracker.logEvent(
+                        "login_failed",
+                        mapOf(
+                            AnalyticsEvents.PARAM_METHOD to "otp",
+                            AnalyticsEvents.PARAM_ERROR to errorMsg
+                        )
+                    )
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -176,6 +218,10 @@ class LoginViewModel(
 
     private fun skipToGuest() {
         viewModelScope.launch {
+            analyticsTracker.logEvent(
+                "guest_mode_selected",
+                mapOf(AnalyticsEvents.PARAM_PLATFORM to "android")
+            )
             _effect.send(LoginEffect.NavigateToMain)
         }
     }

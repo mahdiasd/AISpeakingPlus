@@ -11,6 +11,9 @@ import ir.aispeaking.domain.usecase.user.GetUserProfileUseCase
 import ir.aispeaking.domain.usecase.user.UpdateUserProfileUseCase
 import ir.aispeaking.sharedui.ui.model.theme_mode.ThemeMode
 import ir.aispeaking.sharedui.ui.them.ThemeController
+import ir.aispeaking.utils.analytics.AnalyticsTracker
+import ir.aispeaking.utils.analytics.AnalyticsEvents
+import ir.aispeaking.utils.crashlytics.CrashReporter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,7 +41,9 @@ class ProfileViewModel(
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
     private val authRepository: AuthRepository,
-    private val themeRepository: ThemeRepository
+    private val themeRepository: ThemeRepository,
+    private val analyticsTracker: AnalyticsTracker,
+    private val crashReporter: CrashReporter
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -61,7 +66,15 @@ class ProfileViewModel(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             when (val result = getUserProfileUseCase()) {
                 is DataResult.Success -> {
-                    _uiState.update { it.copy(isLoading = false, user = result.data, errorMessage = null) }
+                    val user = result.data
+                    val tier = if (user.isGuest) "GUEST" else if (user.subscription.isSubscriber) "PRO" else "REGISTERED"
+                    analyticsTracker.setUserProperty(AnalyticsEvents.USER_PROP_LANGUAGE_LEVEL, user.languageLevel.ifBlank { "A1" })
+                    analyticsTracker.setUserProperty(AnalyticsEvents.USER_PROP_ACCESS_TIER, tier)
+                    analyticsTracker.setUserProperty(AnalyticsEvents.USER_PROP_TOTAL_STARS, user.totalStars.toString())
+                    crashReporter.setCustomKey("user_level", user.languageLevel)
+                    crashReporter.setCustomKey("access_tier", tier)
+                    crashReporter.setCustomKey("total_stars", user.totalStars)
+                    _uiState.update { it.copy(isLoading = false, user = user, errorMessage = null) }
                 }
                 is DataResult.Failure -> {
                     _uiState.update { it.copy(isLoading = false, errorMessage = "خطا در دریافت اطلاعات کاربر") }
@@ -77,6 +90,8 @@ class ProfileViewModel(
     }
 
     fun onThemeSelected(mode: ThemeMode) {
+        analyticsTracker.logEvent("theme_changed", mapOf("theme" to mode.key))
+        crashReporter.setCustomKey("theme_mode", mode.key)
         themeRepository.saveThemeMode(mode.key)
         ThemeController.setThemeMode(mode)
         _uiState.update { it.copy(themeMode = mode) }
@@ -125,6 +140,9 @@ class ProfileViewModel(
 
     fun onConfirmSignOut(onComplete: () -> Unit) {
         _uiState.update { it.copy(showSignOutDialog = false) }
+        analyticsTracker.logEvent(AnalyticsEvents.EVENT_LOGOUT)
+        analyticsTracker.setUserId(null)
+        crashReporter.log("User signed out")
         viewModelScope.launch {
             authRepository.logout()
             onComplete()
@@ -137,6 +155,9 @@ class ProfileViewModel(
 
     fun onSelectLanguageLevel(level: String) {
         _uiState.update { it.copy(showLevelPicker = false) }
+        analyticsTracker.setUserProperty(AnalyticsEvents.USER_PROP_LANGUAGE_LEVEL, level)
+        analyticsTracker.logEvent("user_level_changed", mapOf("new_level" to level))
+        crashReporter.setCustomKey("user_level", level)
         updateProfile(UpdateProfileInput(languageLevel = level))
     }
 
