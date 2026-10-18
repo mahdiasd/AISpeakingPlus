@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -238,8 +239,8 @@ private fun PlayingVoiceChip(
                 scaleY = scale
             }
             .clip(shape)
-            .background(Game.Mint.copy(alpha = 0.28f))
-            .border(1.dp, Game.Mint.copy(alpha = 0.75f), shape)
+            .background(Color(0xEB181A22))
+            .border(1.dp, Color(0x33FFFFFF), shape)
             .clickable(interactionSource = interaction, indication = null, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
