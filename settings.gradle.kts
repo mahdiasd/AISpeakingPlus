@@ -2,12 +2,18 @@ rootProject.name = "AISpeakingPlus"
 
 pluginManagement {
     repositories {
+        gradlePluginPortal()
         mavenCentral()
         maven { url = uri("https://repo.maven.apache.org/maven2") }
-        maven { url = uri("https://maven.aliyun.com/repository/google") }
         google()
-        gradlePluginPortal()
-        maven { url = uri("https://plugins.gradle.org/m2") }
+        maven {
+            url = uri("https://maven.myket.ir")
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
     }
 }
 plugins {
@@ -16,10 +22,17 @@ plugins {
 
 dependencyResolutionManagement {
     repositories {
-        maven { url = uri("https://repo.maven.apache.org/maven2") }
-        maven { url = uri("https://maven.aliyun.com/repository/google") }
-        google()
         mavenCentral()
+        maven { url = uri("https://repo.maven.apache.org/maven2") }
+        google()
+        maven {
+            url = uri("https://maven.myket.ir")
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
         maven { url = uri("https://jitpack.io") }
     }
 }

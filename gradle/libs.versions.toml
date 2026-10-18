@@ -37,6 +37,9 @@ firebase-admin = "9.5.0"
 logback = "1.5.16"
 ksp = "2.3.11"
 poolakey = "2.2.0"
+google-services = "4.4.2"
+google-firebase-crashlytics = "3.0.3"
+firebase-bom = "33.10.0"
 
 
 
@@ -132,6 +135,9 @@ poolakey = { module = "com.github.cafebazaar.Poolakey:poolakey", version.ref = "
 koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koin-annotations" }
 koin-ksp-compiler = { module = "io.insert-koin:koin-ksp-compiler", version.ref = "koin-ksp" }
 
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 
 [plugins]
 
@@ -146,5 +152,7 @@ koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koin-com
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
+google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "google-firebase-crashlytics" }
 
 
