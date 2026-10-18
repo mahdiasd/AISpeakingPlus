@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -12,17 +13,27 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ir.aispeaking.chat.component.AppleChatTheme
 import ir.aispeaking.domain.model.stage.Stage
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameSheet
 import ir.aispeaking.sharedui.ui.game.GameText
 
-/** Reminder of the scenario and the mission goal, available any time during the conversation. */
+/**
+ * 2026 Apple Liquid Glass Objective Sheet.
+ *
+ * Provides instant clarity on the learner's mission and background story:
+ * - Translucent frosted glass bottom sheet.
+ * - Goal container glowing in Serene Cyan & Royal Azure (strictly NO green).
+ * - Scenario background in Warm Champagne Gold.
+ * - Tactile Apple Primary Button for dismiss.
+ */
 @Composable
 fun ObjectiveSheet(
     visible: Boolean,
@@ -38,20 +49,35 @@ fun ObjectiveSheet(
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            GameText(text = stage.titleFa, size = 18.sp, bold = true)
+            GameText(
+                text = stage.titleFa,
+                size = 18.sp,
+                bold = true
+            )
 
-            val goalShape = RoundedCornerShape(18.dp)
+            // Mission Objective Container (Serene Cyan & Royal Azure glow)
+            val goalShape = RoundedCornerShape(20.dp)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Game.Mint.copy(alpha = 0.12f), goalShape)
-                    .border(1.dp, Game.Mint.copy(alpha = 0.4f), goalShape)
-                    .padding(14.dp),
+                    .clip(goalShape)
+                    .background(AppleChatTheme.PrimaryAzure.copy(alpha = 0.12f))
+                    .border(1.dp, AppleChatTheme.PrimaryAzure.copy(alpha = 0.45f), goalShape)
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                GameText(text = "هدف تو در این مرحله", size = 13.sp, bold = true, color = Game.Mint)
+                GameText(
+                    text = "هدف تو در این مرحله",
+                    size = 13.sp,
+                    bold = true,
+                    color = AppleChatTheme.SuccessCyan
+                )
                 if (stage.targetObjectiveFa.isNotBlank()) {
-                    GameText(text = stage.targetObjectiveFa, size = 14.sp, lineHeight = 23.sp)
+                    GameText(
+                        text = stage.targetObjectiveFa,
+                        size = 14.sp,
+                        lineHeight = 23.sp
+                    )
                 }
                 if (stage.targetObjective.isNotBlank()) {
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -67,17 +93,24 @@ fun ObjectiveSheet(
                 }
             }
 
+            // Scenario Briefing Container
             if (stage.briefingFa.isNotBlank()) {
-                val shape = RoundedCornerShape(18.dp)
+                val briefingShape = RoundedCornerShape(20.dp)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Game.PanelRaised, shape)
-                        .border(1.dp, Game.Stroke, shape)
-                        .padding(14.dp),
+                        .clip(briefingShape)
+                        .background(AppleChatTheme.GlassPanelRaised)
+                        .border(1.dp, AppleChatTheme.SpecularStrokeBrush, briefingShape)
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    GameText(text = "ماجرا چیست؟", size = 13.sp, bold = true, color = Game.Gold)
+                    GameText(
+                        text = "ماجرا چیست؟",
+                        size = 13.sp,
+                        bold = true,
+                        color = AppleChatTheme.Gold
+                    )
                     GameText(
                         text = stage.briefingFa,
                         size = 13.sp,
@@ -87,12 +120,14 @@ fun ObjectiveSheet(
                 }
             }
 
+            // Tactile Apple Primary Button
             GameButton(
                 text = "متوجه شدم",
                 onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                height = 48.dp
             )
-            androidx.compose.foundation.layout.Spacer(Modifier.padding(bottom = 4.dp))
+            Spacer(Modifier.padding(bottom = 6.dp))
         }
     }
 }

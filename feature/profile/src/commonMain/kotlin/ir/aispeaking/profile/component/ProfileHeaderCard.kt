@@ -44,6 +44,7 @@ import ir.aispeaking.sharedui.ic_phone
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.toFaDigits
+import ir.aispeaking.sharedui.ui.them.AppTheme
 import ir.aispeaking.sharedui.ui.utils.avatar.AvatarUtils
 import org.jetbrains.compose.resources.painterResource
 
@@ -60,14 +61,21 @@ fun ProfileHeaderCard(
         user.avatar.contains(it.name.lowercase())
     }?.drawable ?: Res.drawable.avatar_g1
 
+    val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(26.dp)
+    val cardBg = if (isDark) Color(0xFF1B1C23) else Color(0xFFFFFFFF)
+    val cardBorder = if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
+    val editBtnBg = if (isDark) Color(0x1AFFFFFF) else Color(0xFFF2F4F7)
+    val editBtnBorder = if (isDark) Color(0x24FFFFFF) else Color(0x14000000)
+    val phonePillBg = if (isDark) Color(0x14FFFFFF) else Color(0xFFF2F4F7)
+    val phonePillBorder = if (isDark) Color(0x22FFFFFF) else Color(0x14000000)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(Color(0xFF1B1C23))
-            .border(1.dp, Color(0x22FFFFFF), shape)
+            .background(cardBg)
+            .border(1.dp, cardBorder, shape)
             .padding(18.dp)
     ) {
         Row(
@@ -112,8 +120,8 @@ fun ProfileHeaderCard(
                                 scaleY = editScale
                             }
                             .clip(CircleShape)
-                            .background(Color(0x1AFFFFFF))
-                            .border(1.dp, Color(0x24FFFFFF), CircleShape)
+                            .background(editBtnBg)
+                            .border(1.dp, editBtnBorder, CircleShape)
                             .clickable(
                                 interactionSource = editInteraction,
                                 indication = null,
@@ -124,7 +132,7 @@ fun ProfileHeaderCard(
                         Icon(
                             painter = painterResource(Res.drawable.ic_edit),
                             contentDescription = "ویرایش نام",
-                            tint = Game.TextSecondary,
+                            tint = if (isDark) Game.TextSecondary else Color(0xFF6B7280),
                             modifier = Modifier.size(13.dp)
                         )
                     }
@@ -143,19 +151,19 @@ fun ProfileHeaderCard(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0x14FFFFFF))
-                                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(8.dp))
+                                .background(phonePillBg)
+                                .border(1.dp, phonePillBorder, RoundedCornerShape(8.dp))
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Icon(
                                 painter = painterResource(Res.drawable.ic_phone),
                                 contentDescription = null,
-                                tint = Game.TextSecondary,
+                                tint = if (isDark) Game.TextSecondary else Color(0xFF6B7280),
                                 modifier = Modifier.size(12.dp)
                             )
                             GameText(
                                 text = user.phoneNumber.toFaDigits(),
-                                color = Game.TextSecondary,
+                                color = if (isDark) Game.TextSecondary else Color(0xFF6B7280),
                                 size = 11.sp,
                                 bold = false
                             )
@@ -265,7 +273,7 @@ fun ProfileHeaderCard(
                         .size(26.dp)
                         .clip(CircleShape)
                         .background(Brush.verticalGradient(listOf(Game.Blue, Color(0xFF0066D6))))
-                        .border(2.dp, Color(0xFF1B1C23), CircleShape),
+                        .border(2.dp, cardBg, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(

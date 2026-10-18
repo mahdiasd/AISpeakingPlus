@@ -6,23 +6,18 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -42,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.AnnotatedString
@@ -66,9 +60,17 @@ import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * One message from the AI character. The English text is the hero; translation, audio and copy
- * live in a labelled action row beneath it so each control says what it does.
+ * 2026 Apple Liquid Glass AI Message Item.
+ *
+ * Characteristics:
+ * - Floating Liquid Glass bubble with specular light rim on top.
+ * - Hero English copy with Apple clarity and high contrast.
+ * - Expandable Persian translation with silky smooth transition.
+ * - Audio playback chip with dynamic equalizer waveform in Serene Cyan (strictly NO green).
+ * - Siri iridescent glowing typing dots when message is generating.
+ * - Silky smooth copy feedback with Serene Cyan checkmark.
  */
+@Suppress("DEPRECATION")
 @Composable
 fun AiChatItem(
     modifier: Modifier = Modifier,
@@ -97,7 +99,12 @@ fun AiChatItem(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            GameAvatar(name = characterName, imageUrl = characterAvatarUrl, size = 34.dp)
+            GameAvatar(
+                name = characterName,
+                imageUrl = characterAvatarUrl,
+                size = 36.dp,
+                ring = AppleChatTheme.SpecularBorderColor
+            )
 
             Column(
                 modifier = Modifier.weight(1f, fill = false),
@@ -106,17 +113,20 @@ fun AiChatItem(
                 val bubbleShape = RoundedCornerShape(
                     topStart = 6.dp, topEnd = 20.dp, bottomEnd = 20.dp, bottomStart = 20.dp
                 )
+
+                // Liquid Glass Bubble with Specular Top Highlight
                 Column(
                     modifier = Modifier
-                        .widthIn(max = 320.dp)
-                        .background(Game.BubbleAi, bubbleShape)
-                        .border(1.dp, Game.Stroke, bubbleShape)
-                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                        .widthIn(max = 330.dp)
+                        .clip(bubbleShape)
+                        .background(AppleChatTheme.BubbleAi)
+                        .border(1.dp, AppleChatTheme.SpecularStrokeBrush, bubbleShape)
+                        .padding(horizontal = 15.dp, vertical = 11.dp)
                         .animateContentSize(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (chat.message.isEmpty()) {
-                        TypingDotsIndicator()
+                        IridescentTypingDots()
                     } else {
                         GameText(
                             text = chat.message,
@@ -125,6 +135,7 @@ fun AiChatItem(
                             latin = true,
                             color = Game.TextPrimary
                         )
+
                         AnimatedVisibility(visible = showTranslation && hasTranslation) {
                             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -132,7 +143,7 @@ fun AiChatItem(
                                         Modifier
                                             .fillMaxWidth()
                                             .height(1.dp)
-                                            .background(Game.Stroke)
+                                            .background(AppleChatTheme.SubtleStrokeBrush)
                                     )
                                     GameText(
                                         text = chat.translatedMessage ?: "",
@@ -147,34 +158,50 @@ fun AiChatItem(
                     }
                 }
 
-                // Labelled actions
+                // Apple Labelled Action Chips
                 if (chat.message.isNotBlank()) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         when (chat.voiceState) {
-                            AiVoiceState.PendingToPlay -> GameChip(text = "در حال آماده‌سازی", accent = Game.Mint)
+                            AiVoiceState.PendingToPlay -> GameChip(
+                                text = "در حال آماده‌سازی",
+                                accent = AppleChatTheme.SuccessCyan,
+                                container = Color(0xD9181B2A),
+                                border = AppleChatTheme.SubtleBorderColor
+                            )
                             AiVoiceState.Playing -> PlayingVoiceChip(onClick = onStopVoice)
                             AiVoiceState.Stopped -> if (!chat.audioUrl.isNullOrBlank()) {
                                 GameChip(
                                     text = "پخش صدا",
                                     icon = Res.drawable.ic_play,
-                                    accent = Game.Mint,
+                                    accent = AppleChatTheme.SuccessCyan,
+                                    container = Color(0xD9181B2A),
+                                    border = AppleChatTheme.SubtleBorderColor,
                                     onClick = onPlayVoice
                                 )
                             }
                         }
+
                         if (hasTranslation) {
                             GameChip(
                                 text = if (showTranslation) "پنهان کردن ترجمه" else "ترجمه",
                                 icon = Res.drawable.ic_translate,
-                                accent = Game.Sky,
+                                accent = AppleChatTheme.PrimaryAzure,
+                                container = Color(0xD9181B2A),
+                                border = AppleChatTheme.SubtleBorderColor,
                                 active = showTranslation,
                                 onClick = { showTranslation = !showTranslation }
                             )
                         }
+
                         GameChip(
                             text = if (copied) "کپی شد" else "کپی",
                             icon = if (copied) Res.drawable.ic_done else Res.drawable.ic_copy,
-                            accent = if (copied) Game.Mint else Game.TextPrimary,
+                            accent = if (copied) AppleChatTheme.SuccessCyan else Game.TextSecondary,
+                            container = Color(0xD9181B2A),
+                            border = AppleChatTheme.SubtleBorderColor,
                             active = copied,
                             onClick = {
                                 clipboardManager.setText(AnnotatedString(chat.message))
@@ -188,18 +215,14 @@ fun AiChatItem(
     }
 }
 
+/**
+ * Dynamic Audio Playing Equalizer Chip in Serene Cyan.
+ */
 @Composable
 private fun PlayingVoiceChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.95f else 1f,
-        animationSpec = spring(dampingRatio = 0.82f, stiffness = 450f),
-        label = "playing_voice_press"
-    )
     val shape = RoundedCornerShape(50)
 
     val transition = rememberInfiniteTransition(label = "audio_wave_pulse")
@@ -242,14 +265,10 @@ private fun PlayingVoiceChip(
 
     Row(
         modifier = modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
+            .applePressEffect(targetScale = 0.95f, onClick = onClick)
             .clip(shape)
-            .background(Color(0xEB181A22))
-            .border(1.dp, Color(0x33FFFFFF), shape)
-            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .background(Color(0xD9181B2A))
+            .border(1.dp, AppleChatTheme.SuccessCyan.copy(alpha = 0.45f), shape)
             .padding(horizontal = 12.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -257,7 +276,7 @@ private fun PlayingVoiceChip(
         Icon(
             painter = painterResource(Res.drawable.ic_speaker_off),
             contentDescription = "توقف صدا",
-            tint = Game.Mint,
+            tint = AppleChatTheme.SuccessCyan,
             modifier = Modifier.size(15.dp)
         )
         Row(
@@ -271,21 +290,30 @@ private fun PlayingVoiceChip(
                     modifier = Modifier
                         .width(2.5.dp)
                         .height((4 + 10 * barVal).dp)
-                        .background(Game.Mint, RoundedCornerShape(1.dp))
+                        .background(AppleChatTheme.SuccessCyan, RoundedCornerShape(1.dp))
                 )
             }
         }
     }
 }
 
+/**
+ * Siri / Apple Intelligence Iridescent Typing Dots.
+ */
 @Composable
-private fun TypingDotsIndicator(
+private fun IridescentTypingDots(
     modifier: Modifier = Modifier
 ) {
     val transition = rememberInfiniteTransition(label = "ai_typing_dots")
+    val dotColors = listOf(
+        AppleChatTheme.SiriViolet,
+        AppleChatTheme.SiriCyan,
+        AppleChatTheme.SiriAzure
+    )
+
     Row(
         modifier = modifier.padding(vertical = 4.dp, horizontal = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         repeat(3) { index ->
@@ -301,13 +329,13 @@ private fun TypingDotsIndicator(
                     },
                     repeatMode = RepeatMode.Restart
                 ),
-                label = "dot_$index"
+                label = "ai_dot_$index"
             )
             Box(
                 modifier = Modifier
                     .size(8.dp)
                     .alpha(alpha)
-                    .background(Game.TextPrimary, CircleShape)
+                    .background(dotColors[index % dotColors.size], CircleShape)
             )
         }
     }

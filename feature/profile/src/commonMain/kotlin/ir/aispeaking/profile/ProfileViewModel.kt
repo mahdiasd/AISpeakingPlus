@@ -6,8 +6,11 @@ import ir.aispeaking.domain.model.data_result.DataResult
 import ir.aispeaking.domain.model.user.UpdateProfileInput
 import ir.aispeaking.domain.model.user.UserProfile
 import ir.aispeaking.domain.repository.auth.AuthRepository
+import ir.aispeaking.domain.repository.theme.ThemeRepository
 import ir.aispeaking.domain.usecase.user.GetUserProfileUseCase
 import ir.aispeaking.domain.usecase.user.UpdateUserProfileUseCase
+import ir.aispeaking.sharedui.ui.model.theme_mode.ThemeMode
+import ir.aispeaking.sharedui.ui.them.ThemeController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,7 +26,8 @@ data class ProfileUiState(
     val showEditNameDialog: Boolean = false,
     val showSignOutDialog: Boolean = false,
     val showLevelPicker: Boolean = false,
-    val isSaving: Boolean = false
+    val isSaving: Boolean = false,
+    val themeMode: ThemeMode = ThemeMode.System
 ) {
     val isGuest: Boolean
         get() = user?.isGuest ?: true
@@ -33,13 +37,22 @@ data class ProfileUiState(
 class ProfileViewModel(
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val themeRepository: ThemeRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ProfileUiState())
+    private val _uiState = MutableStateFlow(
+        ProfileUiState(themeMode = ThemeMode.mapper(themeRepository.getThemeMode()))
+    )
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {
+        val currentKey = themeRepository.getThemeMode()
+        val currentMode = ThemeMode.mapper(currentKey)
+        ThemeController.initialize(currentKey) { newKey ->
+            themeRepository.saveThemeMode(newKey)
+        }
+        _uiState.update { it.copy(themeMode = currentMode) }
         loadProfile()
     }
 
@@ -58,7 +71,15 @@ class ProfileViewModel(
     }
 
     fun refresh() {
+        val currentKey = themeRepository.getThemeMode()
+        _uiState.update { it.copy(themeMode = ThemeMode.mapper(currentKey)) }
         loadProfile()
+    }
+
+    fun onThemeSelected(mode: ThemeMode) {
+        themeRepository.saveThemeMode(mode.key)
+        ThemeController.setThemeMode(mode)
+        _uiState.update { it.copy(themeMode = mode) }
     }
 
     fun onAvatarPickerClicked() {

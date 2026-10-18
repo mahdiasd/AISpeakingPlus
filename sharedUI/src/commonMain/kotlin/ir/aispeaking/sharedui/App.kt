@@ -8,6 +8,6 @@ import ir.aispeaking.sharedui.ui.them.AppTheme
 @Composable
 fun App(
     onThemeChanged: @Composable (isDark: Boolean) -> Unit = {}
-) = AppTheme(false) {
-
+) = AppTheme {
+    onThemeChanged(AppTheme.isDark)
 }

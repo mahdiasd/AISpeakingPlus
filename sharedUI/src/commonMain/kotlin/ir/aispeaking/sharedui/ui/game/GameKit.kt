@@ -105,10 +105,19 @@ fun GameText(
         bold -> typography.persianBold
         else -> typography.persianRegular
     } ?: FontFamily.Default
+
+    val isDark = AppTheme.isDark
+    val resolvedColor = when {
+        color == Game.TextPrimary || color == Color.Unspecified -> if (isDark) Game.TextPrimary else Color(0xFF111318)
+        color == Game.TextSecondary -> if (isDark) Game.TextSecondary else Color(0xFF6B7280)
+        color == Game.TextMuted -> if (isDark) Game.TextMuted else Color(0xFF9CA3AF)
+        else -> color
+    }
+
     Text(
         text = text,
         modifier = modifier,
-        color = color,
+        color = resolvedColor,
         fontSize = size,
         fontFamily = family,
         fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
@@ -481,15 +490,17 @@ fun GameModal(
             exit = fadeOut(tween(120)) + scaleOut(targetScale = 0.96f, animationSpec = tween(120)),
         ) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                val isDark = AppTheme.isDark
+                val modalShape = RoundedCornerShape(26.dp)
                 Column(
                     modifier = Modifier
                         .padding(horizontal = 20.dp, vertical = 24.dp)
                         .widthIn(max = 390.dp)
                         .fillMaxWidth()
                         .heightIn(max = 660.dp)
-                        .clip(RoundedCornerShape(26.dp))
-                        .background(Game.PanelSolid)
-                        .border(1.dp, Game.StrokeStrong, RoundedCornerShape(26.dp))
+                        .clip(modalShape)
+                        .background(if (isDark) Game.PanelSolid else Color(0xFFFFFFFF))
+                        .border(1.dp, if (isDark) Game.StrokeStrong else Color(0x18000000), modalShape)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
@@ -545,15 +556,17 @@ fun GameTopModal(
             ) + fadeOut(tween(120)),
         ) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                val isDark = AppTheme.isDark
+                val topModalShape = RoundedCornerShape(26.dp)
                 Column(
                     modifier = Modifier
                         .padding(top = 16.dp, start = 14.dp, end = 14.dp, bottom = 20.dp)
                         .widthIn(max = 410.dp)
                         .fillMaxWidth()
                         .heightIn(max = 560.dp)
-                        .clip(RoundedCornerShape(26.dp))
-                        .background(Game.PanelSolid)
-                        .border(1.dp, Game.StrokeStrong, RoundedCornerShape(26.dp))
+                        .clip(topModalShape)
+                        .background(if (isDark) Game.PanelSolid else Color(0xFFFFFFFF))
+                        .border(1.dp, if (isDark) Game.StrokeStrong else Color(0x18000000), topModalShape)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
@@ -598,14 +611,15 @@ fun GameSheet(
             exit = slideOutVertically(tween(200)) { it } + fadeOut(tween(140)),
         ) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                val isDark = AppTheme.isDark
                 val shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = 680.dp)
                         .clip(shape)
-                        .background(Game.PanelSolid)
-                        .border(1.dp, Game.StrokeStrong, shape)
+                        .background(if (isDark) Game.PanelSolid else Color(0xFFFFFFFF))
+                        .border(1.dp, if (isDark) Game.StrokeStrong else Color(0x14000000), shape)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
@@ -620,7 +634,7 @@ fun GameSheet(
                             .width(36.dp)
                             .height(5.dp)
                             .clip(CircleShape)
-                            .background(Color(0x40FFFFFF))
+                            .background(if (isDark) Color(0x40FFFFFF) else Color(0x28000000))
                     )
                     Spacer(Modifier.height(8.dp))
                     content()

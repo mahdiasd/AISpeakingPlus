@@ -1,13 +1,12 @@
 package ir.aispeaking.chat.component
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -15,9 +14,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +25,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -84,9 +81,16 @@ enum class ChatInputMode {
 }
 
 /**
- * Ultra-compact, elegant Apple-style bottom dock for conversation.
- * Designed to maximize chat transcript visibility while offering instant access to:
- * voice recording, text input, smart hints, transcript preview, and send.
+ * 2026 Apple Liquid Glass Floating Dock for conversation.
+ *
+ * Implements:
+ * - Floating visionOS translucent glass capsule with specular top light rim.
+ * - Tactile Voice Record pill with ambient breathing glow in idle state, switching to
+ *   pulsing Apple Voice Memos live indicator while recording.
+ * - Sleek Apple text field with Royal Azure focus glow.
+ * - Instant toggle between voice and keyboard input modes.
+ * - Elevated transcript preview capsule with 1-tap edit / clear actions.
+ * - Circular Send & Champagne Gold Hint actions with tactile spring physics.
  */
 @Composable
 fun ChatBottomBar(
@@ -108,7 +112,7 @@ fun ChatBottomBar(
             .navigationBarsPadding()
             .imePadding()
     ) {
-        // Floating Compact Transcript Preview Capsule (shown when voice transcript is ready)
+        // Floating Transcript Preview Capsule (shown when speech recognition has recognized text)
         AnimatedVisibility(
             visible = text.isNotBlank() && inputMode == ChatInputMode.VOICE,
             enter = fadeIn(tween(140)) + slideInVertically(tween(160)) { it / 2 },
@@ -121,16 +125,16 @@ fun ChatBottomBar(
             )
         }
 
-        // Main Floating Compact Dock
-        val dockShape = RoundedCornerShape(26.dp)
+        // Main Floating Liquid Glass Capsule Dock
+        val dockShape = RoundedCornerShape(28.dp)
         Box(
             modifier = Modifier
                 .padding(start = 14.dp, end = 14.dp, bottom = 12.dp, top = 4.dp)
                 .fillMaxWidth()
                 .clip(dockShape)
-                .background(Game.Panel)
-                .border(1.dp, Game.StrokeStrong, dockShape)
-                .padding(horizontal = 10.dp, vertical = 7.dp)
+                .background(AppleChatTheme.GlassPanel)
+                .border(1.dp, AppleChatTheme.SpecularStrokeBrush, dockShape)
+                .padding(horizontal = 10.dp, vertical = 8.dp)
         ) {
             when (inputMode) {
                 ChatInputMode.VOICE -> CompactVoiceRow(
@@ -160,7 +164,7 @@ fun ChatBottomBar(
 
 /**
  * Compact voice controls row:
- * [Keyboard toggle] --- [Pulsing recording pill OR Apple record button] --- [Send OR Hint]
+ * [Keyboard toggle] --- [Apple Tactile Record Pill] --- [Send OR Hint]
  */
 @Composable
 private fun CompactVoiceRow(
@@ -184,10 +188,10 @@ private fun CompactVoiceRow(
                 icon = Res.drawable.ic_keyboard,
                 onClick = onSwitchToText,
                 contentDescription = "تایپ متنی",
-                size = 40.dp,
+                size = 42.dp,
                 iconSize = 20.dp,
                 container = Color(0x1AFFFFFF),
-                border = Color(0x14FFFFFF)
+                border = AppleChatTheme.SubtleBorderColor
             )
 
             // Center: Interactive Recording Pill
@@ -207,12 +211,12 @@ private fun CompactVoiceRow(
 
             // Trailing: Send when text is ready, otherwise Hint button
             if (text.isNotBlank()) {
-                AppleSendButton(onClick = onSendClick, size = 40.dp)
+                AppleSendButton(onClick = onSendClick, size = 42.dp)
             } else {
                 AppleHintButton(
                     hintsUsedCount = hintsUsedCount,
                     isRequesting = isRequestingHint,
-                    size = 40.dp,
+                    size = 42.dp,
                     onClick = onHintClick
                 )
             }
@@ -253,10 +257,10 @@ private fun CompactTextRow(
                 icon = Res.drawable.ic_microphone,
                 onClick = onSwitchToVoice,
                 contentDescription = "مکالمه صوتی",
-                size = 40.dp,
+                size = 42.dp,
                 iconSize = 20.dp,
                 container = Color(0x1AFFFFFF),
-                border = Color(0x14FFFFFF)
+                border = AppleChatTheme.SubtleBorderColor
             )
 
             // Apple Compact Input Pill
@@ -281,7 +285,7 @@ private fun CompactTextRow(
                         } else false
                     },
                 textStyle = textStyle,
-                cursorBrush = SolidColor(Game.Blue),
+                cursorBrush = SolidColor(AppleChatTheme.PrimaryAzure),
                 maxLines = 4,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(onSend = { if (canSend) onSendClick() }),
@@ -290,8 +294,12 @@ private fun CompactTextRow(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 42.dp, max = 110.dp)
-                            .background(Game.PanelRaised, fieldShape)
-                            .border(1.dp, if (canSend) Game.Blue.copy(alpha = 0.65f) else Color(0x22FFFFFF), fieldShape)
+                            .background(AppleChatTheme.GlassPanelRaised, fieldShape)
+                            .border(
+                                1.dp,
+                                if (canSend) AppleChatTheme.PrimaryAzure.copy(alpha = 0.7f) else Color(0x22FFFFFF),
+                                fieldShape
+                            )
                             .padding(horizontal = 16.dp, vertical = 9.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
@@ -310,12 +318,12 @@ private fun CompactTextRow(
 
             // Trailing: Send when entered, otherwise Hint
             if (canSend) {
-                AppleSendButton(onClick = onSendClick, size = 40.dp)
+                AppleSendButton(onClick = onSendClick, size = 42.dp)
             } else {
                 AppleHintButton(
                     hintsUsedCount = hintsUsedCount,
                     isRequesting = isRequestingHint,
-                    size = 40.dp,
+                    size = 42.dp,
                     onClick = onHintClick
                 )
             }
@@ -333,15 +341,16 @@ private fun CompactTranscriptCapsule(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .padding(horizontal = 14.dp, vertical = 4.dp)
     ) {
+        val shape = RoundedCornerShape(16.dp)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(Game.PanelRaised)
-                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(14.dp))
-                .padding(horizontal = 12.dp, vertical = 6.dp),
+                .clip(shape)
+                .background(AppleChatTheme.GlassPanelRaised)
+                .border(1.dp, AppleChatTheme.SpecularStrokeBrush, shape)
+                .padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -349,7 +358,7 @@ private fun CompactTranscriptCapsule(
                 GameText(
                     text = text,
                     size = 14.sp,
-                    lineHeight = 19.sp,
+                    lineHeight = 20.sp,
                     latin = true,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -357,196 +366,214 @@ private fun CompactTranscriptCapsule(
                 )
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 GameIconButton(
                     icon = Res.drawable.ic_edit,
                     onClick = onEdit,
                     contentDescription = "ویرایش",
-                    size = 28.dp,
-                    iconSize = 14.dp,
-                    tint = Game.Sky,
-                    container = Color(0x14FFFFFF),
-                    border = Color.Transparent
+                    size = 34.dp,
+                    iconSize = 16.dp,
+                    tint = AppleChatTheme.SuccessCyan,
+                    container = Color(0x18FFFFFF),
+                    border = AppleChatTheme.SubtleBorderColor
                 )
                 GameIconButton(
                     icon = Res.drawable.ic_clear,
                     onClick = onClear,
                     contentDescription = "پاک کردن",
-                    size = 28.dp,
-                    iconSize = 14.dp,
-                    tint = Game.Coral,
-                    container = Color(0x14FFFFFF),
-                    border = Color.Transparent
+                    size = 34.dp,
+                    iconSize = 16.dp,
+                    tint = AppleChatTheme.Coral,
+                    container = Color(0x18FFFFFF),
+                    border = AppleChatTheme.SubtleBorderColor
                 )
             }
         }
     }
 }
 
-/** Apple Voice Memos style active recording pill with pulsing wave and stop button */
+/** Apple Voice Memos style active recording pill with pulsating waveform and stop button */
 @Composable
 private fun AppleRecordingActivePill(onStop: () -> Unit) {
     val transition = rememberInfiniteTransition(label = "rec_pulse")
     val alpha by transition.animateFloat(
         initialValue = 0.4f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(700, easing = LinearEasing), RepeatMode.Reverse),
+        animationSpec = infiniteRepeatable(tween(650, easing = LinearEasing), RepeatMode.Reverse),
         label = "rec_dot_alpha"
     )
 
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.95f else 1f,
-        animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f),
-        label = "rec_stop_press"
+    val bar1 by transition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(420, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "wave_bar1"
     )
+    val bar2 by transition.animateFloat(
+        initialValue = 0.9f,
+        targetValue = 0.2f,
+        animationSpec = infiniteRepeatable(tween(360, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "wave_bar2"
+    )
+    val bar3 by transition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 0.95f,
+        animationSpec = infiniteRepeatable(tween(480, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "wave_bar3"
+    )
+
+    val shape = RoundedCornerShape(22.dp)
 
     Row(
         modifier = Modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(RoundedCornerShape(20.dp))
-            .background(Game.Coral.copy(alpha = 0.16f))
-            .border(1.dp, Game.Coral.copy(alpha = 0.45f), RoundedCornerShape(20.dp))
-            .clickable(interactionSource = interaction, indication = null, onClick = onStop)
-            .padding(horizontal = 14.dp, vertical = 6.dp),
+            .applePressEffect(targetScale = 0.95f, onClick = onStop)
+            .clip(shape)
+            .background(AppleChatTheme.Coral.copy(alpha = 0.16f))
+            .border(1.dp, AppleChatTheme.Coral.copy(alpha = 0.55f), shape)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        // Pulsing red recording dot
         Box(
             modifier = Modifier
                 .size(9.dp)
                 .graphicsLayer { this.alpha = alpha }
-                .background(Game.Coral, CircleShape)
+                .background(AppleChatTheme.Coral, CircleShape)
         )
+
+        // Mini audio wave
+        Row(
+            modifier = Modifier.height(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            listOf(bar1, bar2, bar3).forEach { barVal ->
+                Box(
+                    modifier = Modifier
+                        .width(2.5.dp)
+                        .height((4 + 10 * barVal).dp)
+                        .background(AppleChatTheme.Coral, RoundedCornerShape(1.dp))
+                )
+            }
+        }
+
         GameText(
             text = "در حال شنیدن… لمس برای توقف",
             size = 12.sp,
             bold = true,
-            color = Game.Coral
+            color = AppleChatTheme.Coral
         )
+
+        // Stop square icon
         Box(
             modifier = Modifier
-                .size(14.dp)
-                .background(Game.Coral, RoundedCornerShape(3.dp))
+                .size(13.dp)
+                .background(AppleChatTheme.Coral, RoundedCornerShape(3.dp))
         )
     }
 }
 
-/** Apple-style Record button capsule in idle state */
+/**
+ * 2026 Apple Record pill in idle state.
+ * Features subtle ambient breathing light in Royal Azure / Indigo (replacing green).
+ */
 @Composable
 private fun AppleRecordPill(
     hasText: Boolean,
     onClick: () -> Unit
 ) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.95f else 1f,
-        animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f),
-        label = "rec_start_press"
+    val transition = rememberInfiniteTransition(label = "idle_breathing")
+    val breathGlow by transition.animateFloat(
+        initialValue = 0.18f,
+        targetValue = 0.34f,
+        animationSpec = infiniteRepeatable(tween(1400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "breath_glow"
     )
 
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(22.dp)
+    val pillBg = if (hasText) {
+        Color(0x22FFFFFF)
+    } else {
+        AppleChatTheme.PrimaryAzure.copy(alpha = breathGlow)
+    }
+    val pillBorder = if (hasText) {
+        Color(0x28FFFFFF)
+    } else {
+        AppleChatTheme.PrimaryAzure.copy(alpha = 0.55f)
+    }
+    val accentColor = if (hasText) Game.TextPrimary else AppleChatTheme.SuccessCyan
+
     Row(
         modifier = Modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
+            .applePressEffect(targetScale = 0.95f, onClick = onClick)
             .clip(shape)
-            .background(if (hasText) Color(0x22FFFFFF) else Game.Mint.copy(alpha = 0.18f))
-            .border(1.dp, if (hasText) Color(0x28FFFFFF) else Game.Mint.copy(alpha = 0.5f), shape)
-            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 7.dp),
+            .background(pillBg)
+            .border(1.dp, pillBorder, shape)
+            .padding(horizontal = 18.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Icon(
             painter = painterResource(Res.drawable.ic_microphone),
             contentDescription = "ضبط صدا",
-            tint = if (hasText) Game.TextPrimary else Game.Mint,
-            modifier = Modifier.size(17.dp)
+            tint = accentColor,
+            modifier = Modifier.size(18.dp)
         )
         GameText(
             text = if (hasText) "ضبط مجدد صدا" else "برای صحبت لمس کنید",
             size = 13.sp,
             bold = true,
-            color = if (hasText) Game.TextPrimary else Game.Mint
+            color = accentColor
         )
     }
 }
 
-/** Apple circular vibrant Send button */
+/** Apple circular vibrant Send button with Royal Azure gradient */
 @Composable
 private fun AppleSendButton(onClick: () -> Unit, size: androidx.compose.ui.unit.Dp) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.92f else 1f,
-        animationSpec = spring(dampingRatio = 0.82f, stiffness = 450f),
-        label = "apple_send_press"
-    )
     Box(
         modifier = Modifier
             .size(size)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
+            .applePressEffect(targetScale = 0.92f, onClick = onClick)
             .clip(CircleShape)
-            .background(Brush.verticalGradient(listOf(Color(0xFF0A84FF), Color(0xFF0071E3))))
-            .border(1.dp, Color.White.copy(alpha = 0.25f), CircleShape)
-            .clickable(interactionSource = interaction, indication = null, onClick = onClick),
+            .background(
+                Brush.verticalGradient(
+                    listOf(AppleChatTheme.PrimaryAzure, AppleChatTheme.PrimaryIndigo)
+                )
+            )
+            .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(Res.drawable.ic_send),
             contentDescription = "ارسال پیام",
             tint = Color.White,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(19.dp)
         )
     }
 }
 
-/** Apple compact circular Hint button with smart counter badge */
+/** Apple compact circular Hint button with Champagne Gold badge */
 @Composable
 private fun AppleHintButton(
     hintsUsedCount: Int,
     isRequesting: Boolean,
-    size: androidx.compose.ui.unit.Dp = 40.dp,
+    size: androidx.compose.ui.unit.Dp = 42.dp,
     onClick: () -> Unit
 ) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed && !isRequesting) 0.92f else 1f,
-        animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f),
-        label = "apple_hint_press"
-    )
-
     Box(
         modifier = Modifier
             .size(size)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
+            .applePressEffect(enabled = !isRequesting, targetScale = 0.92f, onClick = onClick)
             .clip(CircleShape)
-            .background(if (hintsUsedCount > 0) Game.Gold.copy(alpha = 0.2f) else Color(0x1AFFFFFF))
+            .background(
+                if (hintsUsedCount > 0) AppleChatTheme.Gold.copy(alpha = 0.2f) else Color(0x1AFFFFFF)
+            )
             .border(
                 1.dp,
-                if (hintsUsedCount > 0) Game.Gold.copy(alpha = 0.55f) else Color(0x14FFFFFF),
+                if (hintsUsedCount > 0) AppleChatTheme.Gold.copy(alpha = 0.55f) else Color(0x14FFFFFF),
                 CircleShape
-            )
-            .clickable(
-                interactionSource = interaction,
-                indication = null,
-                enabled = !isRequesting,
-                onClick = onClick
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -554,22 +581,22 @@ private fun AppleHintButton(
             CircularProgressIndicator(
                 modifier = Modifier.size(16.dp),
                 strokeWidth = 2.dp,
-                color = Game.Gold
+                color = AppleChatTheme.Gold
             )
         } else {
             Icon(
                 painter = painterResource(Res.drawable.ic_lamp),
                 contentDescription = "راهنما",
-                tint = if (hintsUsedCount > 0) Game.Gold else Game.TextSecondary,
+                tint = if (hintsUsedCount > 0) AppleChatTheme.Gold else Game.TextSecondary,
                 modifier = Modifier.size(18.dp)
             )
             if (hintsUsedCount > 0) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(2.dp)
+                        .padding(3.dp)
                         .size(8.dp)
-                        .background(Game.Gold, CircleShape)
+                        .background(AppleChatTheme.Gold, CircleShape)
                 )
             }
         }

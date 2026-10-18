@@ -41,7 +41,15 @@ class MyModule
 class MyApp
 
 fun initKoin() {
-    startKoin<MyApp> {
+    val koinApp = startKoin<MyApp> {
         printLogger()
     }
+    try {
+        val themeRepo = koinApp.koin.getOrNull<ir.aispeaking.domain.repository.theme.ThemeRepository>()
+        if (themeRepo != null) {
+            ir.aispeaking.sharedui.ui.them.ThemeController.initialize(themeRepo.getThemeMode()) { key ->
+                themeRepo.saveThemeMode(key)
+            }
+        }
+    } catch (_: Throwable) {}
 }
