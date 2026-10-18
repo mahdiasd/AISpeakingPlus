@@ -366,26 +366,26 @@ private fun CompactTranscriptCapsule(
                 )
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 GameIconButton(
                     icon = Res.drawable.ic_edit,
                     onClick = onEdit,
                     contentDescription = "ویرایش",
-                    size = 30.dp,
-                    iconSize = 15.dp,
+                    size = 34.dp,
+                    iconSize = 16.dp,
                     tint = AppleChatTheme.SuccessCyan,
-                    container = Color(0x14FFFFFF),
-                    border = Color.Transparent
+                    container = Color(0x18FFFFFF),
+                    border = AppleChatTheme.SubtleBorderColor
                 )
                 GameIconButton(
                     icon = Res.drawable.ic_clear,
                     onClick = onClear,
                     contentDescription = "پاک کردن",
-                    size = 30.dp,
-                    iconSize = 15.dp,
+                    size = 34.dp,
+                    iconSize = 16.dp,
                     tint = AppleChatTheme.Coral,
-                    container = Color(0x14FFFFFF),
-                    border = Color.Transparent
+                    container = Color(0x18FFFFFF),
+                    border = AppleChatTheme.SubtleBorderColor
                 )
             }
         }

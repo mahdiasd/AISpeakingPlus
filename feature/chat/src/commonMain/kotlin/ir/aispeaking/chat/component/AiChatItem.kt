@@ -167,7 +167,9 @@ fun AiChatItem(
                         when (chat.voiceState) {
                             AiVoiceState.PendingToPlay -> GameChip(
                                 text = "در حال آماده‌سازی",
-                                accent = AppleChatTheme.SuccessCyan
+                                accent = AppleChatTheme.SuccessCyan,
+                                container = Color(0xD9181B2A),
+                                border = AppleChatTheme.SubtleBorderColor
                             )
                             AiVoiceState.Playing -> PlayingVoiceChip(onClick = onStopVoice)
                             AiVoiceState.Stopped -> if (!chat.audioUrl.isNullOrBlank()) {
@@ -175,6 +177,8 @@ fun AiChatItem(
                                     text = "پخش صدا",
                                     icon = Res.drawable.ic_play,
                                     accent = AppleChatTheme.SuccessCyan,
+                                    container = Color(0xD9181B2A),
+                                    border = AppleChatTheme.SubtleBorderColor,
                                     onClick = onPlayVoice
                                 )
                             }
@@ -185,6 +189,8 @@ fun AiChatItem(
                                 text = if (showTranslation) "پنهان کردن ترجمه" else "ترجمه",
                                 icon = Res.drawable.ic_translate,
                                 accent = AppleChatTheme.PrimaryAzure,
+                                container = Color(0xD9181B2A),
+                                border = AppleChatTheme.SubtleBorderColor,
                                 active = showTranslation,
                                 onClick = { showTranslation = !showTranslation }
                             )
@@ -194,6 +200,8 @@ fun AiChatItem(
                             text = if (copied) "کپی شد" else "کپی",
                             icon = if (copied) Res.drawable.ic_done else Res.drawable.ic_copy,
                             accent = if (copied) AppleChatTheme.SuccessCyan else Game.TextSecondary,
+                            container = Color(0xD9181B2A),
+                            border = AppleChatTheme.SubtleBorderColor,
                             active = copied,
                             onClick = {
                                 clipboardManager.setText(AnnotatedString(chat.message))

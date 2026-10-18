@@ -89,6 +89,8 @@ fun UserChatItem(
                             text = "ارسال نشد؛ دوباره تلاش کن",
                             icon = Res.drawable.ic_refresh,
                             accent = AppleChatTheme.Coral,
+                            container = Color(0xD9181B2A),
+                            border = AppleChatTheme.Coral.copy(alpha = 0.5f),
                             active = true,
                             onClick = onRetry
                         )

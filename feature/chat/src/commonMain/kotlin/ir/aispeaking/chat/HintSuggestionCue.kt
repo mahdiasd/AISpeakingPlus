@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.chat.component.AppleChatTheme
 import ir.aispeaking.sharedui.Res
@@ -91,12 +92,16 @@ fun HintSuggestionCue(
                         text = if (isError) "خطا در راهنمایی" else "جمله پیشنهادی",
                         icon = if (isError) Res.drawable.ic_close else Res.drawable.ic_lamp,
                         accent = if (isError) AppleChatTheme.Coral else AppleChatTheme.Gold,
+                        container = Color(0xD9181B2A),
+                        border = if (isError) AppleChatTheme.Coral.copy(alpha = 0.5f) else AppleChatTheme.Gold.copy(alpha = 0.5f),
                         active = true
                     )
                     GameChip(
                         text = "بستن",
                         icon = Res.drawable.ic_close,
                         accent = Game.TextSecondary,
+                        container = Color(0xD9181B2A),
+                        border = AppleChatTheme.SubtleBorderColor,
                         onClick = onDismiss
                     )
                 }
@@ -114,6 +119,8 @@ fun HintSuggestionCue(
                             text = "تلاش مجدد",
                             icon = Res.drawable.ic_refresh,
                             accent = AppleChatTheme.Gold,
+                            container = Color(0xD9181B2A),
+                            border = AppleChatTheme.Gold.copy(alpha = 0.5f),
                             active = true,
                             onClick = onRetry
                         )
@@ -145,6 +152,8 @@ fun HintSuggestionCue(
                         text = "استفاده از این جمله",
                         icon = Res.drawable.ic_done,
                         accent = AppleChatTheme.SuccessCyan,
+                        container = Color(0xD9181B2A),
+                        border = AppleChatTheme.SuccessCyan.copy(alpha = 0.6f),
                         active = true,
                         onClick = { suggestionEn?.let { onApplySuggestion(it) } }
                     )
