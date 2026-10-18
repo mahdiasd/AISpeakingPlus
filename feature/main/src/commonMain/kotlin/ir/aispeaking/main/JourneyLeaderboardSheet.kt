@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.stage.JourneyLeaderboard
 import ir.aispeaking.domain.model.stage.LeaderboardEntry
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.them.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,10 +29,12 @@ fun JourneyLeaderboardSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = AppTheme.isDark
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Color(0xFF0F172A),
+        containerColor = Game.PanelSolid,
+        contentColor = Game.TextPrimary,
         modifier = modifier
     ) {
         Column(
@@ -41,7 +45,7 @@ fun JourneyLeaderboardSheet(
         ) {
             Text(
                 text = "🏆 جدول رده‌بندی مسافران",
-                color = Color.White,
+                color = Game.TextPrimary,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
@@ -51,7 +55,7 @@ fun JourneyLeaderboardSheet(
 
             Text(
                 text = "بر اساس بیشترین ستاره‌ها و مراحل تکمیل‌شده مسیر داستانی",
-                color = Color(0xFF94A3B8),
+                color = Game.TextSecondary,
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center
             )
@@ -63,7 +67,13 @@ fun JourneyLeaderboardSheet(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B))
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isDark) Color(0xFF1E1B4B) else Color(0xFFEFF6FF)
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        if (isDark) Color(0x336366F1) else Color(0x333B82F6)
+                    )
                 ) {
                     Row(
                         modifier = Modifier
@@ -77,7 +87,7 @@ fun JourneyLeaderboardSheet(
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFF6366F1)),
+                                    .background(Game.Blue),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -89,8 +99,12 @@ fun JourneyLeaderboardSheet(
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
-                                Text("رتبه شما", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                                Text("${userRank.completedStages} مرحله تکمیل شده", color = Color(0xFFA5B4FC), fontSize = 12.sp)
+                                Text("رتبه شما", color = Game.TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                Text(
+                                    "${userRank.completedStages} مرحله تکمیل شده",
+                                    color = if (isDark) Color(0xFFA5B4FC) else Game.Blue,
+                                    fontSize = 12.sp
+                                )
                             }
                         }
 
@@ -99,7 +113,7 @@ fun JourneyLeaderboardSheet(
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "${userRank.totalStars}",
-                                color = Color(0xFFFBBF24),
+                                color = Game.Gold,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -134,7 +148,8 @@ private fun LeaderboardEntryRow(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
+        colors = CardDefaults.cardColors(containerColor = Game.PanelRaised),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Game.Stroke)
     ) {
         Row(
             modifier = Modifier
@@ -155,7 +170,7 @@ private fun LeaderboardEntryRow(
                         3 -> Text("🥉", fontSize = 20.sp)
                         else -> Text(
                             text = "${entry.rank}",
-                            color = Color(0xFF94A3B8),
+                            color = Game.TextSecondary,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -167,13 +182,13 @@ private fun LeaderboardEntryRow(
                 Column {
                     Text(
                         text = entry.displayName,
-                        color = Color.White,
+                        color = Game.TextPrimary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
                         text = "${entry.completedStages} مرحله",
-                        color = Color(0xFF64748B),
+                        color = Game.TextSecondary,
                         fontSize = 11.sp
                     )
                 }
@@ -184,7 +199,7 @@ private fun LeaderboardEntryRow(
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "${entry.totalStars}",
-                    color = Color(0xFFFBBF24),
+                    color = Game.Gold,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold
                 )

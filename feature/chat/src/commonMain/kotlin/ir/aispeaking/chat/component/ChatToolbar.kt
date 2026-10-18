@@ -61,6 +61,7 @@ fun ChatToolbar(
     onFinishConversationClick: () -> Unit
 ) {
     val maxTurns = (stage?.maxTurns ?: 0).coerceAtLeast(1)
+    val isDark = AppTheme.isDark
 
     Column(
         modifier = modifier
@@ -80,7 +81,7 @@ fun ChatToolbar(
                 contentDescription = "بازگشت",
                 size = 42.dp,
                 iconSize = 20.dp,
-                container = Color(0x22FFFFFF),
+                container = if (isDark) Color(0x22FFFFFF) else Color(0x0F000000),
                 border = AppleChatTheme.SpecularBorderColor
             )
 
@@ -133,7 +134,7 @@ fun ChatToolbar(
                                 GameText(
                                     text = "سطح $userLevel",
                                     size = 10.sp,
-                                    color = Color(0xFFA5A3F6),
+                                    color = if (isDark) Color(0xFFA5A3F6) else AppleChatTheme.PrimaryIndigo,
                                     bold = true
                                 )
                             }
@@ -198,7 +199,7 @@ fun ChatToolbar(
                         .fillMaxWidth()
                         .height(6.dp)
                         .clip(CircleShape)
-                        .background(Color(0x28FFFFFF))
+                        .background(if (isDark) Color(0x28FFFFFF) else Color(0x1F000000))
                 ) {
                     Box(
                         modifier = Modifier
@@ -229,15 +230,17 @@ private fun AppleObjectiveChip(
     text: String,
     onClick: () -> Unit
 ) {
+    val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(50)
+    val accent = if (isDark) AppleChatTheme.SuccessCyan else AppleChatTheme.PrimaryAzure
     Row(
         modifier = Modifier
             .applePressEffect(targetScale = 0.94f, onClick = onClick)
             .clip(shape)
-            .background(Color(0xD9181A28))
+            .background(if (isDark) Color(0xD9181A28) else Color(0xFFE8F2FF))
             .border(
                 1.dp,
-                AppleChatTheme.SuccessCyan.copy(alpha = 0.45f),
+                accent.copy(alpha = if (isDark) 0.45f else 0.5f),
                 shape
             )
             .padding(horizontal = 12.dp, vertical = 7.dp),
@@ -247,14 +250,14 @@ private fun AppleObjectiveChip(
         Icon(
             painter = painterResource(Res.drawable.ic_lamp),
             contentDescription = null,
-            tint = AppleChatTheme.SuccessCyan,
+            tint = accent,
             modifier = Modifier.size(15.dp)
         )
         GameText(
             text = text,
             size = 12.sp,
             bold = true,
-            color = AppleChatTheme.SuccessCyan,
+            color = accent,
             maxLines = 1
         )
     }

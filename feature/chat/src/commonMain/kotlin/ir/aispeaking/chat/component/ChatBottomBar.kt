@@ -190,7 +190,7 @@ private fun CompactVoiceRow(
                 contentDescription = "تایپ متنی",
                 size = 42.dp,
                 iconSize = 20.dp,
-                container = Color(0x1AFFFFFF),
+                container = if (AppTheme.isDark) Color(0x1AFFFFFF) else Color(0x0F000000),
                 border = AppleChatTheme.SubtleBorderColor
             )
 
@@ -259,7 +259,7 @@ private fun CompactTextRow(
                 contentDescription = "مکالمه صوتی",
                 size = 42.dp,
                 iconSize = 20.dp,
-                container = Color(0x1AFFFFFF),
+                container = if (AppTheme.isDark) Color(0x1AFFFFFF) else Color(0x0F000000),
                 border = AppleChatTheme.SubtleBorderColor
             )
 
@@ -297,7 +297,7 @@ private fun CompactTextRow(
                             .background(AppleChatTheme.GlassPanelRaised, fieldShape)
                             .border(
                                 1.dp,
-                                if (canSend) AppleChatTheme.PrimaryAzure.copy(alpha = 0.7f) else Color(0x22FFFFFF),
+                                if (canSend) AppleChatTheme.PrimaryAzure.copy(alpha = 0.7f) else AppleChatTheme.SubtleBorderColor,
                                 fieldShape
                             )
                             .padding(horizontal = 16.dp, vertical = 9.dp),
@@ -374,7 +374,7 @@ private fun CompactTranscriptCapsule(
                     size = 34.dp,
                     iconSize = 16.dp,
                     tint = AppleChatTheme.SuccessCyan,
-                    container = Color(0x18FFFFFF),
+                    container = if (AppTheme.isDark) Color(0x18FFFFFF) else Color(0x0F000000),
                     border = AppleChatTheme.SubtleBorderColor
                 )
                 GameIconButton(
@@ -384,7 +384,7 @@ private fun CompactTranscriptCapsule(
                     size = 34.dp,
                     iconSize = 16.dp,
                     tint = AppleChatTheme.Coral,
-                    container = Color(0x18FFFFFF),
+                    container = if (AppTheme.isDark) Color(0x18FFFFFF) else Color(0x0F000000),
                     border = AppleChatTheme.SubtleBorderColor
                 )
             }
@@ -492,17 +492,18 @@ private fun AppleRecordPill(
     )
 
     val shape = RoundedCornerShape(22.dp)
+    val isDark = AppTheme.isDark
     val pillBg = if (hasText) {
-        Color(0x22FFFFFF)
+        if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
     } else {
         AppleChatTheme.PrimaryAzure.copy(alpha = breathGlow)
     }
     val pillBorder = if (hasText) {
-        Color(0x28FFFFFF)
+        AppleChatTheme.SpecularBorderColor
     } else {
         AppleChatTheme.PrimaryAzure.copy(alpha = 0.55f)
     }
-    val accentColor = if (hasText) Game.TextPrimary else AppleChatTheme.SuccessCyan
+    val accentColor = if (hasText) Game.TextPrimary else (if (isDark) AppleChatTheme.SuccessCyan else AppleChatTheme.PrimaryAzure)
 
     Row(
         modifier = Modifier
@@ -562,17 +563,18 @@ private fun AppleHintButton(
     size: androidx.compose.ui.unit.Dp = 42.dp,
     onClick: () -> Unit
 ) {
+    val isDark = AppTheme.isDark
     Box(
         modifier = Modifier
             .size(size)
             .applePressEffect(enabled = !isRequesting, targetScale = 0.92f, onClick = onClick)
             .clip(CircleShape)
             .background(
-                if (hintsUsedCount > 0) AppleChatTheme.Gold.copy(alpha = 0.2f) else Color(0x1AFFFFFF)
+                if (hintsUsedCount > 0) AppleChatTheme.Gold.copy(alpha = 0.2f) else if (isDark) Color(0x1AFFFFFF) else Color(0x0F000000)
             )
             .border(
                 1.dp,
-                if (hintsUsedCount > 0) AppleChatTheme.Gold.copy(alpha = 0.55f) else Color(0x14FFFFFF),
+                if (hintsUsedCount > 0) AppleChatTheme.Gold.copy(alpha = 0.55f) else AppleChatTheme.SubtleBorderColor,
                 CircleShape
             ),
         contentAlignment = Alignment.Center

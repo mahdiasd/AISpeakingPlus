@@ -374,7 +374,6 @@ private fun StageLoadErrorState(
                 GameChip(
                     text = "تلاش مجدد",
                     accent = AppleChatTheme.PrimaryAzure,
-                    container = Color(0xD9181B2A),
                     border = AppleChatTheme.PrimaryAzure.copy(alpha = 0.5f),
                     active = true,
                     onClick = onRetry
@@ -382,7 +381,6 @@ private fun StageLoadErrorState(
                 GameChip(
                     text = "بازگشت",
                     accent = Game.TextSecondary,
-                    container = Color(0xD9181B2A),
                     border = AppleChatTheme.SubtleBorderColor,
                     active = false,
                     onClick = onBack

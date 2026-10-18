@@ -57,17 +57,25 @@ fun main() {
 
     ComposeViewport {
         AppTheme {
-            // Apple-style dark ambient backdrop shown around the phone frame on large screens.
+            val isDark = AppTheme.isDark
+            // Apple-style ambient backdrop shown around the phone frame on large screens.
+            val backdropBrush = if (isDark) {
+                Brush.radialGradient(
+                    0.0f to Color(0xFF161822),
+                    0.6f to Color(0xFF0A0C10),
+                    1.0f to Color(0xFF000000)
+                )
+            } else {
+                Brush.radialGradient(
+                    0.0f to Color(0xFFF9FAFB),
+                    0.6f to Color(0xFFEDF0F3),
+                    1.0f to Color(0xFFE2E6EB)
+                )
+            }
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.radialGradient(
-                            0.0f to Color(0xFF161822),
-                            0.6f to Color(0xFF0A0C10),
-                            1.0f to Color(0xFF000000)
-                        )
-                    ),
+                    .background(backdropBrush),
                 contentAlignment = Alignment.Center
             ) {
                 BoxWithConstraints(
@@ -94,10 +102,10 @@ fun main() {
                                     .shadow(
                                         elevation = 32.dp,
                                         shape = frame,
-                                        spotColor = Color(0x77000000),
-                                        ambientColor = Color(0x44000000)
+                                        spotColor = if (isDark) Color(0x77000000) else Color(0x24000000),
+                                        ambientColor = if (isDark) Color(0x44000000) else Color(0x12000000)
                                     )
-                                    .border(1.5.dp, Color(0x28FFFFFF), frame)
+                                    .border(1.5.dp, if (isDark) Color(0x28FFFFFF) else Color(0x18000000), frame)
                                     .clip(frame)
                                     .background(Game.Ink)
                             ) {

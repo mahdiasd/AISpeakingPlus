@@ -89,7 +89,6 @@ fun UserChatItem(
                             text = "ارسال نشد؛ دوباره تلاش کن",
                             icon = Res.drawable.ic_refresh,
                             accent = AppleChatTheme.Coral,
-                            container = Color(0xD9181B2A),
                             border = AppleChatTheme.Coral.copy(alpha = 0.5f),
                             active = true,
                             onClick = onRetry
@@ -139,13 +138,15 @@ private fun GrammarOkTag() {
  */
 @Composable
 private fun GrammarTipCard(text: String) {
+    val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(16.dp)
+    val accent = if (isDark) AppleChatTheme.Gold else AppleChatTheme.GoldDeep
     Column(
         modifier = Modifier
             .widthIn(max = 310.dp)
             .clip(shape)
-            .background(Color(0xD91E1C1A))
-            .border(1.dp, AppleChatTheme.Gold.copy(alpha = 0.5f), shape)
+            .background(if (isDark) Color(0xD91E1C1A) else Color(0xFFFFFBEB))
+            .border(1.dp, accent.copy(alpha = if (isDark) 0.5f else 0.45f), shape)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -156,14 +157,14 @@ private fun GrammarTipCard(text: String) {
             Icon(
                 painter = painterResource(Res.drawable.ic_spell_check),
                 contentDescription = null,
-                tint = AppleChatTheme.Gold,
+                tint = accent,
                 modifier = Modifier.size(15.dp)
             )
             GameText(
                 text = "نکته گرامری",
                 size = 12.sp,
                 bold = true,
-                color = AppleChatTheme.Gold
+                color = accent
             )
         }
         GameText(

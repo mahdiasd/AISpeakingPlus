@@ -89,8 +89,7 @@ fun FinishConversationDialog(
                         size = 48.dp,
                         spacing = 8.dp,
                         animate = true,
-                        earnedTint = AppleChatTheme.Gold,
-                        emptyTint = Color(0x44FFFFFF)
+                        earnedTint = AppleChatTheme.Gold
                     )
                     GameText(
                         text = when (stars) {
@@ -117,8 +116,7 @@ fun FinishConversationDialog(
                         size = 48.dp,
                         spacing = 8.dp,
                         animate = false,
-                        earnedTint = AppleChatTheme.Gold,
-                        emptyTint = Color(0x33FFFFFF)
+                        earnedTint = AppleChatTheme.Gold
                     )
                     GameText(
                         text = "هدف مرحله انجام نشده است",
