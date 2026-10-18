@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
@@ -38,6 +39,7 @@ import ir.aispeaking.sharedui.ic_trend_up
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.fa
+import ir.aispeaking.sharedui.ui.them.AppTheme
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
@@ -60,12 +62,12 @@ fun AchievementStatsCard(
             Icon(
                 painter = painterResource(Res.drawable.ic_trend_up),
                 contentDescription = null,
-                tint = Game.TextPrimary,
+                tint = if (AppTheme.isDark) Game.TextPrimary else Color(0xFF111318),
                 modifier = Modifier.size(18.dp)
             )
             GameText(
                 text = "آمار و پیشرفت یادگیری",
-                color = Game.TextPrimary,
+                color = if (AppTheme.isDark) Game.TextPrimary else Color(0xFF111318),
                 size = 16.sp,
                 bold = true
             )
@@ -117,9 +119,9 @@ fun AchievementStatsCard(
                 title = "مراحل تمام‌شده",
                 value = user.completedStagesCount.fa(),
                 icon = Res.drawable.ic_gamepad,
-                iconTint = Game.Mint,
-                iconBg = Color(0x2630D158),
-                iconStroke = Color(0x4D30D158),
+                iconTint = if (AppTheme.isDark) Color(0xFF38BDF8) else Color(0xFF0284C7),
+                iconBg = if (AppTheme.isDark) Color(0x2638BDF8) else Color(0x140284C7),
+                iconStroke = if (AppTheme.isDark) Color(0x4D38BDF8) else Color(0x260284C7),
                 modifier = Modifier.weight(1f)
             )
         }
@@ -139,14 +141,27 @@ private fun StatCard(
     iconStroke: Color,
     modifier: Modifier = Modifier
 ) {
+    val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(22.dp)
+    val cardBg = if (isDark) Color(0xFF1B1C23) else Color(0xFFFFFFFF)
+    val cardBorder = if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
 
     Box(
         modifier = modifier
             .height(118.dp)
+            .then(
+                if (!isDark) {
+                    Modifier.shadow(
+                        elevation = 6.dp,
+                        shape = shape,
+                        spotColor = Color(0x0C000000),
+                        ambientColor = Color(0x06000000)
+                    )
+                } else Modifier
+            )
             .clip(shape)
-            .background(Color(0xFF1B1C23))
-            .border(1.dp, Color(0x22FFFFFF), shape)
+            .background(cardBg)
+            .border(1.dp, cardBorder, shape)
             .padding(14.dp)
     ) {
         Column(
@@ -218,7 +233,14 @@ private fun LevelStatCard(
         label = "level_stat_press"
     )
 
+    val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(22.dp)
+    val cardBg = if (isDark) Color(0xFF1B1C23) else Color(0xFFFFFFFF)
+    val cardBorder = if (onLevelClick != null) {
+        if (isDark) Color(0x385E5CE6) else Color(0x335E5CE6)
+    } else {
+        if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
+    }
 
     Box(
         modifier = modifier
@@ -227,9 +249,19 @@ private fun LevelStatCard(
                 scaleX = scale
                 scaleY = scale
             }
+            .then(
+                if (!isDark) {
+                    Modifier.shadow(
+                        elevation = 6.dp,
+                        shape = shape,
+                        spotColor = Color(0x0C000000),
+                        ambientColor = Color(0x06000000)
+                    )
+                } else Modifier
+            )
             .clip(shape)
-            .background(Color(0xFF1B1C23))
-            .border(1.dp, if (onLevelClick != null) Color(0x385E5CE6) else Color(0x22FFFFFF), shape)
+            .background(cardBg)
+            .border(1.dp, cardBorder, shape)
             .padding(14.dp)
     ) {
         Column(

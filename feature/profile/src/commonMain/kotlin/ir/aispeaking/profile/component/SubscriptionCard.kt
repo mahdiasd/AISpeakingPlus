@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
@@ -39,6 +40,7 @@ import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.fa
 import ir.aispeaking.sharedui.ui.game.toFaDigits
+import ir.aispeaking.sharedui.ui.them.AppTheme
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -47,16 +49,32 @@ fun SubscriptionCard(
     onUpgradeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(24.dp)
+    val cardBg = if (isDark) Color(0xFF1B1C23) else Color(0xFFFFFFFF)
+    val cardBorder = if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
+    val extendBtnBg = if (isDark) Color(0x22FFFFFF) else Color(0xFFF2F4F7)
+    val extendBtnBorder = if (isDark) Color(0x33FFFFFF) else Color(0x14000000)
+    val crownMutedBg = if (isDark) Color(0x1AFFFFFF) else Color(0xFFF2F4F7)
 
     if (subscription.isSubscriber) {
         // Active / Trial Subscription Card
         Box(
             modifier = modifier
                 .fillMaxWidth()
+                .then(
+                    if (!isDark) {
+                        Modifier.shadow(
+                            elevation = 8.dp,
+                            shape = shape,
+                            spotColor = Color(0x0F000000),
+                            ambientColor = Color(0x08000000)
+                        )
+                    } else Modifier
+                )
                 .clip(shape)
-                .background(Color(0xFF1B1C23))
-                .border(1.dp, Color(0x22FFFFFF), shape)
+                .background(cardBg)
+                .border(1.dp, cardBorder, shape)
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -145,8 +163,8 @@ fun SubscriptionCard(
                                 scaleY = extendScale
                             }
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0x22FFFFFF))
-                            .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(12.dp))
+                            .background(extendBtnBg)
+                            .border(1.dp, extendBtnBorder, RoundedCornerShape(12.dp))
                             .clickable(
                                 interactionSource = extendInteraction,
                                 indication = null,
@@ -244,9 +262,19 @@ fun SubscriptionCard(
         Box(
             modifier = modifier
                 .fillMaxWidth()
+                .then(
+                    if (!isDark) {
+                        Modifier.shadow(
+                            elevation = 8.dp,
+                            shape = shape,
+                            spotColor = Color(0x0F000000),
+                            ambientColor = Color(0x08000000)
+                        )
+                    } else Modifier
+                )
                 .clip(shape)
-                .background(Color(0xFF1B1C23))
-                .border(1.dp, Color(0x22FFFFFF), shape)
+                .background(cardBg)
+                .border(1.dp, cardBorder, shape)
                 .padding(16.dp)
         ) {
             Row(
@@ -263,7 +291,7 @@ fun SubscriptionCard(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(RoundedCornerShape(11.dp))
-                                .background(Color(0x1AFFFFFF)),
+                                .background(crownMutedBg),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(

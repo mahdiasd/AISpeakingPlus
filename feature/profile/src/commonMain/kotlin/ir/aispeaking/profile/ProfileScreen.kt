@@ -50,13 +50,14 @@ import ir.aispeaking.profile.component.LevelPickerBottomSheet
 import ir.aispeaking.profile.component.ProfileHeaderCard
 import ir.aispeaking.profile.component.SignOutConfirmDialog
 import ir.aispeaking.profile.component.SubscriptionCard
+import ir.aispeaking.profile.component.ThemeSelectionCard
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_back
 import ir.aispeaking.sharedui.ic_exit
-import ir.aispeaking.sharedui.ic_user
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.them.AppTheme
 import ir.aispeaking.sharedui.utils.lifecycle.OnResume
 import org.jetbrains.compose.resources.painterResource
 
@@ -69,6 +70,8 @@ fun ProfileScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isDark = AppTheme.isDark
+    val screenBg = if (isDark) Color(0xFF0F1015) else Color(0xFFF2F4F7)
 
     OnResume {
         viewModel.refresh()
@@ -78,14 +81,14 @@ fun ProfileScreen(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(Color(0xFF0F1015))
+                .background(screenBg)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
-                // Top Navigation Bar matching the sleek mockup
+                // Top Navigation Bar matching Apple sleek Liquid Glass style
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -106,6 +109,10 @@ fun ProfileScreen(
                             label = "back_btn_press"
                         )
 
+                        val backBg = if (isDark) Color(0x1AFFFFFF) else Color(0xFFFFFFFF)
+                        val backBorder = if (isDark) Color(0x22FFFFFF) else Color(0x14000000)
+                        val backTint = if (isDark) Game.TextPrimary else Color(0xFF111318)
+
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
@@ -114,8 +121,8 @@ fun ProfileScreen(
                                     scaleY = backScale
                                 }
                                 .clip(CircleShape)
-                                .background(Color(0x1AFFFFFF))
-                                .border(1.dp, Color(0x22FFFFFF), CircleShape)
+                                .background(backBg)
+                                .border(1.dp, backBorder, CircleShape)
                                 .clickable(
                                     interactionSource = backInteraction,
                                     indication = null,
@@ -126,7 +133,7 @@ fun ProfileScreen(
                             Icon(
                                 painter = painterResource(Res.drawable.ic_back),
                                 contentDescription = "بازگشت",
-                                tint = Game.TextPrimary,
+                                tint = backTint,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -135,7 +142,7 @@ fun ProfileScreen(
                             text = "پروفایل کاربری",
                             size = 18.sp,
                             bold = true,
-                            color = Game.TextPrimary
+                            color = if (isDark) Game.TextPrimary else Color(0xFF111318)
                         )
                     }
                 }
@@ -152,8 +159,13 @@ fun ProfileScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
-                            CircularProgressIndicator(color = Game.Mint, modifier = Modifier.size(38.dp))
-                            GameText(text = "در حال دریافت اطلاعات کاربر…", size = 13.sp, color = Game.TextSecondary)
+                            val accentColor = if (isDark) Color(0xFF0A84FF) else Color(0xFF007AFF)
+                            CircularProgressIndicator(color = accentColor, modifier = Modifier.size(38.dp))
+                            GameText(
+                                text = "در حال دریافت اطلاعات کاربر…",
+                                size = 13.sp,
+                                color = if (isDark) Game.TextSecondary else Color(0xFF6B7280)
+                            )
                         }
                     }
                 } else if (uiState.user != null) {
@@ -188,7 +200,13 @@ fun ProfileScreen(
                             onLevelClick = { viewModel.onLevelPickerClicked() }
                         )
 
-                        // Sign-out Button right below stats cards
+                        // Apple Theme Appearance Selector (System / Dark / Light)
+                        ThemeSelectionCard(
+                            currentThemeMode = uiState.themeMode,
+                            onThemeSelected = { viewModel.onThemeSelected(it) }
+                        )
+
+                        // Sign-out Button right below settings
                         if (!user.isGuest) {
                             AppleSignOutButton(
                                 onClick = { viewModel.onSignOutClicked() },
@@ -216,7 +234,7 @@ fun ProfileScreen(
                                 text = uiState.errorMessage ?: "خطایی رخ داد",
                                 size = 14.sp,
                                 lineHeight = 22.sp,
-                                color = Game.TextSecondary,
+                                color = if (isDark) Game.TextSecondary else Color(0xFF6B7280),
                                 align = TextAlign.Center
                             )
                             GameButton(
@@ -271,6 +289,7 @@ private fun AppleSignOutButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = AppTheme.isDark
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -280,6 +299,10 @@ private fun AppleSignOutButton(
     )
     val shape = RoundedCornerShape(18.dp)
 
+    val signOutBg = if (isDark) Color(0x1FFF453A) else Color(0x14FF3B30)
+    val signOutBorder = if (isDark) Color(0x40FF453A) else Color(0x29FF3B30)
+    val signOutTint = if (isDark) Game.Coral else Color(0xFFFF3B30)
+
     Box(
         modifier = modifier
             .height(52.dp)
@@ -288,8 +311,8 @@ private fun AppleSignOutButton(
                 scaleY = scale
             }
             .clip(shape)
-            .background(Color(0x1FFF453A))
-            .border(1.dp, Color(0x40FF453A), shape)
+            .background(signOutBg)
+            .border(1.dp, signOutBorder, shape)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
@@ -304,14 +327,14 @@ private fun AppleSignOutButton(
             Icon(
                 painter = painterResource(Res.drawable.ic_exit),
                 contentDescription = null,
-                tint = Game.Coral,
+                tint = signOutTint,
                 modifier = Modifier.size(18.dp)
             )
             GameText(
                 text = "خروج از حساب کاربری",
                 size = 14.sp,
                 bold = true,
-                color = Game.Coral
+                color = signOutTint
             )
         }
     }
