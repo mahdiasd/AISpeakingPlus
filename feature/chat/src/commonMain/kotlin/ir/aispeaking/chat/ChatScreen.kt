@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.chat.component.AiChatItem
+import ir.aispeaking.chat.component.AppleChatTheme
 import ir.aispeaking.chat.component.ChatBottomBar
 import ir.aispeaking.chat.component.ChatInputMode
 import ir.aispeaking.chat.component.ChatToolbar
@@ -53,10 +55,22 @@ import ir.aispeaking.domain.model.stage.EvaluationSession
 import ir.aispeaking.sharedui.ui.component.AsyncStageBackground
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameAvatar
+import ir.aispeaking.sharedui.ui.game.GameChip
 import ir.aispeaking.sharedui.ui.game.GameText
-import ir.aispeaking.sharedui.ui.game.GlassPanel
 import ir.aispeaking.sharedui.ui.them.AppTheme
 
+/**
+ * 2026 Apple Liquid Glass Chat Screen for AISpeakingPlus.
+ *
+ * Implements:
+ * - Frosted Liquid Glass floating HUD header with real-time turn progress and level badge.
+ * - Left-to-right English hero transcript with expandable translations, audio playback,
+ *   and Siri iridescent typing state.
+ * - Right-aligned user messages with rich Royal Azure to Electric Indigo gradient,
+ *   with inline Serene Cyan grammar feedback (strictly NO green).
+ * - Floating Liquid Glass bottom dock with breathing voice record pill and Apple input capsule.
+ * - Ambient visionOS frosted glass cards for empty state, hint suggestions, and objective modals.
+ */
 @Composable
 fun ChatScreen(
     stageId: String,
@@ -68,7 +82,8 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     var showHintConfirmDialog by remember { mutableStateOf(false) }
     var showObjectiveSheet by remember { mutableStateOf(false) }
-    // Keep the last evaluation so the result card can animate out instead of vanishing.
+
+    // Keep the last evaluation so the result card can animate out smoothly
     var lastEvaluation by remember { mutableStateOf<EvaluationSession?>(null) }
     LaunchedEffect(uiState.evaluationSession) {
         uiState.evaluationSession?.let { lastEvaluation = it }
@@ -108,21 +123,22 @@ fun ChatScreen(
             modifier = modifier,
             enableFrostedGlass = false
         ) {
-            // Readability scrims; the middle of the artwork stays visible.
+            // High-clarity Apple dark vignette scrims: lets artwork shine through while keeping glass chrome legible
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
-                            0f to Game.ScrimTop,
-                            0.22f to Color(0x33050816),
-                            0.55f to Color(0x55050816),
-                            1f to Game.ScrimBottom
+                            0f to Color(0xCC070810),
+                            0.2f to Color(0x38090C18),
+                            0.55f to Color(0x55090C18),
+                            1f to Color(0xF2070810)
                         )
                     )
             )
 
             Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+                // Header HUD
                 ChatToolbar(
                     stage = stage,
                     userLevel = uiState.userLevel,
@@ -133,6 +149,7 @@ fun ChatScreen(
                     onFinishConversationClick = { viewModel.submitEvaluation() }
                 )
 
+                // Main Transcript Viewport
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -156,13 +173,13 @@ fun ChatScreen(
                             )
                         }
 
-                        // Conversation reads left-to-right (English); the HUD around it is RTL.
+                        // Conversation reads LTR (English)
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                             LazyColumn(
                                 state = listState,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(horizontal = 12.dp),
+                                    .padding(horizontal = 14.dp),
                                 verticalArrangement = Arrangement.spacedBy(14.dp),
                                 contentPadding = PaddingValues(vertical = 12.dp)
                             ) {
@@ -207,6 +224,7 @@ fun ChatScreen(
                     }
                 }
 
+                // Floating Hint Suggestion Cue
                 HintSuggestionCue(
                     visible = uiState.currentHintSuggestion != null || uiState.hintError != null,
                     suggestionEn = uiState.currentHintSuggestion,
@@ -221,6 +239,7 @@ fun ChatScreen(
                     onRetry = { viewModel.requestHint() }
                 )
 
+                // Floating Liquid Glass Bottom Dock
                 ChatBottomBar(
                     inputMode = uiState.inputMode,
                     text = uiState.messageText,
@@ -235,12 +254,14 @@ fun ChatScreen(
                 )
             }
 
+            // Objective Bottom Sheet
             ObjectiveSheet(
                 visible = showObjectiveSheet,
                 stage = stage,
                 onDismiss = { showObjectiveSheet = false }
             )
 
+            // Hint Confirmation Modal
             HintConfirmDialog(
                 visible = showHintConfirmDialog,
                 hintsUsedCount = uiState.hintsUsedCount,
@@ -251,6 +272,7 @@ fun ChatScreen(
                 onDismiss = { showHintConfirmDialog = false }
             )
 
+            // Evaluation / Stage Complete Modal
             lastEvaluation?.let { evaluation ->
                 FinishConversationDialog(
                     visible = uiState.showFinishConfirmDialog && uiState.evaluationSession != null,
@@ -272,24 +294,40 @@ fun ChatScreen(
     }
 }
 
+/**
+ * Liquid Glass Loading State Pill with Royal Azure Spinner.
+ */
 @Composable
 private fun LoadingState(modifier: Modifier = Modifier) {
-    GlassPanel(modifier = modifier) {
+    val shape = RoundedCornerShape(22.dp)
+    Box(
+        modifier = modifier
+            .clip(shape)
+            .background(AppleChatTheme.GlassPanelRaised)
+            .border(1.dp, AppleChatTheme.SpecularStrokeBrush, shape)
+            .padding(horizontal = 22.dp, vertical = 14.dp)
+    ) {
         Row(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             CircularProgressIndicator(
                 modifier = Modifier.size(20.dp),
-                strokeWidth = 2.dp,
-                color = Game.Mint
+                strokeWidth = 2.5.dp,
+                color = AppleChatTheme.PrimaryAzure
             )
-            GameText(text = "در حال آماده‌سازی گفتگو…", size = 14.sp, color = Game.TextSecondary)
+            GameText(
+                text = "در حال آماده‌سازی گفتگو…",
+                size = 14.sp,
+                color = Game.TextSecondary
+            )
         }
     }
 }
 
+/**
+ * Liquid Glass Error Card with Coral header and Royal Azure retry action.
+ */
 @Composable
 private fun StageLoadErrorState(
     errorMessage: String,
@@ -297,13 +335,25 @@ private fun StageLoadErrorState(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    GlassPanel(modifier = modifier.padding(horizontal = 32.dp)) {
+    val shape = RoundedCornerShape(24.dp)
+    Box(
+        modifier = modifier
+            .padding(horizontal = 32.dp)
+            .clip(shape)
+            .background(AppleChatTheme.GlassPanelRaised)
+            .border(1.dp, AppleChatTheme.Coral.copy(alpha = 0.5f), shape)
+            .padding(22.dp)
+    ) {
         Column(
-            modifier = Modifier.padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            GameText(text = "خطا در باز کردن مرحله", size = 16.sp, bold = true, color = Game.Coral)
+            GameText(
+                text = "خطا در باز کردن مرحله",
+                size = 16.sp,
+                bold = true,
+                color = AppleChatTheme.Coral
+            )
             GameText(
                 text = errorMessage,
                 size = 13.sp,
@@ -312,13 +362,13 @@ private fun StageLoadErrorState(
                 align = androidx.compose.ui.text.style.TextAlign.Center
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                ir.aispeaking.sharedui.ui.game.GameChip(
+                GameChip(
                     text = "تلاش مجدد",
-                    accent = Game.Mint,
+                    accent = AppleChatTheme.PrimaryAzure,
                     active = true,
                     onClick = onRetry
                 )
-                ir.aispeaking.sharedui.ui.game.GameChip(
+                GameChip(
                     text = "بازگشت",
                     accent = Game.TextSecondary,
                     active = false,
@@ -329,25 +379,43 @@ private fun StageLoadErrorState(
     }
 }
 
-/** Shown when the learner is the one who has to open the conversation. */
+/**
+ * Inviting Apple visionOS Floating Glass Card when learner opens the conversation.
+ */
 @Composable
 private fun YourTurnState(
     characterName: String,
     avatarUrl: String?,
     modifier: Modifier = Modifier
 ) {
-    GlassPanel(modifier = modifier.padding(horizontal = 32.dp)) {
+    val shape = RoundedCornerShape(26.dp)
+    Box(
+        modifier = modifier
+            .padding(horizontal = 32.dp)
+            .clip(shape)
+            .background(AppleChatTheme.GlassPanelRaised)
+            .border(1.dp, AppleChatTheme.SpecularStrokeBrush, shape)
+            .padding(22.dp)
+    ) {
         Column(
-            modifier = Modifier.padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            GameAvatar(name = characterName, imageUrl = avatarUrl, size = 56.dp)
-            GameText(text = "نوبت توست!", size = 18.sp, bold = true)
+            GameAvatar(
+                name = characterName,
+                imageUrl = avatarUrl,
+                size = 58.dp,
+                ring = AppleChatTheme.PrimaryAzure
+            )
+            GameText(
+                text = "نوبت توست!",
+                size = 18.sp,
+                bold = true
+            )
             GameText(
                 text = "$characterName منتظر توست. اولین جمله را به انگلیسی بگو.",
                 size = 13.sp,
-                lineHeight = 21.sp,
+                lineHeight = 22.sp,
                 color = Game.TextSecondary,
                 align = androidx.compose.ui.text.style.TextAlign.Center
             )
@@ -355,26 +423,46 @@ private fun YourTurnState(
     }
 }
 
+/**
+ * AI Typing Bubble with Siri Iridescent Pulsing Dots.
+ */
 @Composable
 private fun TypingBubble(
     characterName: String,
     avatarUrl: String?,
     modifier: Modifier = Modifier
 ) {
-    val transition = rememberInfiniteTransition(label = "typing")
+    val transition = rememberInfiniteTransition(label = "typing_bubble")
+    val dotColors = listOf(
+        AppleChatTheme.SiriViolet,
+        AppleChatTheme.SiriCyan,
+        AppleChatTheme.SiriAzure
+    )
+
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        GameAvatar(name = characterName, imageUrl = avatarUrl, size = 34.dp)
-        val shape = RoundedCornerShape(topStart = 6.dp, topEnd = 20.dp, bottomEnd = 20.dp, bottomStart = 20.dp)
+        GameAvatar(
+            name = characterName,
+            imageUrl = avatarUrl,
+            size = 36.dp,
+            ring = AppleChatTheme.SpecularBorderColor
+        )
+        val shape = RoundedCornerShape(
+            topStart = 6.dp,
+            topEnd = 20.dp,
+            bottomEnd = 20.dp,
+            bottomStart = 20.dp
+        )
         Row(
             modifier = Modifier
-                .background(Game.BubbleAi, shape)
-                .border(1.dp, Game.Stroke, shape)
-                .padding(horizontal = 16.dp, vertical = 15.dp),
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                .clip(shape)
+                .background(AppleChatTheme.BubbleAi)
+                .border(1.dp, AppleChatTheme.SpecularStrokeBrush, shape)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             repeat(3) { index ->
@@ -390,13 +478,13 @@ private fun TypingBubble(
                         },
                         repeatMode = RepeatMode.Restart
                     ),
-                    label = "dot_$index"
+                    label = "bubble_dot_$index"
                 )
                 Box(
                     modifier = Modifier
                         .size(8.dp)
                         .alpha(alpha)
-                        .background(Game.TextPrimary, CircleShape)
+                        .background(dotColors[index % dotColors.size], CircleShape)
                 )
             }
         }

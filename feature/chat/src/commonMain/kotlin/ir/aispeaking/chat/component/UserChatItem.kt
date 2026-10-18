@@ -9,13 +9,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -33,8 +33,15 @@ import ir.aispeaking.sharedui.ui.them.AppTheme
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * The learner's own message. The bubble stays clean; grammar feedback is shown right underneath
- * in plain Persian so it is never hidden behind a tap or a timer.
+ * 2026 Apple Liquid Glass User Chat Message Item.
+ *
+ * Characteristics:
+ * - Rich Royal Azure & Electric Indigo glass gradient with specular top rim.
+ * - Hero English copy with high legibility.
+ * - Grammar status indicator beneath the bubble:
+ *   - Serene Cyan checkmark for correct grammar (strictly NO green).
+ *   - Warm Champagne Gold translucent card for grammar coaching tips.
+ *   - Apple Coral retry chip for network failures.
  */
 @Composable
 fun UserChatItem(
@@ -48,26 +55,32 @@ fun UserChatItem(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            val shape = RoundedCornerShape(topStart = 20.dp, topEnd = 6.dp, bottomEnd = 20.dp, bottomStart = 20.dp)
+            val shape = RoundedCornerShape(
+                topStart = 20.dp,
+                topEnd = 6.dp,
+                bottomEnd = 20.dp,
+                bottomStart = 20.dp
+            )
+
+            // Rich Royal Azure & Indigo Glass Bubble
             Column(
                 modifier = Modifier
-                    .widthIn(max = 300.dp)
-                    .background(
-                        Brush.verticalGradient(listOf(Game.BubbleUserTop, Game.BubbleUserBottom)),
-                        shape
-                    )
-                    .border(1.dp, androidx.compose.ui.graphics.Color(0x33FFFFFF), shape)
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
+                    .widthIn(max = 310.dp)
+                    .clip(shape)
+                    .background(AppleChatTheme.UserBubbleBrush)
+                    .border(1.dp, AppleChatTheme.SpecularStrokeBrush, shape)
+                    .padding(horizontal = 15.dp, vertical = 11.dp)
             ) {
                 GameText(
                     text = chat.message,
                     size = 16.sp,
                     lineHeight = 24.sp,
                     latin = true,
-                    color = Game.TextPrimary
+                    color = Color.White
                 )
             }
 
+            // Status & Feedback HUD underneath
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 when (val status = chat.status) {
                     is ChatStatus.Sending -> Unit
@@ -75,7 +88,7 @@ fun UserChatItem(
                         GameChip(
                             text = "ارسال نشد؛ دوباره تلاش کن",
                             icon = Res.drawable.ic_refresh,
-                            accent = Game.Coral,
+                            accent = AppleChatTheme.Coral,
                             active = true,
                             onClick = onRetry
                         )
@@ -94,31 +107,44 @@ fun UserChatItem(
     }
 }
 
+/**
+ * Grammar OK status tag in Serene Cyan (strictly NO green).
+ */
 @Composable
 private fun GrammarOkTag() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
     ) {
         Icon(
             painter = painterResource(Res.drawable.ic_done),
             contentDescription = null,
-            tint = Game.Mint,
+            tint = AppleChatTheme.SuccessCyan,
             modifier = Modifier.size(14.dp)
         )
-        GameText(text = "گرامر درست بود", size = 11.sp, bold = true, color = Game.Mint)
+        GameText(
+            text = "گرامر درست بود",
+            size = 11.sp,
+            bold = true,
+            color = AppleChatTheme.SuccessCyan
+        )
     }
 }
 
+/**
+ * Champagne Gold Frosted Glass Grammar Tip Card.
+ */
 @Composable
 private fun GrammarTipCard(text: String) {
     val shape = RoundedCornerShape(16.dp)
     Column(
         modifier = Modifier
-            .widthIn(max = 300.dp)
-            .background(Game.PanelSolid, shape)
-            .border(1.dp, Game.Gold.copy(alpha = 0.6f), shape)
-            .padding(horizontal = 12.dp, vertical = 9.dp),
+            .widthIn(max = 310.dp)
+            .clip(shape)
+            .background(Color(0xD91E1C1A))
+            .border(1.dp, AppleChatTheme.Gold.copy(alpha = 0.5f), shape)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Row(
@@ -128,12 +154,22 @@ private fun GrammarTipCard(text: String) {
             Icon(
                 painter = painterResource(Res.drawable.ic_spell_check),
                 contentDescription = null,
-                tint = Game.Gold,
+                tint = AppleChatTheme.Gold,
                 modifier = Modifier.size(15.dp)
             )
-            GameText(text = "نکته گرامری", size = 12.sp, bold = true, color = Game.Gold)
+            GameText(
+                text = "نکته گرامری",
+                size = 12.sp,
+                bold = true,
+                color = AppleChatTheme.Gold
+            )
         }
-        GameText(text = text, size = 13.sp, lineHeight = 21.sp, color = Game.TextPrimary)
+        GameText(
+            text = text,
+            size = 13.sp,
+            lineHeight = 21.sp,
+            color = Game.TextPrimary
+        )
     }
 }
 

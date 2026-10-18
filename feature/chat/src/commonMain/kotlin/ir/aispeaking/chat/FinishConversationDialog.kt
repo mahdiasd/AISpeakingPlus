@@ -13,11 +13,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ir.aispeaking.chat.component.AppleChatTheme
 import ir.aispeaking.domain.model.stage.EvaluationSession
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
@@ -27,7 +29,16 @@ import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.GameTopModal
 import ir.aispeaking.sharedui.ui.game.fa
 
-/** "Level complete" result card: stars first, then what affected them, then what to do next. */
+/**
+ * 2026 Apple Liquid Glass Finish Conversation & Evaluation Modal.
+ *
+ * Displays level results with high visual fidelity and clarity:
+ * - Ambient gradient halo in Serene Cyan, Champagne Gold, or Coral (strictly NO green).
+ * - Animated Apple Stars with spring physics.
+ * - Score badge & breakdown stats.
+ * - Coach feedback in translucent glass card.
+ * - Clear action hierarchy: Primary CTA on top, contextual secondary choices below.
+ */
 @Composable
 fun FinishConversationDialog(
     visible: Boolean = true,
@@ -41,7 +52,15 @@ fun FinishConversationDialog(
     val isGoalDone = evaluation.objectiveCompleted
     val stars = if (isGoalDone) evaluation.calculatedStars else 0
     val isPerfect = stars >= 3 && isGoalDone
-    val accent = if (!isGoalDone) Game.Coral else if (isPerfect) Game.Mint else if (stars > 0) Game.Gold else Game.Coral
+    val accent = if (!isGoalDone) {
+        AppleChatTheme.Coral
+    } else if (isPerfect) {
+        AppleChatTheme.SuccessCyan
+    } else if (stars > 0) {
+        AppleChatTheme.Gold
+    } else {
+        AppleChatTheme.Coral
+    }
 
     GameTopModal(visible = visible, onDismiss = onDismissRequest) {
         Column(
@@ -51,16 +70,18 @@ fun FinishConversationDialog(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header with soft glow in the accent color
+            // Header with soft ambient glow in the accent color
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        Brush.verticalGradient(listOf(accent.copy(alpha = 0.28f), Color.Transparent))
+                        Brush.verticalGradient(
+                            listOf(accent.copy(alpha = 0.26f), Color.Transparent)
+                        )
                     )
-                    .padding(top = 22.dp, bottom = 8.dp, start = 18.dp, end = 18.dp),
+                    .padding(top = 24.dp, bottom = 10.dp, start = 20.dp, end = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 if (isGoalDone) {
                     GameStars(
@@ -68,7 +89,7 @@ fun FinishConversationDialog(
                         size = 48.dp,
                         spacing = 8.dp,
                         animate = true,
-                        earnedTint = Game.Gold,
+                        earnedTint = AppleChatTheme.Gold,
                         emptyTint = Color(0x44FFFFFF)
                     )
                     GameText(
@@ -87,7 +108,7 @@ fun FinishConversationDialog(
                             text = "امتیاز تو: ${evaluation.score.fa()}",
                             size = 13.sp,
                             bold = true,
-                            color = Game.Gold
+                            color = AppleChatTheme.Gold
                         )
                     }
                 } else {
@@ -96,14 +117,14 @@ fun FinishConversationDialog(
                         size = 48.dp,
                         spacing = 8.dp,
                         animate = false,
-                        earnedTint = Game.Gold,
+                        earnedTint = AppleChatTheme.Gold,
                         emptyTint = Color(0x33FFFFFF)
                     )
                     GameText(
                         text = "هدف مرحله انجام نشده است",
                         size = 18.sp,
                         bold = true,
-                        color = Game.Coral,
+                        color = AppleChatTheme.Coral,
                         align = TextAlign.Center
                     )
                     GameText(
@@ -119,10 +140,10 @@ fun FinishConversationDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 6.dp),
+                    .padding(horizontal = 20.dp, vertical = 6.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // What changed the stars / progress stats
+                // Key Stats Row: Hints & Grammar Errors
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -154,16 +175,22 @@ fun FinishConversationDialog(
                         color = Game.TextSecondary
                     )
                 } else {
-                    val shape = RoundedCornerShape(14.dp)
+                    val shape = RoundedCornerShape(16.dp)
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Game.Coral.copy(alpha = 0.1f), shape)
-                            .border(1.dp, Game.Coral.copy(alpha = 0.35f), shape)
-                            .padding(12.dp),
+                            .clip(shape)
+                            .background(AppleChatTheme.Coral.copy(alpha = 0.1f))
+                            .border(1.dp, AppleChatTheme.Coral.copy(alpha = 0.35f), shape)
+                            .padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        GameText(text = "راهنمای تکمیل مرحله", size = 12.sp, bold = true, color = Game.Coral)
+                        GameText(
+                            text = "راهنمای تکمیل مرحله",
+                            size = 12.sp,
+                            bold = true,
+                            color = AppleChatTheme.Coral
+                        )
                         GameText(
                             text = "تنها زمانی ستاره دریافت می‌کنید و مرحله کامل می‌شود که هوش مصنوعی تحقق هدف را تایید کند. پیشنهاد می‌کنیم مکالمه را ادامه دهید.",
                             size = 12.sp,
@@ -173,32 +200,40 @@ fun FinishConversationDialog(
                     }
                 }
 
+                // Coach Feedback Container
                 if (isGoalDone && evaluation.feedbackFa.isNotBlank()) {
-                    val shape = RoundedCornerShape(14.dp)
+                    val shape = RoundedCornerShape(16.dp)
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Game.PanelRaised, shape)
-                            .border(1.dp, Game.Stroke, shape)
-                            .padding(12.dp),
+                            .clip(shape)
+                            .background(AppleChatTheme.GlassPanelRaised)
+                            .border(1.dp, AppleChatTheme.SpecularStrokeBrush, shape)
+                            .padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        GameText(text = "نظر مربی", size = 12.sp, bold = true, color = Game.Sky)
+                        GameText(
+                            text = "نظر مربی",
+                            size = 12.sp,
+                            bold = true,
+                            color = AppleChatTheme.SuccessCyan
+                        )
                         GameText(
                             text = evaluation.feedbackFa,
                             size = 12.sp,
-                            lineHeight = 19.sp
+                            lineHeight = 19.sp,
+                            color = Game.TextPrimary
                         )
                     }
                 }
             }
         }
 
-        // Actions: one obvious primary, the rest quieter
+        // Actions Section: Clear Apple CTA Hierarchy
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 18.dp, end = 18.dp, top = 6.dp, bottom = 18.dp),
+                .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (isGoalDone) {
@@ -207,7 +242,7 @@ fun FinishConversationDialog(
                     onClick = onConfirmAndNext,
                     modifier = Modifier.fillMaxWidth(),
                     style = GameButtonStyle.Primary,
-                    height = 44.dp
+                    height = 46.dp
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (!isPerfect) {
@@ -235,7 +270,7 @@ fun FinishConversationDialog(
                     onClick = onContinueChatting,
                     modifier = Modifier.fillMaxWidth(),
                     style = GameButtonStyle.Primary,
-                    height = 44.dp
+                    height = 46.dp
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     GameButton(
@@ -260,6 +295,9 @@ fun FinishConversationDialog(
     }
 }
 
+/**
+ * Result Stat Capsule: Serene Cyan for zero errors/hints, Coral for penalties.
+ */
 @Composable
 private fun ResultStat(
     label: String,
@@ -267,11 +305,12 @@ private fun ResultStat(
     good: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val color = if (good) Game.Mint else Game.Coral
+    val color = if (good) AppleChatTheme.SuccessCyan else AppleChatTheme.Coral
     val shape = RoundedCornerShape(16.dp)
     Column(
         modifier = modifier
-            .background(color.copy(alpha = 0.12f), shape)
+            .clip(shape)
+            .background(color.copy(alpha = 0.12f))
             .border(1.dp, color.copy(alpha = 0.4f), shape)
             .padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
