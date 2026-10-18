@@ -58,6 +58,26 @@ class SubscribePlanUseCaseTest {
                 DataResult.Failure(NetworkError.BadRequest(message = "کد تخفیف واردشده نامعتبر یا منقضی است"))
             }
         }
+
+        override suspend fun validateMarketPromo(promoCode: String, planId: String, market: String): DataResult<PromoValidationResult> {
+            return validatePromo(promoCode)
+        }
+
+        override suspend fun verifyMarketPurchase(
+            market: String,
+            planId: String,
+            sku: String,
+            purchaseToken: String,
+            orderId: String?,
+            developerPayload: String?,
+            promoCode: String?
+        ): DataResult<SubscriptionStatus> {
+            return subscribe(planId, promoCode)
+        }
+
+        override suspend fun createDirectCheckout(planId: String, promoCode: String?): DataResult<ir.aispeaking.domain.model.stage.DirectCheckoutResult> {
+            return DataResult.Success(ir.aispeaking.domain.model.stage.DirectCheckoutResult(paymentUrl = "https://example.com", transactionId = "tx123", amountTomans = 100000L))
+        }
     }
 
     @Test
