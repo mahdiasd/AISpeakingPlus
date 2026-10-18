@@ -15,6 +15,9 @@ import ir.aispeaking.domain.usecase.stage.GetSubscriptionPlansUseCase
 import ir.aispeaking.domain.usecase.stage.SubscribePlanUseCase
 import ir.aispeaking.domain.usecase.stage.ValidateMarketPromoUseCase
 import ir.aispeaking.domain.usecase.stage.VerifyMarketPurchaseUseCase
+import ir.aispeaking.utils.analytics.AnalyticsTracker
+import ir.aispeaking.utils.analytics.AnalyticsEvents
+import ir.aispeaking.utils.crashlytics.CrashReporter
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,7 +36,9 @@ class SubscriptionViewModel(
     private val verifyMarketPurchaseUseCase: VerifyMarketPurchaseUseCase,
     private val createDirectCheckoutUseCase: CreateDirectCheckoutUseCase,
     private val marketDetector: PlatformMarketDetector,
-    private val billingGateway: MarketBillingGateway
+    private val billingGateway: MarketBillingGateway,
+    private val analyticsTracker: AnalyticsTracker,
+    private val crashReporter: CrashReporter
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SubscriptionUiState())
@@ -99,6 +104,16 @@ class SubscriptionViewModel(
                     selectedPlanId = if (loadedPlans.any { p -> p.id == it.selectedPlanId }) it.selectedPlanId else (loadedPlans.getOrNull(1)?.id ?: loadedPlans.firstOrNull()?.id ?: ""),
                     errorMessage = plansError,
                     currentStatus = currentStatus
+                )
+            }
+
+            if (loadedPlans.isNotEmpty()) {
+                analyticsTracker.logEvent(
+                    AnalyticsEvents.EVENT_SUBSCRIPTION_PLANS_VIEWED,
+                    mapOf(
+                        "plans_count" to loadedPlans.size,
+                        AnalyticsEvents.PARAM_MARKET to detectedMarket.name
+                    )
                 )
             }
 
@@ -210,6 +225,15 @@ class SubscriptionViewModel(
         val plan = state.selectedPlan ?: return
         val market = state.detectedMarket
 
+        analyticsTracker.logEvent(
+            AnalyticsEvents.EVENT_SUBSCRIPTION_PURCHASE_STARTED,
+            mapOf(
+                AnalyticsEvents.PARAM_PLAN_ID to plan.id,
+                AnalyticsEvents.PARAM_MARKET to market.name,
+                "price" to plan.priceTomans
+            )
+        )
+
         viewModelScope.launch {
             if (market == AppMarket.CAFE_BAZAAR || market == AppMarket.MYKET) {
                 _uiState.update {
@@ -245,6 +269,16 @@ class SubscriptionViewModel(
                         when (verifyResult) {
                             is DataResult.Success -> {
                                 billingGateway.consumePurchase(purchaseResult.purchaseToken)
+                                analyticsTracker.logEvent(
+                                    AnalyticsEvents.EVENT_SUBSCRIPTION_PURCHASE_SUCCESS,
+                                    mapOf(
+                                        AnalyticsEvents.PARAM_PLAN_ID to plan.id,
+                                        AnalyticsEvents.PARAM_MARKET to market.name,
+                                        "order_id" to (purchaseResult.orderId ?: "")
+                                    )
+                                )
+                                crashReporter.log("Subscription purchase succeeded: ${plan.id} via ${market.name}")
+
                                 _uiState.update {
                                     it.copy(
                                         isPurchasing = false,
@@ -263,6 +297,16 @@ class SubscriptionViewModel(
                                 val errorMsg = verifyResult.appError.getErrorMessage().ifBlank {
                                     "خطا در تایید خرید توسط سرور. لطفاً با پشتیبانی تماس بگیرید."
                                 }
+                                analyticsTracker.logEvent(
+                                    AnalyticsEvents.EVENT_SUBSCRIPTION_PURCHASE_FAILED,
+                                    mapOf(
+                                        AnalyticsEvents.PARAM_PLAN_ID to plan.id,
+                                        AnalyticsEvents.PARAM_MARKET to market.name,
+                                        AnalyticsEvents.PARAM_ERROR to errorMsg
+                                    )
+                                )
+                                crashReporter.log("Subscription purchase verify failed: ${plan.id} via ${market.name} - $errorMsg")
+
                                 _uiState.update {
                                     it.copy(
                                         isPurchasing = false,
@@ -275,11 +319,28 @@ class SubscriptionViewModel(
                         }
                     }
                     is MarketPurchaseResult.UserCancelled -> {
+                        analyticsTracker.logEvent(
+                            "subscription_purchase_cancelled",
+                            mapOf(
+                                AnalyticsEvents.PARAM_PLAN_ID to plan.id,
+                                AnalyticsEvents.PARAM_MARKET to market.name
+                            )
+                        )
                         _uiState.update {
                             it.copy(isPurchasing = false, purchaseProgressMessage = null)
                         }
                     }
                     is MarketPurchaseResult.Error -> {
+                        analyticsTracker.logEvent(
+                            AnalyticsEvents.EVENT_SUBSCRIPTION_PURCHASE_FAILED,
+                            mapOf(
+                                AnalyticsEvents.PARAM_PLAN_ID to plan.id,
+                                AnalyticsEvents.PARAM_MARKET to market.name,
+                                AnalyticsEvents.PARAM_ERROR to purchaseResult.message
+                            )
+                        )
+                        crashReporter.log("Subscription purchase error: ${plan.id} - ${purchaseResult.message}")
+
                         _uiState.update {
                             it.copy(
                                 isPurchasing = false,
@@ -307,6 +368,10 @@ class SubscriptionViewModel(
 
                 when (result) {
                     is DataResult.Success -> {
+                        analyticsTracker.logEvent(
+                            "subscription_direct_checkout_created",
+                            mapOf(AnalyticsEvents.PARAM_PLAN_ID to plan.id)
+                        )
                         _uiState.update {
                             it.copy(
                                 isPurchasing = false,
@@ -319,6 +384,16 @@ class SubscriptionViewModel(
                         val errorMsg = result.appError.getErrorMessage().ifBlank {
                             "خطا در برقراری ارتباط با درگاه پرداخت مستقیم"
                         }
+                        analyticsTracker.logEvent(
+                            AnalyticsEvents.EVENT_SUBSCRIPTION_PURCHASE_FAILED,
+                            mapOf(
+                                AnalyticsEvents.PARAM_PLAN_ID to plan.id,
+                                AnalyticsEvents.PARAM_MARKET to market.name,
+                                AnalyticsEvents.PARAM_ERROR to errorMsg
+                            )
+                        )
+                        crashReporter.log("Direct checkout creation failed: $errorMsg")
+
                         _uiState.update {
                             it.copy(
                                 isPurchasing = false,

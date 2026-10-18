@@ -15,6 +15,10 @@ import ir.aispeaking.profile.ProfileScreen
 import ir.aispeaking.splash.SplashRoute
 import ir.aispeaking.stageslist.StagesListScreen
 import ir.aispeaking.subscription.SubscriptionScreen
+import androidx.compose.runtime.LaunchedEffect
+import ir.aispeaking.utils.analytics.AnalyticsTracker
+import ir.aispeaking.utils.analytics.logScreenView
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -26,6 +30,18 @@ fun AppNavigation(
 ) {
     val backStack = rememberNavBackStack(navigationConfig, SplashRoute)
     onBackStackCreated(backStack)
+
+    val analyticsTracker = koinInject<AnalyticsTracker>()
+    val currentRoute = backStack.lastOrNull()
+
+    LaunchedEffect(currentRoute) {
+        if (currentRoute is AppRoute) {
+            analyticsTracker.logScreenView(
+                screenName = currentRoute.screenName,
+                screenClass = currentRoute::class.simpleName
+            )
+        }
+    }
 
     NavDisplay(
         backStack = backStack,
