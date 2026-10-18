@@ -53,3 +53,14 @@ stt:
   #   joiner-epoch-99-avg-1.int8.onnx
   #   tokens.txt
   modelDir: "/app/models/sherpa-onnx-streaming-zipformer-en-2023-06-21"
+
+market:
+  cafebazaar:
+    clientId: "bazaar_client_id"
+    clientSecret: "bazaar_client_secret"
+    refreshToken: "bazaar_refresh_token"
+    packageName: "ir.aispeaking.androidApp"
+    discountPrivateKey: ""
+  myket:
+    accessToken: "myket_access_token"
+    packageName: "ir.aispeaking.androidApp"

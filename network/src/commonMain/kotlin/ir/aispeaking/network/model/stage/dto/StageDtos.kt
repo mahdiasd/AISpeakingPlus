@@ -170,14 +170,54 @@ data class SubscribeResponseDto(
 
 @Serializable
 data class ValidatePromoRequestDto(
-    val promoCode: String
+    val promoCode: String,
+    val planId: String? = null,
+    val market: String? = null
 )
 
 @Serializable
 data class ValidatePromoResponseDto(
     val promoCode: String,
     val discountPercent: Int,
-    val message: String
+    val message: String,
+    val dynamicDiscountToken: String? = null,
+    val bonusDays: Int = 0,
+    val originalPriceTomans: Long? = null,
+    val finalPriceTomans: Long? = null,
+    val userMessage: String? = null
+)
+
+@Serializable
+data class VerifyMarketPurchaseRequestDto(
+    val market: String,
+    val planId: String,
+    val sku: String,
+    val purchaseToken: String,
+    val orderId: String? = null,
+    val developerPayload: String? = null,
+    val promoCode: String? = null
+)
+
+@Serializable
+data class VerifyMarketPurchaseResponseDto(
+    val isSubscriber: Boolean,
+    val planType: String,
+    val expiresAt: String,
+    val remainingDays: Int,
+    val transactionId: String
+)
+
+@Serializable
+data class DirectCheckoutRequestDto(
+    val planId: String,
+    val promoCode: String? = null
+)
+
+@Serializable
+data class DirectCheckoutResponseDto(
+    val paymentUrl: String,
+    val transactionId: String,
+    val amountTomans: Long
 )
 
 @Serializable

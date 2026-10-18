@@ -25,5 +25,16 @@ data class SubscriptionStatus(
 data class PromoValidationResult(
     val promoCode: String,
     val discountPercent: Int,
-    val message: String
+    val message: String,
+    val dynamicDiscountToken: String? = null,
+    val bonusDays: Int = 0,
+    val originalPriceTomans: Long? = null,
+    val finalPriceTomans: Long? = null
+)
+
+@Serializable
+data class DirectCheckoutResult(
+    val paymentUrl: String,
+    val transactionId: String,
+    val amountTomans: Long
 )

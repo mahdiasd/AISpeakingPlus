@@ -24,6 +24,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
 }
 
 kotlin {
@@ -35,11 +42,13 @@ dependencies {
     implementation(project(":utils"))
     implementation(project(":navigation"))
     implementation(project(":network"))
+    implementation(project(":domain"))
+    implementation(project(":data"))
+    implementation(project(":feature:subscription"))
     implementation(libs.androidx.activityCompose)
     implementation(libs.koin.core)
     implementation(libs.koin.annotations)
     implementation(libs.koin.compose)
     implementation(libs.koin.compose.viewmodel)
-
-
+    implementation(libs.poolakey)
 }

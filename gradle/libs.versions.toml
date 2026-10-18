@@ -36,6 +36,7 @@ openai-client = "4.0.1"
 firebase-admin = "9.5.0"
 logback = "1.5.16"
 ksp = "2.3.11"
+poolakey = "2.2.0"
 
 
 
@@ -126,6 +127,7 @@ koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref =
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatform-settings" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "androidx-security-crypto" }
+poolakey = { module = "com.github.cafebazaar.Poolakey:poolakey", version.ref = "poolakey" }
 
 koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koin-annotations" }
 koin-ksp-compiler = { module = "io.insert-koin:koin-ksp-compiler", version.ref = "koin-ksp" }

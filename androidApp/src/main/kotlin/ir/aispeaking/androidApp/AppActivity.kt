@@ -72,7 +72,14 @@ class AppActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ir.aispeaking.androidApp.payment.CurrentActivityHolder.currentActivity = this
         initKoin()
+        try {
+            org.koin.core.context.loadKoinModules(
+                ir.aispeaking.androidApp.payment.androidPaymentModule(applicationContext)
+            )
+        } catch (_: Throwable) {}
+
         try {
             val audioController = GlobalContext.get().getOrNull<DefaultStageAudioController>()
                 ?: (GlobalContext.get().getOrNull<StageAudioController>() as? DefaultStageAudioController)
@@ -101,8 +108,21 @@ class AppActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        ir.aispeaking.androidApp.payment.CurrentActivityHolder.currentActivity = this
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        if (ir.aispeaking.androidApp.payment.CurrentActivityHolder.currentActivity === this) {
+            ir.aispeaking.androidApp.payment.CurrentActivityHolder.currentActivity = null
+        }
         audioBridge?.stopRecordingAudio()
         audioBridge?.stopAudio()
     }
