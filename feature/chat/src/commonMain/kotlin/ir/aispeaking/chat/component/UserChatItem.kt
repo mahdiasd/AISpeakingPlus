@@ -66,33 +66,28 @@ fun UserChatItem(
                     latin = true,
                     color = Game.TextPrimary
                 )
-                if (chat.status is ChatStatus.Sending) {
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                        Row(
-                            modifier = Modifier
-                                .align(Alignment.End)
-                                .padding(top = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(11.dp),
-                                strokeWidth = 1.5.dp,
-                                color = Game.TextPrimary.copy(alpha = 0.75f)
-                            )
-                            GameText(
-                                text = "در حال ارسال…",
-                                size = 10.sp,
-                                color = Game.TextPrimary.copy(alpha = 0.75f)
-                            )
-                        }
-                    }
-                }
             }
 
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 when (val status = chat.status) {
-                    is ChatStatus.Sending -> Unit
+                    is ChatStatus.Sending -> {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(11.dp),
+                                strokeWidth = 1.5.dp,
+                                color = Game.TextSecondary
+                            )
+                            GameText(
+                                text = "در حال ارسال…",
+                                size = 11.sp,
+                                color = Game.TextSecondary
+                            )
+                        }
+                    }
                     is ChatStatus.Failed -> {
                         GameChip(
                             text = "ارسال نشد؛ دوباره تلاش کن",

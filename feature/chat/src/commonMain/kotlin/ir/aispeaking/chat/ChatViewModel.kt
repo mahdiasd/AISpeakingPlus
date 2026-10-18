@@ -482,10 +482,10 @@ class ChatViewModel(
 
         _uiState.update {
             it.copy(
-                chats = (it.chats + userChat).toImmutableList(),
+                chats = (it.chats + userChat + Chat.WaitingForAi).toImmutableList(),
                 messageText = "",
                 turnsCount = updatedTurns,
-                isModelSpeaking = false
+                isModelSpeaking = true
             )
         }
 
