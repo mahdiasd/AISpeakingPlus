@@ -3,10 +3,12 @@ package ir.aispeaking.chat.component
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -25,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -36,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -111,29 +115,33 @@ fun AiChatItem(
                         .animateContentSize(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    GameText(
-                        text = chat.message,
-                        size = 16.sp,
-                        lineHeight = 24.sp,
-                        latin = true,
-                        color = Game.TextPrimary
-                    )
-                    AnimatedVisibility(visible = showTranslation && hasTranslation) {
-                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Box(
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .height(1.dp)
-                                        .background(Game.Stroke)
-                                )
-                                GameText(
-                                    text = chat.translatedMessage ?: "",
-                                    size = 14.sp,
-                                    lineHeight = 23.sp,
-                                    color = Game.TextSecondary,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                    if (chat.message.isEmpty()) {
+                        TypingDotsIndicator()
+                    } else {
+                        GameText(
+                            text = chat.message,
+                            size = 16.sp,
+                            lineHeight = 24.sp,
+                            latin = true,
+                            color = Game.TextPrimary
+                        )
+                        AnimatedVisibility(visible = showTranslation && hasTranslation) {
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Box(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .height(1.dp)
+                                            .background(Game.Stroke)
+                                    )
+                                    GameText(
+                                        text = chat.translatedMessage ?: "",
+                                        size = 14.sp,
+                                        lineHeight = 23.sp,
+                                        color = Game.TextSecondary,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
                     }
@@ -266,6 +274,41 @@ private fun PlayingVoiceChip(
                         .background(Game.Mint, RoundedCornerShape(1.dp))
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun TypingDotsIndicator(
+    modifier: Modifier = Modifier
+) {
+    val transition = rememberInfiniteTransition(label = "ai_typing_dots")
+    Row(
+        modifier = modifier.padding(vertical = 4.dp, horizontal = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(3) { index ->
+            val alpha by transition.animateFloat(
+                initialValue = 0.3f,
+                targetValue = 0.3f,
+                animationSpec = infiniteRepeatable(
+                    animation = keyframes {
+                        durationMillis = 1200
+                        0.3f at index * 160 using LinearEasing
+                        1f at index * 160 + 260 using LinearEasing
+                        0.3f at index * 160 + 520 using LinearEasing
+                    },
+                    repeatMode = RepeatMode.Restart
+                ),
+                label = "dot_$index"
+            )
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .alpha(alpha)
+                    .background(Game.TextPrimary, CircleShape)
+            )
         }
     }
 }

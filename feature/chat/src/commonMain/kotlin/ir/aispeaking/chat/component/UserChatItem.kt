@@ -70,24 +70,7 @@ fun UserChatItem(
 
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 when (val status = chat.status) {
-                    is ChatStatus.Sending -> {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(11.dp),
-                                strokeWidth = 1.5.dp,
-                                color = Game.TextSecondary
-                            )
-                            GameText(
-                                text = "در حال ارسال…",
-                                size = 11.sp,
-                                color = Game.TextSecondary
-                            )
-                        }
-                    }
+                    is ChatStatus.Sending -> Unit
                     is ChatStatus.Failed -> {
                         GameChip(
                             text = "ارسال نشد؛ دوباره تلاش کن",

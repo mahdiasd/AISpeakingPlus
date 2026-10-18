@@ -158,9 +158,15 @@ class ChatViewModel(
             var accumulatedText = ""
             var isDone = false
 
+            val initialAiChat = Chat.Ai(
+                uid = aiUid,
+                message = "",
+                voiceState = AiVoiceState.Stopped
+            )
+
             _uiState.update {
                 it.copy(
-                    chats = kotlinx.collections.immutable.persistentListOf(Chat.WaitingForAi),
+                    chats = kotlinx.collections.immutable.persistentListOf(initialAiChat),
                     isModelSpeaking = true
                 )
             }
@@ -478,11 +484,18 @@ class ChatViewModel(
             status = ChatStatus.Sending
         )
 
+        val aiUid = "ai_${Clock.System.now().toEpochMilliseconds()}"
+        val initialAiChat = Chat.Ai(
+            uid = aiUid,
+            message = "",
+            voiceState = AiVoiceState.Stopped
+        )
+
         val updatedTurns = _uiState.value.turnsCount + 1
 
         _uiState.update {
             it.copy(
-                chats = (it.chats + userChat + Chat.WaitingForAi).toImmutableList(),
+                chats = (it.chats + userChat + initialAiChat).toImmutableList(),
                 messageText = "",
                 turnsCount = updatedTurns,
                 isModelSpeaking = true
@@ -491,7 +504,7 @@ class ChatViewModel(
 
         viewModelScope.launch {
             val history = _uiState.value.chats
-                .filter { it.uid != userUid && it !is Chat.WaitingForAi }
+                .filter { it.uid != userUid && it.uid != aiUid && it !is Chat.WaitingForAi }
                 .mapNotNull {
                     when (it) {
                         is Chat.User -> "User" to it.message
@@ -500,7 +513,6 @@ class ChatViewModel(
                     }
                 }
 
-            val aiUid = "ai_${Clock.System.now().toEpochMilliseconds()}"
             var accumulatedText = ""
             var isDone = false
             var streamError: String? = null
@@ -514,16 +526,7 @@ class ChatViewModel(
                 ).collect { event ->
                     when (event) {
                         is StageChatStreamEvent.Connected -> {
-                            _uiState.update { state ->
-                                if (state.chats.none { it is Chat.WaitingForAi }) {
-                                    state.copy(
-                                        chats = (state.chats + Chat.WaitingForAi).toImmutableList(),
-                                        isModelSpeaking = true
-                                    )
-                                } else {
-                                    state.copy(isModelSpeaking = true)
-                                }
-                            }
+                            _uiState.update { state -> state.copy(isModelSpeaking = true) }
                         }
                         is StageChatStreamEvent.Chunk -> {
                             accumulatedText += event.delta
