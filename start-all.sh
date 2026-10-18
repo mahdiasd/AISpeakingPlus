@@ -61,11 +61,26 @@ else
 fi
 
 # ------------------------------------------------------------------------------
+# Helper: Safely Free Ports (ONLY kill processes LISTENING on local TCP port)
+# ------------------------------------------------------------------------------
+free_port() {
+  local port=$1
+  # Using -sTCP:LISTEN ensures outbound client connections (like Android Studio, browsers, proxies) are NOT matched.
+  local pids
+  pids=$(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)
+  if [ -n "$pids" ]; then
+    echo -e "${YELLOW}Freeing port $port (stopping PID: $pids)...${NC}"
+    echo "$pids" | xargs kill -9 2>/dev/null || true
+    sleep 0.5
+  fi
+}
+
+# ------------------------------------------------------------------------------
 # 2. Check and Start 9router (AI Gateway on port 20128)
 # ------------------------------------------------------------------------------
 echo -e "${CYAN}[2/5] Checking 9router (AI Gateway on port 20128)...${NC}"
 
-if lsof -i :20128 >/dev/null 2>&1 || curl -s --connect-timeout 1 http://127.0.0.1:20128/ >/dev/null 2>&1; then
+if lsof -tiTCP:20128 -sTCP:LISTEN >/dev/null 2>&1 || curl -s --connect-timeout 1 http://127.0.0.1:20128/ >/dev/null 2>&1; then
   echo -e "${GREEN}✓ 9router is already running on http://127.0.0.1:20128${NC}"
 else
   ROUTER_BIN=""
@@ -81,7 +96,7 @@ else
 
     ROUTER_READY=false
     for i in {1..20}; do
-      if lsof -i :20128 >/dev/null 2>&1 || curl -s --connect-timeout 1 http://127.0.0.1:20128/ >/dev/null 2>&1; then
+      if lsof -tiTCP:20128 -sTCP:LISTEN >/dev/null 2>&1 || curl -s --connect-timeout 1 http://127.0.0.1:20128/ >/dev/null 2>&1; then
         ROUTER_READY=true
         break
       fi
@@ -102,8 +117,8 @@ fi
 # 3. Free Ports 8080 and 8082 if previously occupied
 # ------------------------------------------------------------------------------
 echo -e "${CYAN}[3/5] Ensuring ports 8080 and 8082 are free...${NC}"
-lsof -ti:8080 | xargs kill -9 >/dev/null 2>&1 || true
-lsof -ti:8082 | xargs kill -9 >/dev/null 2>&1 || true
+free_port 8080
+free_port 8082
 
 # ------------------------------------------------------------------------------
 # 4. Check Web Frontend Dependencies
