@@ -76,8 +76,29 @@ class AppActivity : ComponentActivity() {
         initKoin()
         try {
             org.koin.core.context.loadKoinModules(
-                ir.aispeaking.androidApp.payment.androidPaymentModule(applicationContext)
+                listOf(
+                    ir.aispeaking.androidApp.payment.androidPaymentModule(applicationContext),
+                    ir.aispeaking.androidApp.analytics.androidFirebaseModule(applicationContext)
+                )
             )
+        } catch (_: Throwable) {}
+
+        try {
+            val analytics = GlobalContext.get().getOrNull<ir.aispeaking.utils.analytics.AnalyticsTracker>()
+            analytics?.logEvent(
+                ir.aispeaking.utils.analytics.AnalyticsEvents.EVENT_APP_OPEN,
+                mapOf(
+                    ir.aispeaking.utils.analytics.AnalyticsEvents.PARAM_PLATFORM to "android",
+                    "device_model" to android.os.Build.MODEL,
+                    "os_version" to android.os.Build.VERSION.SDK_INT
+                )
+            )
+            analytics?.setUserProperty(ir.aispeaking.utils.analytics.AnalyticsEvents.USER_PROP_PLATFORM, "android")
+
+            val crashReporter = GlobalContext.get().getOrNull<ir.aispeaking.utils.crashlytics.CrashReporter>()
+            crashReporter?.setCustomKey("platform", "android")
+            crashReporter?.setCustomKey("os_version", android.os.Build.VERSION.SDK_INT)
+            crashReporter?.setCustomKey("device_model", android.os.Build.MODEL)
         } catch (_: Throwable) {}
 
         try {
