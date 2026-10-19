@@ -138,6 +138,7 @@ koin-ksp-compiler = { module = "io.insert-koin:koin-ksp-compiler", version.ref =
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 
 [plugins]
 
