@@ -482,11 +482,12 @@
                 try {
                     if (!firebase.apps.length) {
                         firebase.initializeApp({
-                            apiKey: "AIzaSyCPIOcvS-Nc5i1mBICoXGECxau4zFzGnw8",
+                            apiKey: "AIzaSyBixaaHlw2PcUHuFqFTni5R09fs4jECEn4",
                             projectId: "aispeaking-132a3",
                             messagingSenderId: "160657659274",
                             storageBucket: "aispeaking-132a3.firebasestorage.app",
-                            appId: "1:160657659274:web:aispeaking"
+                            appId: "1:160657659274:web:332012813a23198cfc6473",
+                            authDomain: "aispeaking-132a3.firebaseapp.com"
                         });
                     }
                     this.messaging = firebase.messaging();
@@ -613,13 +614,18 @@
                         n.onclick = function() {
                             n.close();
                             window.focus();
+                            var screen = (data.screen || '').toLowerCase().trim();
+                            if (!screen || screen === 'none') {
+                                if (!data.url && !data.stage_id && !data.stageId) {
+                                    return;
+                                }
+                            }
                             if (data.url) {
                                 self.navigateToUrl(data.url);
                             } else if (data.stage_id || data.stageId) {
                                 var stageId = data.stage_id || data.stageId;
                                 window.location.hash = 'chat?stageId=' + encodeURIComponent(stageId);
-                            } else if (data.screen) {
-                                var screen = data.screen.toLowerCase().trim();
+                            } else if (screen) {
                                 if (screen === 'profile') window.location.hash = 'profile';
                                 else if (screen === 'subscription' || screen === 'sub') window.location.hash = 'subscription';
                                 else if (screen === 'stages' || screen === 'stages_list') window.location.hash = 'stages';
