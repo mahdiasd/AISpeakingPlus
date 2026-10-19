@@ -63,12 +63,12 @@ fun ProfileHeaderCard(
 
     val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(26.dp)
-    val cardBg = if (isDark) Color(0xFF1B1C23) else Color(0xFFFFFFFF)
-    val cardBorder = if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
-    val editBtnBg = if (isDark) Color(0x1AFFFFFF) else Color(0xFFF2F4F7)
-    val editBtnBorder = if (isDark) Color(0x24FFFFFF) else Color(0x14000000)
-    val phonePillBg = if (isDark) Color(0x14FFFFFF) else Color(0xFFF2F4F7)
-    val phonePillBorder = if (isDark) Color(0x22FFFFFF) else Color(0x14000000)
+    val cardBg = Game.PanelSolid
+    val cardBorder = Game.Stroke
+    val editBtnBg = if (isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF)
+    val editBtnBorder = Game.Stroke
+    val phonePillBg = if (isDark) Color(0x14FFFFFF) else Color(0xB8FFFFFF)
+    val phonePillBorder = Game.Stroke
 
     Box(
         modifier = modifier

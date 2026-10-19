@@ -256,7 +256,7 @@ private fun AppleInsetCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isDark) Color(0x14FFFFFF) else Color(0x0A000000))
+                        .background(if (isDark) Color(0x14FFFFFF) else Color(0x66FFFFFF))
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     GameText(

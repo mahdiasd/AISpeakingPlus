@@ -68,7 +68,7 @@ fun JourneyLeaderboardSheet(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isDark) Color(0xFF1E1B4B) else Color(0xFFEFF6FF)
+                        containerColor = if (isDark) Color(0xFF1E1B4B) else Color(0xD9EBF5FF)
                     ),
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,

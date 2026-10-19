@@ -28,27 +28,36 @@ object Game {
     val Panel: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0xD91C1C1E) else Color(0xFFFFFFFF)
+        get() = if (AppTheme.isDark) Color(0xD91C1C1E) else Color(0xD9FFFFFF)
 
     val PanelSolid: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0xFF1C1C1E) else Color(0xFFFFFFFF)
+        get() = if (AppTheme.isDark) Color(0xF21C1C1E) else Color(0xF2F8FAFC)
 
     val PanelRaised: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0xFF2C2C2E) else Color(0xFFF8F9FA)
+        get() = if (AppTheme.isDark) Color(0xE62C2C2E) else Color(0xE6FFFFFF)
 
     val Stroke: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0x24FFFFFF) else Color(0x14000000)
+        get() = if (AppTheme.isDark) Color(0x28FFFFFF) else Color(0x1F000000)
 
     val StrokeStrong: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0x38FFFFFF) else Color(0x1F000000)
+        get() = if (AppTheme.isDark) Color(0x3DFFFFFF) else Color(0x2E000000)
+
+    val SpecularStroke: Brush
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) {
+            Brush.verticalGradient(listOf(Color(0x59FFFFFF), Color(0x1AFFFFFF)))
+        } else {
+            Brush.verticalGradient(listOf(Color(0x99FFFFFF), Color(0x1F000000)))
+        }
 
     // Apple Typography Labels
     val TextPrimary: Color
@@ -83,8 +92,15 @@ object Game {
         @ReadOnlyComposable
         get() = if (AppTheme.isDark) Color(0xFF0066CC) else Color(0xFF0056B3)
 
-    val Gold = Color(0xFFFFD60A)
-    val GoldDeep = Color(0xFFD4A000)
+    val Gold: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xFFFFD60A) else Color(0xFFB45309)
+
+    val GoldDeep: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xFFD4A000) else Color(0xFF92400E)
 
     val Violet: Color
         @Composable

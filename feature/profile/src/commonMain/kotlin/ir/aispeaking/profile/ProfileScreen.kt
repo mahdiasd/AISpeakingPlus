@@ -109,8 +109,8 @@ fun ProfileScreen(
                             label = "back_btn_press"
                         )
 
-                        val backBg = if (isDark) Color(0x1AFFFFFF) else Color(0xFFFFFFFF)
-                        val backBorder = if (isDark) Color(0x22FFFFFF) else Color(0x14000000)
+                        val backBg = if (isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF)
+                        val backBorder = Game.Stroke
                         val backTint = if (isDark) Game.TextPrimary else Color(0xFF111318)
 
                         Box(

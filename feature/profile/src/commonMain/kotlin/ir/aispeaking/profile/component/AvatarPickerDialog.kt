@@ -113,7 +113,7 @@ fun AvatarPickerDialog(
                             modifier = Modifier
                                 .size(64.dp)
                                 .clip(CircleShape)
-                                .background(if (isSelected) Game.Blue.copy(alpha = 0.22f) else if (ir.aispeaking.sharedui.ui.them.AppTheme.isDark) Color(0x14FFFFFF) else Color(0x0A000000))
+                                .background(if (isSelected) Game.Blue.copy(alpha = 0.22f) else if (ir.aispeaking.sharedui.ui.them.AppTheme.isDark) Color(0x14FFFFFF) else Color(0x66FFFFFF))
                                 .border(
                                     width = if (isSelected) 2.5.dp else 1.dp,
                                     color = if (isSelected) Game.Blue else Game.Stroke,

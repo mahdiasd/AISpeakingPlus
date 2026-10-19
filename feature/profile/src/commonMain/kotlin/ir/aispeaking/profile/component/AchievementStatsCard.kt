@@ -143,8 +143,8 @@ private fun StatCard(
 ) {
     val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(22.dp)
-    val cardBg = if (isDark) Color(0xFF1B1C23) else Color(0xFFFFFFFF)
-    val cardBorder = if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
+    val cardBg = Game.PanelSolid
+    val cardBorder = Game.Stroke
 
     Box(
         modifier = modifier
@@ -235,11 +235,11 @@ private fun LevelStatCard(
 
     val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(22.dp)
-    val cardBg = if (isDark) Color(0xFF1B1C23) else Color(0xFFFFFFFF)
+    val cardBg = Game.PanelSolid
     val cardBorder = if (onLevelClick != null) {
         if (isDark) Color(0x385E5CE6) else Color(0x335E5CE6)
     } else {
-        if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
+        Game.Stroke
     }
 
     Box(
