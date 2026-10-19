@@ -43,6 +43,20 @@ fun AppNavigation(
         }
     }
 
+    LaunchedEffect(Unit) {
+        AppDeepLinkManager.navigationRequests.collect { route ->
+            if (route is StageChatRoute || route is ProfileRoute || route is SubscriptionRoute || route is StagesListRoute) {
+                if (backStack.none { it is MainRoute }) {
+                    backStack.removeAll { it is SplashRoute }
+                    backStack.add(MainRoute)
+                }
+            }
+            if (backStack.lastOrNull() != route) {
+                backStack.add(route)
+            }
+        }
+    }
+
     NavDisplay(
         backStack = backStack,
         onBack = { backStack.removeLastOrNull() },
