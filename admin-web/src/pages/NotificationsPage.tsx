@@ -13,6 +13,9 @@ import {
   MessageSquare,
   Link as LinkIcon,
   Code2,
+  Laptop,
+  Radio,
+  XCircle,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
@@ -21,6 +24,11 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
 import { ImageDropzone } from '../components/stages/ImageDropzone';
+import {
+  setupBrowserNotifications,
+  isNotificationSupported,
+  getStoredFcmToken,
+} from '../utils/firebasePush';
 
 interface SentNotificationRecord {
   id: string;
@@ -42,7 +50,7 @@ export const NotificationsPage: React.FC = () => {
   const [imageUrl, setImageUrl] = useState('');
   const [targetType, setTargetType] = useState<'topic' | 'token'>('topic');
   const [targetValue, setTargetValue] = useState('aispeaking_plus_v1');
-  const [screen, setScreen] = useState('chat');
+  const [screen, setScreen] = useState('none');
   const [stageId, setStageId] = useState('');
   const [customUrl, setCustomUrl] = useState('');
 
@@ -55,6 +63,27 @@ export const NotificationsPage: React.FC = () => {
   const [showJsonPreview, setShowJsonPreview] = useState(false);
   const [copiedPayload, setCopiedPayload] = useState(false);
   const [sentHistory, setSentHistory] = useState<SentNotificationRecord[]>([]);
+
+  // Browser Notification Status State
+  const [browserSupported, setBrowserSupported] = useState(false);
+  const [browserPermission, setBrowserPermission] = useState<string>('default');
+  const [browserToken, setBrowserToken] = useState<string | null>(null);
+  const [isEnablingBrowser, setIsEnablingBrowser] = useState(false);
+  const [isDirectTesting, setIsDirectTesting] = useState(false);
+  const [copiedBrowserToken, setCopiedBrowserToken] = useState(false);
+
+  // Initialize browser notification status
+  useEffect(() => {
+    const supported = isNotificationSupported();
+    setBrowserSupported(supported);
+    if (supported) {
+      setBrowserPermission(Notification.permission);
+      const savedToken = getStoredFcmToken();
+      if (savedToken) {
+        setBrowserToken(savedToken);
+      }
+    }
+  }, []);
 
   // Load available stages for quick deep link selection
   useEffect(() => {
@@ -78,6 +107,8 @@ export const NotificationsPage: React.FC = () => {
   // Compute destination description for preview
   const getDestinationLabel = () => {
     switch (screen) {
+      case 'none':
+        return 'بدون لینک (فقط اعلان)';
       case 'chat': {
         const found = stages.find((s) => s.id === stageId);
         return found ? `مرحله: ${found.titleFa || found.title} (${stageId})` : `مرحله چت: ${stageId || 'انتخاب نشده'}`;
@@ -93,7 +124,7 @@ export const NotificationsPage: React.FC = () => {
       case 'url':
         return `لینک سفارشی: ${customUrl || 'تنظیم نشده'}`;
       default:
-        return 'صفحه اصلی';
+        return 'بدون لینک (فقط اعلان)';
     }
   };
 
@@ -104,9 +135,63 @@ export const NotificationsPage: React.FC = () => {
     imageUrl: imageUrl.trim() || undefined,
     targetType,
     targetValue: targetValue.trim() || 'aispeaking_plus_v1',
-    screen: screen !== 'url' ? screen : undefined,
+    screen: screen !== 'none' && screen !== 'url' ? screen : undefined,
     stageId: screen === 'chat' && stageId ? stageId.trim() : undefined,
     url: screen === 'url' && customUrl ? customUrl.trim() : undefined,
+  };
+
+  const handleEnableBrowserPush = async () => {
+    setIsEnablingBrowser(true);
+    try {
+      const res = await setupBrowserNotifications((payload) => {
+        toastSuccess(`پیام جدید دریافت شد: ${payload.notification?.title || payload.data?.title || 'نوتیفیکیشن'}`);
+      });
+      setBrowserPermission(res.permission);
+      if (res.token) {
+        setBrowserToken(res.token);
+        toastSuccess('نوتیفیکیشن مرورگر فعال و در کانال aispeaking_plus_v1 ثبت شد!');
+      } else if (res.error) {
+        toastError(res.error);
+      }
+    } catch (err: any) {
+      toastError(err?.message || 'خطا در فعال‌سازی نوتیفیکیشن مرورگر');
+    } finally {
+      setIsEnablingBrowser(false);
+    }
+  };
+
+  const handleCopyBrowserToken = () => {
+    if (!browserToken) return;
+    navigator.clipboard.writeText(browserToken);
+    setCopiedBrowserToken(true);
+    setTimeout(() => setCopiedBrowserToken(false), 2000);
+  };
+
+  const handleDirectTestToThisBrowser = async () => {
+    if (!browserToken) {
+      toastError('ابتدا نوتیفیکیشن این مرورگر را فعال کنید تا توکن دستگاه دریافت شود');
+      return;
+    }
+    setIsDirectTesting(true);
+    try {
+      const testPayload: AdminNotificationPayload = {
+        title: 'تست مستقیم به مرورگر شما 🔔',
+        body: 'اگر این اعلان را می‌بینید، ارتباط و تحویل پوش نوتیفیکیشن کاملاً سالم است!',
+        targetType: 'token',
+        targetValue: browserToken,
+        screen: 'none',
+      };
+      const res = await api.sendPushNotification(testPayload);
+      setLastSuccess(res);
+      toastSuccess('نوتیفیکیشن آزمایشی با موفقیت ارسال شد!');
+    } catch (err: any) {
+      console.error('Direct test error:', err);
+      const errMsg = err?.message || 'خطا در ارسال تست مستقیم به این دستگاه';
+      setFullError(errMsg);
+      toastError(errMsg);
+    } finally {
+      setIsDirectTesting(false);
+    }
   };
 
   const handleCopyPayload = () => {
@@ -422,13 +507,14 @@ export const NotificationsPage: React.FC = () => {
               {/* Destination Screen Picker */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 select-none">
-                  صفحه مقصد
+                  صفحه مقصد (اختیاری)
                 </label>
                 <select
                   value={screen}
                   onChange={(e) => setScreen(e.target.value)}
                   className="w-full rounded-xl bg-white border border-slate-300 dark:border-slate-800 text-slate-900 text-sm px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-[#0E1422] dark:text-slate-100"
                 >
+                  <option value="none">بدون لینک (فقط نمایش پیام - بدون کلیک)</option>
                   <option value="chat">تمرین مرحله چت (Stage Chat)</option>
                   <option value="subscription">صفحه خرید و ارتقای اشتراک (Subscription / VIP)</option>
                   <option value="stages">کاتالوگ لیست مراحل (Stages List)</option>
@@ -437,6 +523,19 @@ export const NotificationsPage: React.FC = () => {
                   <option value="url">لینک سفارشی درون‌برنامه یا وب (Custom URL)</option>
                 </select>
               </div>
+
+              {/* Notice when screen is 'none' */}
+              {screen === 'none' && (
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 space-y-1 animate-in fade-in">
+                  <div className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <span>💡</span>
+                    <span>پیام اطلاع‌رسانی عمومی (بدون مقصد کلیک)</span>
+                  </div>
+                  <p>
+                    این پیام تنها در نوار اعلان نمایش داده می‌شود و کلیک روی آن هیچ صفحه خاصی را باز نمی‌کند.
+                  </p>
+                </div>
+              )}
 
               {/* Stage Picker if Screen is 'chat' */}
               {screen === 'chat' && (
@@ -535,6 +634,107 @@ export const NotificationsPage: React.FC = () => {
 
         {/* Right Column: Mobile Notification Mockup & Session History (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
+          {/* Browser Notification Status & Quick Direct Test Card */}
+          <div className="bg-white dark:bg-[#0E1422] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Laptop className="w-4 h-4 text-indigo-500" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  وضعیت نوتیفیکیشن در این مرورگر
+                </h3>
+              </div>
+              {browserPermission === 'granted' ? (
+                <Badge variant="success" size="sm" className="gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  فعال و آماده
+                </Badge>
+              ) : browserPermission === 'denied' ? (
+                <Badge variant="danger" size="sm" className="gap-1">
+                  <XCircle className="w-3 h-3" />
+                  مسدود شده
+                </Badge>
+              ) : (
+                <Badge variant="warning" size="sm" className="gap-1">
+                  <Radio className="w-3 h-3 animate-pulse" />
+                  نیاز به فعال‌سازی
+                </Badge>
+              )}
+            </div>
+
+            {!browserSupported && (
+              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200">
+                ⚠️ نوتیفیکیشن در این مرورگر یا محیط غیرامن (غیر HTTPS و غیر localhost) پشتیبانی نمی‌شود.
+              </div>
+            )}
+
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              {browserPermission === 'granted'
+                ? 'این مرورگر در سرویس FCM ثبت شده و در کانال aispeaking_plus_v1 عضو است.'
+                : 'برای دریافت اعلان‌ها روی این دستگاه، روی دکمه زیر کلیک کنید و در پاپ‌آپ مرورگر Allow را انتخاب کنید.'}
+            </p>
+
+            {/* Token display if available */}
+            {browserToken && (
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5 font-mono">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                  <span>توکن FCM این مرورگر:</span>
+                  <button
+                    type="button"
+                    onClick={handleCopyBrowserToken}
+                    className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer font-sans"
+                  >
+                    {copiedBrowserToken ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedBrowserToken ? 'کپی شد' : 'کپی'}</span>
+                  </button>
+                </div>
+                <div className="text-[10px] text-slate-700 dark:text-slate-300 break-all select-all font-mono line-clamp-2">
+                  {browserToken}
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              {browserPermission !== 'granted' ? (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleEnableBrowserPush}
+                  isLoading={isEnablingBrowser}
+                  className="w-full text-xs"
+                  icon={<Bell className="w-3.5 h-3.5" />}
+                >
+                  فعال‌سازی نوتیفیکیشن در این مرورگر
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDirectTestToThisBrowser}
+                    isLoading={isDirectTesting}
+                    className="flex-1 text-xs"
+                    icon={<Send className="w-3.5 h-3.5 text-indigo-500" />}
+                  >
+                    ارسال تست مستقیم به همین مرورگر
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleEnableBrowserPush}
+                    isLoading={isEnablingBrowser}
+                    className="text-xs shrink-0"
+                    title="تلاش مجدد برای دریافت توکن و ثبت در کانال"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+
           {/* Mobile Preview Mockup */}
           <div className="bg-white dark:bg-[#0E1422] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
@@ -585,13 +785,23 @@ export const NotificationsPage: React.FC = () => {
               )}
 
               {/* Click Action Badge inside preview */}
-              <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-indigo-300">
-                <span className="flex items-center gap-1">
-                  <ExternalLink className="w-3 h-3" />
-                  {getDestinationLabel()}
-                </span>
-                <span className="text-[10px] text-slate-500">برای باز شدن کلیک کنید</span>
-              </div>
+              {screen === 'none' ? (
+                <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                  <span className="flex items-center gap-1">
+                    <Bell className="w-3 h-3 text-slate-400" />
+                    بدون عملکرد کلیک (فقط اعلان پیام)
+                  </span>
+                  <span className="text-[10px] text-slate-500">بدون تغییر صفحه</span>
+                </div>
+              ) : (
+                <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-indigo-300">
+                  <span className="flex items-center gap-1">
+                    <ExternalLink className="w-3 h-3" />
+                    {getDestinationLabel()}
+                  </span>
+                  <span className="text-[10px] text-slate-500">برای باز شدن کلیک کنید</span>
+                </div>
+              )}
             </div>
 
             <p className="text-xs text-slate-500 dark:text-slate-400 text-center leading-relaxed">
