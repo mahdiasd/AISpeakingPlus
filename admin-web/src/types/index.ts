@@ -266,3 +266,22 @@ export interface PromoListResponse {
   stats: PromoStats;
 }
 
+// Push Notification Models
+export interface AdminNotificationPayload {
+  title: string;
+  body: string;
+  imageUrl?: string;
+  targetType?: 'topic' | 'token';
+  targetValue?: string;
+  screen?: string;
+  stageId?: string;
+  url?: string;
+}
+
+export interface AdminNotificationResponse {
+  success: boolean;
+  messageId: string;
+  target: string;
+  targetType: string;
+}
+

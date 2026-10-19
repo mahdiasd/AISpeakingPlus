@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   AudioWaveform,
   TicketPercent,
+  Bell,
   X,
 } from 'lucide-react';
 
@@ -32,6 +33,11 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       to: '/admin/voice-lab',
       label: 'آزمایشگاه صوت (TTS & STT)',
       icon: AudioWaveform,
+    },
+    {
+      to: '/admin/notifications',
+      label: 'ارسال نوتیفیکیشن',
+      icon: Bell,
     },
     {
       to: '/admin/users',
