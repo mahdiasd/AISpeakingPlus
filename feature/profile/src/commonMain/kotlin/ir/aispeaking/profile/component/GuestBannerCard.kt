@@ -48,8 +48,8 @@ fun GuestBannerCard(
     } else {
         Brush.verticalGradient(
             listOf(
-                Color(0xFFE8F2FF),
-                Color(0xFFFFFFFF)
+                Color(0xCCE8F2FF),
+                Game.PanelSolid
             )
         )
     }

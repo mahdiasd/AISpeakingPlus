@@ -53,7 +53,7 @@ fun PlanSelectionCard(
     val targetBgColor = if (isDark) {
         if (isSelected) Game.PanelRaised else Game.PanelSolid
     } else {
-        if (isSelected) Color(0xFFF0F6FF) else Color(0xFFFFFFFF)
+        if (isSelected) Color(0xD9EBF5FF) else Game.PanelSolid
     }
 
     val animatedBgColor by animateColorAsState(

@@ -51,11 +51,11 @@ fun SubscriptionCard(
 ) {
     val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(24.dp)
-    val cardBg = if (isDark) Color(0xFF1B1C23) else Color(0xFFFFFFFF)
-    val cardBorder = if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
-    val extendBtnBg = if (isDark) Color(0x22FFFFFF) else Color(0xFFF2F4F7)
-    val extendBtnBorder = if (isDark) Color(0x33FFFFFF) else Color(0x14000000)
-    val crownMutedBg = if (isDark) Color(0x1AFFFFFF) else Color(0xFFF2F4F7)
+    val cardBg = Game.PanelSolid
+    val cardBorder = Game.Stroke
+    val extendBtnBg = if (isDark) Color(0x22FFFFFF) else Color(0xB8FFFFFF)
+    val extendBtnBorder = Game.Stroke
+    val crownMutedBg = if (isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF)
 
     if (subscription.isSubscriber) {
         // Active / Trial Subscription Card

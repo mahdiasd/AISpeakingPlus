@@ -81,7 +81,7 @@ fun ChatToolbar(
                 contentDescription = "بازگشت",
                 size = 42.dp,
                 iconSize = 20.dp,
-                container = if (isDark) Color(0x22FFFFFF) else Color(0x0F000000),
+                container = if (isDark) Color(0x22FFFFFF) else Color(0xB8FFFFFF),
                 border = AppleChatTheme.SpecularBorderColor
             )
 
@@ -237,7 +237,7 @@ private fun AppleObjectiveChip(
         modifier = Modifier
             .applePressEffect(targetScale = 0.94f, onClick = onClick)
             .clip(shape)
-            .background(if (isDark) Color(0xD9181A28) else Color(0xFFE8F2FF))
+            .background(if (isDark) Color(0xD9181A28) else Color(0xD9EBF5FF))
             .border(
                 1.dp,
                 accent.copy(alpha = if (isDark) 0.45f else 0.5f),

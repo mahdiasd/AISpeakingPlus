@@ -61,40 +61,51 @@ object AppleChatTheme {
     val SuccessGlow = Color(0x3338BDF8)
 
     // Hints / Mission Badges (Warm Champagne Gold)
-    val Gold = Color(0xFFFFD60A)
-    val GoldDeep = Color(0xFFF59E0B)
-    val GoldGlow = Color(0x33FFD60A)
+    val Gold: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xFFFFD60A) else Color(0xFFB45309)
+
+    val GoldDeep: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xFFF59E0B) else Color(0xFF92400E)
+
+    val GoldGlow: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0x33FFD60A) else Color(0x26B45309)
 
     // Alerts / Errors (Apple Coral)
     val Coral = Color(0xFFFF453A)
     val CoralDeep = Color(0xFFD70015)
     val CoralGlow = Color(0x33FF453A)
 
-    // Liquid Glass Materials (visionOS & iOS 26 translucent surfaces)
+    // Liquid Glass Materials (visionOS & iOS 26/27 translucent surfaces)
     val GlassPanel: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0xD9161826) else Color(0xEEFFFFFF)
+        get() = if (AppTheme.isDark) Color(0xD9161826) else Color(0xD9FFFFFF)
 
     val GlassPanelRaised: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0xE6202438) else Color(0xF5F7FAFC)
+        get() = if (AppTheme.isDark) Color(0xE6202438) else Color(0xE6FFFFFF)
 
     val GlassPanelElevated: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0xF2272B42) else Color(0xFFFFFFFF)
+        get() = if (AppTheme.isDark) Color(0xF2272B42) else Color(0xF2F8FAFC)
 
     val GlassPanelSolid: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0xFF1C1F2E) else Color(0xFFFFFFFF)
+        get() = if (AppTheme.isDark) Color(0xFF1C1F2E) else Color(0xF2F8FAFC)
 
     val BubbleAi: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0xD91D2030) else Color(0xF2F2F4F7)
+        get() = if (AppTheme.isDark) Color(0xD91D2030) else Color(0xD9FFFFFF)
 
     // Specular Light Rims (simulates light refraction along glass edges)
     val SpecularStrokeBrush: Brush
@@ -103,7 +114,7 @@ object AppleChatTheme {
         get() = if (AppTheme.isDark) {
             Brush.verticalGradient(listOf(Color(0x59FFFFFF), Color(0x1AFFFFFF)))
         } else {
-            Brush.verticalGradient(listOf(Color(0x22000000), Color(0x0A000000)))
+            Brush.verticalGradient(listOf(Color(0x99FFFFFF), Color(0x22000000)))
         }
 
     val SubtleStrokeBrush: Brush
@@ -112,13 +123,13 @@ object AppleChatTheme {
         get() = if (AppTheme.isDark) {
             Brush.verticalGradient(listOf(Color(0x33FFFFFF), Color(0x0DFFFFFF)))
         } else {
-            Brush.verticalGradient(listOf(Color(0x14000000), Color(0x05000000)))
+            Brush.verticalGradient(listOf(Color(0x66FFFFFF), Color(0x14000000)))
         }
 
     val SpecularBorderColor: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0x38FFFFFF) else Color(0x1F000000)
+        get() = if (AppTheme.isDark) Color(0x38FFFFFF) else Color(0x26000000)
 
     val SubtleBorderColor: Color
         @Composable

@@ -190,7 +190,7 @@ private fun CompactVoiceRow(
                 contentDescription = "تایپ متنی",
                 size = 42.dp,
                 iconSize = 20.dp,
-                container = if (AppTheme.isDark) Color(0x1AFFFFFF) else Color(0x0F000000),
+                container = if (AppTheme.isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF),
                 border = AppleChatTheme.SubtleBorderColor
             )
 
@@ -259,7 +259,7 @@ private fun CompactTextRow(
                 contentDescription = "مکالمه صوتی",
                 size = 42.dp,
                 iconSize = 20.dp,
-                container = if (AppTheme.isDark) Color(0x1AFFFFFF) else Color(0x0F000000),
+                container = if (AppTheme.isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF),
                 border = AppleChatTheme.SubtleBorderColor
             )
 
@@ -374,7 +374,7 @@ private fun CompactTranscriptCapsule(
                     size = 34.dp,
                     iconSize = 16.dp,
                     tint = AppleChatTheme.SuccessCyan,
-                    container = if (AppTheme.isDark) Color(0x18FFFFFF) else Color(0x0F000000),
+                    container = if (AppTheme.isDark) Color(0x18FFFFFF) else Color(0xB8FFFFFF),
                     border = AppleChatTheme.SubtleBorderColor
                 )
                 GameIconButton(
@@ -384,7 +384,7 @@ private fun CompactTranscriptCapsule(
                     size = 34.dp,
                     iconSize = 16.dp,
                     tint = AppleChatTheme.Coral,
-                    container = if (AppTheme.isDark) Color(0x18FFFFFF) else Color(0x0F000000),
+                    container = if (AppTheme.isDark) Color(0x18FFFFFF) else Color(0xB8FFFFFF),
                     border = AppleChatTheme.SubtleBorderColor
                 )
             }
@@ -494,7 +494,7 @@ private fun AppleRecordPill(
     val shape = RoundedCornerShape(22.dp)
     val isDark = AppTheme.isDark
     val pillBg = if (hasText) {
-        if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
+        if (isDark) Color(0x22FFFFFF) else Color(0xB8FFFFFF)
     } else {
         AppleChatTheme.PrimaryAzure.copy(alpha = breathGlow)
     }
@@ -570,7 +570,7 @@ private fun AppleHintButton(
             .applePressEffect(enabled = !isRequesting, targetScale = 0.92f, onClick = onClick)
             .clip(CircleShape)
             .background(
-                if (hintsUsedCount > 0) AppleChatTheme.Gold.copy(alpha = 0.2f) else if (isDark) Color(0x1AFFFFFF) else Color(0x0F000000)
+                if (hintsUsedCount > 0) AppleChatTheme.Gold.copy(alpha = 0.2f) else if (isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF)
             )
             .border(
                 1.dp,

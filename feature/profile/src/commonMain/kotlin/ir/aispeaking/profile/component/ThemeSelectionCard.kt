@@ -67,8 +67,8 @@ fun ThemeSelectionCard(
     val isDark = AppTheme.isDark
     val cardShape = RoundedCornerShape(26.dp)
 
-    val cardBg = if (isDark) Color(0xFF1B1C23) else Color(0xFFFFFFFF)
-    val cardBorder = if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
+    val cardBg = Game.PanelSolid
+    val cardBorder = Game.Stroke
 
     val options = listOf(
         ThemeOption(ThemeMode.System, "سیستم", Res.drawable.ic_theme_system),
@@ -147,8 +147,8 @@ fun ThemeSelectionCard(
 
             // Apple 3-Way Segmented Control Track
             val trackShape = RoundedCornerShape(16.dp)
-            val trackBg = if (isDark) Color(0xFF14151B) else Color(0xFFEBEFF4)
-            val trackBorder = if (isDark) Color(0x1AFFFFFF) else Color(0x0A000000)
+            val trackBg = if (isDark) Color(0xFF14151B) else Color(0x14000000)
+            val trackBorder = Game.Stroke
 
             Box(
                 modifier = Modifier
@@ -202,8 +202,8 @@ private fun SegmentPill(
 
     val pillShape = RoundedCornerShape(12.dp)
 
-    val activeBg = if (isDark) Color(0xFF2C2D38) else Color(0xFFFFFFFF)
-    val activeBorder = if (isDark) Color(0x38FFFFFF) else Color(0x0D000000)
+    val activeBg = if (isDark) Color(0xFF2C2D38) else Color(0xE6FFFFFF)
+    val activeBorder = if (isDark) Color(0x38FFFFFF) else Color(0x26000000)
     val activeTint = if (isDark) Color(0xFF0A84FF) else Color(0xFF007AFF)
 
     val unselectedTint = if (isDark) Color(0x99EBEBF5) else Color(0xFF6B7280)

@@ -178,8 +178,8 @@ fun GameButton(
             Game.TextMuted
         )
         style == GameButtonStyle.Glass && !isDark -> Triple(
-            Color(0xFFF2F4F7),
-            Color(0xFFE5E7EB),
+            Color(0xCCFFFFFF),
+            Color(0xB3FFFFFF),
             Color(0xFF111318)
         )
         style == GameButtonStyle.Primary && !isDark -> Triple(
@@ -194,7 +194,7 @@ fun GameButton(
         if (style == GameButtonStyle.Glass) Color.White.copy(alpha = if (enabled) 0.22f else 0.08f)
         else Color.White.copy(alpha = if (enabled) 0.16f else 0.06f)
     } else {
-        if (style == GameButtonStyle.Glass) Color.Black.copy(alpha = if (enabled) 0.12f else 0.05f)
+        if (style == GameButtonStyle.Glass) Color.Black.copy(alpha = if (enabled) 0.18f else 0.08f)
         else Color.Black.copy(alpha = if (enabled) 0.08f else 0.03f)
     }
 
@@ -261,7 +261,8 @@ fun GameIconButton(
     border: Color = Game.Stroke,
 ) {
     val isDark = AppTheme.isDark
-    val resolvedContainer = if (container != Color.Unspecified) container else if (isDark) Color(0x22FFFFFF) else Color(0x0F000000)
+    val resolvedContainer = if (container != Color.Unspecified) container else if (isDark) Color(0x26FFFFFF) else Color(0xB8FFFFFF)
+    val resolvedBorder = if (border != Game.Stroke) border else if (isDark) Color(0x30FFFFFF) else Color(0x26000000)
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -278,7 +279,7 @@ fun GameIconButton(
             }
             .clip(CircleShape)
             .background(resolvedContainer)
-            .border(1.dp, border, CircleShape)
+            .border(1.dp, resolvedBorder, CircleShape)
             .clickable(interactionSource = interaction, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -304,8 +305,8 @@ fun GameChip(
     onClick: (() -> Unit)? = null,
 ) {
     val isDark = AppTheme.isDark
-    val resolvedContainer = if (container != Color.Unspecified) container else if (isDark) Color(0xEB181A22) else Color(0xFFF2F4F7)
-    val resolvedBorder = if (border != Color.Unspecified) border else if (isDark) Color(0x33FFFFFF) else Color(0x14000000)
+    val resolvedContainer = if (container != Color.Unspecified) container else if (isDark) Color(0xEB181A22) else Color(0xCCFFFFFF)
+    val resolvedBorder = if (border != Color.Unspecified) border else if (isDark) Color(0x33FFFFFF) else Color(0x1F000000)
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -525,8 +526,8 @@ fun GameModal(
                         .fillMaxWidth()
                         .heightIn(max = 660.dp)
                         .clip(modalShape)
-                        .background(if (isDark) Game.PanelSolid else Color(0xFFFFFFFF))
-                        .border(1.dp, if (isDark) Game.StrokeStrong else Color(0x18000000), modalShape)
+                        .background(Game.PanelSolid)
+                        .border(1.dp, Game.StrokeStrong, modalShape)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
@@ -591,8 +592,8 @@ fun GameTopModal(
                         .fillMaxWidth()
                         .heightIn(max = 560.dp)
                         .clip(topModalShape)
-                        .background(if (isDark) Game.PanelSolid else Color(0xFFFFFFFF))
-                        .border(1.dp, if (isDark) Game.StrokeStrong else Color(0x18000000), topModalShape)
+                        .background(Game.PanelSolid)
+                        .border(1.dp, Game.StrokeStrong, topModalShape)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
@@ -644,8 +645,8 @@ fun GameSheet(
                         .fillMaxWidth()
                         .heightIn(max = 680.dp)
                         .clip(shape)
-                        .background(if (isDark) Game.PanelSolid else Color(0xFFFFFFFF))
-                        .border(1.dp, if (isDark) Game.StrokeStrong else Color(0x14000000), shape)
+                        .background(Game.PanelSolid)
+                        .border(1.dp, Game.StrokeStrong, shape)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
