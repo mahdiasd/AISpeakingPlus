@@ -4,6 +4,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR" />
     <uses-permission android:name="ir.mservices.market.BILLING" />
 
@@ -41,7 +42,47 @@
                     android:scheme="aispeaking"
                     android:host="payment" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="aispeaking"
+                    android:host="open" />
+                <data
+                    android:scheme="aispeaking"
+                    android:host="chat" />
+                <data
+                    android:scheme="aispeaking"
+                    android:host="stage" />
+                <data
+                    android:scheme="aispeaking"
+                    android:host="subscription" />
+                <data
+                    android:scheme="aispeaking"
+                    android:host="profile" />
+                <data
+                    android:scheme="aispeaking"
+                    android:host="stages" />
+            </intent-filter>
         </activity>
+
+        <!-- Firebase Cloud Messaging Service -->
+        <service
+            android:name=".notification.AppFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Default notification channel and icon -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="aispeaking_general_channel" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher" />
     </application>
 
 </manifest>

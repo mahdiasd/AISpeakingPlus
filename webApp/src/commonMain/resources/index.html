@@ -462,5 +462,186 @@
             }
         };
     </script>
+
+    <!-- Firebase Web SDK Compat scripts for Cloud Messaging -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
+
+    <script>
+        window.aiSpeakingPush = {
+            fcmToken: null,
+            messaging: null,
+            serviceWorkerRegistration: null,
+
+            init: function() {
+                if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+                    console.warn('[FCM Web] Service Worker or Notifications not supported in this browser.');
+                    return;
+                }
+
+                try {
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp({
+                            apiKey: "AIzaSyCPIOcvS-Nc5i1mBICoXGECxau4zFzGnw8",
+                            projectId: "aispeaking-132a3",
+                            messagingSenderId: "160657659274",
+                            storageBucket: "aispeaking-132a3.firebasestorage.app",
+                            appId: "1:160657659274:web:aispeaking"
+                        });
+                    }
+                    this.messaging = firebase.messaging();
+                } catch (e) {
+                    console.error('[FCM Web] Firebase initialization error:', e);
+                    return;
+                }
+
+                var self = this;
+
+                // Register Service Worker from root
+                navigator.serviceWorker.register('./firebase-messaging-sw.js')
+                    .then(function(registration) {
+                        self.serviceWorkerRegistration = registration;
+                        console.log('[FCM Web] Service Worker registered with scope:', registration.scope);
+
+                        // If already granted, retrieve token directly
+                        if (Notification.permission === 'granted') {
+                            self.requestToken();
+                        }
+                    })
+                    .catch(function(err) {
+                        console.warn('[FCM Web] Service Worker registration failed:', err);
+                    });
+
+                // Foreground message listener
+                this.messaging.onMessage(function(payload) {
+                    console.log('[FCM Web] Foreground notification received:', payload);
+                    self._handleForegroundMessage(payload);
+                });
+
+                // Listen for messages from service worker (e.g. notification click deep link)
+                navigator.serviceWorker.addEventListener('message', function(event) {
+                    if (event.data && event.data.type === 'FCM_DEEP_LINK') {
+                        console.log('[FCM Web] Navigation message from service worker:', event.data);
+                        self.navigateToUrl(event.data.url);
+                    }
+                });
+            },
+
+            requestPermissionAndToken: function() {
+                var self = this;
+                if (!('Notification' in window)) {
+                    return Promise.reject(new Error("Notifications not supported"));
+                }
+                return Notification.requestPermission().then(function(permission) {
+                    console.log('[FCM Web] Notification permission status:', permission);
+                    if (permission === 'granted') {
+                        return self.requestToken();
+                    } else {
+                        return null;
+                    }
+                });
+            },
+
+            requestToken: function() {
+                var self = this;
+                if (!this.messaging || !this.serviceWorkerRegistration) {
+                    return Promise.resolve(null);
+                }
+
+                var tokenOptions = {
+                    serviceWorkerRegistration: this.serviceWorkerRegistration
+                };
+                if (window.FIREBASE_VAPID_KEY) {
+                    tokenOptions.vapidKey = window.FIREBASE_VAPID_KEY;
+                }
+
+                return this.messaging.getToken(tokenOptions)
+                    .then(function(token) {
+                        if (token) {
+                            self.fcmToken = token;
+                            try { localStorage.setItem('fcm_web_token', token); } catch(e){}
+                            console.log('%c[FCM Web Token]: ' + token, 'color: #10B981; font-weight: bold;');
+                            if (typeof window.onFcmWebTokenReceived === 'function') {
+                                try { window.onFcmWebTokenReceived(token); } catch(e){}
+                            }
+                            return token;
+                        } else {
+                            console.warn('[FCM Web] No registration token returned.');
+                            return null;
+                        }
+                    })
+                    .catch(function(err) {
+                        console.warn('[FCM Web] Error getting FCM web token:', err);
+                        return null;
+                    });
+            },
+
+            navigateToUrl: function(url) {
+                if (!url) return;
+                try {
+                    var parsed = new URL(url, window.location.origin);
+                    if (parsed.hash) {
+                        window.location.hash = parsed.hash;
+                    }
+                } catch(e) {
+                    if (url.indexOf('#') !== -1) {
+                        window.location.hash = url.substring(url.indexOf('#'));
+                    }
+                }
+            },
+
+            _handleForegroundMessage: function(payload) {
+                var title = payload.notification?.title || payload.data?.title || 'AI Speaking Plus';
+                var body = payload.notification?.body || payload.data?.body || payload.data?.message || '';
+                var data = payload.data || {};
+
+                if (Notification.permission === 'granted') {
+                    try {
+                        var n = new Notification(title, {
+                            body: body,
+                            icon: payload.notification?.icon || data.icon || './android-chrome-192x192.png',
+                            data: data
+                        });
+                        var self = this;
+                        n.onclick = function() {
+                            n.close();
+                            window.focus();
+                            if (data.url) {
+                                self.navigateToUrl(data.url);
+                            } else if (data.stage_id || data.stageId) {
+                                var stageId = data.stage_id || data.stageId;
+                                window.location.hash = 'chat?stageId=' + encodeURIComponent(stageId);
+                            } else if (data.screen) {
+                                var screen = data.screen.toLowerCase().trim();
+                                if (screen === 'profile') window.location.hash = 'profile';
+                                else if (screen === 'subscription' || screen === 'sub') window.location.hash = 'subscription';
+                                else if (screen === 'stages' || screen === 'stages_list') window.location.hash = 'stages';
+                                else if (screen === 'login') window.location.hash = 'login';
+                                else window.location.hash = 'main';
+                            }
+                        };
+                    } catch(e) {
+                        console.warn('[FCM Web] Foreground notification presentation failed:', e);
+                    }
+                }
+            }
+        };
+
+        // Initialize when window finishes loading
+        window.addEventListener('load', function() {
+            window.aiSpeakingPush.init();
+        });
+
+        // Request permission on first user gesture (click/tap) if still in 'default' state
+        var requestNotificationOnGesture = function() {
+            if (window.Notification && Notification.permission === 'default') {
+                window.aiSpeakingPush.requestPermissionAndToken();
+            }
+            window.removeEventListener('click', requestNotificationOnGesture);
+            window.removeEventListener('touchend', requestNotificationOnGesture);
+        };
+        window.addEventListener('click', requestNotificationOnGesture, { once: true });
+        window.addEventListener('touchend', requestNotificationOnGesture, { once: true });
+    </script>
     <script src="webApp.js"></script>
 </html>

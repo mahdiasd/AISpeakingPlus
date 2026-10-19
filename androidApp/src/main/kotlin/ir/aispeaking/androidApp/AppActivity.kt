@@ -35,6 +35,28 @@ class AppActivity : ComponentActivity() {
         cb?.invoke(isGranted)
     }
 
+    private val postNotificationsPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        co.touchlab.kermit.Logger.withTag("AppActivity").i { "POST_NOTIFICATIONS permission granted: $isGranted" }
+    }
+
+    private fun checkAndRequestPostNotificationsPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            val currentPermission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+            if (currentPermission != PackageManager.PERMISSION_GRANTED) {
+                try {
+                    postNotificationsPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } catch (e: Exception) {
+                    co.touchlab.kermit.Logger.withTag("AppActivity").w(e) { "Failed to launch POST_NOTIFICATIONS permission request" }
+                }
+            }
+        }
+    }
+
     private fun checkAndRequestRecordAudioPermission(onResult: (Boolean) -> Unit) {
         val currentPermission = ContextCompat.checkSelfPermission(
             this,
@@ -117,6 +139,26 @@ class AppActivity : ComponentActivity() {
             }
         } catch (_: Throwable) {}
 
+        // Initialize Notification channel and request Android 13+ permission
+        ir.aispeaking.androidApp.notification.NotificationHelper.createNotificationChannel(this)
+        checkAndRequestPostNotificationsPermission()
+
+        // Fetch and register FCM Token
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().token
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val token = task.result
+                        co.touchlab.kermit.Logger.withTag("AppActivity").i { "FCM Token: $token" }
+                        val analytics = GlobalContext.get().getOrNull<ir.aispeaking.utils.analytics.AnalyticsTracker>()
+                        analytics?.setUserProperty("fcm_token", token)
+                    }
+                }
+        } catch (_: Throwable) {}
+
+        // Handle cold-start deep link or notification intent
+        handleIntentForDeepLink(intent)
+
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
@@ -137,6 +179,47 @@ class AppActivity : ComponentActivity() {
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        handleIntentForDeepLink(intent)
+    }
+
+    private fun handleIntentForDeepLink(intent: android.content.Intent?) {
+        if (intent == null) return
+        val uri = intent.dataString
+        if (!uri.isNullOrBlank()) {
+            ir.aispeaking.navigation.AppDeepLinkManager.handleUrl(uri)
+            logDeepLinkAnalytics(url = uri)
+            return
+        }
+
+        val extras = intent.extras
+        if (extras != null && !extras.isEmpty) {
+            val dataMap = mutableMapOf<String, String>()
+            for (key in extras.keySet()) {
+                val value = extras.get(key)?.toString()
+                if (value != null) {
+                    dataMap[key] = value
+                }
+            }
+            val handled = ir.aispeaking.navigation.AppDeepLinkManager.handleDeepLink(dataMap)
+            if (handled) {
+                logDeepLinkAnalytics(
+                    stageId = dataMap["stage_id"] ?: dataMap["stageId"],
+                    screen = dataMap["screen"],
+                    url = dataMap["url"]
+                )
+            }
+        }
+    }
+
+    private fun logDeepLinkAnalytics(stageId: String? = null, screen: String? = null, url: String? = null) {
+        try {
+            val analytics = GlobalContext.get().getOrNull<ir.aispeaking.utils.analytics.AnalyticsTracker>()
+            val params = mutableMapOf<String, Any>("platform" to "android")
+            stageId?.let { params["stage_id"] = it }
+            screen?.let { params["screen"] = it }
+            url?.let { params["url"] = it }
+            analytics?.logEvent("notification_opened", params)
+        } catch (_: Throwable) {}
     }
 
     override fun onDestroy() {
