@@ -96,4 +96,18 @@ class AdminNotificationRoutingTest {
         // In test environment without active Firebase connection, it may return OK or InternalServerError with full detail
         assertTrue(validRes.status == HttpStatusCode.OK || validRes.status == HttpStatusCode.InternalServerError)
     }
+
+    @Test
+    fun `test send notification with optional none screen accepted`() = testApplication {
+        setupTestApp()
+        val token = loginAndGetToken()
+
+        val response = client.post("/api/admin/notifications/send") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+            contentType(ContentType.Application.Json)
+            setBody("""{"title":"Test None","body":"No deep link","screen":"none","targetType":"topic","targetValue":"aispeaking_plus_v1"}""")
+        }
+        // In test environment with Firebase credentials, it may succeed (200) or fail at Google API call (502/500), but not validation error (400)
+        assertNotEquals(HttpStatusCode.BadRequest, response.status)
+    }
 }

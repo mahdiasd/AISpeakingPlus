@@ -67,27 +67,32 @@ class AdminNotificationService {
             dataMap["image"] = req.imageUrl.trim()
             dataMap["icon"] = req.imageUrl.trim()
         }
-        if (!req.stageId.isNullOrBlank()) {
-            dataMap["stage_id"] = req.stageId.trim()
-            dataMap["stageId"] = req.stageId.trim()
+
+        val isNoLink = req.screen.isNullOrBlank() || req.screen.trim().lowercase() == "none"
+        if (!isNoLink) {
+            if (!req.stageId.isNullOrBlank()) {
+                dataMap["stage_id"] = req.stageId.trim()
+                dataMap["stageId"] = req.stageId.trim()
+            }
+            if (!req.screen.isNullOrBlank()) {
+                dataMap["screen"] = req.screen.trim().lowercase()
+            }
+            if (!req.url.isNullOrBlank()) {
+                dataMap["url"] = req.url.trim()
+            }
+            dataMap["click_action"] = "ir.aispeaking.NOTIFICATION_CLICK"
         }
-        if (!req.screen.isNullOrBlank()) {
-            dataMap["screen"] = req.screen.trim().lowercase()
-        }
-        if (!req.url.isNullOrBlank()) {
-            dataMap["url"] = req.url.trim()
-        }
-        dataMap["click_action"] = "ir.aispeaking.NOTIFICATION_CLICK"
 
         // Web Link resolution
         val webLink = when {
+            isNoLink -> "/"
             !req.url.isNullOrBlank() -> req.url.trim()
             !req.stageId.isNullOrBlank() -> "/#chat?stageId=${req.stageId.trim()}"
             req.screen?.lowercase() == "chat" && !req.stageId.isNullOrBlank() -> "/#chat?stageId=${req.stageId.trim()}"
             req.screen?.lowercase() == "subscription" -> "/#subscription"
             req.screen?.lowercase() == "profile" -> "/#profile"
             req.screen?.lowercase() == "stages" -> "/#stages"
-            else -> "/#main"
+            else -> "/"
         }
 
         val messageBuilder = Message.builder()
