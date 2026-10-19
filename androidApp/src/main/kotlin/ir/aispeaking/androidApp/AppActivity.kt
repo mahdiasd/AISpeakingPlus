@@ -154,6 +154,14 @@ class AppActivity : ComponentActivity() {
                         analytics?.setUserProperty("fcm_token", token)
                     }
                 }
+            // Subscribe to dedicated AISpeaking Plus topic (isolated from legacy app)
+            com.google.firebase.messaging.FirebaseMessaging.getInstance()
+                .subscribeToTopic("aispeaking_plus_v1")
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        co.touchlab.kermit.Logger.withTag("AppActivity").i { "Subscribed to topic: aispeaking_plus_v1" }
+                    }
+                }
         } catch (_: Throwable) {}
 
         // Handle cold-start deep link or notification intent

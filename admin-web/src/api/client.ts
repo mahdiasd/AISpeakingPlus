@@ -21,6 +21,8 @@ import {
   PromoCodeUpsertPayload,
   PromoListResponse,
   PromoRedemptionItem,
+  AdminNotificationPayload,
+  AdminNotificationResponse,
 } from '../types';
 
 const BASE_URL = '';
@@ -380,6 +382,15 @@ class ApiClient {
 
   async getPromoRedemptions(id: string): Promise<PromoRedemptionItem[]> {
     const res = await this.request<PromoRedemptionItem[]>(`/api/admin/promo-codes/${id}/redemptions`);
+    return res.data;
+  }
+
+  // --- Push Notifications ---
+  async sendPushNotification(payload: AdminNotificationPayload): Promise<AdminNotificationResponse> {
+    const res = await this.request<AdminNotificationResponse>('/api/admin/notifications/send', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
     return res.data;
   }
 }

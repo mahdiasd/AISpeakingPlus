@@ -564,6 +564,13 @@
                             if (typeof window.onFcmWebTokenReceived === 'function') {
                                 try { window.onFcmWebTokenReceived(token); } catch(e){}
                             }
+                            try {
+                                fetch('/api/v1/notifications/register-token', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ token: token, topic: 'aispeaking_plus_v1' })
+                                }).catch(function() {});
+                            } catch(e) {}
                             return token;
                         } else {
                             console.warn('[FCM Web] No registration token returned.');
