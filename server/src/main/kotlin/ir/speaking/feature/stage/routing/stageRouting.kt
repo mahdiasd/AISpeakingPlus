@@ -264,6 +264,13 @@ fun Application.stageRouting() {
                     call.response.header("X-Accel-Buffering", "no")
                     call.respondTextWriter(contentType = ContentType.Text.EventStream) {
                         try {
+                            write(": keep-alive\n\n")
+                            flush()
+                        } catch (_: Exception) {
+                            return@respondTextWriter
+                        }
+
+                        try {
                             val finalResponse = stageChatService.processChatTurnStream(
                                 stageId = stageId,
                                 userId = userId,
@@ -295,17 +302,23 @@ fun Application.stageRouting() {
                             val doneJson = sseJson.encodeToString(doneObj)
                             write("data: $doneJson\n\n")
                             flush()
+                        } catch (_: kotlinx.coroutines.CancellationException) {
+                            // Client cancelled or disconnected cleanly
                         } catch (e: Exception) {
-                            val errorMsg = (e as? ir.speaking.core.exeptions.AppException)?.message
-                                ?: e.message
-                                ?: "خطا در ارتباط با هوش مصنوعی"
-                            val errorObj = ir.speaking.feature.stage.dto.StageChatStreamServerEvent(
-                                type = "error",
-                                message = errorMsg
-                            )
-                            val errorJson = sseJson.encodeToString(errorObj)
-                            write("data: $errorJson\n\n")
-                            flush()
+                            try {
+                                val errorMsg = (e as? ir.speaking.core.exeptions.AppException)?.message
+                                    ?: e.message
+                                    ?: "خطا در ارتباط با هوش مصنوعی"
+                                val errorObj = ir.speaking.feature.stage.dto.StageChatStreamServerEvent(
+                                    type = "error",
+                                    message = errorMsg
+                                )
+                                val errorJson = sseJson.encodeToString(errorObj)
+                                write("data: $errorJson\n\n")
+                                flush()
+                            } catch (_: Exception) {
+                                // Channel might already be closed by client
+                            }
                         }
                     }
                 }

@@ -25,7 +25,7 @@ data class TtsConfig(
 ) {
     companion object {
         const val DEFAULT_MODEL_URL =
-            "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2"
+            "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2"
         fun fromEnv(): TtsConfig {
             fun envBool(name: String, default: Boolean): Boolean =
                 System.getenv(name)?.toBooleanStrictOrNull() ?: default
@@ -38,12 +38,17 @@ data class TtsConfig(
 
             val defaultModelDir = listOf(
                 System.getenv("TTS_MODEL_DIR"),
+                java.io.File("models/kokoro-multi-lang-v1_0").takeIf { it.exists() }?.absolutePath,
+                java.io.File("../models/kokoro-multi-lang-v1_0").takeIf { it.exists() }?.absolutePath,
+                java.io.File("server/models/kokoro-multi-lang-v1_0").takeIf { it.exists() }?.absolutePath,
                 java.io.File("models/kokoro-en-v0_19").takeIf { it.exists() }?.absolutePath,
                 java.io.File("../models/kokoro-en-v0_19").takeIf { it.exists() }?.absolutePath,
                 java.io.File("server/models/kokoro-en-v0_19").takeIf { it.exists() }?.absolutePath,
+                java.io.File(System.getProperty("user.home"), "models/kokoro-multi-lang-v1_0").takeIf { it.exists() }?.absolutePath,
                 java.io.File(System.getProperty("user.home"), "models/kokoro-en-v0_19").takeIf { it.exists() }?.absolutePath,
+                "/app/models/kokoro-multi-lang-v1_0",
                 "/app/models/kokoro-en-v0_19"
-            ).firstOrNull { it != null } ?: "models/kokoro-en-v0_19"
+            ).firstOrNull { it != null } ?: "models/kokoro-multi-lang-v1_0"
 
             val defaultCacheDir = listOf(
                 System.getenv("TTS_CACHE_DIR"),
@@ -57,7 +62,7 @@ data class TtsConfig(
                 modelUrl = System.getenv("TTS_MODEL_URL") ?: DEFAULT_MODEL_URL,
                 autoDownload = envBool("TTS_AUTO_DOWNLOAD", true),
                 numThreads = envInt("TTS_NUM_THREADS", 2),
-                defaultSid = envInt("TTS_DEFAULT_SID", 0),
+                defaultSid = envInt("TTS_DEFAULT_SID", 3),
                 defaultSpeed = envFloat("TTS_DEFAULT_SPEED", 1.0f),
                 cacheDir = defaultCacheDir
             )

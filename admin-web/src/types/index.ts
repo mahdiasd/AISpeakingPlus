@@ -84,17 +84,41 @@ export interface KokoroVoice {
 }
 
 export const KOKORO_VOICES: KokoroVoice[] = [
-  { id: 'af_heart', name: 'Heart', gender: 'Woman', accent: 'US', description: 'صدای زن آمریکایی (صمیمی و گرم)' },
-  { id: 'af_bella', name: 'Bella', gender: 'Woman', accent: 'US', description: 'صدای زن آمریکایی (واضح و پرانرژی)' },
-  { id: 'af_nicole', name: 'Nicole', gender: 'Woman', accent: 'US', description: 'صدای زن آمریکایی (آرام و رسمی)' },
-  { id: 'af_sarah', name: 'Sarah', gender: 'Woman', accent: 'US', description: 'صدای زن آمریکایی (حرفه‌ای و طبیعی)' },
-  { id: 'af_sky', name: 'Sky', gender: 'Woman', accent: 'US', description: 'صدای زن آمریکایی (جوان و پویا)' },
-  { id: 'am_adam', name: 'Adam', gender: 'Man', accent: 'US', description: 'صدای مرد آمریکایی (عمیق و باصلابت)' },
-  { id: 'am_michael', name: 'Michael', gender: 'Man', accent: 'US', description: 'صدای مرد آمریکایی (دوستانه و استاندارد)' },
-  { id: 'bf_emma', name: 'Emma', gender: 'Woman', accent: 'UK', description: 'صدای زن بریتانیایی (مؤدبانه و کریستالی)' },
-  { id: 'bf_isabella', name: 'Isabella', gender: 'Woman', accent: 'UK', description: 'صدای زن بریتانیایی (آهسته و جذاب)' },
-  { id: 'bm_george', name: 'George', gender: 'Man', accent: 'UK', description: 'صدای مرد بریتانیایی (کلاسیک و گوینده)' },
-  { id: 'bm_lewis', name: 'Lewis', gender: 'Man', accent: 'UK', description: 'صدای مرد بریتانیایی (مدرن و صریح)' },
+  // US Female Voices (11)
+  { id: 'af_heart', name: 'Heart (Default)', gender: 'Woman', accent: 'US', description: 'فوق‌العاده طبیعی، انسانی و پرفکت برای مکالمه (پیش‌فرض)' },
+  { id: 'af_bella', name: 'Bella', gender: 'Woman', accent: 'US', description: 'گرم، صمیمی و دوستانه (رتبه کیفی برتر)' },
+  { id: 'af_nicole', name: 'Nicole', gender: 'Woman', accent: 'US', description: 'پرانرژی، روشن و واضح' },
+  { id: 'af_sarah', name: 'Sarah', gender: 'Woman', accent: 'US', description: 'شمرده، آرام و متین' },
+  { id: 'af_sky', name: 'Sky', gender: 'Woman', accent: 'US', description: 'نرم، شفاف و ملایم' },
+  { id: 'af_alloy', name: 'Alloy', gender: 'Woman', accent: 'US', description: 'شفاف، خنثی و بدون اغراق' },
+  { id: 'af_aoede', name: 'Aoede', gender: 'Woman', accent: 'US', description: 'آهنگین و محاوره‌ای' },
+  { id: 'af_jessica', name: 'Jessica', gender: 'Woman', accent: 'US', description: 'زنده، فعال و پویا' },
+  { id: 'af_kore', name: 'Kore', gender: 'Woman', accent: 'US', description: 'متین، متمرکز و آرامش‌بخش' },
+  { id: 'af_nova', name: 'Nova', gender: 'Woman', accent: 'US', description: 'درخشان و مدرن' },
+  { id: 'af_river', name: 'River', gender: 'Woman', accent: 'US', description: 'آرام، رها و طبیعی' },
+
+  // US Male Voices (9)
+  { id: 'am_fenrir', name: 'Fenrir', gender: 'Man', accent: 'US', description: 'بسیار باکیفیت، بم و روایی (رتبه برتر ۵ ستاره)' },
+  { id: 'am_onyx', name: 'Onyx', gender: 'Man', accent: 'US', description: 'بم، کاریزماتیک، قدرتمند با لحن سینمایی (محبوب‌ترین)' },
+  { id: 'am_michael', name: 'Michael', gender: 'Man', accent: 'US', description: 'گرم، طبیعی، دوستانه با لحن بم ملایم (۵ ستاره)' },
+  { id: 'am_puck', name: 'Puck', gender: 'Man', accent: 'US', description: 'رسا، پرانرژی، گیرا و پرحرارت (۵ ستاره)' },
+  { id: 'am_eric', name: 'Eric', gender: 'Man', accent: 'US', description: 'مکالمه‌ای، طبیعی، روان و روزمره' },
+  { id: 'am_liam', name: 'Liam', gender: 'Man', accent: 'US', description: 'جوان، صمیمی، دوستانه و شفاف' },
+  { id: 'am_echo', name: 'Echo', gender: 'Man', accent: 'US', description: 'متعادل، مدرن و رسا' },
+  { id: 'am_adam', name: 'Adam', gender: 'Man', accent: 'US', description: 'با اعتماد به نفس و شفاف' },
+  { id: 'am_santa', name: 'Santa', gender: 'Man', accent: 'US', description: 'کاراکتر بم، مسن و مهربان' },
+
+  // UK Female Voices (4)
+  { id: 'bf_emma', name: 'Emma', gender: 'Woman', accent: 'UK', description: 'فصیح، شفاف، رسمی و حرفه‌ای' },
+  { id: 'bf_isabella', name: 'Isabella', gender: 'Woman', accent: 'UK', description: 'دلنشین، ملایم و آرامش‌بخش' },
+  { id: 'bf_alice', name: 'Alice', gender: 'Woman', accent: 'UK', description: 'متین، باوقار، کتابی و با سابقه' },
+  { id: 'bf_lily', name: 'Lily', gender: 'Woman', accent: 'UK', description: 'شاداب، جوان، آهنگین و پرانرژی' },
+
+  // UK Male Voices (4)
+  { id: 'bm_fable', name: 'Fable', gender: 'Man', accent: 'UK', description: 'صدای راوی برجسته، لهجه اصیل بریتانیایی، بسیار پخته (۵ ستاره)' },
+  { id: 'bm_george', name: 'George', gender: 'Man', accent: 'UK', description: 'کلاسیک، باوقار و جنتلمن انگلیسی (۵ ستاره)' },
+  { id: 'bm_daniel', name: 'Daniel', gender: 'Man', accent: 'UK', description: 'فصیح، مقتدر، رسمی و شمرده با لهجه RP' },
+  { id: 'bm_lewis', name: 'Lewis', gender: 'Man', accent: 'UK', description: 'مدرن، جوان، سریع و پرانرژی' },
 ];
 
 // User Models

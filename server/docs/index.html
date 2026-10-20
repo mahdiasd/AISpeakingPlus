@@ -752,6 +752,16 @@
     "sizeBytes" : { }
   }
 };
+            defs["AdminNotificationSendResponse"] = {
+  "title" : "AdminNotificationSendResponse",
+  "required" : [ "messageId", "success", "target", "targetType" ],
+  "properties" : {
+    "success" : { },
+    "messageId" : { },
+    "target" : { },
+    "targetType" : { }
+  }
+};
             defs["AdminPromoCodeItemDto"] = {
   "title" : "AdminPromoCodeItemDto",
   "required" : [ "code", "createdAt", "discountType", "discountValue", "id" ],
@@ -1553,6 +1563,10 @@
                     <li data-group="AdminMedia" data-name="apiAdminMediaUploadPost" class="">
                       <a href="#api-AdminMedia-apiAdminMediaUploadPost">apiAdminMediaUploadPost</a>
                     </li>
+                  <li class="nav-header" data-group="AdminNotifications"><a href="#api-AdminNotifications">API Methods - AdminNotifications</a></li>
+                    <li data-group="AdminNotifications" data-name="apiAdminNotificationsSendPost" class="">
+                      <a href="#api-AdminNotifications-apiAdminNotificationsSendPost">apiAdminNotificationsSendPost</a>
+                    </li>
                   <li class="nav-header" data-group="AdminPromoCodes"><a href="#api-AdminPromoCodes">API Methods - AdminPromoCodes</a></li>
                     <li data-group="AdminPromoCodes" data-name="apiAdminPromoCodesGet" class="">
                       <a href="#api-AdminPromoCodes-apiAdminPromoCodesGet">apiAdminPromoCodesGet</a>
@@ -1620,6 +1634,10 @@
                     </li>
                     <li data-group="Auth" data-name="apiV2AuthOtpVerifyPost" class="">
                       <a href="#api-Auth-apiV2AuthOtpVerifyPost">apiV2AuthOtpVerifyPost</a>
+                    </li>
+                  <li class="nav-header" data-group="ClientNotifications"><a href="#api-ClientNotifications">API Methods - ClientNotifications</a></li>
+                    <li data-group="ClientNotifications" data-name="apiV1NotificationsRegisterTokenPost" class="">
+                      <a href="#api-ClientNotifications-apiV1NotificationsRegisterTokenPost">apiV1NotificationsRegisterTokenPost</a>
                     </li>
                   <li class="nav-header" data-group="Default"><a href="#api-Default">API Methods - Default</a></li>
                     <li data-group="Default" data-name="apiAdminSttLiveGet" class="">
@@ -3341,6 +3359,290 @@ except ApiException as e:
                                     </script>
                                   </div>
                                   <input id='responses-apiAdminMediaUploadPost-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                  </section>
+                <section id="api-AdminNotifications">
+                  <h1>AdminNotifications</h1>
+                    <div id="api-AdminNotifications-apiAdminNotificationsSendPost">
+                      <article id="api-AdminNotifications-apiAdminNotificationsSendPost-0" data-group="User" data-name="apiAdminNotificationsSendPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminNotificationsSendPost</h1>
+                          <p>Send Push Notification</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Send FCM push notification to topic or device token with deep link data</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/admin/notifications/send</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminNotifications-apiAdminNotificationsSendPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminNotifications-apiAdminNotificationsSendPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminNotifications-apiAdminNotificationsSendPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminNotifications-apiAdminNotificationsSendPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminNotifications-apiAdminNotificationsSendPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminNotifications-apiAdminNotificationsSendPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminNotifications-apiAdminNotificationsSendPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminNotifications-apiAdminNotificationsSendPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminNotifications-apiAdminNotificationsSendPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminNotifications-apiAdminNotificationsSendPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminNotifications-apiAdminNotificationsSendPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminNotifications-apiAdminNotificationsSendPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+"//api/admin/notifications/send"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminNotifications-apiAdminNotificationsSendPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminNotificationsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminNotificationsApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminNotificationsApi apiInstance = new AdminNotificationsApi();
+        try {
+            Object result = apiInstance.apiAdminNotificationsSendPost();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminNotificationsApi#apiAdminNotificationsSendPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminNotifications-apiAdminNotificationsSendPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminNotificationsApi;
+
+public class AdminNotificationsApiExample {
+
+    public static void main(String[] args) {
+        AdminNotificationsApi apiInstance = new AdminNotificationsApi();
+        try {
+            Object result = apiInstance.apiAdminNotificationsSendPost();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminNotificationsApi#apiAdminNotificationsSendPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminNotifications-apiAdminNotificationsSendPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminNotifications-apiAdminNotificationsSendPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+
+AdminNotificationsApi *apiInstance = [[AdminNotificationsApi alloc] init];
+
+// Send Push Notification
+[apiInstance apiAdminNotificationsSendPostWithCompletionHandler: 
+              ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminNotifications-apiAdminNotificationsSendPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminNotificationsApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminNotificationsSendPost(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminNotifications-apiAdminNotificationsSendPost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminNotifications-apiAdminNotificationsSendPost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminNotificationsSendPostExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminNotificationsApi();
+
+            try
+            {
+                // Send Push Notification
+                Object result = apiInstance.apiAdminNotificationsSendPost();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminNotificationsApi.apiAdminNotificationsSendPost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminNotifications-apiAdminNotificationsSendPost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminNotificationsApi();
+
+try {
+    $result = $api_instance->apiAdminNotificationsSendPost();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminNotificationsApi->apiAdminNotificationsSendPost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminNotifications-apiAdminNotificationsSendPost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminNotificationsApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminNotificationsApi->new();
+
+eval { 
+    my $result = $api_instance->apiAdminNotificationsSendPost();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminNotificationsApi->apiAdminNotificationsSendPost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminNotifications-apiAdminNotificationsSendPost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminNotificationsApi()
+
+try: 
+    # Send Push Notification
+    api_response = api_instance.api_admin_notifications_send_post()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminNotificationsApi->apiAdminNotificationsSendPost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Notification sent response </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminNotificationsSendPost-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminNotificationsSendPost-200-schema">
+                                  <div id='responses-apiAdminNotificationsSendPost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Notification sent response",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AdminNotificationSendResponse"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminNotificationsSendPost-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminNotificationsSendPost-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminNotificationsSendPost-200-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 
@@ -10904,6 +11206,209 @@ except ApiException as e:
                                 </div>
                             </div>
 
+                        </article>
+                      </div>
+                      <hr>
+                  </section>
+                <section id="api-ClientNotifications">
+                  <h1>ClientNotifications</h1>
+                    <div id="api-ClientNotifications-apiV1NotificationsRegisterTokenPost">
+                      <article id="api-ClientNotifications-apiV1NotificationsRegisterTokenPost-0" data-group="User" data-name="apiV1NotificationsRegisterTokenPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV1NotificationsRegisterTokenPost</h1>
+                          <p>Register FCM token</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Subscribes client device or web token to a notification topic</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v1/notifications/register-token</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+"//api/v1/notifications/register-token"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.ClientNotificationsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class ClientNotificationsApiExample {
+
+    public static void main(String[] args) {
+        
+        ClientNotificationsApi apiInstance = new ClientNotificationsApi();
+        try {
+            apiInstance.apiV1NotificationsRegisterTokenPost();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling ClientNotificationsApi#apiV1NotificationsRegisterTokenPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.ClientNotificationsApi;
+
+public class ClientNotificationsApiExample {
+
+    public static void main(String[] args) {
+        ClientNotificationsApi apiInstance = new ClientNotificationsApi();
+        try {
+            apiInstance.apiV1NotificationsRegisterTokenPost();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling ClientNotificationsApi#apiV1NotificationsRegisterTokenPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+ClientNotificationsApi *apiInstance = [[ClientNotificationsApi alloc] init];
+
+// Register FCM token
+[apiInstance apiV1NotificationsRegisterTokenPostWithCompletionHandler: 
+              ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+
+var api = new AiSpeakingPlusApi.ClientNotificationsApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.apiV1NotificationsRegisterTokenPost(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV1NotificationsRegisterTokenPostExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new ClientNotificationsApi();
+
+            try
+            {
+                // Register FCM token
+                apiInstance.apiV1NotificationsRegisterTokenPost();
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling ClientNotificationsApi.apiV1NotificationsRegisterTokenPost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiClientNotificationsApi();
+
+try {
+    $api_instance->apiV1NotificationsRegisterTokenPost();
+} catch (Exception $e) {
+    echo 'Exception when calling ClientNotificationsApi->apiV1NotificationsRegisterTokenPost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::ClientNotificationsApi;
+
+my $api_instance = WWW::SwaggerClient::ClientNotificationsApi->new();
+
+eval { 
+    $api_instance->apiV1NotificationsRegisterTokenPost();
+};
+if ($@) {
+    warn "Exception when calling ClientNotificationsApi->apiV1NotificationsRegisterTokenPost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-ClientNotifications-apiV1NotificationsRegisterTokenPost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.ClientNotificationsApi()
+
+try: 
+    # Register FCM token
+    api_instance.api_v1_notifications_register_token_post()
+except ApiException as e:
+    print("Exception when calling ClientNotificationsApi->apiV1NotificationsRegisterTokenPost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
                         </article>
                       </div>
                       <hr>

@@ -51,14 +51,28 @@ class TtsService(
             val voicesFile = File(modelDir, "voices.bin")
             val tokensFile = File(modelDir, "tokens.txt")
             val dataDir = File(modelDir, "espeak-ng-data")
+            val lexiconUs = File(modelDir, "lexicon-us-en.txt")
+            val lexiconGb = File(modelDir, "lexicon-gb-en.txt")
 
-            val kokoroConfig = OfflineTtsKokoroModelConfig.builder()
+            val kokoroConfigBuilder = OfflineTtsKokoroModelConfig.builder()
                 .setModel(modelFile.absolutePath)
                 .setVoices(voicesFile.absolutePath)
                 .setTokens(tokensFile.absolutePath)
                 .setDataDir(dataDir.absolutePath)
                 .setLengthScale(1.0f)
-                .build()
+
+            if (lexiconUs.exists()) {
+                val lexiconPaths = if (lexiconGb.exists()) {
+                    "${lexiconUs.absolutePath},${lexiconGb.absolutePath}"
+                } else {
+                    lexiconUs.absolutePath
+                }
+                kokoroConfigBuilder.setLexicon(lexiconPaths)
+            } else {
+                kokoroConfigBuilder.setLang("en-us")
+            }
+
+            val kokoroConfig = kokoroConfigBuilder.build()
 
             val modelConfig = OfflineTtsModelConfig.builder()
                 .setKokoro(kokoroConfig)
@@ -111,10 +125,15 @@ class TtsService(
     private fun findValidModelDir(): File? {
         val candidates = listOf(
             File(config.modelDir),
+            File("models/kokoro-multi-lang-v1_0"),
+            File("server/models/kokoro-multi-lang-v1_0"),
+            File("../models/kokoro-multi-lang-v1_0"),
             File("models/kokoro-en-v0_19"),
             File("server/models/kokoro-en-v0_19"),
             File("../models/kokoro-en-v0_19"),
+            File(System.getProperty("user.home"), "models/kokoro-multi-lang-v1_0"),
             File(System.getProperty("user.home"), "models/kokoro-en-v0_19"),
+            File("/app/models/kokoro-multi-lang-v1_0"),
             File("/app/models/kokoro-en-v0_19")
         )
         return candidates.firstOrNull { isValidModelDir(it) }
@@ -205,9 +224,14 @@ class TtsService(
         }
     }
 
-    fun getVoices(): List<TtsVoiceInfo> = KokoroVoices.ALL
+    val isV1Model: Boolean
+        get() = (offlineTts?.numSpeakers ?: 54) >= 50
 
-    fun getVoiceInfo(voiceId: Int): TtsVoiceInfo = KokoroVoices.findById(voiceId)
+    fun getVoices(): List<TtsVoiceInfo> =
+        if (isV1Model) KokoroVoices.V1_ENGLISH else KokoroVoices.V0_ALL
+
+    fun getVoiceInfo(voiceId: Int): TtsVoiceInfo =
+        KokoroVoices.findById(voiceId, isV1 = isV1Model)
 
     fun getAudioFile(filename: String): File? {
         val sanitized = File(filename).name // Prevent directory traversal
@@ -231,7 +255,8 @@ class TtsService(
             return@withContext null
         }
 
-        val targetSid = if (sid in 0..10) sid else config.defaultSid
+        val maxSpeakers = offlineTts?.numSpeakers ?: if (isV1Model) 54 else 11
+        val targetSid = if (sid in 0 until maxSpeakers) sid else config.defaultSid
         val targetSpeed = speed.coerceIn(0.5f, 2.0f)
         val voiceInfo = getVoiceInfo(targetSid)
 
@@ -301,18 +326,12 @@ class TtsService(
         if (isMac) {
             try {
                 val macVoice = when (targetSid) {
-                    0 -> "Samantha"
-                    1 -> "Flo"
-                    2 -> "Samantha"
-                    3 -> "Victoria"
-                    4 -> "Flo"
-                    5 -> "Eddy"
-                    6 -> "Fred"
-                    7 -> "Flo"
-                    8 -> "Flo"
-                    9 -> "Daniel"
-                    10 -> "Daniel"
-                    else -> "Samantha"
+                    0, 1, 4, 7, 8, 20, 21, 22, 23 -> "Flo"
+                    2, 3, 5, 6, 9, 10 -> "Samantha"
+                    11, 12, 13, 15 -> "Eddy"
+                    14, 16, 17, 18, 19 -> "Fred"
+                    24, 25, 26, 27 -> "Daniel"
+                    else -> if (voiceInfo.gender == ir.speaking.feature.tts.model.VoiceGender.MALE) "Daniel" else "Samantha"
                 }
                 val rate = (175 * targetSpeed).toInt().coerceIn(100, 350)
                 val tempWav = File.createTempFile("macos_say_", ".wav")
