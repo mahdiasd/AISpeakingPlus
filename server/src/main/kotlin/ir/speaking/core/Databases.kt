@@ -117,12 +117,21 @@ fun seedOrSyncStages() {
             val currentVoiceId = existing[StageTable.voiceId]
             val currentGender = existing[StageTable.characterGender]
             val currentAvatar = existing[StageTable.characterAvatarUrl]
-            if (currentVoiceId != stage.voiceId || currentGender != stage.characterGender || currentAvatar != stage.characterAvatarUrl) {
+            val currentBehavior = existing[StageTable.characterBehavior]
+            val currentBackground = existing[StageTable.backgroundUrl]
+            if (currentVoiceId != stage.voiceId ||
+                currentGender != stage.characterGender ||
+                currentAvatar != stage.characterAvatarUrl ||
+                currentBehavior != stage.characterBehavior ||
+                currentBackground != stage.backgroundUrl
+            ) {
                 val targetId = existing[StageTable.id]
                 StageTable.update({ StageTable.id eq targetId }) {
                     it[voiceId] = stage.voiceId
                     it[characterGender] = stage.characterGender
                     it[characterAvatarUrl] = stage.characterAvatarUrl
+                    it[characterBehavior] = stage.characterBehavior
+                    it[backgroundUrl] = stage.backgroundUrl
                 }
             }
         }

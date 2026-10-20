@@ -52,11 +52,7 @@ class StageChatService(
             ?: "A1"
         val normalizedLevel = resolvedUserLevel.uppercase()
 
-        val voiceSid = KokoroVoices.findByCode(stage?.voiceId)?.id
-            ?: when (stage?.characterGender?.lowercase()) {
-                "man", "male" -> 9 // bm_george
-                else -> 7 // bf_emma
-            }
+        val voiceSid = resolveVoiceSid(stage)
 
         // If userMessage is empty, this is the AI starter greeting turn
         if (userMessage.isEmpty()) {
@@ -112,11 +108,7 @@ class StageChatService(
             ?: "A1"
         val normalizedLevel = resolvedUserLevel.uppercase()
 
-        val voiceSid = KokoroVoices.findByCode(stage?.voiceId)?.id
-            ?: when (stage?.characterGender?.lowercase()) {
-                "man", "male" -> 9 // bm_george
-                else -> 7 // bf_emma
-            }
+        val voiceSid = resolveVoiceSid(stage)
 
         // If userMessage is empty, this is the AI starter greeting turn
         if (userMessage.isEmpty()) {
@@ -156,6 +148,24 @@ class StageChatService(
             objectiveCompleted = turnResult.isObjectiveDone,
             finishTaskIndexes = emptyList()
         )
+    }
+
+    private fun resolveVoiceSid(stage: StageDetailResponse?): Int {
+        val voiceByCode = KokoroVoices.findByCode(stage?.voiceId, isV1 = ttsService.isV1Model)?.id
+        if (voiceByCode != null) return voiceByCode
+        val numericId = stage?.voiceId?.toIntOrNull()
+        if (numericId != null) return numericId
+        return if (ttsService.isV1Model) {
+            when (stage?.characterGender?.lowercase()) {
+                "man", "male" -> 26 // bm_george
+                else -> 21 // bf_emma
+            }
+        } else {
+            when (stage?.characterGender?.lowercase()) {
+                "man", "male" -> 9 // bm_george
+                else -> 7 // bf_emma
+            }
+        }
     }
 
     private suspend fun trySynthesize(text: String, voiceSid: Int): String? {
@@ -222,6 +232,7 @@ class StageChatService(
                 appendLine("Generate the OPENING greeting message from '${stage?.characterName ?: "Character"}' to start the conversation with the user in this scenario.")
                 appendLine("The greeting MUST strictly match the learner's English level ($level) in vocabulary and sentence structure.")
                 appendLine("Keep it natural, in-character, and concise (1 to 2 sentences max).")
+                appendLine("IMPORTANT: Do NOT repeat fixed canned lines or memorized phrases. Dynamically formulate an original, natural opening that fits the character's persona, tone, and scenario context.")
                 appendLine("Also provide a natural Persian translation.")
                 appendLine("ALWAYS return valid JSON matching this schema:")
                 appendLine("{\n  \"reply\": \"Opening greeting in English\",\n  \"translation\": \"ترجمه فارسی پیام آغازین\"\n}")
@@ -267,7 +278,7 @@ class StageChatService(
                 append(buildCefrDirectives(level))
                 appendLine()
                 appendLine("Instructions:")
-                appendLine("1. Reply in-character as '${stage?.characterName ?: "Character"}' in spoken-style English strictly tailored to CEFR level $level. Keep your character reply concise (1 to 2 sentences) and conversational.")
+                appendLine("1. Reply in-character as '${stage?.characterName ?: "Character"}' in spoken-style English strictly tailored to CEFR level $level. Keep your character reply concise (1 to 2 sentences) and conversational. Do NOT recite fixed scripts or memorized phrases; dynamically craft fresh, natural responses following the character's persona and conversational goals.")
                 appendLine("2. Provide a fluent, natural Persian translation ('translation') for your English reply.")
                 appendLine("3. Critically examine the user's latest message for English grammar, vocabulary, preposition, or phrasing errors suited to level $level:")
                 appendLine("   - Pay close attention to word boundaries: never report words as glued or concatenated if standard spaces or punctuation separate them. Only report genuine spelling, grammar, preposition, or phrasing errors.")
@@ -440,6 +451,7 @@ class StageChatService(
                 appendLine("Generate the OPENING greeting message from '${stage?.characterName ?: "Character"}' to start the conversation with the user in this scenario.")
                 appendLine("The greeting MUST strictly match the learner's English level ($level) in vocabulary and sentence structure.")
                 appendLine("Keep it natural, in-character, and concise (1 to 2 sentences max).")
+                appendLine("IMPORTANT: Do NOT repeat fixed canned lines or memorized phrases. Dynamically formulate an original, natural opening that fits the character's persona, tone, and scenario context.")
                 appendLine("Also provide a natural Persian translation.")
                 appendLine("IMPORTANT: 'reply' MUST be the very first property in the returned JSON object.")
                 appendLine("ALWAYS return valid JSON matching this schema:")
@@ -508,7 +520,7 @@ class StageChatService(
                 append(buildCefrDirectives(level))
                 appendLine()
                 appendLine("Instructions:")
-                appendLine("1. Reply in-character as '${stage?.characterName ?: "Character"}' in spoken-style English strictly tailored to CEFR level $level. Keep your character reply concise (1 to 2 sentences) and conversational.")
+                appendLine("1. Reply in-character as '${stage?.characterName ?: "Character"}' in spoken-style English strictly tailored to CEFR level $level. Keep your character reply concise (1 to 2 sentences) and conversational. Do NOT recite fixed scripts or memorized phrases; dynamically craft fresh, natural responses following the character's persona and conversational goals.")
                 appendLine("2. Provide a fluent, natural Persian translation ('translation') for your English reply.")
                 appendLine("3. Critically examine the user's latest message for English grammar, vocabulary, preposition, or phrasing errors suited to level $level:")
                 appendLine("   - Pay close attention to word boundaries: never report words as glued or concatenated if standard spaces or punctuation separate them. Only report genuine spelling, grammar, preposition, or phrasing errors.")
