@@ -23,14 +23,21 @@ fun WebBrowserNavigation(backStack: NavBackStack<NavKey>) {
                 is SplashRoute -> buildBrowserHistoryFragment("splash")
                 is LoginRoute -> buildBrowserHistoryFragment("login")
                 is MainRoute -> buildBrowserHistoryFragment("main")
-                is StageChatRoute -> buildBrowserHistoryFragment("chat?stageId=${key.stageId}")
+                is StageChatRoute -> buildBrowserHistoryFragment("chat", mapOf("stageId" to key.stageId))
                 is ProfileRoute -> buildBrowserHistoryFragment("profile")
                 is SubscriptionRoute -> buildBrowserHistoryFragment("subscription")
                 is StagesListRoute -> buildBrowserHistoryFragment("stages")
                 else -> null
             }
         },
-        restoreKey = { fragment ->
+        restoreKey = { rawFragment ->
+            val fragment = if (rawFragment.contains("%3F", ignoreCase = true) || rawFragment.contains("%3D", ignoreCase = true)) {
+                rawFragment.replace("%3F", "?", ignoreCase = true)
+                    .replace("%3D", "=", ignoreCase = true)
+                    .replace("%26", "&", ignoreCase = true)
+            } else {
+                rawFragment
+            }
             val fragmentName = getBrowserHistoryFragmentName(fragment)
             when {
                 fragmentName == "splash" -> SplashRoute
@@ -39,16 +46,30 @@ fun WebBrowserNavigation(backStack: NavBackStack<NavKey>) {
                 fragmentName == "profile" -> ProfileRoute
                 fragmentName == "subscription" || fragmentName == "sub" -> SubscriptionRoute
                 fragmentName == "stages" || fragmentName == "stages_list" -> StagesListRoute
-                fragmentName?.startsWith("chat") == true -> {
-                    val stageId = when {
-                        fragment.contains("stageId=") -> fragment.substringAfter("stageId=").substringBefore("&")
-                        fragment.contains("stage_id=") -> fragment.substringAfter("stage_id=").substringBefore("&")
-                        else -> "stage-01-inflight-london"
-                    }
-                    StageChatRoute(stageId)
+                fragmentName == "chat" || fragmentName?.startsWith("chat") == true -> {
+                    val params = parseFragmentParameters(fragment)
+                    val stageId = params["stageId"]
+                        ?: params["stage_id"]
+                        ?: when {
+                            fragment.contains("stageId=") -> fragment.substringAfter("stageId=").substringBefore("&")
+                            fragment.contains("stage_id=") -> fragment.substringAfter("stage_id=").substringBefore("&")
+                            else -> null
+                        }
+                    StageChatRoute(stageId?.takeIf { it.isNotBlank() } ?: "stage-01-inflight-london")
                 }
                 else -> null
             }
         }
     )
+}
+
+private fun parseFragmentParameters(fragment: String): Map<String, String> {
+    val query = fragment.substringAfter('?', "")
+    if (query.isEmpty()) return emptyMap()
+    return query.split('&')
+        .mapNotNull { param ->
+            val parts = param.split('=', limit = 2)
+            if (parts.size == 2) parts[0] to parts[1] else null
+        }
+        .toMap()
 }
