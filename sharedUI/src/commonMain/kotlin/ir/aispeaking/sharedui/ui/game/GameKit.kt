@@ -15,6 +15,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,12 +55,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -254,7 +268,7 @@ fun GameIconButton(
     onClick: () -> Unit,
     contentDescription: String,
     modifier: Modifier = Modifier,
-    size: Dp = 40.dp,
+    size: Dp = 44.dp,
     iconSize: Dp = 20.dp,
     tint: Color = Game.TextPrimary,
     container: Color = Color.Unspecified,
@@ -384,6 +398,7 @@ fun GameStatPill(
     val shape = RoundedCornerShape(50)
     Row(
         modifier = modifier
+            .defaultMinSize(minHeight = 44.dp)
             .clip(shape)
             .background(Game.Panel)
             .border(1.dp, accent.copy(alpha = 0.55f), shape)
@@ -492,7 +507,25 @@ fun GameModal(
     dismissOnScrimClick: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(visible) {
+        if (visible) {
+            try { focusRequester.requestFocus() } catch (_: Throwable) {}
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .focusRequester(focusRequester)
+            .focusable()
+            .onPreviewKeyEvent { event ->
+                if (visible && event.type == KeyEventType.KeyDown && event.key == Key.Escape) {
+                    onDismiss()
+                    true
+                } else false
+            }
+    ) {
         AnimatedVisibility(
             visible = visible,
             enter = fadeIn(tween(160)),
@@ -502,6 +535,13 @@ fun GameModal(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Game.ModalScrim)
+                    .semantics {
+                        contentDescription = "بستن کادر"
+                        onClick(label = "بستن") {
+                            onDismiss()
+                            true
+                        }
+                    }
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -528,11 +568,9 @@ fun GameModal(
                         .clip(modalShape)
                         .background(Game.PanelSolid)
                         .border(1.dp, Game.StrokeStrong, modalShape)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = {},
-                        ),
+                        .pointerInput(Unit) {
+                            detectTapGestures { /* consume tap so it does not reach scrim */ }
+                        },
                     content = content,
                 )
             }
@@ -552,7 +590,25 @@ fun GameTopModal(
     dismissOnScrimClick: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(visible) {
+        if (visible) {
+            try { focusRequester.requestFocus() } catch (_: Throwable) {}
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .focusRequester(focusRequester)
+            .focusable()
+            .onPreviewKeyEvent { event ->
+                if (visible && event.type == KeyEventType.KeyDown && event.key == Key.Escape) {
+                    onDismiss()
+                    true
+                } else false
+            }
+    ) {
         AnimatedVisibility(
             visible = visible,
             enter = fadeIn(tween(160)),
@@ -562,6 +618,13 @@ fun GameTopModal(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0x66000000))
+                    .semantics {
+                        contentDescription = "بستن کادر"
+                        onClick(label = "بستن") {
+                            onDismiss()
+                            true
+                        }
+                    }
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -594,11 +657,9 @@ fun GameTopModal(
                         .clip(topModalShape)
                         .background(Game.PanelSolid)
                         .border(1.dp, Game.StrokeStrong, topModalShape)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = {},
-                        ),
+                        .pointerInput(Unit) {
+                            detectTapGestures { /* consume tap so it does not reach scrim */ }
+                        },
                     content = content,
                 )
             }
@@ -614,7 +675,25 @@ fun GameSheet(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(visible) {
+        if (visible) {
+            try { focusRequester.requestFocus() } catch (_: Throwable) {}
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .focusRequester(focusRequester)
+            .focusable()
+            .onPreviewKeyEvent { event ->
+                if (visible && event.type == KeyEventType.KeyDown && event.key == Key.Escape) {
+                    onDismiss()
+                    true
+                } else false
+            }
+    ) {
         AnimatedVisibility(
             visible = visible,
             enter = fadeIn(tween(160)),
@@ -624,6 +703,13 @@ fun GameSheet(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Game.ModalScrim)
+                    .semantics {
+                        contentDescription = "بستن برگ"
+                        onClick(label = "بستن") {
+                            onDismiss()
+                            true
+                        }
+                    }
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -647,11 +733,9 @@ fun GameSheet(
                         .clip(shape)
                         .background(Game.PanelSolid)
                         .border(1.dp, Game.StrokeStrong, shape)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = {},
-                        )
+                        .pointerInput(Unit) {
+                            detectTapGestures { /* consume tap so it does not reach scrim */ }
+                        }
                         .navigationBarsPadding(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {

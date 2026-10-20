@@ -89,8 +89,8 @@ fun StageBriefingDialog(
                     icon = Res.drawable.ic_close,
                     onClick = onDismiss,
                     contentDescription = "بستن",
-                    size = 32.dp,
-                    iconSize = 14.dp,
+                    size = 44.dp,
+                    iconSize = 16.dp,
                     tint = Game.TextSecondary,
                     container = Color.Unspecified,
                     border = Game.Stroke

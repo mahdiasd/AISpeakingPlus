@@ -10,6 +10,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -295,6 +296,7 @@ private fun LevelStatCard(
                 if (onLevelClick != null) {
                     Box(
                         modifier = Modifier
+                            .defaultMinSize(minWidth = 48.dp, minHeight = 44.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(Color(0x2B5E5CE6))
                             .border(1.dp, Color(0x4D5E5CE6), RoundedCornerShape(10.dp))
@@ -303,7 +305,7 @@ private fun LevelStatCard(
                                 indication = null,
                                 onClick = onLevelClick
                             )
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         GameText(

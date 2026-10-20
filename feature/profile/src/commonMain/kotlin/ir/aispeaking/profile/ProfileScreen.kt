@@ -115,7 +115,7 @@ fun ProfileScreen(
 
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(44.dp)
                                 .graphicsLayer {
                                     scaleX = backScale
                                     scaleY = backScale

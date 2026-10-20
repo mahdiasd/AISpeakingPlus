@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -196,7 +197,7 @@ fun StageListItemCard(
                 if (!isLocked) {
                     GameStars(stars = starsEarned, size = 20.dp, spacing = 2.dp)
                 } else {
-                    GameText(text = "", size = 1.sp)
+                    Spacer(modifier = Modifier.width(1.dp))
                 }
 
                 when {

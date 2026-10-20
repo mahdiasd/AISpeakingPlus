@@ -10,6 +10,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -162,6 +163,7 @@ fun SubscriptionCard(
                                 scaleX = extendScale
                                 scaleY = extendScale
                             }
+                            .defaultMinSize(minWidth = 56.dp, minHeight = 44.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(extendBtnBg)
                             .border(1.dp, extendBtnBorder, RoundedCornerShape(12.dp))
@@ -170,7 +172,7 @@ fun SubscriptionCard(
                                 indication = null,
                                 onClick = onUpgradeClick
                             )
-                            .padding(horizontal = 14.dp, vertical = 7.dp),
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         GameText(
@@ -234,6 +236,7 @@ fun SubscriptionCard(
                                         scaleX = quickExtendScale
                                         scaleY = quickExtendScale
                                     }
+                                    .defaultMinSize(minWidth = 77.dp, minHeight = 44.dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(Color(0x40FF453A))
                                     .border(1.dp, Color(0x55FF453A), RoundedCornerShape(10.dp))
@@ -242,7 +245,7 @@ fun SubscriptionCard(
                                         indication = null,
                                         onClick = onUpgradeClick
                                     )
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 GameText(

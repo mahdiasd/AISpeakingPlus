@@ -20,9 +20,9 @@ import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.stage.JourneyLeaderboard
 import ir.aispeaking.domain.model.stage.LeaderboardEntry
 import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameSheet
 import ir.aispeaking.sharedui.ui.them.AppTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JourneyLeaderboardSheet(
     leaderboard: JourneyLeaderboard,
@@ -30,11 +30,9 @@ fun JourneyLeaderboardSheet(
     modifier: Modifier = Modifier
 ) {
     val isDark = AppTheme.isDark
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Game.PanelSolid,
-        contentColor = Game.TextPrimary,
+    GameSheet(
+        visible = true,
+        onDismiss = onDismiss,
         modifier = modifier
     ) {
         Column(

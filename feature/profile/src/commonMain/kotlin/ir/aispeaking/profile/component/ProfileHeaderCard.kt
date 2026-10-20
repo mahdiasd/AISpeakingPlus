@@ -114,14 +114,7 @@ fun ProfileHeaderCard(
 
                     Box(
                         modifier = Modifier
-                            .size(28.dp)
-                            .graphicsLayer {
-                                scaleX = editScale
-                                scaleY = editScale
-                            }
-                            .clip(CircleShape)
-                            .background(editBtnBg)
-                            .border(1.dp, editBtnBorder, CircleShape)
+                            .size(44.dp)
                             .clickable(
                                 interactionSource = editInteraction,
                                 indication = null,
@@ -129,12 +122,25 @@ fun ProfileHeaderCard(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_edit),
-                            contentDescription = "ویرایش نام",
-                            tint = if (isDark) Game.TextSecondary else Color(0xFF6B7280),
-                            modifier = Modifier.size(13.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .graphicsLayer {
+                                    scaleX = editScale
+                                    scaleY = editScale
+                                }
+                                .clip(CircleShape)
+                                .background(editBtnBg)
+                                .border(1.dp, editBtnBorder, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_edit),
+                                contentDescription = "ویرایش نام",
+                                tint = if (isDark) Game.TextSecondary else Color(0xFF6B7280),
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
                     }
                 }
 
