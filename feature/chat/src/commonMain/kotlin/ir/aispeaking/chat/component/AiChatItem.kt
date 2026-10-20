@@ -79,16 +79,17 @@ fun AiChatItem(
     characterAvatarUrl: String? = null,
     isLastChat: Boolean = false,
     onPlayVoice: () -> Unit = {},
-    onStopVoice: () -> Unit = {}
+    onStopVoice: () -> Unit = {},
+    onCopied: () -> Unit = {}
 ) {
     val clipboardManager = LocalClipboardManager.current
     var showTranslation by remember { mutableStateOf(false) }
     var copied by remember { mutableStateOf(false) }
     val hasTranslation = !chat.translatedMessage.isNullOrBlank()
 
-    if (copied) {
-        LaunchedEffect(Unit) {
-            delay(1500)
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(2000)
             copied = false
         }
     }
@@ -202,6 +203,7 @@ fun AiChatItem(
                             onClick = {
                                 clipboardManager.setText(AnnotatedString(chat.message))
                                 copied = true
+                                onCopied()
                             }
                         )
                     }

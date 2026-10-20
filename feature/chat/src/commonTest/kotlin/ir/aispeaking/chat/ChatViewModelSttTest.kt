@@ -25,6 +25,8 @@ import ir.aispeaking.domain.usecase.stt.CloseSttSessionUseCase
 import ir.aispeaking.domain.usecase.stt.SendAudioChunkUseCase
 import ir.aispeaking.domain.usecase.stt.StreamSpeechToTextUseCase
 import ir.aispeaking.domain.usecase.user.GetUserProfileUseCase
+import ir.aispeaking.utils.analytics.AnalyticsTracker
+import ir.aispeaking.utils.crashlytics.DefaultCrashReporter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -161,6 +163,12 @@ class ChatViewModelSttTest {
             UserProfile(id = "guest", phoneNumber = "", nickName = "Guest", languageLevel = "A1", isGuest = true)
     }
 
+    private class FakeAnalyticsTracker : AnalyticsTracker {
+        override fun logEvent(name: String, params: Map<String, Any?>) {}
+        override fun setUserId(userId: String?) {}
+        override fun setUserProperty(name: String, value: String?) {}
+    }
+
     private lateinit var sttRepo: FakeSttRepo
     private lateinit var audioController: DefaultStageAudioController
     private lateinit var viewModel: ChatViewModel
@@ -184,7 +192,9 @@ class ChatViewModelSttTest {
             getUserProfileUseCase = GetUserProfileUseCase(userProfileRepo),
             streamSpeechToTextUseCase = StreamSpeechToTextUseCase(sttRepo),
             sendAudioChunkUseCase = SendAudioChunkUseCase(sttRepo),
-            closeSttSessionUseCase = CloseSttSessionUseCase(sttRepo)
+            closeSttSessionUseCase = CloseSttSessionUseCase(sttRepo),
+            analyticsTracker = FakeAnalyticsTracker(),
+            crashReporter = DefaultCrashReporter()
         )
     }
 

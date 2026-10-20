@@ -54,6 +54,8 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDirection
@@ -278,6 +280,9 @@ private fun CompactTextRow(
                 modifier = Modifier
                     .weight(1f)
                     .focusRequester(focusRequester)
+                    .semantics {
+                        contentDescription = "پیام انگلیسی شما"
+                    }
                     .onPreviewKeyEvent { event ->
                         if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && !event.isShiftPressed) {
                             if (canSend) onSendClick()

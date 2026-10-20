@@ -52,12 +52,16 @@ import ir.aispeaking.chat.component.ChatToolbar
 import ir.aispeaking.chat.component.UserChatItem
 import ir.aispeaking.domain.model.chat.Chat
 import ir.aispeaking.domain.model.stage.EvaluationSession
+import ir.aispeaking.sharedui.Res
+import ir.aispeaking.sharedui.ic_done
 import ir.aispeaking.sharedui.ui.component.AsyncStageBackground
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameAvatar
 import ir.aispeaking.sharedui.ui.game.GameChip
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.them.AppTheme
+import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * 2026 Apple Liquid Glass Chat Screen for AISpeakingPlus.
@@ -82,6 +86,14 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     var showHintConfirmDialog by remember { mutableStateOf(false) }
     var showObjectiveSheet by remember { mutableStateOf(false) }
+    var toastMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(toastMessage) {
+        if (toastMessage != null) {
+            delay(2000)
+            toastMessage = null
+        }
+    }
 
     // Keep the last evaluation so the result card can animate out smoothly
     var lastEvaluation by remember { mutableStateOf<EvaluationSession?>(null) }
@@ -166,6 +178,7 @@ fun ChatScreen(
                 ) {
                     if (uiState.stageLoadError != null) {
                         StageLoadErrorState(
+                            title = if (stage != null) "خطا در شروع گفتگو" else "خطا در باز کردن مرحله",
                             errorMessage = uiState.stageLoadError!!,
                             onRetry = { viewModel.retryLoadStage() },
                             onBack = onNavigateBack,
@@ -212,7 +225,8 @@ fun ChatScreen(
                                                 characterName = stage.characterName,
                                                 characterAvatarUrl = stage.characterAvatarUrl,
                                                 onPlayVoice = { viewModel.playAiVoice(chat.uid) },
-                                                onStopVoice = { viewModel.stopAiVoice(chat.uid) }
+                                                onStopVoice = { viewModel.stopAiVoice(chat.uid) },
+                                                onCopied = { toastMessage = "متن پیام در کلیپ‌بورد کپی شد" }
                                             )
 
                                             is Chat.WaitingForAi -> TypingBubble(
@@ -233,34 +247,36 @@ fun ChatScreen(
                     }
                 }
 
-                // Floating Hint Suggestion Cue
-                HintSuggestionCue(
-                    visible = uiState.currentHintSuggestion != null || uiState.hintError != null,
-                    suggestionEn = uiState.currentHintSuggestion,
-                    explanationFa = uiState.currentHintExplanation,
-                    errorMessage = uiState.hintError,
-                    onApplySuggestion = { suggestion ->
-                        viewModel.onMessageTextChanged(suggestion)
-                        viewModel.setInputMode(ChatInputMode.TEXT)
-                        viewModel.dismissHint()
-                    },
-                    onDismiss = { viewModel.dismissHint() },
-                    onRetry = { viewModel.requestHint() }
-                )
+                if (uiState.stageLoadError == null && stage != null) {
+                    // Floating Hint Suggestion Cue
+                    HintSuggestionCue(
+                        visible = uiState.currentHintSuggestion != null || uiState.hintError != null,
+                        suggestionEn = uiState.currentHintSuggestion,
+                        explanationFa = uiState.currentHintExplanation,
+                        errorMessage = uiState.hintError,
+                        onApplySuggestion = { suggestion ->
+                            viewModel.onMessageTextChanged(suggestion)
+                            viewModel.setInputMode(ChatInputMode.TEXT)
+                            viewModel.dismissHint()
+                        },
+                        onDismiss = { viewModel.dismissHint() },
+                        onRetry = { viewModel.requestHint() }
+                    )
 
-                // Floating Liquid Glass Bottom Dock
-                ChatBottomBar(
-                    inputMode = uiState.inputMode,
-                    text = uiState.messageText,
-                    isRecording = uiState.isRecording,
-                    hintsUsedCount = uiState.hintsUsedCount,
-                    isRequestingHint = uiState.isRequestingHint,
-                    onTextChange = { viewModel.onMessageTextChanged(it) },
-                    onInputModeChange = { viewModel.setInputMode(it) },
-                    onVoiceToggle = { start -> viewModel.toggleRecording(start) },
-                    onSendClick = { viewModel.sendMessage() },
-                    onHintClick = { showHintConfirmDialog = true }
-                )
+                    // Floating Liquid Glass Bottom Dock
+                    ChatBottomBar(
+                        inputMode = uiState.inputMode,
+                        text = uiState.messageText,
+                        isRecording = uiState.isRecording,
+                        hintsUsedCount = uiState.hintsUsedCount,
+                        isRequestingHint = uiState.isRequestingHint,
+                        onTextChange = { viewModel.onMessageTextChanged(it) },
+                        onInputModeChange = { viewModel.setInputMode(it) },
+                        onVoiceToggle = { start -> viewModel.toggleRecording(start) },
+                        onSendClick = { viewModel.sendMessage() },
+                        onHintClick = { showHintConfirmDialog = true }
+                    )
+                }
             }
 
             // Objective Bottom Sheet
@@ -298,6 +314,43 @@ fun ChatScreen(
                         onNavigateBack()
                     }
                 )
+            }
+
+            // Top Floating Toast for Copied Feedback
+            androidx.compose.animation.AnimatedVisibility(
+                visible = toastMessage != null,
+                enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.slideInVertically { -it },
+                exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.slideOutVertically { -it },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(AppleChatTheme.GlassPanelRaised)
+                        .border(1.dp, AppleChatTheme.SpecularBorderColor, RoundedCornerShape(50))
+                        .padding(horizontal = 18.dp, vertical = 10.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        androidx.compose.material3.Icon(
+                            painter = painterResource(Res.drawable.ic_done),
+                            contentDescription = null,
+                            tint = AppleChatTheme.SuccessCyan,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        GameText(
+                            text = toastMessage.orEmpty(),
+                            size = 13.sp,
+                            bold = true,
+                            color = Game.TextPrimary
+                        )
+                    }
+                }
             }
         }
     }
@@ -339,6 +392,7 @@ private fun LoadingState(modifier: Modifier = Modifier) {
  */
 @Composable
 private fun StageLoadErrorState(
+    title: String = "خطا در باز کردن مرحله",
     errorMessage: String,
     onRetry: () -> Unit,
     onBack: () -> Unit,
@@ -358,7 +412,7 @@ private fun StageLoadErrorState(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             GameText(
-                text = "خطا در باز کردن مرحله",
+                text = title,
                 size = 16.sp,
                 bold = true,
                 color = AppleChatTheme.Coral

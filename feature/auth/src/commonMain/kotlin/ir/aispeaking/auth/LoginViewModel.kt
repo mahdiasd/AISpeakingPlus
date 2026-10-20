@@ -104,18 +104,19 @@ class LoginViewModel(
             _uiState.update { it.copy(isLoading = true, phoneError = null, generalError = null) }
             when (val result = sendOtpUseCase(phone)) {
                 is DataResult.Success -> {
-                    val expiresIn = result.data.coerceAtLeast(30)
+                    // Backend OTP resend cooldown is 60s (OTP_COOLDOWN_SECONDS), whereas token TTL is 120s
+                    val cooldownSeconds = minOf(result.data, 60).coerceAtLeast(30)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             step = LoginStep.ENTER_OTP,
-                            countdownSeconds = expiresIn,
+                            countdownSeconds = cooldownSeconds,
                             canResendOtp = false,
                             otpCode = "",
                             otpError = null
                         )
                     }
-                    startCountdown(expiresIn)
+                    startCountdown(cooldownSeconds)
                 }
                 is DataResult.Failure -> {
                     val errorMsg = result.appError.getErrorMessage().ifBlank { "خطا در ارسال کد تایید" }

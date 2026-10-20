@@ -90,7 +90,15 @@ class StageApi(
                                 emit(StageChatStreamEvent.Error(eventDto.message ?: "Server streaming error"))
                             }
                         }
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
+                        val isKeepAlive = data.startsWith(":") ||
+                            data.equals("ping", ignoreCase = true) ||
+                            data.equals("keepalive", ignoreCase = true) ||
+                            data.equals("keep-alive", ignoreCase = true)
+                        if (!isKeepAlive) {
+                            emit(StageChatStreamEvent.Error("خطا در پردازش پیام سرور: ${e.message ?: "پاسخ نامعتبر"}"))
+                        }
                     }
                 }
             }

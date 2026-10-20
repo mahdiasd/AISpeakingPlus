@@ -183,6 +183,7 @@ class ChatViewModel(
             val aiUid = "ai_init_${Clock.System.now().toEpochMilliseconds()}"
             var accumulatedText = ""
             var isDone = false
+            var starterError: String? = null
 
             val initialAiChat = Chat.Ai(
                 uid = aiUid,
@@ -234,7 +235,7 @@ class ChatViewModel(
                             val hasAudio = !d.audioUrl.isNullOrBlank()
                             val finalAiChat = Chat.Ai(
                                 uid = aiUid,
-                                message = if (accumulatedText.isNotBlank()) accumulatedText else d.message,
+                                message = if (d.message.isNotBlank()) d.message else accumulatedText,
                                 translatedMessage = d.translatedMessage,
                                 voiceState = if (hasAudio) AiVoiceState.Playing else AiVoiceState.Stopped,
                                 audioUrl = d.audioUrl,
@@ -264,10 +265,14 @@ class ChatViewModel(
                             }
                         }
                         is StageChatStreamEvent.Error -> {
+                            starterError = event.message
                         }
                     }
                 }
-            } catch (_: Exception) {
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                starterError = e.message
             }
 
             if (!isDone && accumulatedText.isBlank()) {
@@ -275,7 +280,7 @@ class ChatViewModel(
                     it.copy(
                         chats = kotlinx.collections.immutable.persistentListOf(),
                         isModelSpeaking = false,
-                        stageLoadError = "خطا در شروع مکالمه با هوش مصنوعی. لطفاً دوباره تلاش کنید."
+                        stageLoadError = starterError ?: "خطا در شروع مکالمه با هوش مصنوعی. لطفاً دوباره تلاش کنید."
                     )
                 }
             }
@@ -602,7 +607,7 @@ class ChatViewModel(
 
                             val finalAiChat = Chat.Ai(
                                 uid = aiUid,
-                                message = if (accumulatedText.isNotBlank()) accumulatedText else turn.message,
+                                message = if (turn.message.isNotBlank()) turn.message else accumulatedText,
                                 translatedMessage = turn.translatedMessage,
                                 voiceState = if (hasAudio) AiVoiceState.Playing else AiVoiceState.Stopped,
                                 audioUrl = turn.audioUrl,
@@ -673,7 +678,7 @@ class ChatViewModel(
                 streamError = e.message ?: "خطا در ارتباط با سرور"
             }
 
-            if (!isDone && accumulatedText.isBlank()) {
+            if (!isDone) {
                 val failedUserChat = userChat.copy(status = ChatStatus.Failed)
                 _uiState.update { state ->
                     val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi && it.uid != aiUid }

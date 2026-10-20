@@ -96,10 +96,13 @@ fun UserChatItem(
                     }
 
                     is ChatStatus.Answered -> {
-                        if (status.grammar.isBlank()) {
+                        if (!status.hasGrammarError) {
                             GrammarOkTag()
                         } else {
-                            GrammarTipCard(text = status.grammar)
+                            GrammarTipCard(
+                                feedback = status.grammar,
+                                correctedSentence = status.correctedSentence
+                            )
                         }
                     }
                 }
@@ -135,9 +138,13 @@ private fun GrammarOkTag() {
 
 /**
  * Champagne Gold Frosted Glass Grammar Tip Card.
+ * Displays corrected English sentence in LTR alongside Persian feedback.
  */
 @Composable
-private fun GrammarTipCard(text: String) {
+private fun GrammarTipCard(
+    feedback: String?,
+    correctedSentence: String?
+) {
     val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(16.dp)
     val accent = if (isDark) AppleChatTheme.Gold else AppleChatTheme.GoldDeep
@@ -148,7 +155,7 @@ private fun GrammarTipCard(text: String) {
             .background(if (isDark) Color(0xD91E1C1A) else Color(0xFFFFFBEB))
             .border(1.dp, accent.copy(alpha = if (isDark) 0.5f else 0.45f), shape)
             .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -167,12 +174,32 @@ private fun GrammarTipCard(text: String) {
                 color = accent
             )
         }
-        GameText(
-            text = text,
-            size = 13.sp,
-            lineHeight = 21.sp,
-            color = Game.TextPrimary
-        )
+        if (!correctedSentence.isNullOrBlank()) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                GameText(
+                    text = correctedSentence,
+                    size = 13.sp,
+                    bold = true,
+                    lineHeight = 20.sp,
+                    color = Game.TextPrimary
+                )
+            }
+        }
+        if (!feedback.isNullOrBlank()) {
+            GameText(
+                text = feedback,
+                size = 12.sp,
+                lineHeight = 19.sp,
+                color = if (correctedSentence.isNullOrBlank()) Game.TextPrimary else Game.TextSecondary
+            )
+        } else if (correctedSentence.isNullOrBlank()) {
+            GameText(
+                text = "جمله شما از نظر گرامری نیاز به اصلاح دارد.",
+                size = 12.sp,
+                lineHeight = 19.sp,
+                color = Game.TextPrimary
+            )
+        }
     }
 }
 
@@ -200,7 +227,11 @@ private fun UserChatItemGrammarPreview() {
             chat = Chat.User(
                 uid = "2",
                 message = "I wants a coffee.",
-                status = ChatStatus.Answered(grammar = "بهتر است بگویی «I want a coffee» چون فاعل I است.")
+                status = ChatStatus.Answered(
+                    grammar = "بهتر است بگویی «I want a coffee» چون فاعل I است.",
+                    correctedSentence = "I want a coffee.",
+                    hasGrammarError = true
+                )
             )
         )
     }

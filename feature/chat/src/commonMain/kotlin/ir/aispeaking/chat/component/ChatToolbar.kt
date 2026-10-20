@@ -60,7 +60,7 @@ fun ChatToolbar(
     onObjectiveClick: () -> Unit = {},
     onFinishConversationClick: () -> Unit
 ) {
-    val maxTurns = (stage?.maxTurns ?: 0).coerceAtLeast(1)
+    val maxTurns = stage?.maxTurns?.coerceAtLeast(1) ?: 10
     val isDark = AppTheme.isDark
 
     Column(
@@ -149,7 +149,7 @@ fun ChatToolbar(
                 onClick = onFinishConversationClick,
                 modifier = Modifier.width(if (isFinishing) 124.dp else 84.dp),
                 style = GameButtonStyle.Gold,
-                enabled = !isFinishing,
+                enabled = !isFinishing && stage != null && turnsCount > 0,
                 height = 42.dp,
                 textSize = 13.sp,
                 loading = isFinishing
