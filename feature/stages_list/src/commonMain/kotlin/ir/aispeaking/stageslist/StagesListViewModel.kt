@@ -9,6 +9,7 @@ import ir.aispeaking.domain.usecase.stage.GetStagesUseCase
 import ir.aispeaking.utils.analytics.AnalyticsTracker
 import ir.aispeaking.utils.analytics.AnalyticsEvents
 import ir.aispeaking.utils.analytics.logStageLockedClick
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,13 +26,15 @@ class StagesListViewModel(
 
     private val _uiState = MutableStateFlow(StagesListUiState())
     val uiState: StateFlow<StagesListUiState> = _uiState.asStateFlow()
+    private var loadJob: Job? = null
 
     init {
         loadStages()
     }
 
     fun loadStages() {
-        viewModelScope.launch {
+        if (loadJob?.isActive == true) return
+        loadJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val tier = getCurrentAccessTierUseCase()
             when (val result = getStagesUseCase(tier)) {

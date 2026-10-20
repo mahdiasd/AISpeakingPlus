@@ -19,6 +19,7 @@ import ir.aispeaking.utils.analytics.AnalyticsEvents
 import ir.aispeaking.utils.analytics.logLogin
 import ir.aispeaking.utils.analytics.logSignUp
 import ir.aispeaking.utils.analytics.logStageLockedClick
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -85,11 +86,11 @@ class JourneyMapViewModel(
     private val _uiState = MutableStateFlow(JourneyMapUiState())
     val uiState: StateFlow<JourneyMapUiState> = _uiState.asStateFlow()
 
+    private var refreshJob: Job? = null
+    private var loadJob: Job? = null
+
     init {
-        viewModelScope.launch {
-            val tier = getCurrentAccessTierUseCase()
-            loadStages(tier)
-        }
+        refreshStages()
     }
 
     private fun normalizeDigits(input: String): String = buildString(input.length) {
@@ -229,34 +230,40 @@ class JourneyMapViewModel(
     }
 
     fun refreshStages() {
-        viewModelScope.launch {
+        if (refreshJob?.isActive == true || loadJob?.isActive == true) return
+        refreshJob = viewModelScope.launch {
             val tier = getCurrentAccessTierUseCase()
             _uiState.update { it.copy(viewingStage = null) }
-            loadStages(tier)
+            loadStagesInternal(tier)
+        }
+    }
+
+    private suspend fun loadStagesInternal(tier: AccessTier) {
+        _uiState.update { it.copy(isLoading = true, currentTier = tier) }
+        when (val result = getStagesUseCase(tier)) {
+            is DataResult.Success -> {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        stages = result.data
+                    )
+                }
+            }
+            is DataResult.Failure -> {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        snackbarMessage = "خطا در بارگذاری مراحل"
+                    )
+                }
+            }
         }
     }
 
     fun loadStages(tier: AccessTier = AccessTier.GUEST) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, currentTier = tier) }
-            when (val result = getStagesUseCase(tier)) {
-                is DataResult.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            stages = result.data
-                        )
-                    }
-                }
-                is DataResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            snackbarMessage = "خطا در بارگذاری مراحل"
-                        )
-                    }
-                }
-            }
+        if (loadJob?.isActive == true || refreshJob?.isActive == true) return
+        loadJob = viewModelScope.launch {
+            loadStagesInternal(tier)
         }
     }
 

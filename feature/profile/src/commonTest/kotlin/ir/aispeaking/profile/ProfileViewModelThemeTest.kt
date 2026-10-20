@@ -13,6 +13,8 @@ import ir.aispeaking.domain.usecase.user.GetUserProfileUseCase
 import ir.aispeaking.domain.usecase.user.UpdateUserProfileUseCase
 import ir.aispeaking.sharedui.ui.model.theme_mode.ThemeMode
 import ir.aispeaking.sharedui.ui.them.ThemeController
+import ir.aispeaking.utils.analytics.AnalyticsTracker
+import ir.aispeaking.utils.crashlytics.DefaultCrashReporter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -86,6 +88,12 @@ class ProfileViewModelThemeTest {
         Dispatchers.setMain(testDispatcher)
     }
 
+    private class FakeAnalyticsTracker : AnalyticsTracker {
+        override fun logEvent(name: String, params: Map<String, Any?>) {}
+        override fun setUserId(userId: String?) {}
+        override fun setUserProperty(name: String, value: String?) {}
+    }
+
     @AfterTest
     fun tearDown() {
         Dispatchers.resetMain()
@@ -101,7 +109,9 @@ class ProfileViewModelThemeTest {
             getUserProfileUseCase = GetUserProfileUseCase(userRepo),
             updateUserProfileUseCase = UpdateUserProfileUseCase(userRepo),
             authRepository = authRepo,
-            themeRepository = fakeThemeRepo
+            themeRepository = fakeThemeRepo,
+            analyticsTracker = FakeAnalyticsTracker(),
+            crashReporter = DefaultCrashReporter()
         )
 
         advanceUntilIdle()
@@ -120,7 +130,9 @@ class ProfileViewModelThemeTest {
             getUserProfileUseCase = GetUserProfileUseCase(userRepo),
             updateUserProfileUseCase = UpdateUserProfileUseCase(userRepo),
             authRepository = authRepo,
-            themeRepository = fakeThemeRepo
+            themeRepository = fakeThemeRepo,
+            analyticsTracker = FakeAnalyticsTracker(),
+            crashReporter = DefaultCrashReporter()
         )
 
         advanceUntilIdle()

@@ -14,6 +14,7 @@ import ir.aispeaking.sharedui.ui.them.ThemeController
 import ir.aispeaking.utils.analytics.AnalyticsTracker
 import ir.aispeaking.utils.analytics.AnalyticsEvents
 import ir.aispeaking.utils.crashlytics.CrashReporter
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,6 +51,7 @@ class ProfileViewModel(
         ProfileUiState(themeMode = ThemeMode.mapper(themeRepository.getThemeMode()))
     )
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+    private var loadProfileJob: Job? = null
 
     init {
         val currentKey = themeRepository.getThemeMode()
@@ -62,7 +64,8 @@ class ProfileViewModel(
     }
 
     fun loadProfile() {
-        viewModelScope.launch {
+        if (loadProfileJob?.isActive == true) return
+        loadProfileJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             when (val result = getUserProfileUseCase()) {
                 is DataResult.Success -> {

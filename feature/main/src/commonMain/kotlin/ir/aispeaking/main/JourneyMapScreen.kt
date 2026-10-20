@@ -74,10 +74,6 @@ fun JourneyMapScreen(
     onNavigateToStagesList: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.refreshStages()
-    }
-
     OnResume {
         viewModel.refreshStages()
     }
@@ -297,7 +293,8 @@ private fun TopHud(
             GameStatPill(
                 text = "اشتراک ویژه",
                 icon = Res.drawable.ic_crown,
-                accent = Game.Violet
+                accent = Game.Violet,
+                onClick = onSubscribe
             )
         } else {
             GameButton(
@@ -306,7 +303,7 @@ private fun TopHud(
                 modifier = Modifier.width(140.dp),
                 style = GameButtonStyle.Gold,
                 icon = Res.drawable.ic_crown,
-                height = 40.dp,
+                height = 44.dp,
                 textSize = 13.sp
             )
         }
