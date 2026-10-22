@@ -1,9 +1,7 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Mic,
   Sparkles,
-  Shield,
   Layers,
   Headphones,
   Award,
@@ -13,8 +11,6 @@ import {
 import { Button } from '../components/ui/Button';
 
 export const AppHomePage: React.FC = () => {
-  const navigate = useNavigate();
-
   const handleLaunchApp = () => {
     window.location.href = '/app/';
   };
@@ -43,15 +39,6 @@ export const AppHomePage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/admin')}
-            icon={<Shield className="w-3.5 h-3.5 text-slate-400" />}
-          >
-            پنل مدیریت
-          </Button>
-
           <Button
             variant="primary"
             size="sm"
@@ -112,7 +99,7 @@ export const AppHomePage: React.FC = () => {
         </div>
 
         {/* Action Button to Compose Web App */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="pt-8 flex justify-center">
           <Button
             size="lg"
             variant="primary"
@@ -121,15 +108,6 @@ export const AppHomePage: React.FC = () => {
             icon={<Monitor className="w-5 h-5 text-indigo-100 group-hover:scale-110 transition-transform" />}
           >
             ورود به برنامه و شروع مکالمه
-          </Button>
-
-          <Button
-            size="lg"
-            variant="outline"
-            onClick={() => navigate('/admin')}
-            icon={<Shield className="w-4 h-4 text-slate-400" />}
-          >
-            ورود به پنل مدیریت
           </Button>
         </div>
       </main>
