@@ -27,10 +27,10 @@ class AiClientManager(
     private var lastConfigHash: Int? = null
 
     private val fallbackConfig = AiPlatformConfig(
-        baseUrl = System.getenv("AI_BASE_URL") ?: "http://127.0.0.1:20128/v1/",
-        apiKey = System.getenv("AI_API_KEY") ?: "sk-3c185114b476049c-z4geo6-d954b610",
-        primaryModel = System.getenv("AI_PRIMARY_MODEL") ?: "FreeCombo",
-        fallbackModel = System.getenv("AI_FALLBACK_MODEL") ?: "FreeCombo"
+        baseUrl = System.getenv("AI_BASE_URL") ?: "https://api.gapgpt.app/v1/",
+        apiKey = System.getenv("AI_API_KEY") ?: "sk-NaIklheGxCNh1mWS4sPZwtB87GRthzJPjVZ3TkRXsFxlM2Rh",
+        primaryModel = System.getenv("AI_PRIMARY_MODEL") ?: "deepseek-v4-flash",
+        fallbackModel = System.getenv("AI_FALLBACK_MODEL") ?: "gapgpt-qwen-3.5"
     )
 
     suspend fun getOpenAiClient(): OpenAI {
