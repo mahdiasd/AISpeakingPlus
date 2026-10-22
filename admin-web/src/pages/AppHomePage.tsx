@@ -5,14 +5,19 @@ import {
   Sparkles,
   Shield,
   Layers,
-  ArrowLeft,
   Headphones,
   Award,
+  Play,
+  Monitor,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 export const AppHomePage: React.FC = () => {
   const navigate = useNavigate();
+
+  const handleLaunchApp = () => {
+    window.location.href = '/app/';
+  };
 
   return (
     <div className="min-h-screen bg-[#0B0F17] text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
@@ -37,23 +42,32 @@ export const AppHomePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Button
             variant="outline"
             size="sm"
             onClick={() => navigate('/admin')}
-            icon={<Shield className="w-3.5 h-3.5 text-indigo-400" />}
+            icon={<Shield className="w-3.5 h-3.5 text-slate-400" />}
           >
-            ورود به پنل مدیریت
+            پنل مدیریت
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleLaunchApp}
+            icon={<Play className="w-3.5 h-3.5 text-white fill-white" />}
+          >
+            ورود به برنامه
           </Button>
         </div>
       </header>
 
       {/* Hero Section */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-16 sm:py-24 max-w-5xl mx-auto text-center z-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-950/30 border border-indigo-500/20 text-indigo-300 text-xs font-medium mb-6">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-950/40 border border-indigo-500/30 text-indigo-300 text-xs font-medium mb-6">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span>نسل جدید تمرین مکالمه بر پایه سناریوهای داستانی و واقع‌گرایانه</span>
+          <span>نسخه تحت وب و هوشمند Compose Multiplatform فعال است</span>
         </div>
 
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-100 tracking-tight leading-tight max-w-3xl mb-6">
@@ -97,14 +111,25 @@ export const AppHomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Button to Admin or Launch */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+        {/* Action Button to Compose Web App */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button
             size="lg"
-            onClick={() => navigate('/admin')}
-            icon={<ArrowLeft className="w-4 h-4 rotate-180" />}
+            variant="primary"
+            onClick={handleLaunchApp}
+            className="px-8 py-3.5 text-base shadow-lg shadow-indigo-600/30 group"
+            icon={<Monitor className="w-5 h-5 text-indigo-100 group-hover:scale-110 transition-transform" />}
           >
-            ورود به پنل مدیریت (/admin)
+            ورود به برنامه و شروع مکالمه
+          </Button>
+
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => navigate('/admin')}
+            icon={<Shield className="w-4 h-4 text-slate-400" />}
+          >
+            ورود به پنل مدیریت
           </Button>
         </div>
       </main>
