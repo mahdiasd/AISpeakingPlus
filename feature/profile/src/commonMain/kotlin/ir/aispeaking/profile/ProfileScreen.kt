@@ -31,7 +31,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,12 +52,16 @@ import ir.aispeaking.profile.component.LevelPickerBottomSheet
 import ir.aispeaking.profile.component.ProfileHeaderCard
 import ir.aispeaking.profile.component.SignOutConfirmDialog
 import ir.aispeaking.profile.component.SubscriptionCard
+import ir.aispeaking.profile.component.SupportCard
 import ir.aispeaking.profile.component.ThemeSelectionCard
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_back
 import ir.aispeaking.sharedui.ic_exit
+import ir.aispeaking.sharedui.ic_support
+import ir.aispeaking.sharedui.ui.dialog.SupportDialog
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import ir.aispeaking.sharedui.utils.lifecycle.OnResume
@@ -70,6 +76,7 @@ fun ProfileScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showSupportDialog by remember { mutableStateOf(false) }
     val isDark = AppTheme.isDark
     val screenBg = if (isDark) Color(0xFF0F1015) else Color(0xFFF2F4F7)
 
@@ -206,6 +213,11 @@ fun ProfileScreen(
                             onThemeSelected = { viewModel.onThemeSelected(it) }
                         )
 
+                        // Support & Contact Card
+                        SupportCard(
+                            onClick = { showSupportDialog = true }
+                        )
+
                         // Sign-out Button right below settings
                         if (!user.isGuest) {
                             AppleSignOutButton(
@@ -242,6 +254,13 @@ fun ProfileScreen(
                                 onClick = { viewModel.refresh() },
                                 modifier = Modifier.width(200.dp)
                             )
+                            GameButton(
+                                text = "ارتباط با پشتیبانی",
+                                icon = Res.drawable.ic_support,
+                                onClick = { showSupportDialog = true },
+                                style = GameButtonStyle.Glass,
+                                modifier = Modifier.width(200.dp)
+                            )
                         }
                     }
                 }
@@ -275,6 +294,11 @@ fun ProfileScreen(
                 currentLevel = uiState.user?.languageLevel,
                 onLevelSelected = { level -> viewModel.onSelectLanguageLevel(level) },
                 onDismiss = { viewModel.onDismissDialogs() }
+            )
+
+            SupportDialog(
+                visible = showSupportDialog,
+                onDismiss = { showSupportDialog = false }
             )
         }
     }
