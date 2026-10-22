@@ -31,6 +31,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,9 +49,12 @@ import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.user.User
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_logo
+import ir.aispeaking.sharedui.ic_support
 import ir.aispeaking.sharedui.ui.core.loading.DotLoading
+import ir.aispeaking.sharedui.ui.dialog.SupportDialog
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.GlassPanel
 import ir.aispeaking.sharedui.ui.them.AppTheme
@@ -112,8 +118,10 @@ fun SplashScreen(
 fun SplashScreen(
     modifier: Modifier = Modifier,
     uiState: SplashUiState,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onSupportClick: (() -> Unit)? = null
 ) {
+    var showSupportDialog by remember { mutableStateOf(false) }
     val infiniteTransition = rememberInfiniteTransition(label = "SplashFloat")
     val floatAnim by infiniteTransition.animateFloat(
         initialValue = -6f,
@@ -259,11 +267,25 @@ fun SplashScreen(
                                     onClick = onRetry,
                                     modifier = Modifier.fillMaxWidth()
                                 )
+                                GameButton(
+                                    text = "ارتباط با پشتیبانی",
+                                    icon = Res.drawable.ic_support,
+                                    onClick = {
+                                        if (onSupportClick != null) onSupportClick() else showSupportDialog = true
+                                    },
+                                    style = GameButtonStyle.Glass,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                         }
                     }
                 }
             }
+
+            SupportDialog(
+                visible = showSupportDialog,
+                onDismiss = { showSupportDialog = false }
+            )
         }
     }
 }
