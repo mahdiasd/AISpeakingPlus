@@ -38,5 +38,5 @@ ENV TTS_ENABLED=true
 
 EXPOSE 8080
 
-# JVM heap: cap at 2 GB to leave room for native libs + onnxruntime arena
-ENTRYPOINT ["java", "-Xmx2g", "-Dsherpa_onnx.native.path=/app/native", "-jar", "app.jar"]
+# JVM heap: cap at 1400m for safe operation on 4GB server
+ENTRYPOINT ["java", "-Xmx1400m", "-Dsherpa_onnx.native.path=/app/native", "-jar", "app.jar"]

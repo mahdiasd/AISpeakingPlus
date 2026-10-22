@@ -48,6 +48,10 @@ fun configureDatabases() {
         )
 
         transaction {
+            if (allTables.isNotEmpty()) {
+                SchemaUtils.createMissingTablesAndColumns(*allTables)
+            }
+
             try {
                 exec("ALTER TABLE stages ADD COLUMN IF NOT EXISTS target_objective_fa TEXT NOT NULL DEFAULT '';")
                 exec("ALTER TABLE stages ADD COLUMN IF NOT EXISTS character_behavior TEXT;")
@@ -55,9 +59,6 @@ fun configureDatabases() {
                 PrintHelper.warning("Stage table migration notice: ${e.message}")
             }
 
-            if (allTables.isNotEmpty()) {
-                SchemaUtils.createMissingTablesAndColumns(*allTables)
-            }
             seedOrSyncStages()
             seedSuperAdminIfEmpty()
         }
