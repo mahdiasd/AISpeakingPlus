@@ -128,7 +128,10 @@ fun Route.adminNotificationRouting(
                 )
             } catch (e: Exception) {
                 logger.warn("Failed to subscribe token to topic: ${e.message}")
-                call.failureRespond(HttpStatusCode.InternalServerError, "خطا در ثبت توکن: ${e.message}")
+                call.successRespond(
+                    RegisterTokenResponse(success = false, message = "سرویس اعلان موقتاً غیرفعال است: ${e.message}"),
+                    message = "سرویس اعلان در دسترس نیست"
+                )
             }
         }.describe {
             tag("Client Notifications")

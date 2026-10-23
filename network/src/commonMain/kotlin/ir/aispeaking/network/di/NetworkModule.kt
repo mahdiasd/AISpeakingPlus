@@ -2,6 +2,7 @@ package ir.aispeaking.network.di
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
@@ -12,6 +13,7 @@ import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import ir.aispeaking.network.BuildConfig
 import ir.aispeaking.storage.preferences.token.TokenPreferences
@@ -36,6 +38,14 @@ fun provideKtor(tokenPreferences: TokenPreferences): HttpClient {
 
             tokenPreferences.read().takeIf { it.isNotEmpty() }?.let { token ->
                 header(HttpHeaders.Authorization, "Bearer $token")
+            }
+        }
+
+        HttpResponseValidator {
+            validateResponse { response ->
+                if (response.status == HttpStatusCode.Unauthorized) {
+                    tokenPreferences.save("")
+                }
             }
         }
 
