@@ -17,22 +17,28 @@ import ir.aispeaking.network.model.stage.dto.ChatMessageDto
 import ir.aispeaking.network.model.stage.dto.EvaluationRequestDto
 import ir.aispeaking.network.model.stage.dto.GrammarErrorDto
 import ir.aispeaking.network.model.stage.dto.HintRequestDto
+import ir.aispeaking.storage.preferences.token.TokenPreferences
 import org.koin.core.annotation.Single
 
 @Single
 class StageRepositoryImpl(
     private val stageApi: StageApi,
-    private val localGuestProgressDataSource: LocalGuestProgressDataSource
+    private val localGuestProgressDataSource: LocalGuestProgressDataSource,
+    private val tokenPreferences: TokenPreferences
 ) : StageRepository {
 
     override suspend fun getStages(tier: AccessTier): DataResult<List<Stage>> {
-        val networkResult = safeCall { stageApi.getStages() }
+        var networkResult = safeCall { stageApi.getStages() }
+        if (networkResult is DataResult.Failure && networkResult.appError is ir.aispeaking.domain.model.error.NetworkError.Unauthorized) {
+            tokenPreferences.save("")
+            networkResult = safeCall { stageApi.getStages() }
+        }
         if (networkResult !is DataResult.Success) return DataResult.Failure((networkResult as DataResult.Failure).appError)
 
         val stages = networkResult.data.stages.map { it.toDomain() }
 
         // If in guest mode, merge local guest progress for stage 1
-        if (tier == AccessTier.GUEST) {
+        if (tier == AccessTier.GUEST || tokenPreferences.read().isBlank()) {
             val localList = localGuestProgressDataSource.getProgressList()
             val merged = stages.map { stage ->
                 val local = localList.find { it.stageId == stage.id }

@@ -22,6 +22,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 val SuspendedUserAttributeKey = AttributeKey<Boolean>("SuspendedUser")
+val ExpiredTokenAttributeKey = AttributeKey<Boolean>("ExpiredToken")
 
 fun Application.configureSecurity() {
     
@@ -80,13 +81,26 @@ fun Application.configureSecurity() {
             realm = jwtRealm
             authHeader { call ->
                 val authHeader = call.request.parseAuthorizationHeader()
-                if (authHeader != null) {
-                    authHeader
-                } else {
-                    call.request.queryParameters["token"]?.let { token ->
+                    ?: call.request.queryParameters["token"]?.let { token ->
                         io.ktor.http.auth.HttpAuthHeader.Single("Bearer", token)
                     }
+
+                if (authHeader is io.ktor.http.auth.HttpAuthHeader.Single &&
+                    authHeader.authScheme.equals("Bearer", ignoreCase = true)
+                ) {
+                    val rawToken = authHeader.blob
+                    try {
+                        val decoded = JWT.decode(rawToken)
+                        val expiresAt = decoded.expiresAt
+                        if (expiresAt != null && expiresAt.before(Date())) {
+                            call.attributes.put(ExpiredTokenAttributeKey, true)
+                            return@authHeader null
+                        }
+                    } catch (_: Exception) {
+                        return@authHeader null
+                    }
                 }
+                authHeader
             }
             verifier(
                 JWT
@@ -131,6 +145,8 @@ fun Application.configureSecurity() {
             challenge { _, _ ->
                 if (call.attributes.getOrNull(SuspendedUserAttributeKey) == true) {
                     call.failureRespond(HttpStatusCode.Forbidden, "حساب کاربری شما تعلیق شده است.")
+                } else if (call.attributes.getOrNull(ExpiredTokenAttributeKey) == true) {
+                    call.failureRespond(HttpStatusCode.Unauthorized, "توکن شما منقضی شده است. لطفاً دوباره وارد شوید.")
                 } else {
                     call.failureRespond(HttpStatusCode.Unauthorized)
                 }

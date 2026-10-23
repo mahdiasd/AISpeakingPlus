@@ -56,6 +56,10 @@ class AuthRepositoryImpl(
         val subResult = subscriptionRepository.getSubscriptionStatus()
         return if (subResult is DataResult.Success && subResult.data.isSubscriber) {
             AccessTier.SUBSCRIBER
+        } else if (subResult is DataResult.Failure && subResult.appError is ir.aispeaking.domain.model.error.NetworkError.Unauthorized) {
+            tokenPreferences.save("")
+            clearSharedPreferences.clear()
+            AccessTier.GUEST
         } else {
             AccessTier.REGISTERED_FREE
         }

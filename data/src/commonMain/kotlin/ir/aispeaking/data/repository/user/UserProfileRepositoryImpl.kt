@@ -49,25 +49,31 @@ class UserProfileRepositoryImpl(
                 DataResult.Success(profile)
             }
             is DataResult.Failure -> {
-                val cached = userPreferences.read()
-                if (cached != null && cached.uid.isNotBlank()) {
-                    DataResult.Success(
-                        UserProfile(
-                            id = cached.uid,
-                            phoneNumber = cached.mobile,
-                            nickName = cached.nickName,
-                            firstName = cached.firstName,
-                            lastName = cached.lastName,
-                            avatar = cached.avatar,
-                            score = cached.score,
-                            totalStars = 0,
-                            completedStagesCount = 0,
-                            languageLevel = cached.languageLevel,
-                            isGuest = false
-                        )
-                    )
+                if (result.appError is ir.aispeaking.domain.model.error.NetworkError.Unauthorized) {
+                    tokenPreferences.save("")
+                    userPreferences.save(defaultSharedPrefUser())
+                    DataResult.Success(getGuestProfile())
                 } else {
-                    DataResult.Failure(result.appError)
+                    val cached = userPreferences.read()
+                    if (cached != null && cached.uid.isNotBlank()) {
+                        DataResult.Success(
+                            UserProfile(
+                                id = cached.uid,
+                                phoneNumber = cached.mobile,
+                                nickName = cached.nickName,
+                                firstName = cached.firstName,
+                                lastName = cached.lastName,
+                                avatar = cached.avatar,
+                                score = cached.score,
+                                totalStars = 0,
+                                completedStagesCount = 0,
+                                languageLevel = cached.languageLevel,
+                                isGuest = false
+                            )
+                        )
+                    } else {
+                        DataResult.Failure(result.appError)
+                    }
                 }
             }
         }
