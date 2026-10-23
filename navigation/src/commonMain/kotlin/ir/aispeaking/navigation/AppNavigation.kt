@@ -10,6 +10,8 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import ir.aispeaking.auth.LoginRootScreen
 import ir.aispeaking.chat.ChatScreen
+import ir.aispeaking.domain.usecase.auth.SetHasSeenIntroVideoUseCase
+import ir.aispeaking.main.IntroVideoScreen
 import ir.aispeaking.main.JourneyMapScreen
 import ir.aispeaking.profile.ProfileScreen
 import ir.aispeaking.splash.SplashRoute
@@ -71,9 +73,37 @@ fun AppNavigation(
                         backStack.removeAll { it is SplashRoute }
                         backStack.add(MainRoute)
                     },
+                    onNavigateToIntroVideo = {
+                        backStack.removeAll { it is SplashRoute }
+                        backStack.add(IntroVideoRoute)
+                    },
                     onNavigateToLogin = {
                         backStack.removeAll { it is SplashRoute }
                         backStack.add(LoginRoute)
+                    }
+                )
+            }
+
+            entry<IntroVideoRoute> {
+                val setHasSeenIntroVideoUseCase = koinInject<SetHasSeenIntroVideoUseCase>()
+                IntroVideoScreen(
+                    onFinished = {
+                        setHasSeenIntroVideoUseCase(true)
+                        if (backStack.size > 1) {
+                            backStack.removeLastOrNull()
+                        } else {
+                            backStack.clear()
+                            backStack.add(MainRoute)
+                        }
+                    },
+                    onSkip = {
+                        setHasSeenIntroVideoUseCase(true)
+                        if (backStack.size > 1) {
+                            backStack.removeLastOrNull()
+                        } else {
+                            backStack.clear()
+                            backStack.add(MainRoute)
+                        }
                     }
                 )
             }
@@ -131,6 +161,9 @@ fun AppNavigation(
                     },
                     onNavigateToSubscription = {
                         backStack.add(SubscriptionRoute)
+                    },
+                    onNavigateToIntroVideo = {
+                        backStack.add(IntroVideoRoute)
                     }
                 )
             }

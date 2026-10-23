@@ -9,6 +9,7 @@ val navigationConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
             subclass(SplashRoute::class, SplashRoute.serializer())
+            subclass(IntroVideoRoute::class, IntroVideoRoute.serializer())
             subclass(LoginRoute::class, LoginRoute.serializer())
             subclass(MainRoute::class, MainRoute.serializer())
             subclass(StageChatRoute::class, StageChatRoute.serializer())

@@ -94,3 +94,21 @@ class VerifyOtpUseCase(
         return authRepository.verifyOtp(mobile, otpCode)
     }
 }
+
+@Factory
+class HasSeenIntroVideoUseCase(
+    private val authRepository: AuthRepository
+) {
+    operator fun invoke(): Boolean {
+        return authRepository.hasSeenIntroVideo()
+    }
+}
+
+@Factory
+class SetHasSeenIntroVideoUseCase(
+    private val authRepository: AuthRepository
+) {
+    operator fun invoke(seen: Boolean) {
+        authRepository.setHasSeenIntroVideo(seen)
+    }
+}

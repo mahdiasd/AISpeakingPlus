@@ -17,4 +17,12 @@ class UserPreferencesImpl(private val settings: Settings) : UserPreferences {
     override fun read(): SharedPrefUser? {
         return settings.getStringOrNull(SharedKeyConstant.USER).fromJson<SharedPrefUser>()
     }
+
+    override fun hasSeenIntroVideo(): Boolean {
+        return settings.getBoolean(SharedKeyConstant.HAS_SEEN_INTRO_VIDEO, false)
+    }
+
+    override fun setHasSeenIntroVideo(seen: Boolean) {
+        settings.putBoolean(SharedKeyConstant.HAS_SEEN_INTRO_VIDEO, seen)
+    }
 }

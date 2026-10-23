@@ -14,6 +14,7 @@ sealed interface SplashIntent {
 
 sealed interface SplashEffect {
     data class NavigateToMain(val user: User? = null) : SplashEffect
+    data object NavigateToIntroVideo : SplashEffect
     data object NavigateToLogin : SplashEffect
     data class ShowToast(val message: String) : SplashEffect
 }

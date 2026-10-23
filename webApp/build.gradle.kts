@@ -38,7 +38,6 @@ kotlin {
             implementation(project(":network"))
             implementation(libs.koin.core)
             implementation(libs.koin.annotations)
-            implementation(libs.nav3.browser)
         }
     }
 }

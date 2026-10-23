@@ -81,6 +81,7 @@ object AppDeepLinkManager {
             screen == "stages" || screen == "stages_list" || screen == "stageslist" -> StagesListRoute
             screen == "main" || screen == "roadmap" || screen == "map" -> MainRoute
             screen == "login" || screen == "auth" -> LoginRoute
+            screen == "intro" || screen == "video" || screen == "prologue" -> IntroVideoRoute
             else -> null
         }
     }
@@ -131,6 +132,7 @@ object AppDeepLinkManager {
             normalizedRoute == "subscription" || normalizedRoute == "sub" || normalizedRoute == "vip" -> SubscriptionRoute
             normalizedRoute == "main" || normalizedRoute == "roadmap" || normalizedRoute == "map" -> MainRoute
             normalizedRoute == "login" || normalizedRoute == "auth" -> LoginRoute
+            normalizedRoute == "intro" || normalizedRoute == "video" || normalizedRoute == "prologue" || normalizedRoute.endsWith("/intro") -> IntroVideoRoute
             else -> null
         }
     }

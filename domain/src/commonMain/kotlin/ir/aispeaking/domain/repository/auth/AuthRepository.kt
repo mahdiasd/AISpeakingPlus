@@ -15,4 +15,6 @@ interface AuthRepository {
     suspend fun sendOtp(mobile: String): DataResult<Int>
     suspend fun verifyOtp(mobile: String, otpCode: String): DataResult<User>
     suspend fun fetchCurrentUserRemote(): DataResult<User>
+    fun hasSeenIntroVideo(): Boolean
+    fun setHasSeenIntroVideo(seen: Boolean)
 }
