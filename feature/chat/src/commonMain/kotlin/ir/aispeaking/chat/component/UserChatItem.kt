@@ -1,10 +1,29 @@
 package ir.aispeaking.chat.component
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -12,10 +31,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -38,10 +62,11 @@ import org.jetbrains.compose.resources.painterResource
  * Characteristics:
  * - Rich Royal Azure & Electric Indigo glass gradient with specular top rim.
  * - Hero English copy with high legibility.
- * - Grammar status indicator beneath the bubble:
- *   - Serene Cyan checkmark for correct grammar (strictly NO green).
- *   - Warm Champagne Gold translucent card for grammar coaching tips.
- *   - Apple Coral retry chip for network failures.
+ * - Status Badge anchored at bottom-right (straddling bubble edge 50% in, 50% out):
+ *   - Sleek micro spinner with breathing specular stroke while evaluating grammar.
+ *   - Serene Cyan liquid glass pill for correct grammar (strictly NO green).
+ * - Warm Champagne Gold translucent card for grammar coaching tips beneath bubble.
+ * - Apple Coral retry chip for network failures.
  */
 @Composable
 fun UserChatItem(
@@ -49,6 +74,18 @@ fun UserChatItem(
     chat: Chat.User,
     onRetry: () -> Unit = {}
 ) {
+    val showBubbleBadge = when (val s = chat.status) {
+        is ChatStatus.Sending -> true
+        is ChatStatus.Answered -> !s.hasGrammarError
+        is ChatStatus.Failed -> false
+    }
+
+    val badgeBottomPadding by animateDpAsState(
+        targetValue = if (showBubbleBadge) 13.dp else 0.dp,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 380f),
+        label = "user_bubble_badge_bottom_padding"
+    )
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Column(
             modifier = modifier,
@@ -62,25 +99,46 @@ fun UserChatItem(
                 bottomStart = 20.dp
             )
 
-            // Rich Royal Azure & Indigo Glass Bubble
-            Column(
-                modifier = Modifier
-                    .widthIn(max = 310.dp)
-                    .clip(shape)
-                    .background(AppleChatTheme.UserBubbleBrush)
-                    .border(1.dp, AppleChatTheme.SpecularStrokeBrush, shape)
-                    .padding(horizontal = 15.dp, vertical = 11.dp)
+            // Bubble container with reserved clearance for the protruding bottom-right badge
+            Box(
+                modifier = Modifier.padding(bottom = badgeBottomPadding)
             ) {
-                GameText(
-                    text = chat.message,
-                    size = 16.sp,
-                    lineHeight = 24.sp,
-                    latin = true,
-                    color = Color.White
-                )
+                // Rich Royal Azure & Indigo Glass Bubble
+                Column(
+                    modifier = Modifier
+                        .widthIn(min = 96.dp, max = 310.dp)
+                        .clip(shape)
+                        .background(AppleChatTheme.UserBubbleBrush)
+                        .border(1.dp, AppleChatTheme.SpecularStrokeBrush, shape)
+                        .padding(horizontal = 15.dp, vertical = 11.dp)
+                ) {
+                    GameText(
+                        text = chat.message,
+                        size = 16.sp,
+                        lineHeight = 24.sp,
+                        latin = true,
+                        color = Color.White
+                    )
+                }
+
+                // Apple liquid glass grammar status badge anchored to bottom-right corner
+                // (50% vertically inside the bubble, 50% outside over the background)
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = showBubbleBadge,
+                    enter = fadeIn(animationSpec = spring(dampingRatio = 0.82f, stiffness = 380f)) +
+                            scaleIn(initialScale = 0.82f, animationSpec = spring(dampingRatio = 0.82f, stiffness = 380f)),
+                    exit = fadeOut(animationSpec = spring(dampingRatio = 0.82f, stiffness = 380f)) +
+                           scaleOut(targetScale = 0.82f, animationSpec = spring(dampingRatio = 0.82f, stiffness = 380f)),
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 10.dp)
+                        .offset(y = 12.dp)
+                ) {
+                    UserGrammarBadge(status = chat.status)
+                }
             }
 
-            // Status & Feedback HUD underneath
+            // Status & Feedback HUD underneath (e.g. grammar correction card or retry button)
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 when (val status = chat.status) {
                     is ChatStatus.Sending -> Unit
@@ -96,9 +154,7 @@ fun UserChatItem(
                     }
 
                     is ChatStatus.Answered -> {
-                        if (!status.hasGrammarError) {
-                            GrammarOkTag()
-                        } else {
+                        if (status.hasGrammarError) {
                             GrammarTipCard(
                                 feedback = status.grammar,
                                 correctedSentence = status.correctedSentence
@@ -112,20 +168,164 @@ fun UserChatItem(
 }
 
 /**
- * Grammar OK status tag in Serene Cyan (strictly NO green).
+ * Apple Liquid Glass Grammar Badge that lives on the bubble boundary.
+ * Switches between loading evaluation and serene cyan success checkmark with tactile spring physics.
  */
 @Composable
-private fun GrammarOkTag() {
+private fun UserGrammarBadge(
+    status: ChatStatus,
+    modifier: Modifier = Modifier
+) {
+    val isDark = AppTheme.isDark
+
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        AnimatedContent(
+            targetState = status,
+            transitionSpec = {
+                (fadeIn(animationSpec = spring(dampingRatio = 0.82f, stiffness = 380f)) +
+                 scaleIn(initialScale = 0.85f, animationSpec = spring(dampingRatio = 0.82f, stiffness = 380f)))
+                    .togetherWith(
+                        fadeOut(animationSpec = spring(dampingRatio = 0.82f, stiffness = 380f)) +
+                        scaleOut(targetScale = 0.85f, animationSpec = spring(dampingRatio = 0.82f, stiffness = 380f))
+                    )
+            },
+            modifier = modifier
+        ) { targetStatus ->
+            when (targetStatus) {
+                is ChatStatus.Sending -> {
+                    GrammarLoadingBadge(isDark = isDark)
+                }
+
+                is ChatStatus.Answered -> {
+                    if (!targetStatus.hasGrammarError) {
+                        GrammarSuccessBadge(isDark = isDark)
+                    }
+                }
+
+                else -> Unit
+            }
+        }
+    }
+}
+
+/**
+ * Loading badge: Apple micro spinner + "بررسی گرامر..." with iridescent breathing pulse.
+ */
+@Composable
+private fun GrammarLoadingBadge(isDark: Boolean) {
+    val infiniteTransition = rememberInfiniteTransition(label = "grammar_loading_anim")
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 850, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "spinner_rotation"
+    )
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.45f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse_alpha"
+    )
+
+    val shape = RoundedCornerShape(percent = 50)
+    val backgroundColor = if (isDark) Color(0xF2151928) else Color(0xF8FFFFFF)
+    val borderBrush = Brush.verticalGradient(
+        listOf(
+            AppleChatTheme.PrimaryAzure.copy(alpha = pulseAlpha * 0.7f),
+            AppleChatTheme.PrimaryIndigo.copy(alpha = pulseAlpha * 0.35f)
+        )
+    )
+
     Row(
+        modifier = Modifier
+            .shadow(
+                elevation = 3.dp,
+                shape = shape,
+                ambientColor = Color.Black.copy(alpha = 0.22f),
+                spotColor = AppleChatTheme.PrimaryAzure.copy(alpha = 0.25f),
+                clip = false
+            )
+            .clip(shape)
+            .background(backgroundColor)
+            .border(1.dp, borderBrush, shape)
+            .padding(horizontal = 9.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        Canvas(modifier = Modifier.size(11.dp)) {
+            val strokeWidth = 1.75.dp.toPx()
+            // Ambient track
+            drawCircle(
+                color = if (isDark) Color(0x33FFFFFF) else Color(0x1F000000),
+                radius = (size.minDimension - strokeWidth) / 2f,
+                style = Stroke(width = strokeWidth)
+            )
+            // Rotating active arc
+            drawArc(
+                brush = Brush.sweepGradient(
+                    listOf(
+                        AppleChatTheme.PrimaryAzure.copy(alpha = 0.15f),
+                        AppleChatTheme.PrimaryAzure,
+                        AppleChatTheme.PrimaryIndigo
+                    )
+                ),
+                startAngle = rotation,
+                sweepAngle = 260f,
+                useCenter = false,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+        }
+
+        GameText(
+            text = "بررسی گرامر...",
+            size = 10.5.sp,
+            bold = false,
+            color = if (isDark) Color(0xEEFFFFFF) else Color(0xDD0F172A)
+        )
+    }
+}
+
+/**
+ * Grammar OK status badge in Serene Cyan (strictly NO green) with specular glass rim.
+ */
+@Composable
+private fun GrammarSuccessBadge(isDark: Boolean) {
+    val shape = RoundedCornerShape(percent = 50)
+    val backgroundColor = if (isDark) Color(0xF20F1826) else Color(0xF8FFFFFF)
+    val borderBrush = Brush.verticalGradient(
+        listOf(
+            AppleChatTheme.SuccessCyan.copy(alpha = if (isDark) 0.85f else 0.65f),
+            AppleChatTheme.SuccessCyan.copy(alpha = if (isDark) 0.35f else 0.25f)
+        )
+    )
+
+    Row(
+        modifier = Modifier
+            .shadow(
+                elevation = 4.dp,
+                shape = shape,
+                ambientColor = Color.Black.copy(alpha = 0.22f),
+                spotColor = AppleChatTheme.SuccessCyan.copy(alpha = 0.35f),
+                clip = false
+            )
+            .clip(shape)
+            .background(backgroundColor)
+            .border(1.dp, borderBrush, shape)
+            .padding(horizontal = 9.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Icon(
             painter = painterResource(Res.drawable.ic_done),
             contentDescription = null,
             tint = AppleChatTheme.SuccessCyan,
-            modifier = Modifier.size(14.dp)
+            modifier = Modifier.size(13.dp)
         )
         GameText(
             text = "گرامر درست بود",
@@ -221,11 +421,25 @@ private fun UserChatItemPreview() {
 
 @androidx.compose.ui.tooling.preview.Preview
 @Composable
-private fun UserChatItemGrammarPreview() {
+private fun UserChatItemSendingPreview() {
     AppTheme {
         UserChatItem(
             chat = Chat.User(
                 uid = "2",
+                message = "I want to have a coffee.",
+                status = ChatStatus.Sending
+            )
+        )
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun UserChatItemGrammarPreview() {
+    AppTheme {
+        UserChatItem(
+            chat = Chat.User(
+                uid = "3",
                 message = "I wants a coffee.",
                 status = ChatStatus.Answered(
                     grammar = "بهتر است بگویی «I want a coffee» چون فاعل I است.",
