@@ -91,8 +91,8 @@ curl -I http://127.0.0.1:8080/health
 # ۱. کامپایل بیلد ترکیبی پروداکشن (Wasm به همراه فال‌بک خودکار JS برای مرورگرها و سیستم‌های قدیمی):
 ./gradlew :webApp:composeCompatibilityBrowserDistribution
 
-# ۲. انتقال امن فایل‌های خروجی به دایرکتوری وب سرور با rsync:
-rsync -avz --delete webApp/build/dist/composeWebCompatibility/productionExecutable/ ubuntu@193.93.169.198:/var/www/aispeaking.ir/html/app/
+# ۲. انتقال امن فایل‌های خروجی به دایرکتوری وب سرور با rsync (بدون --delete تا چانک‌های هش‌شده قبلی wasm برای سشن‌های فعال ۴۰۴ نشوند):
+rsync -avz webApp/build/dist/composeWebCompatibility/productionExecutable/ ubuntu@193.93.169.198:/var/www/aispeaking.ir/html/app/
 
 # ۳. در صورت نیاز به ریلود کش وب‌سرور Nginx:
 ssh ubuntu@193.93.169.198 "sudo systemctl reload nginx"
