@@ -115,4 +115,12 @@ class AuthRepositoryImpl(
             is DataResult.Failure -> DataResult.Failure(result.appError)
         }
     }
+
+    override fun hasSeenIntroVideo(): Boolean {
+        return userPreferences.hasSeenIntroVideo()
+    }
+
+    override fun setHasSeenIntroVideo(seen: Boolean) {
+        userPreferences.setHasSeenIntroVideo(seen)
+    }
 }

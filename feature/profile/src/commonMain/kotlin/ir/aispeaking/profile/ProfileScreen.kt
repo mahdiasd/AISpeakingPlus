@@ -51,6 +51,7 @@ import ir.aispeaking.profile.component.GuestBannerCard
 import ir.aispeaking.profile.component.LevelPickerBottomSheet
 import ir.aispeaking.profile.component.ProfileHeaderCard
 import ir.aispeaking.profile.component.SignOutConfirmDialog
+import ir.aispeaking.profile.component.StoryVideoCard
 import ir.aispeaking.profile.component.SubscriptionCard
 import ir.aispeaking.profile.component.SupportCard
 import ir.aispeaking.profile.component.ThemeSelectionCard
@@ -73,6 +74,7 @@ fun ProfileScreen(
     onNavigateBack: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToSubscription: () -> Unit,
+    onNavigateToIntroVideo: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -211,6 +213,11 @@ fun ProfileScreen(
                         ThemeSelectionCard(
                             currentThemeMode = uiState.themeMode,
                             onThemeSelected = { viewModel.onThemeSelected(it) }
+                        )
+
+                        // Intro Cinematic Story Video Replay
+                        StoryVideoCard(
+                            onPlay = onNavigateToIntroVideo
                         )
 
                         // Support & Contact Card

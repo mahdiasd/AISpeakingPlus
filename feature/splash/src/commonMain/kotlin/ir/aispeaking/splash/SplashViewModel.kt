@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.aispeaking.domain.usecase.auth.AuthStatus
 import ir.aispeaking.domain.usecase.auth.CheckAuthStatusUseCase
+import ir.aispeaking.domain.usecase.auth.HasSeenIntroVideoUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +17,8 @@ import org.koin.core.annotation.Factory
 
 @Factory
 class SplashViewModel(
-    private val checkAuthStatusUseCase: CheckAuthStatusUseCase
+    private val checkAuthStatusUseCase: CheckAuthStatusUseCase,
+    private val hasSeenIntroVideoUseCase: HasSeenIntroVideoUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SplashUiState())
@@ -44,14 +46,23 @@ class SplashViewModel(
             delay(1200)
 
             try {
+                val hasSeenIntro = hasSeenIntroVideoUseCase()
                 when (val status = checkAuthStatusUseCase()) {
                     is AuthStatus.Authenticated -> {
                         _uiState.update { it.copy(isLoading = false) }
-                        _effect.send(SplashEffect.NavigateToMain(status.user))
+                        if (!hasSeenIntro) {
+                            _effect.send(SplashEffect.NavigateToIntroVideo)
+                        } else {
+                            _effect.send(SplashEffect.NavigateToMain(status.user))
+                        }
                     }
                     is AuthStatus.Unauthenticated -> {
                         _uiState.update { it.copy(isLoading = false) }
-                        _effect.send(SplashEffect.NavigateToMain(null))
+                        if (!hasSeenIntro) {
+                            _effect.send(SplashEffect.NavigateToIntroVideo)
+                        } else {
+                            _effect.send(SplashEffect.NavigateToMain(null))
+                        }
                     }
                 }
             } catch (e: Throwable) {

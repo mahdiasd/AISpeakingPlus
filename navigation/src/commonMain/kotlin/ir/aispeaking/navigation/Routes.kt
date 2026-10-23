@@ -14,6 +14,11 @@ data object SplashRoute : AppRoute {
 }
 
 @Serializable
+data object IntroVideoRoute : AppRoute {
+    override val screenName: String = "IntroVideo"
+}
+
+@Serializable
 data object LoginRoute : AppRoute {
     override val screenName: String = "Login"
 }

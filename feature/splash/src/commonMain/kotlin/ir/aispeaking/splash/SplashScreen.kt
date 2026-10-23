@@ -69,6 +69,7 @@ fun SplashRoute(
     modifier: Modifier = Modifier,
     viewModel: SplashViewModel = koinViewModel(),
     onNavigateToMain: (User?) -> Unit = {},
+    onNavigateToIntroVideo: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -77,6 +78,7 @@ fun SplashRoute(
         viewModel.effect.collect { effect ->
             when (effect) {
                 is SplashEffect.NavigateToMain -> onNavigateToMain(effect.user)
+                is SplashEffect.NavigateToIntroVideo -> onNavigateToIntroVideo()
                 is SplashEffect.NavigateToLogin -> onNavigateToLogin()
                 is SplashEffect.ShowToast -> {
                     // Handled if snackbar host provided
@@ -100,12 +102,14 @@ fun SplashScreen(
     modifier: Modifier = Modifier,
     viewModel: SplashViewModel = koinViewModel(),
     onNavigateToMain: (User?) -> Unit = {},
+    onNavigateToIntroVideo: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
 ) {
     SplashRoute(
         modifier = modifier,
         viewModel = viewModel,
         onNavigateToMain = onNavigateToMain,
+        onNavigateToIntroVideo = onNavigateToIntroVideo,
         onNavigateToLogin = onNavigateToLogin
     )
 }

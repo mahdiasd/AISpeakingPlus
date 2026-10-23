@@ -41,6 +41,7 @@ import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import ir.aispeaking.web.WebBrowserNavigation
 import ir.aispeaking.web.setupWebAudioBridge
+import ir.aispeaking.web.setupWebVideoBridge
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.context.GlobalContext
 
@@ -53,6 +54,10 @@ fun main() {
         if (audioController != null) {
             setupWebAudioBridge(audioController)
         }
+    } catch (_: Throwable) {}
+
+    try {
+        setupWebVideoBridge()
     } catch (_: Throwable) {}
 
     ComposeViewport {
