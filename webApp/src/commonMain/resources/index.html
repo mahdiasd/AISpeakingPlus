@@ -2,6 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <base href="/app/">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
         <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
@@ -28,6 +29,286 @@
     </svg>
     </body>
     <script>
+        window.aiSpeakingRouter = {
+            _popCounter: 0,
+            init: function() {
+                var self = this;
+                window.addEventListener('popstate', function(e) {
+                    self._popCounter++;
+                });
+            },
+            getPopCounter: function() {
+                return this._popCounter;
+            },
+            getCurrentPath: function() {
+                return window.location.pathname;
+            },
+            getCurrentSearch: function() {
+                return window.location.search || "";
+            },
+            getHash: function() {
+                return window.location.hash || "";
+            },
+            pushUrl: function(url) {
+                var cur = window.location.pathname + (window.location.search || "");
+                if (cur !== url) {
+                    window.history.pushState({ path: url }, "", url);
+                }
+            },
+            replaceUrl: function(url) {
+                var cur = window.location.pathname + (window.location.search || "");
+                if (cur !== url) {
+                    window.history.replaceState({ path: url }, "", url);
+                }
+            }
+        };
+        window.aiSpeakingRouter.init();
+
+        window.aiSpeakingVideo = {
+            overlay: null,
+            video: null,
+            _hasEnded: false,
+            _hasSkipped: false,
+            _isPlaying: false,
+
+            show: function(src) {
+                this._hasEnded = false;
+                this._hasSkipped = false;
+                this._isPlaying = false;
+
+                if (!this.overlay) {
+                    this._createDom();
+                }
+
+                var fullUrl = (src && (src.startsWith("http://") || src.startsWith("https://")))
+                    ? src
+                    : (window.location.origin + (src.startsWith("/") ? src : "/" + src));
+
+                this.video.src = fullUrl;
+                this.overlay.style.display = "flex";
+                this.overlay.style.opacity = "1";
+                this._updateMuteButton(false);
+
+                var self = this;
+                var playPromise = this.video.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(function() {
+                        self._isPlaying = true;
+                    }).catch(function(err) {
+                        console.warn("Autoplay with sound prevented, muting to start playback:", err);
+                        self.video.muted = true;
+                        self._updateMuteButton(true);
+                        self.video.play().then(function() {
+                            self._isPlaying = true;
+                            self._showUnmuteHint();
+                        }).catch(function(e) {
+                            console.error("Video play failed:", e);
+                        });
+                    });
+                }
+            },
+
+            hide: function() {
+                if (this.video) {
+                    try { this.video.pause(); } catch(e){}
+                }
+                if (this.overlay) {
+                    this.overlay.style.display = "none";
+                }
+                this._isPlaying = false;
+            },
+
+            consumeEnded: function() {
+                if (this._hasEnded) {
+                    this._hasEnded = false;
+                    return true;
+                }
+                return false;
+            },
+
+            consumeSkipped: function() {
+                if (this._hasSkipped) {
+                    this._hasSkipped = false;
+                    return true;
+                }
+                return false;
+            },
+
+            _createDom: function() {
+                var self = this;
+                var overlay = document.createElement("div");
+                overlay.id = "aiSpeakingVideoOverlay";
+                overlay.style.position = "fixed";
+                overlay.style.top = "0";
+                overlay.style.left = "0";
+                overlay.style.width = "100%";
+                overlay.style.height = "100%";
+                overlay.style.backgroundColor = "rgba(0,0,0,0.92)";
+                overlay.style.zIndex = "99999";
+                overlay.style.display = "none";
+                overlay.style.flexDirection = "column";
+                overlay.style.alignItems = "center";
+                overlay.style.justifyContent = "center";
+                overlay.style.transition = "opacity 0.3s ease";
+                overlay.style.overflow = "hidden";
+
+                var playerBox = document.createElement("div");
+                playerBox.style.position = "relative";
+                playerBox.style.width = "100%";
+                playerBox.style.maxWidth = "430px";
+                playerBox.style.height = "100%";
+                playerBox.style.maxHeight = "900px";
+                playerBox.style.display = "flex";
+                playerBox.style.flexDirection = "column";
+                playerBox.style.justifyContent = "center";
+                playerBox.style.alignItems = "center";
+                playerBox.style.backgroundColor = "#000";
+                playerBox.style.borderRadius = (window.innerWidth > 560) ? "16px" : "0";
+                playerBox.style.boxShadow = "0 25px 50px -12px rgba(0, 0, 0, 0.7)";
+                playerBox.style.overflow = "hidden";
+
+                var video = document.createElement("video");
+                video.setAttribute("playsinline", "");
+                video.setAttribute("webkit-playsinline", "");
+                video.setAttribute("preload", "auto");
+                video.style.width = "100%";
+                video.style.height = "100%";
+                video.style.objectFit = "cover";
+                video.style.backgroundColor = "#000";
+
+                // Top Controls Bar
+                var topBar = document.createElement("div");
+                topBar.style.position = "absolute";
+                topBar.style.top = "16px";
+                topBar.style.left = "16px";
+                topBar.style.right = "16px";
+                topBar.style.display = "flex";
+                topBar.style.justifyContent = "space-between";
+                topBar.style.alignItems = "center";
+                topBar.style.zIndex = "10";
+                topBar.style.direction = "rtl";
+
+                // Skip Button
+                var skipBtn = document.createElement("button");
+                skipBtn.innerHTML = "رد کردن ›";
+                skipBtn.style.padding = "8px 18px";
+                skipBtn.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+                skipBtn.style.backdropFilter = "blur(12px)";
+                skipBtn.style.webkitBackdropFilter = "blur(12px)";
+                skipBtn.style.border = "1px solid rgba(255, 255, 255, 0.35)";
+                skipBtn.style.borderRadius = "20px";
+                skipBtn.style.color = "#ffffff";
+                skipBtn.style.fontSize = "13px";
+                skipBtn.style.fontWeight = "600";
+                skipBtn.style.fontFamily = "Vazirmatn, system-ui, sans-serif";
+                skipBtn.style.cursor = "pointer";
+                skipBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
+                skipBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    self._hasSkipped = true;
+                    self.hide();
+                };
+
+                // Sound Toggle Button
+                var soundBtn = document.createElement("button");
+                soundBtn.id = "videoMuteBtn";
+                soundBtn.innerHTML = "🔊";
+                soundBtn.style.width = "38px";
+                soundBtn.style.height = "38px";
+                soundBtn.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+                soundBtn.style.backdropFilter = "blur(12px)";
+                soundBtn.style.webkitBackdropFilter = "blur(12px)";
+                soundBtn.style.border = "1px solid rgba(255, 255, 255, 0.35)";
+                soundBtn.style.borderRadius = "50%";
+                soundBtn.style.color = "#ffffff";
+                soundBtn.style.fontSize = "16px";
+                soundBtn.style.cursor = "pointer";
+                soundBtn.style.display = "flex";
+                soundBtn.style.alignItems = "center";
+                soundBtn.style.justifyContent = "center";
+                soundBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    self.video.muted = !self.video.muted;
+                    self._updateMuteButton(self.video.muted);
+                    self._hideUnmuteHint();
+                };
+
+                topBar.appendChild(skipBtn);
+                topBar.appendChild(soundBtn);
+
+                // Unmute hint
+                var unmuteHint = document.createElement("div");
+                unmuteHint.id = "videoUnmuteHint";
+                unmuteHint.innerHTML = "🔊 برای شنیدن صدا لمس کنید";
+                unmuteHint.style.position = "absolute";
+                unmuteHint.style.bottom = "24px";
+                unmuteHint.style.backgroundColor = "rgba(30, 41, 59, 0.85)";
+                unmuteHint.style.backdropFilter = "blur(8px)";
+                unmuteHint.style.border = "1px solid rgba(59, 130, 246, 0.5)";
+                unmuteHint.style.color = "#60A5FA";
+                unmuteHint.style.padding = "8px 16px";
+                unmuteHint.style.borderRadius = "20px";
+                unmuteHint.style.fontSize = "13px";
+                unmuteHint.style.fontWeight = "bold";
+                unmuteHint.style.fontFamily = "Vazirmatn, sans-serif";
+                unmuteHint.style.cursor = "pointer";
+                unmuteHint.style.display = "none";
+                unmuteHint.style.zIndex = "10";
+                unmuteHint.onclick = function(e) {
+                    e.stopPropagation();
+                    self.video.muted = false;
+                    self._updateMuteButton(false);
+                    self._hideUnmuteHint();
+                };
+
+                video.onclick = function() {
+                    if (video.muted) {
+                        video.muted = false;
+                        self._updateMuteButton(false);
+                        self._hideUnmuteHint();
+                    } else if (video.paused) {
+                        video.play();
+                    } else {
+                        video.pause();
+                    }
+                };
+
+                video.onended = function() {
+                    self._hasEnded = true;
+                    self.hide();
+                };
+
+                playerBox.appendChild(video);
+                playerBox.appendChild(topBar);
+                playerBox.appendChild(unmuteHint);
+                overlay.appendChild(playerBox);
+                document.body.appendChild(overlay);
+
+                this.overlay = overlay;
+                this.video = video;
+                this.muteBtn = soundBtn;
+                this.unmuteHint = unmuteHint;
+            },
+
+            _updateMuteButton: function(muted) {
+                if (this.muteBtn) {
+                    this.muteBtn.innerHTML = muted ? "🔇" : "🔊";
+                }
+            },
+
+            _showUnmuteHint: function() {
+                if (this.unmuteHint) {
+                    this.unmuteHint.style.display = "block";
+                }
+            },
+
+            _hideUnmuteHint: function() {
+                if (this.unmuteHint) {
+                    this.unmuteHint.style.display = "none";
+                }
+            }
+        };
+
         window._isAudioPlaying = false;
         window.aiSpeakingAudio = {
             audio: null,
@@ -781,5 +1062,5 @@
             }, 500);
         })();
     </script>
-    <script src="webApp.js"></script>
+    <script src="webApp.js?v=compat"></script>
 </html>
