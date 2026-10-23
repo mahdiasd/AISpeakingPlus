@@ -41,3 +41,42 @@ kotlin {
         }
     }
 }
+
+abstract class PatchCompatibilityWebAppJs : DefaultTask() {
+    @get:OutputDirectory
+    abstract val distDir: DirectoryProperty
+
+    @TaskAction
+    fun patch() {
+        val webAppJs = distDir.get().asFile.resolve("webApp.js")
+        if (webAppJs.exists()) {
+            val content = webAppJs.readText()
+            val targetFind = """document.body.appendChild(createScript(hasSupportOfAllRequiredWasmFeatures() ? "originWasmWebApp.js" : "originJsWebApp.js"));"""
+            val replacement = """
+    const currentScriptSrc = (typeof document !== "undefined" && document.currentScript) ? document.currentScript.src : "";
+    const getQuery = () => {
+        if (currentScriptSrc && currentScriptSrc.includes("?")) {
+            return "?" + currentScriptSrc.split("?")[1];
+        }
+        return "?v=" + Date.now();
+    };
+    const targetScript = (hasSupportOfAllRequiredWasmFeatures() ? "originWasmWebApp.js" : "originJsWebApp.js") + getQuery();
+    document.body.appendChild(createScript(targetScript));
+""".trimIndent()
+            if (content.contains(targetFind)) {
+                webAppJs.writeText(content.replace(targetFind, replacement))
+                logger.lifecycle("Patched webApp.js with cache-buster forwarding.")
+            }
+        }
+    }
+}
+
+val patchCompatibilityWebAppJs = tasks.register<PatchCompatibilityWebAppJs>("patchCompatibilityWebAppJs") {
+    distDir.set(layout.buildDirectory.dir("dist/composeWebCompatibility/productionExecutable"))
+    mustRunAfter("composeCompatibilityBrowserDistribution")
+}
+
+tasks.named("composeCompatibilityBrowserDistribution") {
+    finalizedBy(patchCompatibilityWebAppJs)
+}
+
