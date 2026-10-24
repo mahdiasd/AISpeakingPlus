@@ -116,6 +116,28 @@ class AndroidAudioBridge(
         controller.onPlatformStopRecording = {
             stopRecordingAudio()
         }
+
+        controller.onPlatformCheckMicrophonePermission = { callback ->
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+            callback(hasPermission)
+        }
+
+        controller.onPlatformRequestMicrophonePermission = { callback ->
+            if (onRequestRecordPermission != null) {
+                onRequestRecordPermission.invoke { granted ->
+                    callback(granted)
+                }
+            } else {
+                val hasPermission = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.RECORD_AUDIO
+                ) == PackageManager.PERMISSION_GRANTED
+                callback(hasPermission)
+            }
+        }
     }
 
     @SuppressLint("MissingPermission")

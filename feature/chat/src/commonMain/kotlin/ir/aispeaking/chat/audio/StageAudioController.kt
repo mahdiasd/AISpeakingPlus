@@ -16,6 +16,14 @@ interface StageAudioController {
     )
     fun stopRecording()
     fun isRecording(): Boolean
+
+    fun checkMicrophonePermission(onResult: (Boolean) -> Unit) {
+        onResult(true)
+    }
+
+    fun requestMicrophonePermission(onResult: (Boolean) -> Unit) {
+        onResult(true)
+    }
 }
 
 @Single
@@ -34,6 +42,8 @@ class DefaultStageAudioController : StageAudioController {
     var onPlatformStopVoice: (() -> Unit)? = null
     var onPlatformStartRecording: (((String) -> Unit, () -> Unit) -> Unit)? = null
     var onPlatformStopRecording: (() -> Unit)? = null
+    var onPlatformCheckMicrophonePermission: (((Boolean) -> Unit) -> Unit)? = null
+    var onPlatformRequestMicrophonePermission: (((Boolean) -> Unit) -> Unit)? = null
 
     fun dispatchAudioChunk(bytes: ByteArray) {
         onAudioChunkCaptured?.invoke(bytes)
@@ -135,4 +145,20 @@ class DefaultStageAudioController : StageAudioController {
     }
 
     override fun isRecording(): Boolean = isRecordingState
+
+    override fun checkMicrophonePermission(onResult: (Boolean) -> Unit) {
+        if (onPlatformCheckMicrophonePermission != null) {
+            onPlatformCheckMicrophonePermission?.invoke(onResult)
+        } else {
+            onResult(true)
+        }
+    }
+
+    override fun requestMicrophonePermission(onResult: (Boolean) -> Unit) {
+        if (onPlatformRequestMicrophonePermission != null) {
+            onPlatformRequestMicrophonePermission?.invoke(onResult)
+        } else {
+            onResult(true)
+        }
+    }
 }

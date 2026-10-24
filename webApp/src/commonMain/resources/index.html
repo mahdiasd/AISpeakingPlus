@@ -742,6 +742,94 @@
                 return this.transcript || "";
             }
         };
+
+        window.aiSpeakingPermission = {
+            _state: "unknown",
+            _isRequesting: false,
+            _lastResult: "",
+
+            check: function() {
+                var self = this;
+                if (navigator.permissions && navigator.permissions.query) {
+                    try {
+                        navigator.permissions.query({ name: 'microphone' }).then(function(result) {
+                            self._state = result.state;
+                            if (result.state === 'granted') {
+                                try { localStorage.setItem('mic_perm_granted', 'true'); } catch(e) {}
+                            } else if (result.state === 'denied') {
+                                try { localStorage.setItem('mic_perm_granted', 'false'); } catch(e) {}
+                            }
+                            result.onchange = function() {
+                                self._state = result.state;
+                                try {
+                                    localStorage.setItem('mic_perm_granted', result.state === 'granted' ? 'true' : 'false');
+                                } catch(e) {}
+                            };
+                        }).catch(function() {
+                            try {
+                                self._state = (localStorage.getItem('mic_perm_granted') === 'true') ? 'granted' : 'prompt';
+                            } catch(e) {
+                                self._state = 'prompt';
+                            }
+                        });
+                    } catch(err) {
+                        try {
+                            self._state = (localStorage.getItem('mic_perm_granted') === 'true') ? 'granted' : 'prompt';
+                        } catch(e) {
+                            self._state = 'prompt';
+                        }
+                    }
+                } else {
+                    try {
+                        self._state = (localStorage.getItem('mic_perm_granted') === 'true') ? 'granted' : 'prompt';
+                    } catch(e) {
+                        self._state = 'prompt';
+                    }
+                }
+                return self._state;
+            },
+
+            request: function() {
+                var self = this;
+                self._isRequesting = true;
+                self._lastResult = "";
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    self._state = "denied";
+                    self._lastResult = "denied";
+                    self._isRequesting = false;
+                    return;
+                }
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+                    try {
+                        stream.getTracks().forEach(function(track) { track.stop(); });
+                    } catch(e) {}
+                    self._state = "granted";
+                    self._lastResult = "granted";
+                    self._isRequesting = false;
+                    try { localStorage.setItem('mic_perm_granted', 'true'); } catch(e) {}
+                }).catch(function(err) {
+                    console.warn("[aiSpeakingPermission] getUserMedia denied:", err);
+                    self._state = "denied";
+                    self._lastResult = "denied";
+                    self._isRequesting = false;
+                    try { localStorage.setItem('mic_perm_granted', 'false'); } catch(e) {}
+                });
+            },
+
+            getState: function() {
+                return this._state;
+            },
+
+            isRequesting: function() {
+                return !!this._isRequesting;
+            },
+
+            getLastResult: function() {
+                return this._lastResult || "";
+            }
+        };
+
+        try { window.aiSpeakingPermission.check(); } catch(e) {}
     </script>
 
     <!-- Firebase Web SDK Compat scripts for Cloud Messaging -->

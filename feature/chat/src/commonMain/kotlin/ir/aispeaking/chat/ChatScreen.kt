@@ -101,6 +101,10 @@ fun ChatScreen(
         uiState.evaluationSession?.let { lastEvaluation = it }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.checkMicrophonePermission()
+    }
+
     LaunchedEffect(stageId) {
         viewModel.initStage(stageId)
     }
@@ -295,6 +299,14 @@ fun ChatScreen(
                     viewModel.requestHint()
                 },
                 onDismiss = { showHintConfirmDialog = false }
+            )
+
+            // Microphone Permission Modal
+            MicPermissionDialog(
+                visible = uiState.showMicPermissionDialog,
+                isPermanentlyDenied = uiState.isMicPermissionPermanentlyDenied,
+                onGrant = { viewModel.requestMicrophonePermission() },
+                onDismiss = { viewModel.dismissMicPermissionDialog() }
             )
 
             // Evaluation / Stage Complete Modal
