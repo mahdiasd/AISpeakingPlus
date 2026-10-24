@@ -70,7 +70,10 @@ data class ChatUiState(
     val evaluationSession: EvaluationSession? = null,
     val earnedStars: Int = 0,
     val earnedScore: Int = 0,
-    val currentlyPlayingUid: String? = null
+    val currentlyPlayingUid: String? = null,
+    val showMicPermissionDialog: Boolean = false,
+    val isMicPermissionGranted: Boolean = false,
+    val isMicPermissionPermanentlyDenied: Boolean = false
 )
 
 @Factory
@@ -148,6 +151,7 @@ class ChatViewModel(
                     if (stage.initialSpeaker == "Model") {
                         requestInitialAiGreeting(stageId)
                     }
+                    checkMicrophonePermission()
                 }
                 is DataResult.Failure -> {
                     analyticsTracker.logEvent(
@@ -340,11 +344,63 @@ class ChatViewModel(
         }
     }
 
+    fun checkMicrophonePermission() {
+        audioController.checkMicrophonePermission { isGranted ->
+            _uiState.update {
+                it.copy(
+                    isMicPermissionGranted = isGranted,
+                    showMicPermissionDialog = !isGranted,
+                    isMicPermissionPermanentlyDenied = false
+                )
+            }
+        }
+    }
+
+    fun requestMicrophonePermission() {
+        audioController.requestMicrophonePermission { isGranted ->
+            _uiState.update {
+                it.copy(
+                    isMicPermissionGranted = isGranted,
+                    showMicPermissionDialog = !isGranted,
+                    isMicPermissionPermanentlyDenied = !isGranted
+                )
+            }
+        }
+    }
+
+    fun dismissMicPermissionDialog() {
+        _uiState.update { it.copy(showMicPermissionDialog = false) }
+    }
+
     // Requirements 4 & 5: Voice recording, realtime transcription, and 5-second silence auto-pause
     fun toggleRecording(start: Boolean) {
         if (start) {
-            audioController.stopVoice()
-            _uiState.update { it.copy(isRecording = true, sttError = null, hintError = null) }
+            if (!_uiState.value.isMicPermissionGranted) {
+                audioController.checkMicrophonePermission { isGranted ->
+                    if (isGranted) {
+                        _uiState.update { it.copy(isMicPermissionGranted = true) }
+                        startRecordingInternal()
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                showMicPermissionDialog = true,
+                                isMicPermissionPermanentlyDenied = false
+                            )
+                        }
+                    }
+                }
+                return
+            }
+            startRecordingInternal()
+        } else {
+            stopRecordingSession()
+            _uiState.update { it.copy(isRecording = false) }
+        }
+    }
+
+    private fun startRecordingInternal() {
+        audioController.stopVoice()
+        _uiState.update { it.copy(isRecording = true, sttError = null, hintError = null) }
 
             audioSenderJob?.cancel()
             audioChunkChannel?.close()
@@ -451,10 +507,6 @@ class ChatViewModel(
                     _uiState.update { it.copy(isRecording = false) }
                 }
             )
-        } else {
-            stopRecordingSession()
-            _uiState.update { it.copy(isRecording = false) }
-        }
     }
 
     private fun stopRecordingSession() {

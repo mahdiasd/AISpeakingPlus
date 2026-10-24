@@ -34,6 +34,21 @@ private external fun jsDrainPcmChunks(): String
 @JsFun("() => !!(window.aiSpeakingSpeech && window.aiSpeakingSpeech.hasVoiceActivity && window.aiSpeakingSpeech.hasVoiceActivity())")
 private external fun jsHasVoiceActivity(): Boolean
 
+@JsFun("() => window.aiSpeakingPermission ? window.aiSpeakingPermission.check() : 'prompt'")
+private external fun jsCheckSpeechPermission(): String
+
+@JsFun("() => window.aiSpeakingPermission ? window.aiSpeakingPermission.request() : null")
+private external fun jsRequestSpeechPermission()
+
+@JsFun("() => window.aiSpeakingPermission ? window.aiSpeakingPermission.getState() : 'prompt'")
+private external fun jsGetSpeechPermissionState(): String
+
+@JsFun("() => window.aiSpeakingPermission ? window.aiSpeakingPermission.getLastResult() : ''")
+private external fun jsGetSpeechPermissionLastResult(): String
+
+@JsFun("() => !!(window.aiSpeakingPermission && window.aiSpeakingPermission.isRequesting())")
+private external fun jsIsSpeechPermissionRequesting(): Boolean
+
 private val bridgeScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
 fun setupWebAudioBridge(controller: DefaultStageAudioController) {
@@ -173,6 +188,36 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
             recordJob?.cancel()
             recordJob = null
             currentOnSpeech = null
+        }
+
+        controller.onPlatformCheckMicrophonePermission = { callback ->
+            try {
+                jsCheckSpeechPermission()
+                bridgeScope.launch {
+                    delay(80)
+                    val state = jsGetSpeechPermissionState()
+                    callback(state == "granted")
+                }
+            } catch (_: Throwable) {
+                callback(true)
+            }
+        }
+
+        controller.onPlatformRequestMicrophonePermission = { callback ->
+            try {
+                jsRequestSpeechPermission()
+                bridgeScope.launch {
+                    var elapsed = 0
+                    while (jsIsSpeechPermissionRequesting() && elapsed < 30000 && isActive) {
+                        delay(100)
+                        elapsed += 100
+                    }
+                    val result = jsGetSpeechPermissionLastResult()
+                    callback(result == "granted")
+                }
+            } catch (_: Throwable) {
+                callback(true)
+            }
         }
     } catch (_: Throwable) {
         // Fallback gracefully on non-browser / test runs

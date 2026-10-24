@@ -153,6 +153,8 @@ class ChatViewModelSttTest {
         override suspend fun sendOtp(mobile: String): DataResult<Int> = DataResult.Success(1234)
         override suspend fun verifyOtp(mobile: String, otpCode: String): DataResult<User> = DataResult.Success(User(uid = "1", nickName = "Learner", mobile = "09120000000"))
         override suspend fun fetchCurrentUserRemote(): DataResult<User> = DataResult.Success(User(uid = "1", nickName = "Learner", mobile = "09120000000"))
+        override fun hasSeenIntroVideo(): Boolean = true
+        override fun setHasSeenIntroVideo(seen: Boolean) {}
     }
 
     private class FakeUserProfileRepo : UserProfileRepository {
@@ -297,5 +299,67 @@ class ChatViewModelSttTest {
         // Voice must be stopped immediately and finish dialog shown
         assertFalse(audioController.isVoicePlaying(), "Voice must stop when user manually finishes conversation")
         assertTrue(viewModel.uiState.value.showFinishConfirmDialog, "Finish dialog must be shown immediately on manual submit")
+    }
+
+    @Test
+    fun testCheckMicrophonePermissionShowsDialogWhenNotGranted() = runTest {
+        audioController.onPlatformCheckMicrophonePermission = { callback ->
+            callback(false)
+        }
+        viewModel.checkMicrophonePermission()
+        runCurrent()
+
+        assertTrue(viewModel.uiState.value.showMicPermissionDialog)
+        assertFalse(viewModel.uiState.value.isMicPermissionGranted)
+    }
+
+    @Test
+    fun testCheckMicrophonePermissionHidesDialogWhenGranted() = runTest {
+        audioController.onPlatformCheckMicrophonePermission = { callback ->
+            callback(true)
+        }
+        viewModel.checkMicrophonePermission()
+        runCurrent()
+
+        assertFalse(viewModel.uiState.value.showMicPermissionDialog)
+        assertTrue(viewModel.uiState.value.isMicPermissionGranted)
+    }
+
+    @Test
+    fun testRequestMicrophonePermissionDismissesDialogWhenUserAllows() = runTest {
+        audioController.onPlatformRequestMicrophonePermission = { callback ->
+            callback(true)
+        }
+        viewModel.requestMicrophonePermission()
+        runCurrent()
+
+        assertFalse(viewModel.uiState.value.showMicPermissionDialog)
+        assertTrue(viewModel.uiState.value.isMicPermissionGranted)
+        assertFalse(viewModel.uiState.value.isMicPermissionPermanentlyDenied)
+    }
+
+    @Test
+    fun testRequestMicrophonePermissionSetsPermanentlyDeniedWhenUserRejects() = runTest {
+        audioController.onPlatformRequestMicrophonePermission = { callback ->
+            callback(false)
+        }
+        viewModel.requestMicrophonePermission()
+        runCurrent()
+
+        assertTrue(viewModel.uiState.value.showMicPermissionDialog)
+        assertFalse(viewModel.uiState.value.isMicPermissionGranted)
+        assertTrue(viewModel.uiState.value.isMicPermissionPermanentlyDenied)
+    }
+
+    @Test
+    fun testToggleRecordingBlocksWhenPermissionNotGrantedAndShowsDialog() = runTest {
+        audioController.onPlatformCheckMicrophonePermission = { callback ->
+            callback(false)
+        }
+        viewModel.toggleRecording(true)
+        runCurrent()
+
+        assertFalse(viewModel.uiState.value.isRecording, "Recording must not start without permission")
+        assertTrue(viewModel.uiState.value.showMicPermissionDialog, "Permission dialog must be shown")
     }
 }
