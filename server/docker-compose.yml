@@ -21,9 +21,9 @@ services:
       - STT_NUM_THREADS=1
       - STT_SAMPLE_RATE=16000
       # Text-to-Speech (Kokoro-82M) settings
-      - TTS_MODEL_DIR=/app/models/kokoro-en-v0_19
+      - TTS_MODEL_DIR=/app/models/kokoro-multi-lang-v1_0
       - TTS_NUM_THREADS=2
-      - TTS_DEFAULT_SID=0
+      - TTS_DEFAULT_SID=3
       - TTS_DEFAULT_SPEED=1.0
       - TTS_CACHE_DIR=/app/audio_cache
       - TTS_ENABLED=true

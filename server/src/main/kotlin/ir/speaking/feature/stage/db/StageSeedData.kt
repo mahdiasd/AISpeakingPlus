@@ -243,7 +243,7 @@ Target Achieved Criterion: The user has requested a student bank account, confir
             characterName = "Bank Officer Rachel",
             characterAvatarUrl = "/resources/avatars/stage_9_avatar.webp",
             characterGender = "Woman",
-            voiceId = "bf_emma",
+            voiceId = "af_heart",
             initialSpeaker = "Model",
             maxTurns = 10
         ),
@@ -343,7 +343,7 @@ Target Achieved Criterion: The user has stated their interest in the role, confi
             characterName = "Manager Arthur",
             characterAvatarUrl = "/resources/avatars/stage_13_avatar.webp",
             characterGender = "Man",
-            voiceId = "bm_daniel",
+            voiceId = "am_onyx",
             initialSpeaker = "Model",
             maxTurns = 12
         ),
@@ -368,7 +368,7 @@ Target Achieved Criterion: The user has articulated their illness symptoms, conf
             characterName = "Dr. Watson",
             characterAvatarUrl = "/resources/avatars/stage_14_avatar.webp",
             characterGender = "Woman",
-            voiceId = "bf_isabella",
+            voiceId = "af_sarah",
             initialSpeaker = "Model",
             maxTurns = 12
         ),
