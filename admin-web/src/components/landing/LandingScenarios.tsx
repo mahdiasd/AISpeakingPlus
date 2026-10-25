@@ -118,7 +118,7 @@ export const LandingScenarios: React.FC<LandingScenariosProps> = ({ onLaunchApp 
   const CurrentIcon = currentScenario.icon;
 
   return (
-    <section id="scenarios" className="py-20 bg-[#0E1422]/50 border-y border-slate-800/80">
+    <section id="scenarios" className="scroll-mt-24 py-20 bg-[#0E1422]/50 border-y border-slate-800/80">
       <div className="max-w-7xl mx-auto px-5 sm:px-8">
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold mb-3">

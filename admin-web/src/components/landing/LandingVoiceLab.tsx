@@ -12,7 +12,7 @@ export const LandingVoiceLab: React.FC = () => {
   ];
 
   return (
-    <section id="voice" className="py-24 max-w-7xl mx-auto px-5 sm:px-8">
+    <section id="voice" className="scroll-mt-24 py-24 max-w-7xl mx-auto px-5 sm:px-8">
       <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
         {/* Left Information */}
         <div className="lg:w-1/2">

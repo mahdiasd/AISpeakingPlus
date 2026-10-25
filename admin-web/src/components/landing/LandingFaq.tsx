@@ -32,7 +32,7 @@ export const LandingFaq: React.FC = () => {
   ];
 
   return (
-    <section id="faq" className="py-20 max-w-4xl mx-auto px-5 sm:px-8">
+    <section id="faq" className="scroll-mt-24 py-20 max-w-4xl mx-auto px-5 sm:px-8">
       <div className="text-center mb-14">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-3">
           <HelpCircle className="w-3.5 h-3.5" />

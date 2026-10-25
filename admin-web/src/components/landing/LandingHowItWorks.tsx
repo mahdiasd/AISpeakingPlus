@@ -24,7 +24,7 @@ export const LandingHowItWorks: React.FC = () => {
   ];
 
   return (
-    <section id="how-it-works" className="py-20 bg-[#0E1422]/30 border-t border-slate-800/80">
+    <section id="how-it-works" className="scroll-mt-24 py-20 bg-[#0E1422]/30 border-t border-slate-800/80">
       <div className="max-w-7xl mx-auto px-5 sm:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3">

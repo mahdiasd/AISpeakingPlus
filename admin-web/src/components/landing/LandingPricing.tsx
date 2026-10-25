@@ -53,8 +53,12 @@ const toPersianDigits = (value: number | string): string => {
 };
 
 const formatPrice = (tomans: number): string => {
-  const parts = tomans.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '٬');
-  return toPersianDigits(parts);
+  try {
+    return tomans.toLocaleString('fa-IR');
+  } catch {
+    const parts = tomans.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '٬');
+    return toPersianDigits(parts);
+  }
 };
 
 export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) => {
@@ -96,7 +100,7 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
   ];
 
   return (
-    <section id="pricing" className="py-24 max-w-7xl mx-auto px-5 sm:px-8 relative">
+    <section id="pricing" className="scroll-mt-24 py-24 max-w-7xl mx-auto px-5 sm:px-8 relative">
       {/* Background glow effects */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
 
@@ -199,7 +203,7 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
                     </div>
                   )}
                   <div className="flex items-baseline justify-center gap-1.5">
-                    <span className="text-3xl sm:text-4xl font-extrabold text-white font-inter">
+                    <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
                       {formatPrice(plan.priceTomans)}
                     </span>
                     <span className="text-xs text-slate-400 font-medium">تومان</span>
@@ -219,7 +223,7 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
                 </div>
 
                 {/* Features List */}
-                <div className="space-y-3 pt-2 pb-6 border-t border-slate-800/60">
+                <div className="space-y-3 pt-2 pb-6 border-t border-slate-800/60 text-right">
                   {featuresList.map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-300">
                       <div className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">

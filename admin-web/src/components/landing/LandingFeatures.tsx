@@ -42,7 +42,7 @@ export const LandingFeatures: React.FC = () => {
   ];
 
   return (
-    <section id="features" className="py-24 max-w-7xl mx-auto px-5 sm:px-8">
+    <section id="features" className="scroll-mt-24 py-24 max-w-7xl mx-auto px-5 sm:px-8">
       {/* Section Header */}
       <div className="text-center max-w-3xl mx-auto mb-16">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-4">
