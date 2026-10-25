@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.stage.Stage
 import ir.aispeaking.sharedui.Res
-import ir.aispeaking.sharedui.ic_close
 import ir.aispeaking.sharedui.ic_done
 import ir.aispeaking.sharedui.ic_play
 import ir.aispeaking.sharedui.ic_scenario
@@ -38,10 +37,8 @@ import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameAvatar
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
-import ir.aispeaking.sharedui.ui.game.GameIconButton
 import ir.aispeaking.sharedui.ui.game.GameModal
 import ir.aispeaking.sharedui.ui.game.GameText
-import ir.aispeaking.sharedui.ui.game.fa
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -64,40 +61,7 @@ fun StageBriefingDialog(
                 .padding(horizontal = 20.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Top Navigation Row: Stage badge & Close button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(Game.Blue.copy(alpha = 0.16f))
-                        .border(1.dp, Game.Blue.copy(alpha = 0.35f), RoundedCornerShape(50))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    GameText(
-                        text = "مرحله ${stage.orderIndex.fa()}",
-                        size = 12.sp,
-                        bold = true,
-                        color = Game.Blue
-                    )
-                }
-
-                GameIconButton(
-                    icon = Res.drawable.ic_close,
-                    onClick = onDismiss,
-                    contentDescription = "بستن",
-                    size = 44.dp,
-                    iconSize = 16.dp,
-                    tint = Game.TextSecondary,
-                    container = Color.Unspecified,
-                    border = Game.Stroke
-                )
-            }
-
-            // Hero Section: Character Presence & Stage Title
+            // Hero Section: Character Presence & Stage Title (topmost)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -169,29 +133,30 @@ fun StageBriefingDialog(
             }
         }
 
-        // Action Buttons pinned at bottom
-        Column(
+        // Action Buttons pinned at bottom in a horizontal row
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 20.dp, end = 20.dp, bottom = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            GameButton(
-                text = "شروع گفتگو",
-                onClick = { onStartMission(stage) },
-                modifier = Modifier.fillMaxWidth(),
-                icon = Res.drawable.ic_play,
-                height = 50.dp,
-                textSize = 15.sp,
-                style = GameButtonStyle.Primary
-            )
             GameButton(
                 text = "فعلاً نه",
                 onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.weight(1f),
                 style = GameButtonStyle.Glass,
-                height = 42.dp,
+                height = 46.dp,
                 textSize = 14.sp
+            )
+            GameButton(
+                text = "شروع گفتگو",
+                onClick = { onStartMission(stage) },
+                modifier = Modifier.weight(1.35f),
+                icon = Res.drawable.ic_play,
+                height = 46.dp,
+                textSize = 14.sp,
+                style = GameButtonStyle.Primary
             )
         }
     }
