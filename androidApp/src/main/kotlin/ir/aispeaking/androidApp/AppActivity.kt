@@ -25,6 +25,7 @@ import org.koin.core.context.GlobalContext
 
 class AppActivity : ComponentActivity() {
     private var audioBridge: AndroidAudioBridge? = null
+    private var videoBridge: AndroidVideoBridge? = null
     private var pendingRecordAudioCallback: ((Boolean) -> Unit)? = null
 
     private val recordAudioPermissionLauncher = registerForActivityResult(
@@ -139,6 +140,12 @@ class AppActivity : ComponentActivity() {
             }
         } catch (_: Throwable) {}
 
+        try {
+            videoBridge = AndroidVideoBridge(this).apply {
+                attach()
+            }
+        } catch (_: Throwable) {}
+
         // Initialize Notification channel and request Android 13+ permission
         ir.aispeaking.androidApp.notification.NotificationHelper.createNotificationChannel(this)
         checkAndRequestPostNotificationsPermission()
@@ -237,6 +244,8 @@ class AppActivity : ComponentActivity() {
         }
         audioBridge?.stopRecordingAudio()
         audioBridge?.stopAudio()
+        videoBridge?.detach()
+        videoBridge = null
     }
 
     companion object {
