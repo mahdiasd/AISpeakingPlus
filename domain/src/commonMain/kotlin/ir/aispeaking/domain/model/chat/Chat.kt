@@ -12,7 +12,6 @@ sealed class Chat(
         val voiceState: AiVoiceState = AiVoiceState.Stopped,
         val audioUrl: String? = null,
         val objectiveCompleted: Boolean = false,
-        val finishTaskIndexes: ImmutableList<Int>? = null,
         val suggests: ImmutableList<String>? = null,
         val fetchingSuggest: Boolean = false,
     ) : Chat(uid = uid)
@@ -49,8 +48,7 @@ data class StageChatTurnResult(
     val hasGrammarError: Boolean = false,
     val correctedSentence: String? = null,
     val grammarFeedbackFa: String = "",
-    val objectiveCompleted: Boolean = false,
-    val finishTaskIndexes: List<Int> = emptyList()
+    val objectiveCompleted: Boolean = false
 )
 
 sealed class StageChatStreamEvent {

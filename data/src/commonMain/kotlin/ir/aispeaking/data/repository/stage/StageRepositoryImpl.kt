@@ -183,8 +183,7 @@ class StageRepositoryImpl(
                 hasGrammarError = d.hasGrammarError,
                 correctedSentence = d.correctedSentence,
                 grammarFeedbackFa = d.grammarFeedbackFa,
-                objectiveCompleted = d.objectiveCompleted,
-                finishTaskIndexes = d.finishTaskIndexes
+                objectiveCompleted = d.objectiveCompleted
             )
         )
     }
@@ -219,8 +218,7 @@ class StageRepositoryImpl(
                                 hasGrammarError = p.hasGrammarError,
                                 correctedSentence = p.correctedSentence,
                                 grammarFeedbackFa = p.grammarFeedbackFa,
-                                objectiveCompleted = p.objectiveCompleted,
-                                finishTaskIndexes = p.finishTaskIndexes
+                                objectiveCompleted = p.objectiveCompleted
                             )
                         )
                     )

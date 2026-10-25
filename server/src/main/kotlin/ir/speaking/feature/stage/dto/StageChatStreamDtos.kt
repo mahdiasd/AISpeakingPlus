@@ -11,8 +11,7 @@ data class StageChatStreamDonePayload(
     @SerialName("corrected_sentence") val correctedSentence: String? = null,
     @SerialName("grammar_feedback_fa") val grammarFeedbackFa: String = "",
     @SerialName("objective_completed") val objectiveCompleted: Boolean = false,
-    @SerialName("audio_url") val audioUrl: String? = null,
-    @SerialName("finish_task_indexes") val finishTaskIndexes: List<Int> = emptyList()
+    @SerialName("audio_url") val audioUrl: String? = null
 )
 
 @Serializable

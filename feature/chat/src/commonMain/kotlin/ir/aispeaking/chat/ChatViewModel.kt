@@ -243,8 +243,7 @@ class ChatViewModel(
                                 translatedMessage = d.translatedMessage,
                                 voiceState = if (hasAudio) AiVoiceState.Playing else AiVoiceState.Stopped,
                                 audioUrl = d.audioUrl,
-                                objectiveCompleted = d.objectiveCompleted,
-                                finishTaskIndexes = d.finishTaskIndexes.toImmutableList()
+                                objectiveCompleted = d.objectiveCompleted
                             )
 
                             _uiState.update { state ->
@@ -663,8 +662,7 @@ class ChatViewModel(
                                 translatedMessage = turn.translatedMessage,
                                 voiceState = if (hasAudio) AiVoiceState.Playing else AiVoiceState.Stopped,
                                 audioUrl = turn.audioUrl,
-                                objectiveCompleted = isTurnGoalCompleted,
-                                finishTaskIndexes = turn.finishTaskIndexes.toImmutableList()
+                                objectiveCompleted = isTurnGoalCompleted
                             )
 
                             _uiState.update { state ->

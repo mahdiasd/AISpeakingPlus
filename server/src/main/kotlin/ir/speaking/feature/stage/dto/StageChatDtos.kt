@@ -23,7 +23,6 @@ data class StageChatResponse(
     val hasGrammarError: Boolean = false,
     val correctedSentence: String? = null,
     val grammarFeedbackFa: String = "",
-    val objectiveCompleted: Boolean = false,
-    val finishTaskIndexes: List<Int> = emptyList()
+    val objectiveCompleted: Boolean = false
 )
 
