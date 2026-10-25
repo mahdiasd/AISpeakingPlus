@@ -9,6 +9,7 @@ interface StageAudioController {
     fun playVoice(url: String?, onEnded: () -> Unit)
     fun stopVoice()
     fun isVoicePlaying(): Boolean
+    fun preloadVoice(url: String?) {}
 
     fun startRecording(
         onSpeechRecognized: (String) -> Unit,
@@ -39,11 +40,18 @@ class DefaultStageAudioController : StageAudioController {
 
     // Platform callback bridges (can be set by platform host like Web/Android)
     var onPlatformPlayVoice: ((String?, () -> Unit) -> Unit)? = null
+    var onPlatformPreloadVoice: ((String?) -> Unit)? = null
     var onPlatformStopVoice: (() -> Unit)? = null
     var onPlatformStartRecording: (((String) -> Unit, () -> Unit) -> Unit)? = null
     var onPlatformStopRecording: (() -> Unit)? = null
     var onPlatformCheckMicrophonePermission: (((Boolean) -> Unit) -> Unit)? = null
     var onPlatformRequestMicrophonePermission: (((Boolean) -> Unit) -> Unit)? = null
+
+    override fun preloadVoice(url: String?) {
+        if (!url.isNullOrBlank()) {
+            onPlatformPreloadVoice?.invoke(url)
+        }
+    }
 
     fun dispatchAudioChunk(bytes: ByteArray) {
         onAudioChunkCaptured?.invoke(bytes)

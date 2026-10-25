@@ -199,6 +199,7 @@ private fun Route.registerTtsEndpoints(ttsService: () -> TtsService, tag: String
             call.response.header(HttpHeaders.ContentType, "audio/wav")
             call.response.header(HttpHeaders.ContentDisposition, "inline; filename=\"$filename\"")
             call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
+            call.response.header(HttpHeaders.AcceptRanges, "bytes")
             call.respondFile(file)
         } else {
             call.respond(HttpStatusCode.NotFound, "Audio file not found")

@@ -10,6 +10,9 @@ import kotlin.io.encoding.Base64
 @JsFun("(url) => window.aiSpeakingAudio ? window.aiSpeakingAudio.play(url) : null")
 private external fun jsPlayAudio(url: String)
 
+@JsFun("(url) => window.aiSpeakingAudio ? window.aiSpeakingAudio.preload(url) : null")
+private external fun jsPreloadAudio(url: String)
+
 @JsFun("() => window.aiSpeakingAudio ? window.aiSpeakingAudio.stop() : null")
 private external fun jsStopAudio()
 
@@ -69,6 +72,12 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
                     }
                     onEnded()
                 }
+            }
+        }
+
+        controller.onPlatformPreloadVoice = { url ->
+            if (!url.isNullOrBlank()) {
+                jsPreloadAudio(url)
             }
         }
 

@@ -168,16 +168,18 @@ fun AiChatItem(
                         when (chat.voiceState) {
                             AiVoiceState.PendingToPlay -> GameChip(
                                 text = "در حال آماده‌سازی",
-                                accent = AppleChatTheme.SuccessCyan,
-                                border = AppleChatTheme.SubtleBorderColor
+                                accent = AppleChatTheme.PrimaryAzure,
+                                border = AppleChatTheme.SubtleBorderColor,
+                                keepContainerOnActive = true
                             )
                             AiVoiceState.Playing -> PlayingVoiceChip(onClick = onStopVoice)
                             AiVoiceState.Stopped -> if (!chat.audioUrl.isNullOrBlank()) {
                                 GameChip(
                                     text = "پخش صدا",
                                     icon = Res.drawable.ic_play,
-                                    accent = AppleChatTheme.SuccessCyan,
+                                    accent = AppleChatTheme.PrimaryAzure,
                                     border = AppleChatTheme.SubtleBorderColor,
+                                    keepContainerOnActive = true,
                                     onClick = onPlayVoice
                                 )
                             }
@@ -190,6 +192,7 @@ fun AiChatItem(
                                 accent = AppleChatTheme.PrimaryAzure,
                                 border = AppleChatTheme.SubtleBorderColor,
                                 active = showTranslation,
+                                keepContainerOnActive = true,
                                 onClick = { showTranslation = !showTranslation }
                             )
                         }
@@ -197,9 +200,10 @@ fun AiChatItem(
                         GameChip(
                             text = if (copied) "کپی شد" else "کپی",
                             icon = if (copied) Res.drawable.ic_done else Res.drawable.ic_copy,
-                            accent = if (copied) AppleChatTheme.SuccessCyan else Game.TextSecondary,
+                            accent = AppleChatTheme.PrimaryAzure,
                             border = AppleChatTheme.SubtleBorderColor,
                             active = copied,
+                            keepContainerOnActive = true,
                             onClick = {
                                 clipboardManager.setText(AnnotatedString(chat.message))
                                 copied = true
@@ -223,7 +227,8 @@ private fun PlayingVoiceChip(
 ) {
     val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(50)
-    val accent = if (isDark) AppleChatTheme.SuccessCyan else AppleChatTheme.PrimaryAzure
+    val accent = AppleChatTheme.PrimaryAzure
+    val containerBg = if (isDark) Color(0xEB181A22) else Color(0xCCFFFFFF)
 
     val transition = rememberInfiniteTransition(label = "audio_wave_pulse")
     val bar1 by transition.animateFloat(
@@ -267,8 +272,8 @@ private fun PlayingVoiceChip(
         modifier = modifier
             .applePressEffect(targetScale = 0.95f, onClick = onClick)
             .clip(shape)
-            .background(if (isDark) Color(0xD9181B2A) else Color(0xFFE0F2FE))
-            .border(1.dp, accent.copy(alpha = if (isDark) 0.45f else 0.5f), shape)
+            .background(containerBg)
+            .border(1.5.dp, accent.copy(alpha = 0.65f), shape)
             .padding(horizontal = 12.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)

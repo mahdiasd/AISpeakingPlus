@@ -316,6 +316,7 @@ fun GameChip(
     container: Color = Color.Unspecified,
     border: Color = Color.Unspecified,
     active: Boolean = false,
+    keepContainerOnActive: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
     val isDark = AppTheme.isDark
@@ -329,6 +330,16 @@ fun GameChip(
         label = "apple_chip_press",
     )
     val shape = RoundedCornerShape(50)
+    val bg = if (active && !keepContainerOnActive) {
+        accent.copy(alpha = if (isDark) 0.28f else 0.14f)
+    } else {
+        resolvedContainer
+    }
+    val strokeColor = if (active) {
+        if (keepContainerOnActive) accent.copy(alpha = 0.65f) else accent.copy(alpha = 0.75f)
+    } else {
+        resolvedBorder
+    }
     Row(
         modifier = modifier
             .graphicsLayer {
@@ -336,8 +347,8 @@ fun GameChip(
                 scaleY = scale
             }
             .clip(shape)
-            .background(if (active) accent.copy(alpha = if (isDark) 0.28f else 0.14f) else resolvedContainer)
-            .border(1.dp, if (active) accent.copy(alpha = 0.75f) else resolvedBorder, shape)
+            .background(bg)
+            .border(if (active && keepContainerOnActive) 1.5.dp else 1.dp, strokeColor, shape)
             .then(
                 if (onClick != null) {
                     Modifier.clickable(interactionSource = interaction, indication = null, onClick = onClick)
@@ -362,6 +373,14 @@ fun GameChip(
             color = if (active) accent else Game.TextPrimary,
             maxLines = 1
         )
+        if (active && keepContainerOnActive) {
+            Box(
+                modifier = Modifier
+                    .size(5.dp)
+                    .clip(CircleShape)
+                    .background(accent)
+            )
+        }
     }
 }
 

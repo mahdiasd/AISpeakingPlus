@@ -262,6 +262,7 @@ class ChatViewModel(
                             }
 
                             if (hasAudio) {
+                                audioController.preloadVoice(d.audioUrl)
                                 audioController.playVoice(d.audioUrl) {
                                     onVoicePlaybackEnded(aiUid)
                                 }
@@ -686,6 +687,7 @@ class ChatViewModel(
                             val shouldAutoComplete = isGoalCompleted || _uiState.value.turnsCount >= maxTurns
 
                             if (hasAudio) {
+                                audioController.preloadVoice(turn.audioUrl)
                                 var hasAutoFinished = false
                                 val triggerAutoFinish = {
                                     if (!hasAutoFinished) {

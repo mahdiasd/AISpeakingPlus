@@ -310,42 +310,93 @@
         };
 
         window._isAudioPlaying = false;
+        window._aiSpeakingAudioPool = window._aiSpeakingAudioPool || {};
         window.aiSpeakingAudio = {
             audio: null,
+            _currentUrl: null,
+
             isPlaying: function() {
                 return window._isAudioPlaying === true;
             },
-            play: function(url) {
-                if (this.audio) {
-                    try { this.audio.pause(); } catch(e){}
-                    this.audio = null;
+
+            preload: function(url) {
+                if (!url) return;
+                var fullUrl = (url.startsWith("http://") || url.startsWith("https://")) ? url : (window.location.origin + (url.startsWith("/") ? url : "/" + url));
+                if (!window._aiSpeakingAudioPool[fullUrl]) {
+                    try {
+                        var a = new Audio();
+                        a.preload = "auto";
+                        a.src = fullUrl;
+                        a.load();
+                        window._aiSpeakingAudioPool[fullUrl] = a;
+                    } catch(e) {
+                        console.warn("[aiSpeakingAudio] preload error:", e);
+                    }
                 }
+            },
+
+            play: function(url) {
                 if (!url) {
-                    window._isAudioPlaying = false;
+                    this.stop();
                     return;
                 }
+
+                if (this.audio) {
+                    try {
+                        this.audio.pause();
+                        this.audio.currentTime = 0;
+                    } catch(e){}
+                    this.audio = null;
+                }
+
                 var fullUrl = (url.startsWith("http://") || url.startsWith("https://")) ? url : (window.location.origin + (url.startsWith("/") ? url : "/" + url));
-                window._isAudioPlaying = true;
-                this.audio = new Audio(fullUrl);
                 var self = this;
+                self._currentUrl = fullUrl;
+
+                var audio = window._aiSpeakingAudioPool[fullUrl];
+                if (!audio) {
+                    audio = new Audio();
+                    audio.preload = "auto";
+                    audio.src = fullUrl;
+                    window._aiSpeakingAudioPool[fullUrl] = audio;
+                }
+
+                self.audio = audio;
+                window._isAudioPlaying = true;
+
+                // Reset position so replay is immediate
+                try {
+                    audio.currentTime = 0;
+                } catch(e) {}
+
                 var finish = function() {
-                    window._isAudioPlaying = false;
-                    self.audio = null;
+                    if (self._currentUrl === fullUrl) {
+                        window._isAudioPlaying = false;
+                    }
                 };
-                this.audio.onended = finish;
-                this.audio.onerror = function(e) {
-                    console.warn("Audio load error, falling back", e);
+
+                audio.onended = finish;
+                audio.onerror = function(e) {
+                    console.warn("[aiSpeakingAudio] Playback error, falling back:", e);
                     finish();
                 };
-                this.audio.play().catch(function(err) {
-                    console.warn("Audio play prevented or error", err);
-                    finish();
-                });
+
+                var playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(function(err) {
+                        console.warn("[aiSpeakingAudio] Play prevented or failed:", err);
+                        finish();
+                    });
+                }
             },
+
             stop: function() {
                 window._isAudioPlaying = false;
                 if (this.audio) {
-                    try { this.audio.pause(); } catch(e){}
+                    try {
+                        this.audio.pause();
+                        this.audio.currentTime = 0;
+                    } catch(e){}
                     this.audio = null;
                 }
             }
@@ -456,27 +507,47 @@
                 this._consecutiveErrors = 0;
 
                 var self = this;
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    console.warn("[aiSpeakingSpeech] navigator.mediaDevices.getUserMedia not available, trying speech recognition fallback");
+
+                // 1. Prime AudioContext synchronously in current user gesture
+                var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    try {
+                        if (!window._aiSpeakingAudioCtx || window._aiSpeakingAudioCtx.state === 'closed') {
+                            window._aiSpeakingAudioCtx = new AudioContextClass();
+                        }
+                        self.audioContext = window._aiSpeakingAudioCtx;
+                        if (self.audioContext && self.audioContext.state === 'suspended') {
+                            self.audioContext.resume().catch(function(){});
+                        }
+                    } catch(e) {
+                        console.warn("[aiSpeakingSpeech] AudioContext pre-creation error:", e);
+                    }
+                }
+
+                var navMedia = navigator.mediaDevices;
+                var getUserMediaFn = null;
+                if (navMedia && navMedia.getUserMedia) {
+                    getUserMediaFn = function(c) { return navMedia.getUserMedia(c); };
+                } else if (navigator.getUserMedia) {
+                    getUserMediaFn = function(c) { return new Promise(function(res, rej) { navigator.getUserMedia(c, res, rej); }); };
+                } else if (navigator.webkitGetUserMedia) {
+                    getUserMediaFn = function(c) { return new Promise(function(res, rej) { navigator.webkitGetUserMedia(c, res, rej); }); };
+                }
+
+                if (!getUserMediaFn) {
+                    console.warn("[aiSpeakingSpeech] getUserMedia not available, trying speech recognition fallback");
                     this._startRecognitionInstance();
                     return;
                 }
 
-                navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        channelCount: 1,
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    }
-                }).then(function(stream) {
+                var handleStreamAcquired = function(stream) {
                     if (!self._userWantsRecording) {
                         try { stream.getTracks().forEach(function(t) { t.stop(); }); } catch(e) {}
                         return;
                     }
 
                     self.mediaStream = stream;
-                    var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+
                     if (!AudioContextClass) {
                         console.warn("[aiSpeakingSpeech] AudioContext not available, falling back to SpeechRecognition");
                         self._startRecognitionInstance();
@@ -484,24 +555,16 @@
                     }
 
                     try {
-                        try {
-                            self.audioContext = new AudioContextClass({ sampleRate: 16000 });
-                        } catch(e) {
+                        if (!self.audioContext || self.audioContext.state === 'closed') {
                             self.audioContext = new AudioContextClass();
                         }
-                    } catch(err) {
-                        console.warn("[aiSpeakingSpeech] Failed to create AudioContext:", err);
-                        self._startRecognitionInstance();
-                        return;
-                    }
-
-                    try {
                         if (self.audioContext.state === 'suspended') {
-                            self.audioContext.resume();
+                            self.audioContext.resume().catch(function(){});
                         }
 
                         self.audioInputSource = self.audioContext.createMediaStreamSource(stream);
                         self.audioProcessor = self.audioContext.createScriptProcessor(2048, 1, 1);
+                        window._activeAudioProcessor = self.audioProcessor; // Keep reference to prevent GC in WebKit
 
                         self.audioProcessor.onaudioprocess = function(e) {
                             if (!self.isRecording) return;
@@ -545,19 +608,33 @@
                         console.error("[aiSpeakingSpeech] Web Audio processing graph error:", err);
                         self._startRecognitionInstance();
                     }
-                }).catch(function(err) {
-                    console.error("[aiSpeakingSpeech] getUserMedia error:", err);
-                    self.isRecording = false;
-                    self._userWantsRecording = false;
-                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                        var msg = "دسترسی به میکروفون رد شد. لطفاً دسترسی به میکروفون را در تنظیمات مرورگر فعال کنید.";
-                        if (!self._checkSecureContext()) {
-                            msg += "\n\n(نکته: در مرورگرهای موبایل و شبکه محلی، دسترسی به میکروفون نیازمند HTTPS است.)";
-                        }
-                        alert(msg);
-                    } else {
-                        self._startRecognitionInstance();
+                };
+
+                // Use soft ideal constraints to prevent OverconstrainedError on iOS WebKit
+                var preferredConstraints = {
+                    audio: {
+                        echoCancellation: { ideal: true },
+                        noiseSuppression: { ideal: true },
+                        autoGainControl: { ideal: true }
                     }
+                };
+
+                getUserMediaFn(preferredConstraints).then(handleStreamAcquired).catch(function(err) {
+                    console.warn("[aiSpeakingSpeech] Preferred getUserMedia failed, retrying with basic { audio: true }:", err);
+                    getUserMediaFn({ audio: true }).then(handleStreamAcquired).catch(function(finalErr) {
+                        console.error("[aiSpeakingSpeech] getUserMedia final error:", finalErr);
+                        self.isRecording = false;
+                        self._userWantsRecording = false;
+                        if (finalErr.name === 'NotAllowedError' || finalErr.name === 'PermissionDeniedError') {
+                            var msg = "دسترسی به میکروفون رد شد. لطفاً دسترسی به میکروفون را در تنظیمات مرورگر فعال کنید.";
+                            if (!self._checkSecureContext()) {
+                                msg += "\n\n(نکته: در مرورگرهای موبایل و شبکه محلی، دسترسی به میکروفون نیازمند HTTPS است.)";
+                            }
+                            alert(msg);
+                        } else {
+                            self._startRecognitionInstance();
+                        }
+                    });
                 });
             },
 
@@ -699,6 +776,7 @@
                     } catch(e) {}
                     this.audioProcessor = null;
                 }
+                window._activeAudioProcessor = null;
 
                 if (this.zeroGain) {
                     try { this.zeroGain.disconnect(); } catch(e) {}
@@ -711,8 +789,11 @@
                 }
 
                 if (this.audioContext) {
-                    try { this.audioContext.close(); } catch(e) {}
-                    this.audioContext = null;
+                    try {
+                        if (this.audioContext.state !== 'closed') {
+                            this.audioContext.suspend().catch(function(){});
+                        }
+                    } catch(e) {}
                 }
 
                 if (this.mediaStream) {
@@ -748,17 +829,34 @@
             _isRequesting: false,
             _lastResult: "",
 
+            _isIOSDevice: function() {
+                var ua = navigator.userAgent || '';
+                return /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            },
+
             check: function() {
                 var self = this;
+                var isIOS = self._isIOSDevice();
+
+                // On WebKit iOS (Safari & Chrome iOS), permissions.query({ name: 'microphone' }) throws TypeError
+                if (isIOS) {
+                    try {
+                        var stored = localStorage.getItem('mic_perm_granted');
+                        self._state = (stored === 'true') ? 'granted' : (stored === 'false' ? 'denied' : 'prompt');
+                    } catch(e) {
+                        self._state = 'prompt';
+                    }
+                    return self._state;
+                }
+
                 if (navigator.permissions && navigator.permissions.query) {
                     try {
                         navigator.permissions.query({ name: 'microphone' }).then(function(result) {
                             self._state = result.state;
-                            if (result.state === 'granted') {
-                                try { localStorage.setItem('mic_perm_granted', 'true'); } catch(e) {}
-                            } else if (result.state === 'denied') {
-                                try { localStorage.setItem('mic_perm_granted', 'false'); } catch(e) {}
-                            }
+                            try {
+                                if (result.state === 'granted') localStorage.setItem('mic_perm_granted', 'true');
+                                else if (result.state === 'denied') localStorage.setItem('mic_perm_granted', 'false');
+                            } catch(e) {}
                             result.onchange = function() {
                                 self._state = result.state;
                                 try {
@@ -767,21 +865,24 @@
                             };
                         }).catch(function() {
                             try {
-                                self._state = (localStorage.getItem('mic_perm_granted') === 'true') ? 'granted' : 'prompt';
+                                var s = localStorage.getItem('mic_perm_granted');
+                                self._state = (s === 'true') ? 'granted' : (s === 'false' ? 'denied' : 'prompt');
                             } catch(e) {
                                 self._state = 'prompt';
                             }
                         });
                     } catch(err) {
                         try {
-                            self._state = (localStorage.getItem('mic_perm_granted') === 'true') ? 'granted' : 'prompt';
+                            var s = localStorage.getItem('mic_perm_granted');
+                            self._state = (s === 'true') ? 'granted' : (s === 'false' ? 'denied' : 'prompt');
                         } catch(e) {
                             self._state = 'prompt';
                         }
                     }
                 } else {
                     try {
-                        self._state = (localStorage.getItem('mic_perm_granted') === 'true') ? 'granted' : 'prompt';
+                        var s = localStorage.getItem('mic_perm_granted');
+                        self._state = (s === 'true') ? 'granted' : (s === 'false' ? 'denied' : 'prompt');
                     } catch(e) {
                         self._state = 'prompt';
                     }
@@ -793,20 +894,50 @@
                 var self = this;
                 self._isRequesting = true;
                 self._lastResult = "";
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+
+                // Prime AudioContext synchronously in current user gesture
+                try {
+                    var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContextClass) {
+                        if (!window._aiSpeakingAudioCtx || window._aiSpeakingAudioCtx.state === 'closed') {
+                            window._aiSpeakingAudioCtx = new AudioContextClass();
+                        }
+                        if (window._aiSpeakingAudioCtx && window._aiSpeakingAudioCtx.state === 'suspended') {
+                            window._aiSpeakingAudioCtx.resume().catch(function(){});
+                        }
+                    }
+                } catch(e) {
+                    console.warn("[aiSpeakingPermission] AudioContext priming error:", e);
+                }
+
+                var navMedia = navigator.mediaDevices;
+                var getUserMediaFn = null;
+                if (navMedia && navMedia.getUserMedia) {
+                    getUserMediaFn = function(c) { return navMedia.getUserMedia(c); };
+                } else if (navigator.getUserMedia) {
+                    getUserMediaFn = function(c) { return new Promise(function(res, rej) { navigator.getUserMedia(c, res, rej); }); };
+                } else if (navigator.webkitGetUserMedia) {
+                    getUserMediaFn = function(c) { return new Promise(function(res, rej) { navigator.webkitGetUserMedia(c, res, rej); }); };
+                }
+
+                if (!getUserMediaFn) {
                     self._state = "denied";
                     self._lastResult = "denied";
                     self._isRequesting = false;
                     return;
                 }
-                navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
-                    try {
-                        stream.getTracks().forEach(function(track) { track.stop(); });
-                    } catch(e) {}
+
+                getUserMediaFn({ audio: true }).then(function(stream) {
                     self._state = "granted";
                     self._lastResult = "granted";
                     self._isRequesting = false;
                     try { localStorage.setItem('mic_perm_granted', 'true'); } catch(e) {}
+                    // Delay track stopping slightly on iOS to let WebKit register session
+                    setTimeout(function() {
+                        try {
+                            stream.getTracks().forEach(function(track) { track.stop(); });
+                        } catch(e) {}
+                    }, 500);
                 }).catch(function(err) {
                     console.warn("[aiSpeakingPermission] getUserMedia denied:", err);
                     self._state = "denied";
