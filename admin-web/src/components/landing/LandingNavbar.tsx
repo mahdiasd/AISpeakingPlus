@@ -18,9 +18,10 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchApp }) => 
   }, []);
 
   const navLinks = [
-    { label: 'امکانات پلتفرم', href: '#features' },
-    { label: 'سناریوهای داستانی', href: '#scenarios' },
-    { label: 'هوش صوتی Kokoro', href: '#voice' },
+    { label: 'امکانات', href: '#features' },
+    { label: 'سناریوها', href: '#scenarios' },
+    { label: 'صداهای طبیعی', href: '#voice' },
+    { label: 'تعرفه‌ها', href: '#pricing' },
     { label: 'نحوه کار', href: '#how-it-works' },
     { label: 'پرسش‌های متداول', href: '#faq' },
   ];
@@ -29,8 +30,8 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchApp }) => 
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 animate-fade-in-down ${
         isScrolled
-          ? 'bg-[#0B0F17]/85 backdrop-blur-md border-b border-white/10 py-3.5 shadow-lg shadow-black/30'
-          : 'bg-gradient-to-b from-black/60 to-transparent py-5'
+          ? 'bg-[#0B0F17]/90 backdrop-blur-md border-b border-white/10 py-3.5 shadow-lg shadow-black/30'
+          : 'bg-gradient-to-b from-black/70 to-transparent py-5'
       }`}
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between">
@@ -45,19 +46,19 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchApp }) => 
             <span className="font-inter font-bold text-lg sm:text-xl text-white tracking-tight">
               AISpeaking<span className="text-cyan-400">Plus</span>
             </span>
-            <span className="text-[10px] font-inter font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-              AI VOICE
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+              یادگیری هوشمند مکالمه
             </span>
           </div>
         </a>
 
         {/* Desktop Menu Items */}
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden lg:flex items-center gap-7">
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="text-[14px] font-normal text-white/90 hover:text-white transition-colors duration-200"
+              className="text-[14px] font-medium text-white/80 hover:text-white transition-colors duration-200"
             >
               {link.label}
             </a>
@@ -68,16 +69,16 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchApp }) => 
         <div className="flex items-center gap-3">
           <button
             onClick={onLaunchApp}
-            className="hidden sm:inline-flex items-center gap-2 border border-white/80 text-white hover:bg-white hover:text-black transition-all duration-300 font-normal text-[14px] px-5 py-2 rounded-full cursor-pointer shadow-sm group"
+            className="hidden sm:inline-flex items-center gap-2 border border-white/70 text-white hover:bg-white hover:text-black transition-all duration-300 font-medium text-[13px] sm:text-[14px] px-4 sm:px-5 py-2 rounded-full cursor-pointer shadow-sm group"
           >
-            <span>ورود به برنامه</span>
+            <span>ورود و شروع رایگان</span>
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
           </button>
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-white/90 hover:text-white rounded-lg bg-white/5 border border-white/10"
-            aria-label="منوی موبایل"
+            className="lg:hidden p-2 text-white/90 hover:text-white rounded-lg bg-white/5 border border-white/10"
+            aria-label="منوی سایت"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -86,14 +87,14 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchApp }) => 
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0B0F17]/95 backdrop-blur-xl border-b border-white/10 px-6 py-5 space-y-4 animate-fade-in-down">
-          <nav className="flex flex-col space-y-3">
+        <div className="lg:hidden bg-[#0B0F17]/98 backdrop-blur-2xl border-b border-white/10 px-6 py-5 space-y-4 animate-fade-in-down shadow-2xl">
+          <nav className="flex flex-col space-y-2.5">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-[15px] font-normal text-white/90 hover:text-white py-1.5 border-b border-white/5"
+                className="text-[15px] font-medium text-white/90 hover:text-white py-2 border-b border-white/5"
               >
                 {link.label}
               </a>
@@ -105,9 +106,9 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchApp }) => 
               setMobileMenuOpen(false);
               onLaunchApp();
             }}
-            className="w-full mt-2 flex items-center justify-center gap-2 bg-white text-black font-medium text-[15px] py-2.5 rounded-xl cursor-pointer shadow-md hover:bg-slate-100 transition-colors"
+            className="w-full mt-2 flex items-center justify-center gap-2 bg-white text-black font-semibold text-[15px] py-3 rounded-xl cursor-pointer shadow-md hover:bg-slate-100 transition-colors"
           >
-            <span>ورود به اپلیکیشن و شروع مکالمه</span>
+            <span>ورود به برنامه (دو مرحله اول رایگان)</span>
             <ArrowLeft className="w-4 h-4" />
           </button>
         </div>

@@ -6,6 +6,7 @@ import { LandingFeatures } from '../components/landing/LandingFeatures';
 import { LandingScenarios } from '../components/landing/LandingScenarios';
 import { LandingVoiceLab } from '../components/landing/LandingVoiceLab';
 import { LandingHowItWorks } from '../components/landing/LandingHowItWorks';
+import { LandingPricing } from '../components/landing/LandingPricing';
 import { LandingFaq } from '../components/landing/LandingFaq';
 import { LandingFooter } from '../components/landing/LandingFooter';
 
@@ -23,6 +24,7 @@ export const AppHomePage: React.FC = () => {
       <LandingScenarios onLaunchApp={handleLaunchApp} />
       <LandingVoiceLab />
       <LandingHowItWorks />
+      <LandingPricing onLaunchApp={handleLaunchApp} />
       <LandingFaq />
       <LandingFooter onLaunchApp={handleLaunchApp} />
     </div>

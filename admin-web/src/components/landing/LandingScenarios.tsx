@@ -9,12 +9,12 @@ export const LandingScenarios: React.FC<LandingScenariosProps> = ({ onLaunchApp 
   const scenarios = [
     {
       id: 'airport',
-      title: 'کنترل گذرنامه و ورود به لندن',
+      title: 'کنترل گذرنامه در فرودگاه',
       titleEn: 'London Heathrow Airport Immigration',
       icon: Plane,
       category: 'سفر و گردشگری',
-      partner: 'Officer Davis (لهجه بریتیش)',
-      goal: 'توضیح هدف از سفر، ارائه کارت ورود و هتل اقامت به افسر مرزی',
+      partner: 'افسر دیویس (لهجه بریتانیایی)',
+      goal: 'توضیح هدف از سفر، ارائه گذرنامه و نشانی هتل اقامت به افسر مرزی',
       dialogue: [
         {
           speaker: 'ai',
@@ -35,12 +35,12 @@ export const LandingScenarios: React.FC<LandingScenariosProps> = ({ onLaunchApp 
     },
     {
       id: 'hotel',
-      title: 'پذیرش و درخواست اتاق در هتل',
+      title: 'پذیرش و تحویل اتاق در هتل',
       titleEn: 'Boutique Hotel Front Desk',
       icon: Hotel,
-      category: 'اقامت و رزرو',
-      partner: 'Sarah (لهجه امریکن)',
-      goal: 'اعلام شماره رزرو، درخواست اتاق آرام در طبقات بالا و گرفتن رمز وای‌فای',
+      category: 'اقامت و هتل',
+      partner: 'سارا (لهجه آمریکایی)',
+      goal: 'اعلام شماره رزرو، درخواست اتاق آرام در طبقات بالا و دریافت رمز اینترنت',
       dialogue: [
         {
           speaker: 'ai',
@@ -61,12 +61,12 @@ export const LandingScenarios: React.FC<LandingScenariosProps> = ({ onLaunchApp 
     },
     {
       id: 'cafe',
-      title: 'سفارش در کافه شلوغ و مکالمه کوتاه',
+      title: 'سفارش در کافه و مکالمه کوتاه',
       titleEn: 'Downtown Coffee Shop',
       icon: Coffee,
       category: 'زندگی روزمره',
-      partner: 'Michael (لهجه امریکن)',
-      goal: 'سفارش قهوه با شیر گیاهی، کیک و نحوه پرداخت',
+      partner: 'مایکل (لهجه آمریکایی)',
+      goal: 'سفارش نوشیدنی با شیر گیاهی، کیک و نحوه پرداخت صورت‌حساب',
       dialogue: [
         {
           speaker: 'ai',
@@ -88,16 +88,16 @@ export const LandingScenarios: React.FC<LandingScenariosProps> = ({ onLaunchApp 
     {
       id: 'interview',
       title: 'مصاحبه شغلی شرکت بین‌المللی',
-      titleEn: 'Senior Software Job Interview',
+      titleEn: 'Senior Job Interview',
       icon: Briefcase,
-      category: 'کار و حرفه',
-      partner: 'Emily (لهجه بریتیش رسمی)',
-      goal: 'پاسخ به سوال درباره چالش‌های فنی و شیوه همکاری با تیم‌های توزیع‌شده',
+      category: 'کار و مصاحبه',
+      partner: 'امیلی (لهجه رسمی بریتانیایی)',
+      goal: 'پاسخ به پرسش درباره چالش‌های کاری و شیوه مدیریت موقعیت‌های دشوار',
       dialogue: [
         {
           speaker: 'ai',
           name: 'Emily (Interviewer)',
-          text: 'Welcome to the interview. Could you tell me about a time you resolved a critical production issue under pressure?',
+          text: 'Welcome to the interview. Could you tell me about a time you resolved a critical challenge under pressure?',
         },
         {
           speaker: 'user',
@@ -125,10 +125,10 @@ export const LandingScenarios: React.FC<LandingScenariosProps> = ({ onLaunchApp 
             <span>تمرین موقعیت‌های واقعی زندگی</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3">
-            سناریوهای داستانی با کاراکترهای زنده
+            سناریوهای موضوعی با شخصیت‌های شبیه‌سازی‌شده
           </h2>
           <p className="text-slate-400 text-sm sm:text-base">
-            مکالمه انگلیسی را در صحنه‌های واقعی تجربه کنید؛ با کاراکترهایی که می‌شنوند، درک می‌کنند و مثل انسان پاسخ می‌دهند.
+            مکالمه انگلیسی را در موقعیت‌های طبیعی تجربه کنید؛ با شخصیت‌هایی که می‌شنوند، درک می‌کنند و با لهجه استاندارد پاسخ می‌دهند.
           </p>
         </div>
 
@@ -155,23 +155,23 @@ export const LandingScenarios: React.FC<LandingScenariosProps> = ({ onLaunchApp 
         </div>
 
         {/* Active Scenario Card Preview */}
-        <div className="max-w-4xl mx-auto rounded-2xl bg-[#111726] border border-slate-800 p-6 sm:p-8 shadow-xl">
+        <div className="max-w-4xl mx-auto rounded-2xl bg-[#111726] border border-slate-800 p-5 sm:p-8 shadow-xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
             <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+              <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
                 <CurrentIcon className="w-6 h-6" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg sm:text-xl font-bold text-white">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base sm:text-xl font-bold text-white">
                     {currentScenario.title}
                   </h3>
-                  <span className="text-[11px] font-mono text-cyan-400 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">
+                  <span className="text-[11px] font-medium text-cyan-400 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">
                     {currentScenario.category}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-1 font-inter">
-                  {currentScenario.titleEn} &bull; پارتنر:{' '}
+                <p className="text-xs text-slate-400 mt-1">
+                  هم‌صحبت شما:{' '}
                   <span className="text-slate-300 font-medium">{currentScenario.partner}</span>
                 </p>
               </div>
@@ -179,17 +179,18 @@ export const LandingScenarios: React.FC<LandingScenariosProps> = ({ onLaunchApp 
 
             <button
               onClick={onLaunchApp}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white text-black hover:bg-slate-100 font-medium text-xs sm:text-sm shadow-md transition-all hover:scale-105 cursor-pointer self-start sm:self-auto"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white text-black hover:bg-slate-100 font-medium text-xs sm:text-sm shadow-md transition-all hover:scale-105 cursor-pointer self-start sm:self-auto shrink-0"
             >
               <Play className="w-3.5 h-3.5 fill-black text-black" />
-              <span>شروع این سناریو در اپلیکیشن</span>
+              <span>شروع این سناریو (رایگان)</span>
             </button>
           </div>
 
           {/* Dialogue Simulator Preview */}
           <div className="mt-6 space-y-3.5">
-            <div className="text-xs text-slate-500 font-semibold mb-2">
-              هدف سناریو: <span className="text-slate-400 font-normal">{currentScenario.goal}</span>
+            <div className="text-xs text-slate-400 font-medium mb-3 bg-slate-900/40 p-3 rounded-lg border border-slate-800/60">
+              <span className="text-slate-300 font-bold ml-1">هدف سناریو:</span>
+              <span>{currentScenario.goal}</span>
             </div>
 
             {currentScenario.dialogue.map((item, idx) => {
@@ -212,12 +213,12 @@ export const LandingScenarios: React.FC<LandingScenariosProps> = ({ onLaunchApp 
                   >
                     {isAi ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
                       <span className="font-semibold text-slate-300">{item.name}</span>
-                      <span className="font-mono text-[10px] text-slate-500">Live Voice</span>
+                      <span className="text-[10px] text-slate-500">پاسخ صوتی</span>
                     </div>
-                    <p className="text-sm text-slate-200 font-inter dir-ltr text-left leading-relaxed">
+                    <p className="text-sm text-slate-200 font-inter dir-ltr text-left leading-relaxed break-words">
                       {item.text}
                     </p>
                   </div>
