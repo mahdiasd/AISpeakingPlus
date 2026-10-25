@@ -295,8 +295,7 @@ fun Application.stageRouting() {
                                     correctedSentence = finalResponse.correctedSentence,
                                     grammarFeedbackFa = finalResponse.grammarFeedbackFa,
                                     objectiveCompleted = finalResponse.objectiveCompleted,
-                                    audioUrl = finalResponse.audioUrl,
-                                    finishTaskIndexes = finalResponse.finishTaskIndexes
+                                    audioUrl = finalResponse.audioUrl
                                 )
                             )
                             val doneJson = sseJson.encodeToString(doneObj)

@@ -66,8 +66,7 @@ class StageChatService(
                 hasGrammarError = false,
                 correctedSentence = null,
                 grammarFeedbackFa = "",
-                objectiveCompleted = false,
-                finishTaskIndexes = emptyList()
+                objectiveCompleted = false
             )
         }
 
@@ -88,8 +87,7 @@ class StageChatService(
             hasGrammarError = turnResult.hasGrammarError,
             correctedSentence = turnResult.correctedSentence,
             grammarFeedbackFa = turnResult.grammarFeedback,
-            objectiveCompleted = turnResult.isObjectiveDone,
-            finishTaskIndexes = emptyList()
+            objectiveCompleted = turnResult.isObjectiveDone
         )
     }
 
@@ -122,8 +120,7 @@ class StageChatService(
                 hasGrammarError = false,
                 correctedSentence = null,
                 grammarFeedbackFa = "",
-                objectiveCompleted = false,
-                finishTaskIndexes = emptyList()
+                objectiveCompleted = false
             )
         }
 
@@ -145,8 +142,7 @@ class StageChatService(
             hasGrammarError = turnResult.hasGrammarError,
             correctedSentence = turnResult.correctedSentence,
             grammarFeedbackFa = turnResult.grammarFeedback,
-            objectiveCompleted = turnResult.isObjectiveDone,
-            finishTaskIndexes = emptyList()
+            objectiveCompleted = turnResult.isObjectiveDone
         )
     }
 
