@@ -1306,29 +1306,55 @@
             }, 500);
         })();
 
-        // iOS WebKit (Safari & Chrome on iOS) Virtual Keyboard Bridge (CMP-10858 / CMP-8013)
+        // iOS WebKit (Safari & Chrome on iOS) Virtual Keyboard & Hardware Permission Bridge (CMP-10858 / CMP-8013)
         (function() {
             var ua = navigator.userAgent || '';
             var isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
             if (!isIOS) return;
 
-            // 1. Dedicated transparent proxy input
-            var proxyInput = document.getElementById('cmp_ios_keyboard_proxy');
-            if (!proxyInput) {
-                proxyInput = document.createElement('textarea');
-                proxyInput.id = 'cmp_ios_keyboard_proxy';
-                proxyInput.setAttribute('autocomplete', 'off');
-                proxyInput.setAttribute('autocorrect', 'off');
-                proxyInput.setAttribute('autocapitalize', 'off');
-                proxyInput.setAttribute('spellcheck', 'false');
-                proxyInput.setAttribute('tabindex', '-1');
-                // 16px font-size prevents iOS Safari/WebKit auto-zoom on focus
-                proxyInput.style.cssText = 'position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; font-size: 16px; border: none; outline: none; background: transparent; pointer-events: none; z-index: 99998;';
-                if (document.body) document.body.appendChild(proxyInput);
-                else window.addEventListener('DOMContentLoaded', function() { document.body.appendChild(proxyInput); });
+            // 1. Maintain persistent transparent proxy input
+            var proxyInput = null;
+            function ensureProxyInput() {
+                proxyInput = document.getElementById('cmp_ios_keyboard_proxy');
+                if (!proxyInput) {
+                    proxyInput = document.createElement('textarea');
+                    proxyInput.id = 'cmp_ios_keyboard_proxy';
+                    proxyInput.setAttribute('autocomplete', 'off');
+                    proxyInput.setAttribute('autocorrect', 'off');
+                    proxyInput.setAttribute('autocapitalize', 'off');
+                    proxyInput.setAttribute('spellcheck', 'false');
+                    proxyInput.setAttribute('inputmode', 'text');
+                    proxyInput.setAttribute('enterkeyhint', 'done');
+                    proxyInput.setAttribute('tabindex', '-1');
+                    // 16px font-size prevents iOS Safari/WebKit auto-zoom on focus
+                    proxyInput.style.cssText = 'position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.001; font-size: 16px; border: none; outline: none; background: transparent; pointer-events: none; z-index: 99998;';
+                }
+                if (!proxyInput.isConnected && document.body) {
+                    document.body.appendChild(proxyInput);
+                }
+                return proxyInput;
+            }
+            ensureProxyInput();
+
+            // 2. Deep collector for all active ShadowRoots
+            function getAllShadowRoots() {
+                var roots = [];
+                function traverse(el) {
+                    if (!el) return;
+                    if (el.shadowRoot && roots.indexOf(el.shadowRoot) === -1) {
+                        roots.push(el.shadowRoot);
+                        traverse(el.shadowRoot);
+                    }
+                    var children = el.children || [];
+                    for (var i = 0; i < children.length; i++) {
+                        traverse(children[i]);
+                    }
+                }
+                traverse(document.body);
+                return roots;
             }
 
-            // 2. Helper to elevate backing input created by Compose
+            // 3. Helper to elevate Compose backing inputs above canvas
             function elevateBackingInput(el) {
                 if (!el) return;
                 var tag = (el.tagName || '').toUpperCase();
@@ -1336,13 +1362,15 @@
                     if (el.id === 'cmp_ios_keyboard_proxy') return;
                     el.style.setProperty('z-index', '99999', 'important');
                     el.style.setProperty('pointer-events', 'auto', 'important');
-                    el.style.setProperty('opacity', '0.01', 'important');
+                    el.style.setProperty('opacity', '0.001', 'important');
                     el.style.setProperty('font-size', '16px', 'important');
                     el.style.setProperty('-webkit-user-select', 'text', 'important');
                     el.style.setProperty('user-select', 'text', 'important');
+                    el.style.setProperty('caret-color', 'transparent', 'important');
 
-                    // If proxy input was focused during touch gesture, transition focus to backing input
-                    if (document.activeElement === proxyInput) {
+                    // If proxy input was focused during touchstart, smoothly transfer focus to Compose backing input
+                    var proxy = ensureProxyInput();
+                    if (document.activeElement === proxy || (proxy && proxy.matches && proxy.matches(':focus'))) {
                         setTimeout(function() {
                             try { el.focus(); } catch(e) {}
                         }, 10);
@@ -1350,8 +1378,9 @@
                 }
             }
 
-            // 3. MutationObserver to watch shadow roots and body for inputs
+            // 4. MutationObserver to watch shadow roots and body for inputs
             var inputObserver = new MutationObserver(function(mutations) {
+                ensureProxyInput();
                 for (var i = 0; i < mutations.length; i++) {
                     var m = mutations[i];
                     for (var j = 0; j < m.addedNodes.length; j++) {
@@ -1370,16 +1399,15 @@
             });
 
             function scanAndObserveInputs() {
+                ensureProxyInput();
                 if (document.body) inputObserver.observe(document.body, { childList: true, subtree: true });
-                var allEls = document.querySelectorAll('*');
-                for (var i = 0; i < allEls.length; i++) {
-                    var shadow = allEls[i].shadowRoot;
-                    if (shadow) {
-                        inputObserver.observe(shadow, { childList: true, subtree: true });
-                        var inputs = shadow.querySelectorAll('input, textarea');
-                        for (var j = 0; j < inputs.length; j++) {
-                            elevateBackingInput(inputs[j]);
-                        }
+                var roots = getAllShadowRoots();
+                for (var i = 0; i < roots.length; i++) {
+                    var shadow = roots[i];
+                    try { inputObserver.observe(shadow, { childList: true, subtree: true }); } catch(e) {}
+                    var inputs = shadow.querySelectorAll('input, textarea');
+                    for (var j = 0; j < inputs.length; j++) {
+                        elevateBackingInput(inputs[j]);
                     }
                 }
             }
@@ -1388,7 +1416,8 @@
             var prevAttachShadow = Element.prototype.attachShadow;
             Element.prototype.attachShadow = function() {
                 var shadow = prevAttachShadow.apply(this, arguments);
-                inputObserver.observe(shadow, { childList: true, subtree: true });
+                try { inputObserver.observe(shadow, { childList: true, subtree: true }); } catch(e) {}
+                setTimeout(scanAndObserveInputs, 50);
                 return shadow;
             };
 
@@ -1397,28 +1426,58 @@
             } else {
                 scanAndObserveInputs();
             }
+            setInterval(ensureProxyInput, 1000);
 
-            // 4. Synchronous touch event interception
+            // 5. Synchronous touch event interception for Keyboard & Mic Permission
             function onNativeTouch(e) {
+                ensureProxyInput();
                 if (!e.touches && !e.changedTouches) return;
                 var touch = (e.touches && e.touches.length > 0) ? e.touches[0] : e.changedTouches[0];
                 if (!touch) return;
                 var x = touch.clientX;
                 var y = touch.clientY;
 
-                // Collect textboxes from a11y trees and shadow roots
+                // Collect textboxes and mic buttons from a11y trees and shadow roots
                 var textboxes = [];
-                function collectTextboxes(root) {
+                var micButtons = [];
+
+                function checkA11yRoot(root) {
                     if (!root) return;
                     var tbs = root.querySelectorAll ? root.querySelectorAll('[role="textbox"]') : [];
                     for (var i = 0; i < tbs.length; i++) textboxes.push(tbs[i]);
-                    var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
-                    for (var j = 0; j < all.length; j++) {
-                        if (all[j].shadowRoot) collectTextboxes(all[j].shadowRoot);
+
+                    var buttons = root.querySelectorAll ? root.querySelectorAll('[role="button"]') : [];
+                    for (var j = 0; j < buttons.length; j++) {
+                        var bText = (buttons[j].innerText || buttons[j].textContent || "").trim();
+                        if (bText.indexOf("میکروفون") !== -1 || bText.indexOf("اجازه") !== -1 || bText.indexOf("صوتی") !== -1) {
+                            micButtons.push(buttons[j]);
+                        }
                     }
                 }
-                collectTextboxes(document);
 
+                var roots = getAllShadowRoots();
+                for (var rIdx = 0; rIdx < roots.length; rIdx++) {
+                    var a11y = roots[rIdx].querySelector('#cmp_a11y_root');
+                    if (a11y) checkA11yRoot(a11y);
+                }
+
+                // Check hit on Mic permission buttons to trigger synchronous getUserMedia on iOS Chrome / Safari
+                for (var m = 0; m < micButtons.length; m++) {
+                    var mb = micButtons[m];
+                    var mRect = mb.getBoundingClientRect();
+                    if (x >= mRect.left && x <= mRect.right && y >= mRect.top && y <= mRect.bottom) {
+                        try {
+                            if (window.aiSpeakingPermission && typeof window.aiSpeakingPermission.request === 'function') {
+                                window.aiSpeakingPermission.request();
+                            }
+                        } catch(err) {
+                            console.warn("[onNativeTouch] mic prompt trigger error:", err);
+                        }
+                        break;
+                    }
+                }
+
+                // Check hit on textboxes
                 var hitTextbox = null;
                 for (var i = 0; i < textboxes.length; i++) {
                     var tb = textboxes[i];
@@ -1430,22 +1489,18 @@
                 }
 
                 if (hitTextbox) {
-                    // Check if an elevated backing input is already available
+                    // Check if an elevated backing input is already available in any shadow root
                     var backingInput = null;
-                    var all = document.querySelectorAll('*');
-                    for (var i = 0; i < all.length; i++) {
-                        var shadow = all[i].shadowRoot;
-                        if (shadow) {
-                            var found = shadow.querySelector('input:not(#cmp_ios_keyboard_proxy), textarea:not(#cmp_ios_keyboard_proxy)');
-                            if (found) { backingInput = found; break; }
-                        }
+                    for (var s = 0; s < roots.length; s++) {
+                        var found = roots[s].querySelector('input:not(#cmp_ios_keyboard_proxy), textarea:not(#cmp_ios_keyboard_proxy)');
+                        if (found) { backingInput = found; break; }
                     }
 
                     if (backingInput) {
                         elevateBackingInput(backingInput);
-                        backingInput.focus();
+                        try { backingInput.focus(); } catch(e) {}
                     } else if (proxyInput) {
-                        proxyInput.focus();
+                        try { proxyInput.focus(); } catch(e) {}
                     }
                 }
             }
@@ -1454,5 +1509,5 @@
             window.addEventListener('touchend', onNativeTouch, { capture: true, passive: true });
         })();
     </script>
-    <script src="webApp.js?v=20261026v1"></script>
+    <script src="webApp.js?v=20261026v2"></script>
 </html>
