@@ -1,11 +1,9 @@
 package ir.aispeaking.main
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,12 +16,11 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -42,22 +39,19 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
-import ir.aispeaking.sharedui.ic_logo
 import ir.aispeaking.sharedui.ic_play
+import ir.aispeaking.sharedui.ui.core.button.AppBackButton
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
-import ir.aispeaking.sharedui.ui.game.GameChip
 import ir.aispeaking.sharedui.ui.game.GameText
-import ir.aispeaking.sharedui.ui.game.GlassPanel
 import ir.aispeaking.sharedui.ui.video.VideoPlayerBridgeHolder
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * Welcoming onboarding & intro video briefing screen.
- * Displays a warm, conversational explanation of the game's story journey (Tehran to London),
- * explains why watching the cinematic video sets the context for all speaking missions,
- * and allows the user to play the video with a single tap or skip straight to the game.
+ * Clean & minimalistic onboarding intro video briefing screen.
+ * Keeps the interface uncluttered, presenting only essential actions:
+ * play the intro video or proceed straight to the main game.
  */
 @Composable
 fun IntroVideoScreen(
@@ -120,190 +114,168 @@ fun IntroVideoScreen(
                     }
                 }
             } else {
-                // Briefing Screen
+                // Clean Minimalist Briefing Screen
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .statusBarsPadding()
                         .navigationBarsPadding()
                 ) {
-                    // Top Bar
-                    Row(
+                    // Top Bar (RTL: Start = Right, End = Left)
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        contentAlignment = Alignment.Center
                     ) {
-                        GameButton(
-                            text = "رد کردن ›",
-                            onClick = onSkip,
-                            style = GameButtonStyle.Glass,
-                            height = 36.dp,
-                            textSize = 12.sp
-                        )
-
-                        GameChip(
-                            text = "داستان سفر: تهران تا لندن",
-                            active = true,
-                            onClick = {}
-                        )
-                    }
-
-                    // Scrollable Briefing Content
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 20.dp, vertical = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Spacer(Modifier.height(4.dp))
-
-                        // Glowing Hero Avatar
-                        Box(
-                            modifier = Modifier
-                                .size(92.dp)
-                                .clip(CircleShape)
-                                .background(Color(0x220A84FF))
-                                .border(1.5.dp, Color(0x550A84FF), CircleShape),
-                            contentAlignment = Alignment.Center
+                        // Start Anchor: Back Button
+                        Row(
+                            modifier = Modifier.align(Alignment.CenterStart),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Image(
-                                painter = painterResource(Res.drawable.ic_logo),
-                                contentDescription = "AI Speaking Hero",
-                                modifier = Modifier
-                                    .size(68.dp)
-                                    .clip(CircleShape)
-                            )
+                            AppBackButton(onClick = onSkip)
                         }
 
-                        // Welcoming Heading
+                        // Symmetrical Center Title
                         GameText(
-                            text = "سلام همسفر! خیلی خوش اومدی 👋",
-                            size = 21.sp,
+                            text = "ویدیو معرفی",
+                            size = 17.sp,
                             bold = true,
                             align = TextAlign.Center
                         )
 
-                        // Warm & Conversational "Why Watch" Explanation
-                        GameText(
-                            text = "اینجا یادگیری زبان مثل یک بازی واقعیه؛ قراره پا جای پای کسی بذاری که چمدونش رو در تهران بسته و راهی لندن شده!\nاز سفارش غذا توی هواپیما گرفته تا گپ زدن با هم‌اتاقی‌ها و مصاحبه کاری، همه مکالمه‌ها تکه‌ای از همین ماجراجویی هستن.\n\nدیدن این ویدیوی کوتاه ۱۰ ثانیه‌ای کمکت می‌کنه حس و حال شروع سفر رو لمس کنی و بدونی در طول بازی با چه کسی و چرا داری انگلیسی صحبت می‌کنی.",
-                            size = 14.sp,
-                            lineHeight = 24.sp,
-                            color = Game.TextSecondary,
-                            align = TextAlign.Center,
-                            modifier = Modifier.widthIn(max = 440.dp)
-                        )
+                        // End Anchor: Quick Skip Button
+                        Row(
+                            modifier = Modifier.align(Alignment.CenterEnd),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            GameButton(
+                                text = "رد کردن",
+                                onClick = onSkip,
+                                style = GameButtonStyle.Glass,
+                                height = 36.dp,
+                                textSize = 12.sp
+                            )
+                        }
+                    }
 
-                        // 3 Key Story Pillars in Liquid Glass Panel
-                        GlassPanel(
+                    // Centered Content
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(horizontal = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .widthIn(max = 440.dp),
-                            shape = RoundedCornerShape(20.dp)
+                                .widthIn(max = 380.dp)
+                                .verticalScroll(rememberScrollState()),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            Spacer(Modifier.height(10.dp))
+
+                            // Glowing Hero Play Preview Badge
+                            Box(
+                                modifier = Modifier
+                                    .size(108.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.radialGradient(
+                                            colors = listOf(
+                                                Color(0x330A84FF),
+                                                Color(0x120A84FF),
+                                                Color(0x050A84FF)
+                                            )
+                                        )
+                                    )
+                                    .border(
+                                        width = 1.5.dp,
+                                        brush = Brush.linearGradient(
+                                            listOf(
+                                                Color(0x880A84FF),
+                                                Color(0x220A84FF)
+                                            )
+                                        ),
+                                        shape = CircleShape
+                                    )
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                        onClick = { isPlayingVideo = true }
+                                    ),
+                                contentAlignment = Alignment.Center
                             ) {
-                                StoryPillarRow(
-                                    emoji = "✈️",
-                                    title = "آغاز پرواز در دل شب",
-                                    desc = "شروع واقعی با اولین مکالمه روی صندلی پرواز به لندن"
+                                Box(
+                                    modifier = Modifier
+                                        .size(56.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF007AFF)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.ic_play),
+                                        contentDescription = "پخش ویدیو",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(26.dp)
+                                    )
+                                }
+                            }
+
+                            // Title & Minimal Subtitle
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                GameText(
+                                    text = "داستان سفر: تهران تا لندن",
+                                    size = 20.sp,
+                                    bold = true,
+                                    align = TextAlign.Center
                                 )
-                                StoryPillarRow(
-                                    emoji = "🎭",
-                                    title = "شخصیت‌ها و چالش‌های زنده",
-                                    desc = "تمرین انگلیسی در شرایط و موقعیت‌های طبیعی روزمره"
-                                )
-                                StoryPillarRow(
-                                    emoji = "🎯",
-                                    title = "ماموریت‌های زبانی هدفمند",
-                                    desc = "هر مکالمه یک هدف مشخص داره تا قدم‌به‌قدم پیشرفت کنی"
+
+                                GameText(
+                                    text = "یک نگاه کوتاه به ماجرای سفر و مسیر پیش‌رو",
+                                    size = 14.sp,
+                                    color = Game.TextSecondary,
+                                    align = TextAlign.Center
                                 )
                             }
+
+                            Spacer(Modifier.height(8.dp))
+
+                            // Action Buttons
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                GameButton(
+                                    text = "تماشای ویدیو",
+                                    icon = Res.drawable.ic_play,
+                                    onClick = { isPlayingVideo = true },
+                                    style = GameButtonStyle.Primary,
+                                    height = 50.dp,
+                                    textSize = 15.sp,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                GameButton(
+                                    text = "ورود به بازی",
+                                    onClick = onSkip,
+                                    style = GameButtonStyle.Glass,
+                                    height = 46.dp,
+                                    textSize = 14.sp,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+
+                            Spacer(Modifier.height(10.dp))
                         }
-
-                        Spacer(Modifier.height(4.dp))
-
-                        // Primary Action: Watch Video
-                        GameButton(
-                            text = "تماشای داستان شروع سفر (۱۰ ثانیه) ▶",
-                            icon = Res.drawable.ic_play,
-                            onClick = { isPlayingVideo = true },
-                            style = GameButtonStyle.Primary,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .widthIn(max = 440.dp)
-                                .height(52.dp),
-                            textSize = 15.sp
-                        )
-
-                        // Secondary Action: Skip
-                        GameButton(
-                            text = "رد کردن و ورود مستقیم به مراحل ›",
-                            onClick = onSkip,
-                            style = GameButtonStyle.Glass,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .widthIn(max = 440.dp)
-                                .height(44.dp),
-                            textSize = 13.sp
-                        )
-
-                        // Footer Replay Note
-                        GameText(
-                            text = "می‌تونی این ویدیو رو هر زمان که خواستی از بخش پروفایلت هم دوباره تماشا کنی.",
-                            size = 12.sp,
-                            color = Game.TextMuted,
-                            align = TextAlign.Center,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun StoryPillarRow(
-    emoji: String,
-    title: String,
-    desc: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(38.dp)
-                .clip(CircleShape)
-                .background(Color(0x22FFFFFF)),
-            contentAlignment = Alignment.Center
-        ) {
-            GameText(text = emoji, size = 18.sp)
-        }
-
-        Column(modifier = Modifier.weight(1f)) {
-            GameText(
-                text = title,
-                size = 13.sp,
-                bold = true,
-                color = Game.TextPrimary
-            )
-            GameText(
-                text = desc,
-                size = 11.5.sp,
-                lineHeight = 16.sp,
-                color = Game.TextSecondary
-            )
         }
     }
 }
