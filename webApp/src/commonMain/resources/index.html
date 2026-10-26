@@ -610,8 +610,8 @@
                     }
                 };
 
-                // Use soft ideal constraints to prevent OverconstrainedError on iOS WebKit
-                var preferredConstraints = {
+                // On iOS WebKit (Safari & Chrome iOS), directly use { audio: true } to prevent user gesture token expiration
+                var preferredConstraints = this._isIOS ? { audio: true } : {
                     audio: {
                         echoCancellation: { ideal: true },
                         noiseSuppression: { ideal: true },
@@ -620,6 +620,22 @@
                 };
 
                 getUserMediaFn(preferredConstraints).then(handleStreamAcquired).catch(function(err) {
+                    if (self._isIOS) {
+                        console.error("[aiSpeakingSpeech] getUserMedia iOS error:", err);
+                        self.isRecording = false;
+                        self._userWantsRecording = false;
+                        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                            var msg = "دسترسی به میکروفون تایید نشد.\nلطفاً در تنظیمات آیفون (Settings > Chrome یا Safari > Microphone) دسترسی میکروفون را فعال کنید.";
+                            if (!self._checkSecureContext()) {
+                                msg += "\n\n(نکته: در مرورگرهای موبایل، دسترسی به میکروفون نیازمند HTTPS است.)";
+                            }
+                            alert(msg);
+                        } else {
+                            self._startRecognitionInstance();
+                        }
+                        return;
+                    }
+
                     console.warn("[aiSpeakingSpeech] Preferred getUserMedia failed, retrying with basic { audio: true }:", err);
                     getUserMediaFn({ audio: true }).then(handleStreamAcquired).catch(function(finalErr) {
                         console.error("[aiSpeakingSpeech] getUserMedia final error:", finalErr);
@@ -838,11 +854,19 @@
                 var self = this;
                 var isIOS = self._isIOSDevice();
 
+                // Clear any bad cached 'false' state from prior failed requests
+                try {
+                    if (localStorage.getItem('mic_perm_granted') === 'false') {
+                        localStorage.removeItem('mic_perm_granted');
+                    }
+                } catch(e) {}
+
                 // On WebKit iOS (Safari & Chrome iOS), permissions.query({ name: 'microphone' }) throws TypeError
                 if (isIOS) {
                     try {
                         var stored = localStorage.getItem('mic_perm_granted');
-                        self._state = (stored === 'true') ? 'granted' : (stored === 'false' ? 'denied' : 'prompt');
+                        // On iOS, never lock to 'denied' in check() without an explicit fresh prompt
+                        self._state = (stored === 'true') ? 'granted' : 'prompt';
                     } catch(e) {
                         self._state = 'prompt';
                     }
@@ -855,18 +879,19 @@
                             self._state = result.state;
                             try {
                                 if (result.state === 'granted') localStorage.setItem('mic_perm_granted', 'true');
-                                else if (result.state === 'denied') localStorage.setItem('mic_perm_granted', 'false');
+                                else localStorage.removeItem('mic_perm_granted');
                             } catch(e) {}
                             result.onchange = function() {
                                 self._state = result.state;
                                 try {
-                                    localStorage.setItem('mic_perm_granted', result.state === 'granted' ? 'true' : 'false');
+                                    if (result.state === 'granted') localStorage.setItem('mic_perm_granted', 'true');
+                                    else localStorage.removeItem('mic_perm_granted');
                                 } catch(e) {}
                             };
                         }).catch(function() {
                             try {
                                 var s = localStorage.getItem('mic_perm_granted');
-                                self._state = (s === 'true') ? 'granted' : (s === 'false' ? 'denied' : 'prompt');
+                                self._state = (s === 'true') ? 'granted' : 'prompt';
                             } catch(e) {
                                 self._state = 'prompt';
                             }
@@ -874,7 +899,7 @@
                     } catch(err) {
                         try {
                             var s = localStorage.getItem('mic_perm_granted');
-                            self._state = (s === 'true') ? 'granted' : (s === 'false' ? 'denied' : 'prompt');
+                            self._state = (s === 'true') ? 'granted' : 'prompt';
                         } catch(e) {
                             self._state = 'prompt';
                         }
@@ -882,7 +907,7 @@
                 } else {
                     try {
                         var s = localStorage.getItem('mic_perm_granted');
-                        self._state = (s === 'true') ? 'granted' : (s === 'false' ? 'denied' : 'prompt');
+                        self._state = (s === 'true') ? 'granted' : 'prompt';
                     } catch(e) {
                         self._state = 'prompt';
                     }
@@ -943,7 +968,7 @@
                     self._state = "denied";
                     self._lastResult = "denied";
                     self._isRequesting = false;
-                    try { localStorage.setItem('mic_perm_granted', 'false'); } catch(e) {}
+                    try { localStorage.removeItem('mic_perm_granted'); } catch(e) {}
                 });
             },
 
@@ -1280,6 +1305,154 @@
                 if (scanCount > 20) clearInterval(scanInterval);
             }, 500);
         })();
+
+        // iOS WebKit (Safari & Chrome on iOS) Virtual Keyboard Bridge (CMP-10858 / CMP-8013)
+        (function() {
+            var ua = navigator.userAgent || '';
+            var isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            if (!isIOS) return;
+
+            // 1. Dedicated transparent proxy input
+            var proxyInput = document.getElementById('cmp_ios_keyboard_proxy');
+            if (!proxyInput) {
+                proxyInput = document.createElement('textarea');
+                proxyInput.id = 'cmp_ios_keyboard_proxy';
+                proxyInput.setAttribute('autocomplete', 'off');
+                proxyInput.setAttribute('autocorrect', 'off');
+                proxyInput.setAttribute('autocapitalize', 'off');
+                proxyInput.setAttribute('spellcheck', 'false');
+                proxyInput.setAttribute('tabindex', '-1');
+                // 16px font-size prevents iOS Safari/WebKit auto-zoom on focus
+                proxyInput.style.cssText = 'position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; font-size: 16px; border: none; outline: none; background: transparent; pointer-events: none; z-index: 99998;';
+                if (document.body) document.body.appendChild(proxyInput);
+                else window.addEventListener('DOMContentLoaded', function() { document.body.appendChild(proxyInput); });
+            }
+
+            // 2. Helper to elevate backing input created by Compose
+            function elevateBackingInput(el) {
+                if (!el) return;
+                var tag = (el.tagName || '').toUpperCase();
+                if (tag === 'INPUT' || tag === 'TEXTAREA') {
+                    if (el.id === 'cmp_ios_keyboard_proxy') return;
+                    el.style.setProperty('z-index', '99999', 'important');
+                    el.style.setProperty('pointer-events', 'auto', 'important');
+                    el.style.setProperty('opacity', '0.01', 'important');
+                    el.style.setProperty('font-size', '16px', 'important');
+                    el.style.setProperty('-webkit-user-select', 'text', 'important');
+                    el.style.setProperty('user-select', 'text', 'important');
+
+                    // If proxy input was focused during touch gesture, transition focus to backing input
+                    if (document.activeElement === proxyInput) {
+                        setTimeout(function() {
+                            try { el.focus(); } catch(e) {}
+                        }, 10);
+                    }
+                }
+            }
+
+            // 3. MutationObserver to watch shadow roots and body for inputs
+            var inputObserver = new MutationObserver(function(mutations) {
+                for (var i = 0; i < mutations.length; i++) {
+                    var m = mutations[i];
+                    for (var j = 0; j < m.addedNodes.length; j++) {
+                        var node = m.addedNodes[j];
+                        if (node.nodeType === 1) {
+                            elevateBackingInput(node);
+                            if (node.querySelectorAll) {
+                                var children = node.querySelectorAll('input, textarea');
+                                for (var k = 0; k < children.length; k++) {
+                                    elevateBackingInput(children[k]);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            function scanAndObserveInputs() {
+                if (document.body) inputObserver.observe(document.body, { childList: true, subtree: true });
+                var allEls = document.querySelectorAll('*');
+                for (var i = 0; i < allEls.length; i++) {
+                    var shadow = allEls[i].shadowRoot;
+                    if (shadow) {
+                        inputObserver.observe(shadow, { childList: true, subtree: true });
+                        var inputs = shadow.querySelectorAll('input, textarea');
+                        for (var j = 0; j < inputs.length; j++) {
+                            elevateBackingInput(inputs[j]);
+                        }
+                    }
+                }
+            }
+
+            // Hook attachShadow to catch dynamically mounted shadow roots
+            var prevAttachShadow = Element.prototype.attachShadow;
+            Element.prototype.attachShadow = function() {
+                var shadow = prevAttachShadow.apply(this, arguments);
+                inputObserver.observe(shadow, { childList: true, subtree: true });
+                return shadow;
+            };
+
+            if (document.readyState === 'loading') {
+                window.addEventListener('DOMContentLoaded', scanAndObserveInputs);
+            } else {
+                scanAndObserveInputs();
+            }
+
+            // 4. Synchronous touch event interception
+            function onNativeTouch(e) {
+                if (!e.touches && !e.changedTouches) return;
+                var touch = (e.touches && e.touches.length > 0) ? e.touches[0] : e.changedTouches[0];
+                if (!touch) return;
+                var x = touch.clientX;
+                var y = touch.clientY;
+
+                // Collect textboxes from a11y trees and shadow roots
+                var textboxes = [];
+                function collectTextboxes(root) {
+                    if (!root) return;
+                    var tbs = root.querySelectorAll ? root.querySelectorAll('[role="textbox"]') : [];
+                    for (var i = 0; i < tbs.length; i++) textboxes.push(tbs[i]);
+                    var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
+                    for (var j = 0; j < all.length; j++) {
+                        if (all[j].shadowRoot) collectTextboxes(all[j].shadowRoot);
+                    }
+                }
+                collectTextboxes(document);
+
+                var hitTextbox = null;
+                for (var i = 0; i < textboxes.length; i++) {
+                    var tb = textboxes[i];
+                    var r = tb.getBoundingClientRect();
+                    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+                        hitTextbox = tb;
+                        break;
+                    }
+                }
+
+                if (hitTextbox) {
+                    // Check if an elevated backing input is already available
+                    var backingInput = null;
+                    var all = document.querySelectorAll('*');
+                    for (var i = 0; i < all.length; i++) {
+                        var shadow = all[i].shadowRoot;
+                        if (shadow) {
+                            var found = shadow.querySelector('input:not(#cmp_ios_keyboard_proxy), textarea:not(#cmp_ios_keyboard_proxy)');
+                            if (found) { backingInput = found; break; }
+                        }
+                    }
+
+                    if (backingInput) {
+                        elevateBackingInput(backingInput);
+                        backingInput.focus();
+                    } else if (proxyInput) {
+                        proxyInput.focus();
+                    }
+                }
+            }
+
+            window.addEventListener('touchstart', onNativeTouch, { capture: true, passive: true });
+            window.addEventListener('touchend', onNativeTouch, { capture: true, passive: true });
+        })();
     </script>
-    <script src="webApp.js?v=20261023v9"></script>
+    <script src="webApp.js?v=20261026v1"></script>
 </html>

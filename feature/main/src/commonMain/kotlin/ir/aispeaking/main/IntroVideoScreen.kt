@@ -100,7 +100,7 @@ fun IntroVideoScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         GameText(
-                            text = "در حال پخش داستان سفر...",
+                            text = "در حال پخش داستان بازی...",
                             size = 15.sp,
                             color = Game.TextSecondary
                         )
@@ -138,7 +138,7 @@ fun IntroVideoScreen(
 
                         // Symmetrical Center Title
                         GameText(
-                            text = "ویدیو معرفی",
+                            text = "داستان بازی",
                             size = 17.sp,
                             bold = true,
                             align = TextAlign.Center
@@ -224,21 +224,22 @@ fun IntroVideoScreen(
                                 }
                             }
 
-                            // Title & Minimal Subtitle
+                            // Title & Clear, Short Story Motivation
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 GameText(
-                                    text = "داستان سفر: تهران تا لندن",
+                                    text = "داستان بازی چطور شروع می‌شود؟",
                                     size = 20.sp,
                                     bold = true,
                                     align = TextAlign.Center
                                 )
 
                                 GameText(
-                                    text = "یک نگاه کوتاه به ماجرای سفر و مسیر پیش‌رو",
+                                    text = "تمام تمرین‌ها و مراحل این برنامه، مأموریت‌های یک سفر واقعی از تهران تا لندن هستند. این ویدیوی کوتاه را ببینید تا با هدف بازی و نقش خودتان در این مسیر آشنا شوید.",
                                     size = 14.sp,
+                                    lineHeight = 23.sp,
                                     color = Game.TextSecondary,
                                     align = TextAlign.Center
                                 )
@@ -252,7 +253,7 @@ fun IntroVideoScreen(
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
                                 GameButton(
-                                    text = "تماشای ویدیو",
+                                    text = "تماشای داستان بازی",
                                     icon = Res.drawable.ic_play,
                                     onClick = { isPlayingVideo = true },
                                     style = GameButtonStyle.Primary,
@@ -262,7 +263,7 @@ fun IntroVideoScreen(
                                 )
 
                                 GameButton(
-                                    text = "ورود به بازی",
+                                    text = "ورود مستقیم به مراحل",
                                     onClick = onSkip,
                                     style = GameButtonStyle.Glass,
                                     height = 46.dp,
