@@ -18,6 +18,8 @@ import ir.speaking.feature.admin.subscription.routing.adminSubscriptionRouting
 import ir.speaking.feature.admin.subscription.service.AdminSubscriptionService
 import ir.speaking.feature.admin.user.routing.adminUserRouting
 import ir.speaking.feature.admin.user.service.AdminUserService
+import ir.speaking.feature.announcement.routing.adminAnnouncementRouting
+import ir.speaking.feature.announcement.service.AnnouncementService
 
 fun Application.adminRouting() {
     val auditLogService = AuditLogService()
@@ -28,6 +30,7 @@ fun Application.adminRouting() {
     val adminDashboardService = AdminDashboardService()
     val adminPromoService = AdminPromoService()
     val adminNotificationService = AdminNotificationService()
+    val announcementService = AnnouncementService()
 
     routing {
         adminAuthRouting(adminAuthService, auditLogService)
@@ -37,6 +40,7 @@ fun Application.adminRouting() {
         adminDashboardRouting(adminDashboardService, auditLogService)
         adminPromoRouting(adminPromoService, auditLogService)
         adminNotificationRouting(adminNotificationService, auditLogService)
+        adminAnnouncementRouting(announcementService, auditLogService)
         adminMediaRouting()
     }
 }

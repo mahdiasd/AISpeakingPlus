@@ -309,3 +309,46 @@ export interface AdminNotificationResponse {
   targetType: string;
 }
 
+// In-App Announcements Models
+export type AnnouncementType = 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS';
+export type AnnouncementActionType = 'CLOSE' | 'OPEN_URL' | 'NAVIGATE' | 'RELOAD';
+
+export interface AnnouncementItem {
+  id: string;
+  title: string;
+  message: string;
+  type: AnnouncementType;
+  imageUrl?: string | null;
+  isBlocking: boolean;
+  isActive: boolean;
+  primaryButtonText: string;
+  primaryButtonAction: AnnouncementActionType;
+  primaryButtonValue?: string | null;
+  secondaryButtonText?: string | null;
+  secondaryButtonAction?: AnnouncementActionType | null;
+  secondaryButtonValue?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AnnouncementUpsertPayload {
+  title: string;
+  message: string;
+  type: AnnouncementType;
+  imageUrl?: string | null;
+  isBlocking: boolean;
+  isActive: boolean;
+  primaryButtonText: string;
+  primaryButtonAction: AnnouncementActionType;
+  primaryButtonValue?: string | null;
+  secondaryButtonText?: string | null;
+  secondaryButtonAction?: AnnouncementActionType | null;
+  secondaryButtonValue?: string | null;
+}
+
+export interface AnnouncementListResponse {
+  announcements: AnnouncementItem[];
+  activeAnnouncementId?: string | null;
+}
+
+

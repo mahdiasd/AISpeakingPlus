@@ -14,6 +14,7 @@ import { PromoCodesPage } from './pages/PromoCodesPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
 import { VoiceLabPage } from './pages/VoiceLabPage';
 import { NotificationsPage } from './pages/NotificationsPage';
+import { AnnouncementsPage } from './pages/AnnouncementsPage';
 
 export const App: React.FC = () => {
   return (
@@ -39,6 +40,7 @@ export const App: React.FC = () => {
               <Route path="stages/new" element={<StageEditorPage />} />
               <Route path="stages/:id" element={<StageEditorPage />} />
               <Route path="voice-lab" element={<VoiceLabPage />} />
+              <Route path="announcements" element={<AnnouncementsPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="promo-codes" element={<PromoCodesPage />} />
@@ -49,6 +51,7 @@ export const App: React.FC = () => {
             <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/stages" element={<Navigate to="/admin/stages" replace />} />
             <Route path="/voice-lab" element={<Navigate to="/admin/voice-lab" replace />} />
+            <Route path="/announcements" element={<Navigate to="/admin/announcements" replace />} />
             <Route path="/notifications" element={<Navigate to="/admin/notifications" replace />} />
             <Route path="/users" element={<Navigate to="/admin/users" replace />} />
             <Route path="/promo-codes" element={<Navigate to="/admin/promo-codes" replace />} />

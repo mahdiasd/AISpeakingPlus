@@ -23,6 +23,9 @@ import {
   PromoRedemptionItem,
   AdminNotificationPayload,
   AdminNotificationResponse,
+  AnnouncementItem,
+  AnnouncementListResponse,
+  AnnouncementUpsertPayload,
 } from '../types';
 
 const BASE_URL = '';
@@ -383,6 +386,42 @@ class ApiClient {
   async getPromoRedemptions(id: string): Promise<PromoRedemptionItem[]> {
     const res = await this.request<PromoRedemptionItem[]>(`/api/admin/promo-codes/${id}/redemptions`);
     return res.data;
+  }
+
+  // --- In-App Announcements ---
+  async getAnnouncements(): Promise<AnnouncementListResponse> {
+    const res = await this.request<AnnouncementListResponse>('/api/admin/announcements');
+    return res.data;
+  }
+
+  async createAnnouncement(payload: AnnouncementUpsertPayload): Promise<AnnouncementItem> {
+    const res = await this.request<AnnouncementItem>('/api/admin/announcements', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return res.data;
+  }
+
+  async updateAnnouncement(id: string, payload: AnnouncementUpsertPayload): Promise<AnnouncementItem> {
+    const res = await this.request<AnnouncementItem>(`/api/admin/announcements/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+    return res.data;
+  }
+
+  async toggleAnnouncementActive(id: string): Promise<AnnouncementItem> {
+    const res = await this.request<AnnouncementItem>(`/api/admin/announcements/${id}/toggle-active`, {
+      method: 'POST',
+    });
+    return res.data;
+  }
+
+  async deleteAnnouncement(id: string): Promise<boolean> {
+    const res = await this.request<{ deleted: boolean }>(`/api/admin/announcements/${id}`, {
+      method: 'DELETE',
+    });
+    return res.data?.deleted ?? true;
   }
 
   // --- Push Notifications ---

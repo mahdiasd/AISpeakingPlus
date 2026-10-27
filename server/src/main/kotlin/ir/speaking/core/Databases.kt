@@ -11,6 +11,7 @@ import ir.speaking.feature.subscription.db.MarketPaymentTable
 import ir.speaking.feature.subscription.db.PromoCodeTable
 import ir.speaking.feature.subscription.db.SubscriptionTable
 import ir.speaking.feature.user.db.UserTable
+import ir.speaking.feature.announcement.db.AnnouncementTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
@@ -31,7 +32,8 @@ private val allTables = arrayOf<Table>(
     AdminAuditTable,
     PromoCodeTable,
     PromoCodeRedemptionTable,
-    MarketPaymentTable
+    MarketPaymentTable,
+    AnnouncementTable
 )
 
 fun configureDatabases() {

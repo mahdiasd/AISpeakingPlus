@@ -11,6 +11,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.*
 import io.ktor.utils.io.*
 import ir.speaking.feature.admin.routing.adminRouting
+import ir.speaking.feature.announcement.routing.announcementRouting
 import ir.speaking.feature.leaderboard.routing.leaderboardRouting
 import ir.speaking.feature.stage.routing.stageRouting
 import ir.speaking.feature.stage_progress.routing.progressRouting
@@ -31,6 +32,7 @@ fun Application.configureRouting() {
     progressRouting()
     subscriptionRouting()
     leaderboardRouting()
+    announcementRouting()
     adminRouting()
 
     routing {

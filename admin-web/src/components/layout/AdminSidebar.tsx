@@ -9,6 +9,7 @@ import {
   AudioWaveform,
   TicketPercent,
   Bell,
+  Megaphone,
   X,
 } from 'lucide-react';
 
@@ -33,6 +34,11 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       to: '/admin/voice-lab',
       label: 'آزمایشگاه صوت (TTS & STT)',
       icon: AudioWaveform,
+    },
+    {
+      to: '/admin/announcements',
+      label: 'پیام‌ها و اطلاعیه‌ها',
+      icon: Megaphone,
     },
     {
       to: '/admin/notifications',
