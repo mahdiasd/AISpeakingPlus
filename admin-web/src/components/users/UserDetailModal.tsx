@@ -122,8 +122,8 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
         ) : (
           <div className="space-y-6">
             {/* Top Identity Card */}
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-[#0E1422] border border-slate-200 dark:border-slate-800 shadow-xs">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 flex items-center justify-center text-indigo-700 dark:text-indigo-400 font-bold text-2xl shrink-0 shadow-xs">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] shadow-2xs">
+              <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-[#282a30] border border-slate-200 dark:border-[#383b44] flex items-center justify-center text-indigo-700 dark:text-indigo-400 font-bold text-2xl shrink-0 shadow-2xs">
                 {user.nickName ? user.nickName.charAt(0) : <User className="w-8 h-8" />}
               </div>
 
@@ -171,7 +171,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
             )}
 
             {/* Subscription Section */}
-            <div className="rounded-2xl bg-slate-50 dark:bg-[#0E1422] border border-slate-200 dark:border-slate-800 p-5 space-y-3.5 shadow-xs">
+            <div className="rounded-2xl bg-slate-50 dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] p-5 space-y-3.5 shadow-xs">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Award className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -188,10 +188,10 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
               </div>
 
               {user.activeSubscription ? (
-                <div className="p-4 rounded-xl bg-white dark:bg-[#0B0F17]/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                <div className="p-4 rounded-xl bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-slate-900 dark:text-slate-100 font-mono">
+                      <span className="text-sm font-bold text-slate-900 dark:text-[#f1f3f5] font-mono">
                         طرح {user.activeSubscription.planType}
                       </span>
                       {user.activeSubscription.grantSource === 'MANUAL_ADMIN' ? (
@@ -216,7 +216,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 dark:text-slate-400 pt-1 font-mono">
+                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 dark:text-[#9ca3af] pt-1 font-mono">
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
                       <span>شروع: {new Date(user.activeSubscription.startedAt).toLocaleDateString('fa-IR')}</span>
@@ -228,14 +228,14 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   </div>
 
                   {user.activeSubscription.grantReason && (
-                    <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                    <div className="mt-2 pt-2 border-t border-slate-100 dark:border-[#2d3037] text-xs text-slate-600 dark:text-slate-300">
                       <span className="text-slate-400">یادداشت و علت ثبت: </span>
                       <span className="italic">{user.activeSubscription.grantReason}</span>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="p-3.5 rounded-xl bg-white dark:bg-[#0B0F17]/40 border border-slate-200 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                <div className="p-3.5 rounded-xl bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] text-sm text-slate-500 dark:text-[#9ca3af] flex items-center justify-between">
                   <span>این کاربر در حال حاضر اشتراک فعالی ندارد.</span>
                   <span className="text-xs text-amber-600 dark:text-amber-400 font-mono font-medium">پلن پایه (رایگان)</span>
                 </div>
@@ -250,7 +250,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                     {subscriptions.map((sub) => (
                       <div
                         key={sub.id}
-                        className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-white/70 dark:bg-[#0B0F17]/40 border border-slate-200/70 dark:border-slate-800/70"
+                        className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-white/70 dark:bg-[#18191b]/60 border border-slate-200/70 dark:border-[#2d3037]"
                       >
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
@@ -295,7 +295,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   value={suspendReason}
                   onChange={(e) => setSuspendReason(e.target.value)}
                   placeholder="مثال: نقض قوانین مکالمه صوتی، توهین یا سوءاستفاده"
-                  className="w-full rounded-xl bg-white dark:bg-[#0E1422] border border-rose-300 dark:border-rose-800/60 text-slate-900 dark:text-slate-100 text-sm p-3 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20 transition-colors"
+                  className="w-full rounded-xl bg-white dark:bg-[#24262b] border border-rose-300 dark:border-rose-800/60 text-slate-900 dark:text-slate-100 text-sm p-3 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20 transition-colors"
                   autoFocus
                 />
                 <div className="flex justify-end gap-2">

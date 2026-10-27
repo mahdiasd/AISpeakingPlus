@@ -11,7 +11,7 @@ export const AdminLayout: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#0B0F17] flex flex-col items-center justify-center gap-3">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#18191b] flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-spin" />
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400">در حال بررسی نشست ادمین...</p>
       </div>
@@ -23,7 +23,7 @@ export const AdminLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0B0F17] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-150">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#18191b] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-150">
       {/* Sidebar */}
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 

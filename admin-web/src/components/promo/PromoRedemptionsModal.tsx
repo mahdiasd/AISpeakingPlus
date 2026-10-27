@@ -109,7 +109,7 @@ export const PromoRedemptionsModal: React.FC<PromoRedemptionsModalProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="جستجو بر اساس شماره موبایل یا نام کاربر..."
-            className="w-full pl-3 pr-9 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400"
+            className="w-full pl-3 pr-9 py-2 rounded-xl border border-slate-200 dark:border-[#363842] bg-white dark:bg-[#24262b] text-slate-900 dark:text-[#f1f3f5] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400 dark:placeholder-[#858a94]"
           />
           <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
         </div>
@@ -126,7 +126,7 @@ export const PromoRedemptionsModal: React.FC<PromoRedemptionsModalProps> = ({
             <span>{errorMsg}</span>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-12 text-center text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+          <div className="py-12 text-center text-slate-400 border border-dashed border-slate-200 dark:border-[#2d3037] rounded-2xl">
             <Users className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
             <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
               هنوز هیچ کاربری از این کد تخفیف استفاده نکرده است.
@@ -136,9 +136,9 @@ export const PromoRedemptionsModal: React.FC<PromoRedemptionsModalProps> = ({
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-[#2d3037]">
             <table className="w-full text-right text-xs">
-              <thead className="bg-slate-50 dark:bg-[#0E1422] border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold select-none">
+              <thead className="bg-slate-50 dark:bg-[#1b1c1f] border-b border-slate-200 dark:border-[#2d3037] text-slate-500 dark:text-[#9ca3af] font-semibold select-none">
                 <tr>
                   <th className="py-3 px-4">کاربر خریدار</th>
                   <th className="py-3 px-4">پلن خریداری‌شده</th>

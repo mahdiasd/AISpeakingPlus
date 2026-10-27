@@ -54,13 +54,13 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0B0F17] flex flex-col justify-center items-center px-4 relative overflow-hidden transition-colors duration-150">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#18191b] flex flex-col justify-center items-center px-4 relative overflow-hidden transition-colors duration-150">
       {/* Theme toggle in corner */}
       <div className="absolute top-6 left-6 z-20">
         <button
           onClick={toggleTheme}
           title={resolvedTheme === 'dark' ? 'تغییر به حالت روشن' : 'تغییر به حالت تاریک'}
-          className="p-2.5 rounded-xl bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-xs transition-colors"
+          className="p-2.5 rounded-xl bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-xs transition-colors"
         >
           {resolvedTheme === 'dark' ? (
             <Sun className="w-5 h-5 text-amber-400" />
@@ -74,7 +74,7 @@ export const LoginPage: React.FC = () => {
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[36rem] h-[36rem] bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Login Card */}
-      <div className="relative w-full max-w-md bg-white dark:bg-[#111726]/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-8 sm:p-10 shadow-xl dark:shadow-[0_24px_60px_rgba(0,0,0,0.8),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+      <div className="relative w-full max-w-md bg-white dark:bg-[#202125]/95 backdrop-blur-xl border border-slate-200 dark:border-[#2d3037] rounded-3xl p-8 sm:p-10 shadow-xl dark:shadow-[0_24px_60px_rgba(0,0,0,0.8),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
         {/* Header / Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 shadow-xs mb-4 text-indigo-600 dark:text-indigo-400">

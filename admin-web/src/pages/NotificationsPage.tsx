@@ -248,21 +248,18 @@ export const NotificationsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-12 max-w-7xl mx-auto">
+    <div className="space-y-4 pb-12 max-w-7xl mx-auto">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#0E1422] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
-            <Bell className="w-6 h-6" />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#202125] p-5 rounded-2xl border border-slate-200 dark:border-[#2d3037] shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-[#282a30] border border-slate-200 dark:border-[#383b44] flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+            <Bell className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">ارسال پوش‌نوتیفیکیشن (FCM)</h1>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-[#f1f3f5]">ارسال پوش‌نوتیفیکیشن</h1>
               <Badge variant="info" size="sm">FCM v1</Badge>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              ارسال پیام به همراه دیپ‌لینک برای هدایت خودکار کاربران در اپلیکیشن اندروید و مرورگرهای وب
-            </p>
           </div>
         </div>
 
@@ -326,15 +323,12 @@ export const NotificationsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Form (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <form onSubmit={handleSend} className="bg-white dark:bg-[#0E1422] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-5">
-            <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <form onSubmit={handleSend} className="bg-white dark:bg-[#202125] p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-[#2d3037] shadow-2xs space-y-5">
+            <div className="border-b border-slate-100 dark:border-[#2d3037] pb-3.5">
+              <h2 className="text-base font-bold text-slate-900 dark:text-[#f1f3f5] flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-indigo-500" />
                 محتوا و جزئیات پیام
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                متن عنوان و پیام ارسالی که روی صفحه قفل یا نوار اعلان کاربر ظاهر می‌شود
-              </p>
             </div>
 
             {/* Title */}
@@ -354,7 +348,7 @@ export const NotificationsPage: React.FC = () => {
                 متن پیام نوتیفیکیشن *
               </label>
               <textarea
-                className="w-full rounded-xl bg-white border border-slate-300 dark:border-slate-800 text-slate-900 placeholder-slate-400 text-sm px-3.5 py-2.5 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-[#0B0F17] focus:border-indigo-600 dark:focus:border-indigo-500 dark:bg-[#0E1422] dark:text-slate-100 dark:placeholder-slate-500 min-h-[90px]"
+                className="w-full rounded-xl bg-white border border-slate-300 dark:border-[#363842] text-slate-900 placeholder-slate-400 text-sm px-3.5 py-2.5 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-[#18191b] focus:border-indigo-600 dark:focus:border-indigo-500 dark:bg-[#24262b] dark:text-[#f1f3f5] dark:placeholder-[#858a94] min-h-[90px]"
                 placeholder="مثال: مکالمه در هتل را تمرین کن و مهارتت رو ارتقا بده..."
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
@@ -512,7 +506,7 @@ export const NotificationsPage: React.FC = () => {
                 <select
                   value={screen}
                   onChange={(e) => setScreen(e.target.value)}
-                  className="w-full rounded-xl bg-white border border-slate-300 dark:border-slate-800 text-slate-900 text-sm px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-[#0E1422] dark:text-slate-100"
+                  className="w-full rounded-xl bg-white border border-slate-300 dark:border-[#363842] text-slate-900 text-sm px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-[#24262b] dark:text-[#f1f3f5]"
                 >
                   <option value="none">بدون لینک (فقط نمایش پیام - بدون کلیک)</option>
                   <option value="chat">تمرین مرحله چت (Stage Chat)</option>
@@ -553,7 +547,7 @@ export const NotificationsPage: React.FC = () => {
                       <select
                         value={stageId}
                         onChange={(e) => setStageId(e.target.value)}
-                        className="w-full rounded-xl bg-white border border-slate-300 dark:border-slate-800 text-slate-900 text-sm px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-[#0E1422] dark:text-slate-100"
+                        className="w-full rounded-xl bg-white border border-slate-300 dark:border-[#363842] text-slate-900 text-sm px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-[#24262b] dark:text-[#f1f3f5]"
                       >
                         {stages.map((stg) => (
                           <option key={stg.id} value={stg.id}>
@@ -635,7 +629,7 @@ export const NotificationsPage: React.FC = () => {
         {/* Right Column: Mobile Notification Mockup & Session History (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           {/* Browser Notification Status & Quick Direct Test Card */}
-          <div className="bg-white dark:bg-[#0E1422] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3.5">
+          <div className="bg-white dark:bg-[#202125] p-5 rounded-2xl border border-slate-200 dark:border-[#2d3037] shadow-2xs space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Laptop className="w-4 h-4 text-indigo-500" />
@@ -736,7 +730,7 @@ export const NotificationsPage: React.FC = () => {
           </div>
 
           {/* Mobile Preview Mockup */}
-          <div className="bg-white dark:bg-[#0E1422] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="bg-white dark:bg-[#202125] p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-[#2d3037] shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Smartphone className="w-4 h-4 text-indigo-500" />
@@ -810,7 +804,7 @@ export const NotificationsPage: React.FC = () => {
           </div>
 
           {/* Session Sent Notifications History */}
-          <div className="bg-white dark:bg-[#0E1422] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="bg-white dark:bg-[#202125] p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-[#2d3037] shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />

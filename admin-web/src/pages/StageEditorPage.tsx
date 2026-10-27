@@ -223,13 +223,13 @@ export const StageEditorPage: React.FC = () => {
         {/* View Switcher & Action Button */}
         <div className="flex items-center gap-3 self-end sm:self-auto">
           {/* Segmented Control */}
-          <div className="bg-slate-100 dark:bg-[#0E1422] p-1 rounded-xl text-xs flex items-center border border-slate-200/60 dark:border-slate-800/60">
+          <div className="bg-slate-100 dark:bg-[#202125] p-1 rounded-xl text-xs flex items-center border border-slate-200/60 dark:border-[#2d3037]">
             <button
               type="button"
               onClick={() => setActiveTab('form')}
               className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
                 activeTab === 'form'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs'
+                  ? 'bg-white dark:bg-[#282a30] text-slate-900 dark:text-[#f1f3f5] shadow-2xs'
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
@@ -240,7 +240,7 @@ export const StageEditorPage: React.FC = () => {
               onClick={() => setActiveTab('json')}
               className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
                 activeTab === 'json'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs'
+                  ? 'bg-white dark:bg-[#282a30] text-slate-900 dark:text-[#f1f3f5] shadow-2xs'
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
@@ -251,7 +251,7 @@ export const StageEditorPage: React.FC = () => {
               onClick={() => setActiveTab('both')}
               className={`hidden lg:inline-block px-3 py-1.5 rounded-lg font-medium transition-all ${
                 activeTab === 'both'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs'
+                  ? 'bg-white dark:bg-[#282a30] text-slate-900 dark:text-[#f1f3f5] shadow-2xs'
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
@@ -277,8 +277,8 @@ export const StageEditorPage: React.FC = () => {
         {(activeTab === 'both' || activeTab === 'form') && (
           <div className={`${activeTab === 'both' ? 'lg:col-span-7' : 'w-full'} space-y-6`}>
             {/* Card 1: Basic Info */}
-            <div className="bg-white dark:bg-[#111726] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-6 shadow-2xs space-y-5">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight pb-3 border-b border-slate-100 dark:border-slate-800/60">
+            <div className="bg-white dark:bg-[#202125] border border-slate-200/80 dark:border-[#2d3037] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-5">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight pb-3 border-b border-slate-100 dark:border-[#2d3037]">
                 مشخصات اصلی
               </h2>
 
@@ -323,7 +323,7 @@ export const StageEditorPage: React.FC = () => {
                   <select
                     value={formData.status}
                     onChange={(e) => updateFormField('status', e.target.value as StageStatus)}
-                    className="w-full rounded-xl bg-white dark:bg-[#0E1422] border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all"
+                    className="w-full rounded-xl bg-white dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] text-slate-900 dark:text-[#f1f3f5] text-sm px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all"
                   >
                     <option value="DRAFT">پیش‌نویس</option>
                     <option value="PUBLISHED">منتشر شده</option>
@@ -347,8 +347,8 @@ export const StageEditorPage: React.FC = () => {
             </div>
 
             {/* Card 2: Scenario & Objectives */}
-            <div className="bg-white dark:bg-[#111726] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-6 shadow-2xs space-y-4">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight pb-3 border-b border-slate-100 dark:border-slate-800/60">
+            <div className="bg-white dark:bg-[#202125] border border-slate-200/80 dark:border-[#2d3037] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight pb-3 border-b border-slate-100 dark:border-[#2d3037]">
                 سناریو و اهداف گفتگو
               </h2>
 
@@ -359,7 +359,7 @@ export const StageEditorPage: React.FC = () => {
                   </label>
                   <textarea
                     rows={2}
-                    className="w-full rounded-xl bg-white dark:bg-[#0E1422] border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all leading-relaxed"
+                    className="w-full rounded-xl bg-white dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] text-slate-900 dark:text-[#f1f3f5] text-sm p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all leading-relaxed placeholder:text-slate-400 dark:placeholder-[#858a94]"
                     placeholder="موقعیت فرودگاه، تحویل بار و..."
                     value={formData.briefingFa}
                     onChange={(e) => updateFormField('briefingFa', e.target.value)}
@@ -372,7 +372,7 @@ export const StageEditorPage: React.FC = () => {
                   </label>
                   <textarea
                     rows={2}
-                    className="w-full rounded-xl bg-white dark:bg-[#0E1422] border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all leading-relaxed"
+                    className="w-full rounded-xl bg-white dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] text-slate-900 dark:text-[#f1f3f5] text-sm p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all leading-relaxed placeholder:text-slate-400 dark:placeholder-[#858a94]"
                     placeholder="Airport check-in scenario..."
                     value={formData.briefing}
                     onChange={(e) => updateFormField('briefing', e.target.value)}
@@ -386,7 +386,7 @@ export const StageEditorPage: React.FC = () => {
                   </label>
                   <textarea
                     rows={2}
-                    className="w-full rounded-xl bg-white dark:bg-[#0E1422] border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all leading-relaxed"
+                    className="w-full rounded-xl bg-white dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] text-slate-900 dark:text-[#f1f3f5] text-sm p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all leading-relaxed placeholder:text-slate-400 dark:placeholder-[#858a94]"
                     placeholder="دریافت کارت پرواز"
                     value={formData.targetObjectiveFa}
                     onChange={(e) => updateFormField('targetObjectiveFa', e.target.value)}
@@ -399,7 +399,7 @@ export const StageEditorPage: React.FC = () => {
                   </label>
                   <textarea
                     rows={2}
-                    className="w-full rounded-xl bg-white dark:bg-[#0E1422] border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all leading-relaxed"
+                    className="w-full rounded-xl bg-white dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] text-slate-900 dark:text-[#f1f3f5] text-sm p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all leading-relaxed placeholder:text-slate-400 dark:placeholder-[#858a94]"
                     placeholder="Obtain a boarding pass"
                     value={formData.targetObjective}
                     onChange={(e) => updateFormField('targetObjective', e.target.value)}
@@ -410,8 +410,8 @@ export const StageEditorPage: React.FC = () => {
             </div>
 
             {/* Card 3: Character & Speech */}
-            <div className="bg-white dark:bg-[#111726] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-6 shadow-2xs space-y-4">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight pb-3 border-b border-slate-100 dark:border-slate-800/60">
+            <div className="bg-white dark:bg-[#202125] border border-slate-200/80 dark:border-[#2d3037] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight pb-3 border-b border-slate-100 dark:border-[#2d3037]">
                 کاراکتر هوش مصنوعی و تنظیمات صدا
               </h2>
 
@@ -431,7 +431,7 @@ export const StageEditorPage: React.FC = () => {
                   <select
                     value={formData.characterGender}
                     onChange={(e) => updateFormField('characterGender', e.target.value)}
-                    className="w-full rounded-xl bg-white dark:bg-[#0E1422] border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all"
+                    className="w-full rounded-xl bg-white dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] text-slate-900 dark:text-[#f1f3f5] text-sm px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all"
                   >
                     <option value="Woman">زن (Woman)</option>
                     <option value="Man">مرد (Man)</option>
@@ -445,7 +445,7 @@ export const StageEditorPage: React.FC = () => {
                   <select
                     value={formData.initialSpeaker}
                     onChange={(e) => updateFormField('initialSpeaker', e.target.value)}
-                    className="w-full rounded-xl bg-white dark:bg-[#0E1422] border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all"
+                    className="w-full rounded-xl bg-white dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] text-slate-900 dark:text-[#f1f3f5] text-sm px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all"
                   >
                     <option value="Model">هوش مصنوعی (Model)</option>
                     <option value="User">کاربر زبان‌آموز (User)</option>
@@ -475,7 +475,7 @@ export const StageEditorPage: React.FC = () => {
                   </label>
                   <textarea
                     rows={2}
-                    className="w-full rounded-xl bg-white dark:bg-[#0E1422] border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all leading-relaxed"
+                    className="w-full rounded-xl bg-white dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] text-slate-900 dark:text-[#f1f3f5] text-sm p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 dark:focus:border-indigo-500 transition-all leading-relaxed placeholder:text-slate-400 dark:placeholder-[#858a94]"
                     placeholder="میزان سخت‌گیری، شروط راستی‌آزمایی و نحوه پاسخگویی کاراکتر..."
                     value={formData.characterBehavior || ''}
                     onChange={(e) => updateFormField('characterBehavior', e.target.value)}
@@ -485,14 +485,14 @@ export const StageEditorPage: React.FC = () => {
             </div>
 
             {/* Card 4: Clean Media Section (Side-by-Side Images) */}
-            <div className="bg-white dark:bg-[#111726] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-6 shadow-2xs space-y-4">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight pb-3 border-b border-slate-100 dark:border-slate-800/60">
+            <div className="bg-white dark:bg-[#202125] border border-slate-200/80 dark:border-[#2d3037] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight pb-3 border-b border-slate-100 dark:border-[#2d3037]">
                 تصاویر مرحله
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
                 {/* Scenario Background (Vertical 9:16) */}
-                <div className="p-5 rounded-2xl bg-slate-50/70 dark:bg-[#0E1422]/60 border border-slate-200/60 dark:border-slate-800/60 flex flex-col items-center sm:items-start">
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-[#24262b] border border-slate-200/60 dark:border-[#32353e] flex flex-col items-center sm:items-start">
                   <ImageDropzone
                     label="تصویر پس‌زمینه سناریو"
                     value={formData.backgroundUrl}
@@ -502,7 +502,7 @@ export const StageEditorPage: React.FC = () => {
                 </div>
 
                 {/* Character Avatar (Square 1:1) */}
-                <div className="p-5 rounded-2xl bg-slate-50/70 dark:bg-[#0E1422]/60 border border-slate-200/60 dark:border-slate-800/60 flex flex-col items-center sm:items-start">
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-[#24262b] border border-slate-200/60 dark:border-[#32353e] flex flex-col items-center sm:items-start">
                   <ImageDropzone
                     label="آواتار کاراکتر (اختیاری)"
                     value={formData.characterAvatarUrl}
@@ -518,7 +518,7 @@ export const StageEditorPage: React.FC = () => {
         {/* JSON Column */}
         {(activeTab === 'both' || activeTab === 'json') && (
           <div className={`${activeTab === 'both' ? 'lg:col-span-5' : 'w-full'} space-y-4`}>
-            <div className="sticky top-20 bg-white dark:bg-[#111726] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-5 shadow-2xs flex flex-col h-[calc(100vh-7.5rem)]">
+            <div className="sticky top-20 bg-white dark:bg-[#202125] border border-slate-200/80 dark:border-[#2d3037] rounded-2xl p-5 shadow-2xs flex flex-col h-[calc(100vh-7.5rem)]">
               {/* JSON Toolbar */}
               <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/60">
                 <div className="flex items-center gap-2">

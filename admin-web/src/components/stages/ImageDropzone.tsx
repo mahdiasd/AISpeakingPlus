@@ -157,7 +157,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
           className={`relative border border-dashed rounded-2xl cursor-pointer transition-all duration-200 flex flex-col items-center justify-center p-4 text-center select-none ${sizeClasses} ${
             isDragging
               ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10'
-              : 'border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-[#0E1422]/40 hover:bg-white dark:hover:bg-[#121826]'
+              : 'border-slate-300 dark:border-[#2d3037] hover:border-slate-400 dark:hover:border-[#363842] bg-slate-50/50 dark:bg-[#202125]/40 hover:bg-white dark:hover:bg-[#24262b]'
           }`}
         >
           {isUploading ? (

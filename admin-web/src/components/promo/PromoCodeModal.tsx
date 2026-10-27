@@ -221,7 +221,7 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
                 placeholder="مثال: NOROOZ1404 یا VIP30"
                 dir="ltr"
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] text-slate-900 dark:text-white font-mono font-bold tracking-wider text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all uppercase placeholder:font-sans placeholder:font-normal placeholder:text-slate-400"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#363842] bg-white dark:bg-[#24262b] text-slate-900 dark:text-[#f1f3f5] font-mono font-bold tracking-wider text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all uppercase placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 dark:placeholder-[#858a94]"
               />
             </div>
             <button
@@ -249,7 +249,7 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="مثال: کمپین شب عید، تخفیف ۳۰٪ بلاگرها"
-            className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400"
+            className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-[#363842] bg-white dark:bg-[#24262b] text-slate-900 dark:text-[#f1f3f5] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400 dark:placeholder-[#858a94]"
           />
         </div>
 
@@ -258,14 +258,14 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
             نوع تخفیف <span className="text-red-500">*</span>
           </label>
-          <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
+          <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-[#202125] border border-slate-200/80 dark:border-[#2d3037]">
             <button
               type="button"
               onClick={() => setDiscountType('PERCENTAGE')}
               className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
                 discountType === 'PERCENTAGE'
-                  ? 'bg-white dark:bg-[#111726] text-indigo-600 dark:text-indigo-400 shadow-xs font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-white dark:bg-[#282a30] text-indigo-600 dark:text-indigo-400 shadow-2xs font-bold'
+                  : 'text-slate-600 dark:text-[#9ca3af] hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Percent className="w-4 h-4" />
@@ -276,8 +276,8 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
               onClick={() => setDiscountType('FIXED_AMOUNT')}
               className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
                 discountType === 'FIXED_AMOUNT'
-                  ? 'bg-white dark:bg-[#111726] text-indigo-600 dark:text-indigo-400 shadow-xs font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-white dark:bg-[#282a30] text-indigo-600 dark:text-indigo-400 shadow-2xs font-bold'
+                  : 'text-slate-600 dark:text-[#9ca3af] hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Coins className="w-4 h-4" />
@@ -301,7 +301,7 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
                 value={discountValue}
                 onChange={(e) => setDiscountValue(Number(e.target.value))}
                 required
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] text-slate-900 dark:text-white text-sm font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-[#363842] bg-white dark:bg-[#24262b] text-slate-900 dark:text-[#f1f3f5] text-sm font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
               />
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">
                 {discountType === 'PERCENTAGE' ? '٪' : 'تومان'}
@@ -322,7 +322,7 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
                   value={maxDiscountCap}
                   onChange={(e) => setMaxDiscountCap(e.target.value)}
                   placeholder="بدون سقف"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:font-sans placeholder:text-slate-400"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-[#363842] bg-white dark:bg-[#24262b] text-slate-900 dark:text-[#f1f3f5] text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:font-sans placeholder:text-slate-400 dark:placeholder-[#858a94]"
                 />
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">
                   تومان
@@ -342,7 +342,7 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
                   value={minOrderAmount}
                   onChange={(e) => setMinOrderAmount(e.target.value)}
                   placeholder="بدون شرط حداقل"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:font-sans placeholder:text-slate-400"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-[#363842] bg-white dark:bg-[#24262b] text-slate-900 dark:text-[#f1f3f5] text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:font-sans placeholder:text-slate-400 dark:placeholder-[#858a94]"
                 />
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">
                   تومان
@@ -424,7 +424,7 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
               value={maxUses}
               onChange={(e) => setMaxUses(e.target.value)}
               placeholder="مثال: ۱۰۰"
-              className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] text-slate-900 dark:text-white text-sm font-mono disabled:opacity-50 disabled:bg-slate-100 dark:disabled:bg-slate-900/50"
+              className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#363842] bg-white dark:bg-[#24262b] text-slate-900 dark:text-[#f1f3f5] text-sm font-mono disabled:opacity-50 disabled:bg-slate-100 dark:disabled:bg-[#1a1b1e]"
             />
           </div>
 
@@ -433,7 +433,7 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
               <Users className="w-3.5 h-3.5 text-indigo-500" />
               محدودیت هر کاربر
             </span>
-            <label className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] cursor-pointer hover:border-indigo-300 transition-colors">
+            <label className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-[#363842] bg-white dark:bg-[#24262b] cursor-pointer hover:border-indigo-300 transition-colors">
               <input
                 type="checkbox"
                 checked={isOncePerUser}
@@ -457,7 +457,7 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
               type="datetime-local"
               value={startsAt}
               onChange={(e) => setStartsAt(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#363842] bg-white dark:bg-[#24262b] text-slate-900 dark:text-[#f1f3f5] text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
             />
           </div>
 
@@ -469,7 +469,7 @@ export const PromoCodeModal: React.FC<PromoCodeModalProps> = ({
               type="datetime-local"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E1422] text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#363842] bg-white dark:bg-[#24262b] text-slate-900 dark:text-[#f1f3f5] text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
             />
           </div>
         </div>

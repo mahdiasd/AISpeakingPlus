@@ -105,26 +105,21 @@ export const StagesListPage: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header and Add Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-              مراحل مکالمه (Stages)
-            </h1>
-            <Badge variant="purple" size="md">
-              {stages.length} مرحله
-            </Badge>
-          </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            مدیریت سناریوهای صوتی هوش مصنوعی، تنظیمات گوینده و اولویت چینش مراحل
-          </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#f1f3f5] tracking-tight">
+            مراحل مکالمه
+          </h1>
+          <Badge variant="purple" size="md">
+            {stages.length} مرحله
+          </Badge>
         </div>
 
         <Button
           onClick={() => navigate('/admin/stages/new')}
-          icon={<Plus className="w-5 h-5" />}
+          icon={<Plus className="w-4 h-4" />}
           size="md"
         >
           ایجاد مرحله جدید
@@ -132,10 +127,10 @@ export const StagesListPage: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl p-3 sm:p-4 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
         {/* Filter Pills */}
         <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-          <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 ml-1 hidden sm:inline-flex items-center gap-1.5 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-slate-400 dark:text-[#858a94] ml-1 hidden sm:inline-flex items-center gap-1.5 uppercase tracking-wider">
             <Filter className="w-3.5 h-3.5 text-indigo-500" /> وضعیت:
           </span>
           {(['ALL', 'PUBLISHED', 'DRAFT', 'ARCHIVED'] as const).map((st) => (
@@ -144,8 +139,8 @@ export const StagesListPage: React.FC = () => {
               onClick={() => setFilterStatus(st)}
               className={`text-xs sm:text-sm px-3.5 py-1.5 rounded-xl font-medium transition-all ${
                 filterStatus === st
-                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-xs dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30'
-                  : 'bg-slate-100 dark:bg-[#0E1422] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-slate-800/60 border border-transparent'
+                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs dark:bg-[#282a30] dark:text-[#f1f3f5] dark:border-[#383b44]'
+                  : 'bg-slate-100 dark:bg-[#24262b] text-slate-600 dark:text-[#9ca3af] hover:text-slate-900 dark:hover:text-[#f1f3f5] hover:bg-slate-200/70 dark:hover:bg-[#282a30] border border-transparent'
               }`}
             >
               {st === 'ALL' && 'همه مراحل'}
@@ -163,26 +158,26 @@ export const StagesListPage: React.FC = () => {
             placeholder="جستجوی عنوان، شناسه یا کاراکتر..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-sm rounded-xl bg-slate-50 dark:bg-[#0E1422] border border-slate-300 dark:border-slate-800 pl-9 pr-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:ring-indigo-500/25 dark:focus:border-indigo-500 transition-all"
+            className="w-full text-sm rounded-xl bg-slate-50 dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] pl-9 pr-4 py-2 text-slate-900 dark:text-[#f1f3f5] placeholder-slate-400 dark:placeholder-[#858a94] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
         </div>
       </div>
 
       {/* Table Container */}
-      <div className="bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl shadow-2xs overflow-hidden">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
             <div className="w-8 h-8 border-3 border-indigo-500/20 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin" />
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">در حال دریافت فهرست مراحل...</p>
+            <p className="text-sm font-medium text-slate-500 dark:text-[#9ca3af]">در حال دریافت فهرست مراحل...</p>
           </div>
         ) : filteredStages.length === 0 ? (
-          <div className="text-center py-20 px-4">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-4 shadow-xs">
-              <Layers className="w-7 h-7" />
+          <div className="text-center py-16 px-4">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-[#282a30] border border-slate-200 dark:border-[#383b44] text-slate-600 dark:text-slate-300 flex items-center justify-center mx-auto mb-3 shadow-2xs">
+              <Layers className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">هیچ مرحله‌ای یافت نشد</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+            <h3 className="text-base font-bold text-slate-800 dark:text-[#f1f3f5]">هیچ مرحله‌ای یافت نشد</h3>
+            <p className="text-sm text-slate-500 dark:text-[#9ca3af] mt-1 max-w-sm mx-auto">
               {searchQuery ? 'موردی با این عبارت جستجو یافت نشد.' : 'هنوز مرحله‌ای در این وضعیت ثبت نشده است.'}
             </p>
           </div>
@@ -190,16 +185,16 @@ export const StagesListPage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-[#0E1422]/90 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  <th className="py-4 px-4 w-16 text-center">ترتیب</th>
-                  <th className="py-4 px-4">تصویر سناریو</th>
-                  <th className="py-4 px-4">عنوان سناریو و جزئیات</th>
-                  <th className="py-4 px-4 hidden lg:table-cell">تنظیمات صدا و هوش مصنوعی</th>
-                  <th className="py-4 px-4 text-center">وضعیت</th>
-                  <th className="py-4 px-4 text-left">عملیات</th>
+                <tr className="border-b border-slate-200 dark:border-[#2d3037] bg-slate-50/70 dark:bg-[#1b1c1f] text-xs font-semibold text-slate-500 dark:text-[#9ca3af] uppercase tracking-wider">
+                  <th className="py-3.5 px-4 w-16 text-center">ترتیب</th>
+                  <th className="py-3.5 px-4">تصویر سناریو</th>
+                  <th className="py-3.5 px-4">عنوان سناریو و جزئیات</th>
+                  <th className="py-3.5 px-4 hidden lg:table-cell">تنظیمات صدا و هوش مصنوعی</th>
+                  <th className="py-3.5 px-4 text-center">وضعیت</th>
+                  <th className="py-3.5 px-4 text-left">عملیات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
+              <tbody className="divide-y divide-slate-100 dark:divide-[#2d3037] text-sm">
                 {filteredStages.map((stage, idx) => {
                   const voice = KOKORO_VOICES.find((v) => v.id === stage.voiceId);
                   const isFirst = idx === 0;
@@ -211,26 +206,26 @@ export const StagesListPage: React.FC = () => {
                   return (
                     <tr
                       key={stage.id}
-                      className="hover:bg-slate-50/80 dark:hover:bg-[#151D30]/60 transition-colors group"
+                      className="hover:bg-slate-50/80 dark:hover:bg-[#282a30] transition-colors group"
                     >
                       {/* Order Controls */}
-                      <td className="py-4 px-4 text-center">
+                      <td className="py-3.5 px-4 text-center">
                         <div className="flex flex-col items-center justify-center gap-0.5">
                           <button
                             disabled={isFirst || reorderingId === stage.id}
                             onClick={() => handleMoveOrder(stage, 'up')}
-                            className="p-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
+                            className="p-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-[#24262b] disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
                             title="انتقال به بالا"
                           >
                             <ChevronUp className="w-4 h-4" />
                           </button>
-                          <span className="font-mono font-bold text-slate-700 dark:text-slate-200 text-sm tabular-nums">
+                          <span className="font-mono font-bold text-slate-700 dark:text-[#f1f3f5] text-sm tabular-nums">
                             {stage.orderIndex}
                           </span>
                           <button
                             disabled={isLast || reorderingId === stage.id}
                             onClick={() => handleMoveOrder(stage, 'down')}
-                            className="p-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
+                            className="p-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-[#24262b] disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
                             title="انتقال به پایین"
                           >
                             <ChevronDown className="w-4 h-4" />
@@ -239,7 +234,7 @@ export const StagesListPage: React.FC = () => {
                       </td>
 
                       {/* Main Scenario Image with robust fallback */}
-                      <td className="py-4 px-4">
+                      <td className="py-3.5 px-4">
                         <StageThumbnail
                           src={primaryImageUrl}
                           alt={stage.titleFa || stage.title}
@@ -249,19 +244,19 @@ export const StagesListPage: React.FC = () => {
                       </td>
 
                       {/* Scenario Title, ID and Character Info */}
-                      <td className="py-4 px-4">
+                      <td className="py-3.5 px-4">
                         <div className="space-y-1">
-                          <div className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base">
+                          <div className="font-bold text-slate-900 dark:text-[#f1f3f5] text-sm sm:text-base">
                             {stage.titleFa}
                           </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400 font-mono" dir="ltr">
+                          <div className="text-xs text-slate-500 dark:text-[#9ca3af] font-mono" dir="ltr">
                             {stage.title}
                           </div>
-                          <div className="flex flex-wrap items-center gap-2 pt-1">
-                            <span className="inline-block text-xs text-indigo-700 dark:text-indigo-300 font-mono bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-500/20" dir="ltr">
+                          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                            <span className="inline-block text-xs text-slate-700 dark:text-[#d1d5db] font-mono bg-slate-100 dark:bg-[#24262b] px-2 py-0.5 rounded-md border border-slate-200 dark:border-[#343741]" dir="ltr">
                               {stage.id}
                             </span>
-                            <span className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                            <span className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-[#9ca3af]">
                               {stage.characterAvatarUrl ? (
                                 <img
                                   src={stage.characterAvatarUrl}
@@ -270,24 +265,24 @@ export const StagesListPage: React.FC = () => {
                                 />
                               ) : (
                                 <div
-                                  className="w-5 h-5 rounded-full bg-gradient-to-tr from-indigo-500/20 to-purple-500/25 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-500/30 flex items-center justify-center font-bold text-[10px] select-none shadow-2xs"
+                                  className="w-5 h-5 rounded-full bg-slate-200 dark:bg-[#282a30] text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-[#383b44] flex items-center justify-center font-bold text-[10px] select-none shadow-2xs"
                                   title="بدون تصویر آواتار (آواتار پیش‌فرض)"
                                 >
                                   {stage.characterName ? stage.characterName.trim()[0].toUpperCase() : <UserCheck className="w-3 h-3" />}
                                 </div>
                               )}
-                              هم‌صحبت: <strong className="font-medium text-slate-800 dark:text-slate-200">{stage.characterName || 'نامشخص'}</strong>
+                              هم‌صحبت: <strong className="font-medium text-slate-800 dark:text-[#e5e7eb]">{stage.characterName || 'نامشخص'}</strong>
                               <span className="text-slate-400">({stage.characterGender === 'Woman' ? 'زن' : 'مرد'})</span>
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 max-w-md pt-0.5">
+                          <p className="text-xs text-slate-500 dark:text-[#9ca3af] line-clamp-1 max-w-md pt-0.5">
                             {stage.briefingFa || stage.briefing}
                           </p>
                         </div>
                       </td>
 
                       {/* Voice & AI Speech Settings */}
-                      <td className="py-4 px-4 hidden lg:table-cell">
+                      <td className="py-3.5 px-4 hidden lg:table-cell">
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
                             <Volume2 className="w-4 h-4 text-indigo-500" />
@@ -300,14 +295,14 @@ export const StagesListPage: React.FC = () => {
                               </Badge>
                             )}
                           </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                          <div className="text-xs text-slate-500 dark:text-[#9ca3af]">
                             شروع: <span className="font-medium text-slate-700 dark:text-slate-300">{stage.initialSpeaker === 'Model' ? 'هوش مصنوعی' : 'کاربر'}</span> &bull; حداکثر {stage.maxTurns} دور
                           </div>
                         </div>
                       </td>
 
                       {/* Status Badge */}
-                      <td className="py-4 px-4 text-center">
+                      <td className="py-3.5 px-4 text-center">
                         <Badge
                           variant={
                             stage.status === 'PUBLISHED'
@@ -325,11 +320,11 @@ export const StagesListPage: React.FC = () => {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-4 px-4 text-left">
+                      <td className="py-3.5 px-4 text-left">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => navigate(`/admin/stages/${stage.id}`)}
-                            className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 border border-transparent hover:border-indigo-200 dark:hover:border-indigo-500/20 transition-all"
+                            className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#282a30] transition-all"
                             title="ویرایش مرحله"
                           >
                             <Edit2 className="w-4 h-4" />
@@ -339,7 +334,7 @@ export const StagesListPage: React.FC = () => {
                               setStageToDelete(stage);
                               setDeleteModalOpen(true);
                             }}
-                            className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 border border-transparent hover:border-rose-200 dark:hover:border-rose-500/20 transition-all"
+                            className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all"
                             title="حذف مرحله"
                           >
                             <Trash2 className="w-4 h-4" />

@@ -22,21 +22,23 @@ export default {
           950: '#1e1b4b',
         },
         obsidian: {
-          canvas: '#0B0F17',
-          card: '#111726',
-          'card-hover': '#151D30',
-          elevated: '#172033',
-          panel: '#0E1422',
-          border: '#1E293B',
-          'border-subtle': 'rgba(255, 255, 255, 0.07)',
-          'border-highlight': 'rgba(255, 255, 255, 0.12)',
+          canvas: '#18191b',
+          card: '#202125',
+          'card-hover': '#282a30',
+          elevated: '#24262b',
+          panel: '#1b1c1f',
+          input: '#24262b',
+          border: '#2d3037',
+          'border-subtle': 'rgba(255, 255, 255, 0.08)',
+          'border-highlight': 'rgba(255, 255, 255, 0.14)',
         },
         dark: {
-          bg: '#0B0F17',
-          card: '#111726',
-          surface: '#172033',
-          border: '#1E293B',
-          muted: '#94a3b8'
+          bg: '#18191b',
+          card: '#202125',
+          surface: '#1b1c1f',
+          input: '#24262b',
+          border: '#2d3037',
+          muted: '#9ca3af'
         }
       },
       boxShadow: {

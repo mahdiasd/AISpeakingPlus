@@ -73,29 +73,24 @@ export const UsersPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-              مدیریت کاربران و زبان‌آموزان
-            </h1>
-            <Badge variant="purple" size="md">
-              {totalItems} کاربر ثبت‌شده
-            </Badge>
-          </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            جستجوی شماره همراه (پشتیبانی از ارقام فارسی)، تعلیق و اهدای اشتراک
-          </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#f1f3f5] tracking-tight">
+            مدیریت کاربران
+          </h1>
+          <Badge variant="purple" size="md">
+            {totalItems} کاربر
+          </Badge>
         </div>
       </div>
 
       {/* Filter and Search Toolbar */}
-      <div className="bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl p-3 sm:p-4 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
         {/* Status Filter Buttons */}
         <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-          <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 ml-1 hidden sm:inline-flex items-center gap-1.5 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-slate-400 dark:text-[#858a94] ml-1 hidden sm:inline-flex items-center gap-1.5 uppercase tracking-wider">
             <Filter className="w-3.5 h-3.5 text-indigo-500" /> وضعیت:
           </span>
           {[
@@ -108,8 +103,8 @@ export const UsersPage: React.FC = () => {
               onClick={() => handleStatusFilterChange(item.id)}
               className={`text-xs sm:text-sm px-3.5 py-1.5 rounded-xl font-medium transition-all ${
                 statusFilter === item.id
-                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-xs dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30'
-                  : 'bg-slate-100 dark:bg-[#0E1422] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-slate-800/60 border border-transparent'
+                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs dark:bg-[#282a30] dark:text-[#f1f3f5] dark:border-[#383b44]'
+                  : 'bg-slate-100 dark:bg-[#24262b] text-slate-600 dark:text-[#9ca3af] hover:text-slate-900 dark:hover:text-[#f1f3f5] hover:bg-slate-200/70 dark:hover:bg-[#282a30] border border-transparent'
               }`}
             >
               {item.label}
@@ -121,17 +116,17 @@ export const UsersPage: React.FC = () => {
         <div className="relative w-full md:w-80">
           <input
             type="text"
-            placeholder="جستجوی شماره همراه (۰۹۱۲...) یا نام..."
+            placeholder="جستجوی شماره همراه یا نام..."
             value={searchQuery}
             onChange={handleSearchChange}
-            className="w-full text-sm rounded-xl bg-slate-50 dark:bg-[#0E1422] border border-slate-300 dark:border-slate-800 pl-9 pr-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:ring-indigo-500/25 dark:focus:border-indigo-500 transition-all"
+            className="w-full text-sm rounded-xl bg-slate-50 dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] pl-9 pr-4 py-2 text-slate-900 dark:text-[#f1f3f5] placeholder-slate-400 dark:placeholder-[#858a94] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl shadow-2xs overflow-hidden">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
             <div className="w-8 h-8 border-3 border-indigo-500/20 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin" />
@@ -151,30 +146,30 @@ export const UsersPage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-[#0E1422]/90 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  <th className="py-4 px-4">کاربر</th>
-                  <th className="py-4 px-4">شماره همراه</th>
-                  <th className="py-4 px-4 text-center">وضعیت حساب</th>
-                  <th className="py-4 px-4 text-center">وضعیت اشتراک</th>
-                  <th className="py-4 px-4 text-center hidden sm:table-cell">امتیاز</th>
-                  <th className="py-4 px-4 hidden md:table-cell">تاریخ عضویت</th>
-                  <th className="py-4 px-4 text-left">عملیات</th>
+                <tr className="border-b border-slate-200 dark:border-[#2d3037] bg-slate-50/70 dark:bg-[#1b1c1f] text-xs font-semibold text-slate-500 dark:text-[#9ca3af] uppercase tracking-wider">
+                  <th className="py-3.5 px-4">کاربر</th>
+                  <th className="py-3.5 px-4">شماره همراه</th>
+                  <th className="py-3.5 px-4 text-center">وضعیت حساب</th>
+                  <th className="py-3.5 px-4 text-center">وضعیت اشتراک</th>
+                  <th className="py-3.5 px-4 text-center hidden sm:table-cell">امتیاز</th>
+                  <th className="py-3.5 px-4 hidden md:table-cell">تاریخ عضویت</th>
+                  <th className="py-3.5 px-4 text-left">عملیات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
+              <tbody className="divide-y divide-slate-100 dark:divide-[#2d3037] text-sm">
                 {users.map((user) => (
                   <tr
                     key={user.id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-[#151D30]/60 transition-colors group"
+                    className="hover:bg-slate-50/80 dark:hover:bg-[#282a30] transition-colors group"
                   >
                     {/* User Identity */}
-                    <td className="py-4 px-4">
+                    <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/25 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold shrink-0 shadow-xs">
+                        <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-[#282a30] border border-slate-200 dark:border-[#383b44] flex items-center justify-center text-slate-700 dark:text-[#f1f3f5] font-bold shrink-0 shadow-2xs">
                           {user.nickName ? user.nickName.charAt(0) : 'U'}
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 text-sm">
+                          <div className="font-bold text-slate-900 dark:text-[#f1f3f5] flex items-center gap-1.5 text-sm">
                             {user.nickName || 'کاربر بدون نام'}
                           </div>
                           <span className="text-xs text-slate-400 font-mono" dir="ltr">
@@ -185,14 +180,14 @@ export const UsersPage: React.FC = () => {
                     </td>
 
                     {/* Mobile Number */}
-                    <td className="py-4 px-4">
-                      <span className="font-mono text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-[#0E1422] px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800/90 tabular-nums text-xs sm:text-sm" dir="ltr">
+                    <td className="py-3.5 px-4">
+                      <span className="font-mono text-slate-800 dark:text-[#f1f3f5] bg-slate-100 dark:bg-[#24262b] px-2.5 py-0.5 rounded-lg border border-slate-200 dark:border-[#343741] tabular-nums text-xs sm:text-sm" dir="ltr">
                         {user.mobile}
                       </span>
                     </td>
 
                     {/* Status Badge */}
-                    <td className="py-4 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center">
                       <Badge
                         variant={user.status === 'ACTIVE' ? 'success' : 'danger'}
                         pulse={user.status === 'ACTIVE'}
@@ -202,19 +197,19 @@ export const UsersPage: React.FC = () => {
                     </td>
 
                     {/* Subscription Status */}
-                    <td className="py-4 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center">
                       {user.hasActiveSubscription ? (
                         <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/25 px-2.5 py-0.5 rounded-md">
                           <Crown className="w-3.5 h-3.5 text-amber-500" />
                           <span>اشتراک ویژه</span>
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">پایه (رایگان)</span>
+                        <span className="text-xs text-slate-500 dark:text-[#9ca3af] font-medium">پایه (رایگان)</span>
                       )}
                     </td>
 
                     {/* Score */}
-                    <td className="py-4 px-4 text-center hidden sm:table-cell">
+                    <td className="py-3.5 px-4 text-center hidden sm:table-cell">
                       <div className="inline-flex items-center gap-1.5 font-mono font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-0.5 rounded-md border border-amber-200 dark:border-amber-500/20 tabular-nums text-xs">
                         <Trophy className="w-3.5 h-3.5 text-amber-500" />
                         {user.score}
@@ -222,18 +217,18 @@ export const UsersPage: React.FC = () => {
                     </td>
 
                     {/* Created Date */}
-                    <td className="py-4 px-4 hidden md:table-cell text-slate-500 dark:text-slate-400 text-xs font-mono tabular-nums">
+                    <td className="py-3.5 px-4 hidden md:table-cell text-slate-500 dark:text-[#9ca3af] text-xs font-mono tabular-nums">
                       {new Date(user.createdAt).toLocaleDateString('fa-IR')}
                     </td>
 
                     {/* Actions */}
-                    <td className="py-4 px-4 text-left">
+                    <td className="py-3.5 px-4 text-left">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => {
                             setGrantModalUser(user);
                           }}
-                          className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/10 border border-transparent hover:border-amber-200 dark:hover:border-amber-500/20 transition-all"
+                          className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-50 dark:hover:bg-[#282a30] transition-colors"
                           title="اعطای اشتراک دستی"
                         >
                           <Gift className="w-4 h-4" />
@@ -261,10 +256,10 @@ export const UsersPage: React.FC = () => {
 
         {/* Pagination Bar */}
         {!isLoading && totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-[#0E1422]/60 flex items-center justify-between text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+          <div className="px-5 py-3 border-t border-slate-200 dark:border-[#2d3037] bg-slate-50/70 dark:bg-[#1b1c1f] flex items-center justify-between text-xs sm:text-sm text-slate-600 dark:text-[#9ca3af]">
             <div className="tabular-nums">
-              صفحه <span className="font-semibold text-slate-900 dark:text-slate-200">{currentPage}</span> از{' '}
-              <span className="font-semibold text-slate-900 dark:text-slate-200">{totalPages}</span> (مجموع{' '}
+              صفحه <span className="font-semibold text-slate-900 dark:text-[#f1f3f5]">{currentPage}</span> از{' '}
+              <span className="font-semibold text-slate-900 dark:text-[#f1f3f5]">{totalPages}</span> (مجموع{' '}
               {totalItems} کاربر)
             </div>
 

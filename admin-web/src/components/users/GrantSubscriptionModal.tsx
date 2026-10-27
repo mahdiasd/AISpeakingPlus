@@ -81,7 +81,7 @@ export const GrantSubscriptionModal: React.FC<GrantSubscriptionModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Banner */}
-        <div className="p-3.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-500/20 text-xs sm:text-sm text-indigo-800 dark:text-indigo-200 flex items-start gap-2.5">
+        <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-[#24262b] border border-slate-200 dark:border-[#32353e] text-xs sm:text-sm text-slate-800 dark:text-[#f1f3f5] flex items-start gap-2.5">
           <Gift className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
           <p className="leading-relaxed">
             این اشتراک به عنوان <span className="font-mono font-bold">MANUAL_ADMIN</span> ثبت شده و در صورت داشتن اشتراک فعال، به انتهای مهلت قبلی اضافه می‌گردد.
@@ -103,8 +103,8 @@ export const GrantSubscriptionModal: React.FC<GrantSubscriptionModalProps> = ({
                   onClick={() => handlePresetSelect(p.days, p.planType)}
                   className={`p-3 rounded-xl text-xs sm:text-sm font-medium border text-center transition-all flex items-center justify-between active:scale-[0.98] ${
                     isSelected
-                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700 shadow-xs dark:bg-indigo-950/40 dark:border-indigo-500/60 dark:text-indigo-300'
-                      : 'bg-slate-50 dark:bg-[#0E1422] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#151D30]'
+                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700 shadow-2xs dark:bg-[#282a30] dark:border-[#383b44] dark:text-[#f1f3f5]'
+                      : 'bg-slate-50 dark:bg-[#202125] border-slate-200 dark:border-[#2d3037] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#282a30]'
                   }`}
                 >
                   <span>{p.label}</span>
@@ -140,7 +140,7 @@ export const GrantSubscriptionModal: React.FC<GrantSubscriptionModalProps> = ({
             rows={2}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full rounded-xl bg-white dark:bg-[#0E1422] border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm p-3.5 focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 dark:focus:ring-indigo-500/20 placeholder-slate-400 dark:placeholder-slate-500 transition-colors leading-relaxed"
+            className="w-full rounded-xl bg-white dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] text-slate-900 dark:text-slate-100 text-sm p-3.5 focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 dark:focus:ring-indigo-500/20 placeholder-slate-400 dark:placeholder-slate-500 transition-colors leading-relaxed"
             placeholder="مثال: جایزه مسابقه برترین مکالمه، عذرخواهی قطعی سرور یا تستر رسمی"
           />
         </div>

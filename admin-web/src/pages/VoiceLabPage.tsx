@@ -20,7 +20,6 @@ import {
   Radio,
   Upload,
   ArrowRightLeft,
-  Activity,
   Trash2,
 } from 'lucide-react';
 
@@ -639,35 +638,28 @@ export const VoiceLabPage: React.FC = () => {
             <span className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30">
               <AudioWaveform className="w-5 h-5" />
             </span>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-              آزمایشگاه صوت و هوش مصنوعی (Voice Lab)
+            <h1 className="text-xl font-bold text-slate-900 dark:text-[#f1f3f5]">
+              آزمایشگاه صوت و هوش مصنوعی
             </h1>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            تست و اعتبارسنجی آنلاین موتورهای صوتی Kokoro-82M (تبدیل متن به صوت) و Sherpa-ONNX Zipformer (تبدیل صوت به متن)
-          </p>
         </div>
 
         {/* Status badges */}
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="purple" size="md">
             <Volume2 className="w-3.5 h-3.5" />
-            Kokoro TTS (11 صدا)
+            Kokoro TTS (۱۱ صدا)
           </Badge>
           <Badge variant="success" size="md">
             <Mic className="w-3.5 h-3.5" />
-            Sherpa STT 16kHz
-          </Badge>
-          <Badge variant="info" size="md">
-            <Activity className="w-3.5 h-3.5" />
-            پورت 8080 Ktor
+            Sherpa STT
           </Badge>
         </div>
       </div>
 
       {/* Modern Tab Switcher */}
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-2">
-        <div className="flex items-center gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-[#0E1422] border border-slate-200 dark:border-slate-800">
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#2d3037] pb-2">
+        <div className="flex items-center gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037]">
           <button
             onClick={() => setActiveTab('tts')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
@@ -713,7 +705,7 @@ export const VoiceLabPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Voice Explorer Catalog */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="bg-white dark:bg-[#0E1422] rounded-2xl border border-slate-200 dark:border-slate-800/80 p-4 shadow-xs">
+            <div className="bg-white dark:bg-[#202125] rounded-2xl border border-slate-200 dark:border-[#2d3037] p-4 shadow-2xs">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Volume2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -733,7 +725,7 @@ export const VoiceLabPage: React.FC = () => {
                   placeholder="جستجوی صدا (نام، لهجه، ویژگی)..."
                   value={voiceSearch}
                   onChange={(e) => setVoiceSearch(e.target.value)}
-                  className="w-full text-xs rounded-xl bg-slate-50 dark:bg-[#111726] border border-slate-200 dark:border-slate-800 px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500"
+                  className="w-full text-xs rounded-xl bg-slate-50 dark:bg-[#24262b] border border-slate-200 dark:border-[#363842] px-3 py-2 text-slate-800 dark:text-[#f1f3f5] focus:outline-none focus:border-indigo-500 placeholder:text-slate-400 dark:placeholder-[#858a94]"
                 />
 
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -778,7 +770,7 @@ export const VoiceLabPage: React.FC = () => {
                       className={`p-3 rounded-xl border transition-all duration-150 cursor-pointer flex items-center justify-between gap-3 ${
                         isSelected
                           ? 'bg-indigo-50/70 dark:bg-indigo-500/10 border-indigo-500 shadow-xs'
-                          : 'bg-white dark:bg-[#111726]/60 border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700'
+                          : 'bg-white dark:bg-[#24262b]/60 border-slate-200 dark:border-[#2d3037] hover:border-slate-300 dark:hover:border-[#363842]'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -891,7 +883,7 @@ export const VoiceLabPage: React.FC = () => {
             )}
 
             {/* Input Studio */}
-            <div className="bg-white dark:bg-[#0E1422] rounded-2xl border border-slate-200 dark:border-slate-800/80 p-5 shadow-xs space-y-4">
+            <div className="bg-white dark:bg-[#202125] rounded-2xl border border-slate-200 dark:border-[#2d3037] p-5 shadow-xs space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -906,7 +898,7 @@ export const VoiceLabPage: React.FC = () => {
                   value={ttsText}
                   onChange={(e) => setTtsText(e.target.value)}
                   placeholder="Enter English text to synthesize..."
-                  className="w-full rounded-xl bg-slate-50 dark:bg-[#111726] border border-slate-300 dark:border-slate-800 p-3.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-xl bg-slate-50 dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] p-3.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-500"
                   dir="ltr"
                 />
               </div>
@@ -922,7 +914,7 @@ export const VoiceLabPage: React.FC = () => {
                       key={idx}
                       type="button"
                       onClick={() => setTtsText(sample.text)}
-                      className="text-right p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#111726]/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+                      className="text-right p-2.5 rounded-xl border border-slate-200 dark:border-[#2d3037] bg-slate-50 dark:bg-[#24262b]/60 hover:bg-slate-100 dark:hover:bg-[#282a30] transition-colors group"
                     >
                       <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 block mb-0.5">
                         {sample.category}
@@ -986,7 +978,7 @@ export const VoiceLabPage: React.FC = () => {
 
             {/* Generated Audio Player Result Card */}
             {ttsResult && (
-              <div className="bg-white dark:bg-[#0E1422] rounded-2xl border border-indigo-200 dark:border-indigo-500/30 p-5 shadow-xs space-y-4">
+              <div className="bg-white dark:bg-[#202125] rounded-2xl border border-indigo-200 dark:border-indigo-500/30 p-5 shadow-xs space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -997,7 +989,7 @@ export const VoiceLabPage: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleCopyLink}
-                      className="text-xs text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1 p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      className="text-xs text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1 p-1.5 rounded-lg border border-slate-200 dark:border-[#2d3037] hover:bg-slate-50 dark:hover:bg-[#282a30]"
                       title="کپی لینک مستقیم فایل صوت"
                     >
                       <Copy className="w-3.5 h-3.5" />
@@ -1015,7 +1007,7 @@ export const VoiceLabPage: React.FC = () => {
                 </div>
 
                 {/* Custom Audio Player UI */}
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#111726] border border-slate-200 dark:border-slate-800/80 flex flex-col gap-3">
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#24262b] border border-slate-200 dark:border-[#2d3037] flex flex-col gap-3">
                   <div className="flex items-center gap-4">
                     <button
                       onClick={toggleTtsPlay}
@@ -1070,28 +1062,28 @@ export const VoiceLabPage: React.FC = () => {
 
                 {/* Technical Telemetry */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#111726]/70 border border-slate-200 dark:border-slate-800">
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#24262b] border border-slate-200 dark:border-[#2d3037]">
                     <span className="text-[10px] text-slate-400 block">مدت زمان صوت</span>
                     <span className="text-xs font-bold font-mono text-slate-800 dark:text-slate-200">
                       {ttsResult.durationMs.toLocaleString()} ms
                     </span>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#111726]/70 border border-slate-200 dark:border-slate-800">
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#24262b] border border-slate-200 dark:border-[#2d3037]">
                     <span className="text-[10px] text-slate-400 block">نرخ نمونه‌برداری</span>
                     <span className="text-xs font-bold font-mono text-indigo-600 dark:text-indigo-400">
                       {ttsResult.sampleRate.toLocaleString()} Hz (24kHz)
                     </span>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#111726]/70 border border-slate-200 dark:border-slate-800">
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#24262b] border border-slate-200 dark:border-[#2d3037]">
                     <span className="text-[10px] text-slate-400 block">شناسه و نام صدا</span>
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block">
                       {ttsResult.voiceName} ({ttsResult.voiceId})
                     </span>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#111726]/70 border border-slate-200 dark:border-slate-800">
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#24262b] border border-slate-200 dark:border-[#2d3037]">
                     <span className="text-[10px] text-slate-400 block">قالب خروجی</span>
                     <span className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400">
                       16-bit Mono WAV
@@ -1111,13 +1103,13 @@ export const VoiceLabPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Recording Controls & Visualizer */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="bg-white dark:bg-[#0E1422] rounded-2xl border border-slate-200 dark:border-slate-800/80 p-5 shadow-xs space-y-5">
+            <div className="bg-white dark:bg-[#202125] rounded-2xl border border-slate-200 dark:border-[#2d3037] p-5 shadow-xs space-y-5">
               {/* STT Mode Selection */}
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-2">
                   حالت آزمون تبدیل گفتار (STT Mode)
                 </label>
-                <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-[#111726] border border-slate-200 dark:border-slate-800">
+                <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-[#24262b] border border-slate-200 dark:border-[#363842]">
                   <button
                     onClick={() => {
                       if (isRecording) stopRecording();
@@ -1259,7 +1251,7 @@ export const VoiceLabPage: React.FC = () => {
 
               {/* Recorded Audio Preview */}
               {recordedAudioUrl && (
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#111726] border border-slate-200 dark:border-slate-800 space-y-1.5">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#24262b] border border-slate-200 dark:border-[#2d3037] space-y-1.5">
                   <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-400">
                     <span>پیش‌نمایش صدای ضبط شده شما:</span>
                     {recordedAudioBlob && (
@@ -1273,7 +1265,7 @@ export const VoiceLabPage: React.FC = () => {
               )}
 
               {/* Engine Specs */}
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#111726]/60 border border-slate-200 dark:border-slate-800/80 text-xs space-y-1 text-slate-500 dark:text-slate-400">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#24262b]/60 border border-slate-200 dark:border-[#2d3037] text-xs space-y-1 text-slate-500 dark:text-slate-400">
                 <div className="flex items-center justify-between">
                   <span>مدل پردازش:</span>
                   <span className="font-mono text-slate-700 dark:text-slate-300">streaming-zipformer-en</span>
@@ -1288,7 +1280,7 @@ export const VoiceLabPage: React.FC = () => {
 
           {/* Right Column: Transcription Output & Telemetry */}
           <div className="lg:col-span-7 space-y-4">
-            <div className="bg-white dark:bg-[#0E1422] rounded-2xl border border-slate-200 dark:border-slate-800/80 p-5 shadow-xs space-y-4">
+            <div className="bg-white dark:bg-[#202125] rounded-2xl border border-slate-200 dark:border-[#2d3037] p-5 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className={`w-2.5 h-2.5 rounded-full ${isRecording ? 'bg-emerald-500 animate-ping' : 'bg-slate-400'}`} />
@@ -1326,7 +1318,7 @@ export const VoiceLabPage: React.FC = () => {
 
               {/* Transcript Display Box */}
               <div
-                className="min-h-[220px] max-h-[360px] overflow-y-auto p-4 rounded-xl bg-slate-50 dark:bg-[#111726] border border-slate-200 dark:border-slate-800 text-sm leading-relaxed"
+                className="min-h-[220px] max-h-[360px] overflow-y-auto p-4 rounded-xl bg-slate-50 dark:bg-[#24262b] border border-slate-200 dark:border-[#2d3037] text-sm leading-relaxed"
                 dir="ltr"
               >
                 {finalTranscripts.length === 0 && !livePartial ? (
@@ -1385,7 +1377,7 @@ export const VoiceLabPage: React.FC = () => {
           TAB 3: FULL LOOPBACK SIMULATOR
           ======================================================== */}
       {activeTab === 'loopback' && (
-        <div className="bg-white dark:bg-[#0E1422] rounded-2xl border border-slate-200 dark:border-slate-800/80 p-6 shadow-xs space-y-6">
+        <div className="bg-white dark:bg-[#202125] rounded-2xl border border-slate-200 dark:border-[#2d3037] p-6 shadow-xs space-y-6">
           <div className="max-w-2xl mx-auto text-center space-y-2">
             <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center mx-auto">
               <ArrowRightLeft className="w-6 h-6" />
@@ -1400,7 +1392,7 @@ export const VoiceLabPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {/* Step 1: Speak */}
-            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#111726]/60 flex flex-col items-center text-center gap-3">
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-[#2d3037] bg-slate-50 dark:bg-[#24262b]/60 flex flex-col items-center text-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">
                 ۱
               </div>
@@ -1421,20 +1413,20 @@ export const VoiceLabPage: React.FC = () => {
             </div>
 
             {/* Step 2: Transcribe */}
-            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#111726]/60 flex flex-col items-center text-center gap-3">
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-[#2d3037] bg-slate-50 dark:bg-[#24262b]/60 flex flex-col items-center text-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold">
                 ۲
               </div>
               <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
                 تشخیص کلمات شما
               </h4>
-              <div className="w-full min-h-[50px] p-2 rounded-lg bg-white dark:bg-[#0E1422] border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-800 dark:text-slate-200 flex items-center justify-center text-center" dir="ltr">
+              <div className="w-full min-h-[50px] p-2 rounded-lg bg-white dark:bg-[#18191b] border border-slate-200 dark:border-[#2d3037] text-xs font-mono text-slate-800 dark:text-slate-200 flex items-center justify-center text-center" dir="ltr">
                 {loopbackText || '— هنوز متنی دریافت نشده —'}
               </div>
             </div>
 
             {/* Step 3: Speak Back */}
-            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#111726]/60 flex flex-col items-center text-center gap-3">
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-[#2d3037] bg-slate-50 dark:bg-[#24262b]/60 flex flex-col items-center text-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
                 ۳
               </div>

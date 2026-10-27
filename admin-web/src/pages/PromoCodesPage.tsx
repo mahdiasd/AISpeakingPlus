@@ -140,21 +140,16 @@ export const PromoCodesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-              مدیریت کدهای تخفیف و پروموشن
-            </h1>
-            <Badge variant="purple" size="md">
-              {stats.activeCodes} کد فعال
-            </Badge>
-          </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            تعریف، ویرایش، تعیین سقف استفاده و گزارش عملکرد کدهای تخفیف خرید اشتراک
-          </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#f1f3f5] tracking-tight">
+            کدهای تخفیف
+          </h1>
+          <Badge variant="purple" size="md">
+            {stats.activeCodes} کد فعال
+          </Badge>
         </div>
 
         <Button
@@ -163,7 +158,7 @@ export const PromoCodesPage: React.FC = () => {
             setEditingPromo(null);
             setIsUpsertModalOpen(true);
           }}
-          className="gap-2 shrink-0 shadow-sm"
+          className="gap-2 shrink-0 shadow-2xs"
         >
           <Plus className="w-4 h-4" />
           کد تخفیف جدید
@@ -171,28 +166,28 @@ export const PromoCodesPage: React.FC = () => {
       </div>
 
       {/* Metric Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <span className="text-xs font-semibold text-slate-500 dark:text-[#9ca3af]">
               کل کدهای ثبت‌شده
             </span>
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#282a30] border border-slate-200 dark:border-[#383b44] flex items-center justify-center text-indigo-600 dark:text-indigo-400">
               <TicketPercent className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-2 font-mono">
+          <div className="text-2xl font-bold text-slate-900 dark:text-[#f1f3f5] mt-2 font-mono">
             {stats.totalCodes.toLocaleString('fa-IR')}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">کدهای فعال و منقضی</div>
         </div>
 
-        <div className="bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
+        <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <span className="text-xs font-semibold text-slate-500 dark:text-[#9ca3af]">
               کدهای معتبر و فعال
             </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#282a30] border border-slate-200 dark:border-[#383b44] flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
@@ -202,27 +197,27 @@ export const PromoCodesPage: React.FC = () => {
           <div className="text-[11px] text-slate-400 mt-1">آماده اعمال در کلاینت</div>
         </div>
 
-        <div className="bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
+        <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <span className="text-xs font-semibold text-slate-500 dark:text-[#9ca3af]">
               کل دفعات استفاده
             </span>
-            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#282a30] border border-slate-200 dark:border-[#383b44] flex items-center justify-center text-blue-600 dark:text-blue-400">
               <Users className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-2 font-mono">
+          <div className="text-2xl font-bold text-slate-900 dark:text-[#f1f3f5] mt-2 font-mono">
             {stats.totalRedemptions.toLocaleString('fa-IR')}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">اشتراک خریداری‌شده با تخفیف</div>
         </div>
 
-        <div className="bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
+        <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <span className="text-xs font-semibold text-slate-500 dark:text-[#9ca3af]">
               مجموع تخفیف اعطایی
             </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#282a30] border border-slate-200 dark:border-[#383b44] flex items-center justify-center text-amber-600 dark:text-amber-400">
               <Coins className="w-4 h-4" />
             </div>
           </div>
@@ -235,10 +230,10 @@ export const PromoCodesPage: React.FC = () => {
       </div>
 
       {/* Filter and Search Toolbar */}
-      <div className="bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl p-3 sm:p-4 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
         {/* Status Filter Tabs */}
         <div className="flex items-center gap-1.5 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-          <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 ml-1 hidden sm:inline-flex items-center gap-1 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-slate-400 dark:text-[#858a94] ml-1 hidden sm:inline-flex items-center gap-1 uppercase tracking-wider">
             <Filter className="w-3.5 h-3.5 text-indigo-500" /> فیلتر:
           </span>
           {[
@@ -252,8 +247,8 @@ export const PromoCodesPage: React.FC = () => {
               onClick={() => setStatusFilter(tab.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
                 statusFilter === tab.id
-                  ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-500/30 shadow-2xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                  ? 'bg-indigo-50 text-indigo-700 dark:bg-[#282a30] dark:text-[#f1f3f5] font-bold border border-indigo-200 dark:border-[#383b44] shadow-2xs'
+                  : 'text-slate-600 dark:text-[#9ca3af] hover:bg-slate-100 dark:hover:bg-[#24262b]'
               }`}
             >
               {tab.label}
@@ -268,14 +263,14 @@ export const PromoCodesPage: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="جستجوی کد یا عنوان تخفیف..."
-            className="w-full pl-3 pr-9 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0E1422] text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400"
+            className="w-full pl-3 pr-9 py-2 rounded-xl border border-slate-200 dark:border-[#363842] bg-slate-50 dark:bg-[#24262b] text-slate-900 dark:text-[#f1f3f5] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-400 dark:placeholder-[#858a94]"
           />
           <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
         </div>
       </div>
 
       {/* Main Table / List */}
-      <div className="bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl shadow-2xs overflow-hidden">
         {isLoading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
             <div className="w-9 h-9 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
@@ -310,7 +305,7 @@ export const PromoCodesPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-right text-xs">
-              <thead className="bg-slate-50/80 dark:bg-[#0E1422]/90 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold select-none">
+              <thead className="bg-slate-50/80 dark:bg-[#1b1c1f] border-b border-slate-200 dark:border-[#2d3037] text-slate-500 dark:text-[#9ca3af] font-semibold select-none">
                 <tr>
                   <th className="py-3.5 px-4">کد تخفیف</th>
                   <th className="py-3.5 px-4">نوع و میزان تخفیف</th>
@@ -321,7 +316,7 @@ export const PromoCodesPage: React.FC = () => {
                   <th className="py-3.5 px-4 text-left">عملیات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <tbody className="divide-y divide-slate-100 dark:divide-[#2d3037]">
                 {promoCodes.map((item) => {
                   const isExpired = item.isExpired;
                   const isNearLimit = item.maxUses != null && item.usedCount >= item.maxUses;
@@ -333,7 +328,7 @@ export const PromoCodesPage: React.FC = () => {
                   return (
                     <tr
                       key={item.id}
-                      className="hover:bg-slate-50/70 dark:hover:bg-slate-800/25 transition-colors"
+                      className="hover:bg-slate-50/70 dark:hover:bg-[#282a30] transition-colors"
                     >
                       {/* Code & Title */}
                       <td className="py-3.5 px-4">

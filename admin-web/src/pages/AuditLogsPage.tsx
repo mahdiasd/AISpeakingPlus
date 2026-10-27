@@ -79,21 +79,16 @@ export const AuditLogsPage: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-              تاریخچه عملیات و لاگ‌های حسابرسی
-            </h1>
-            <Badge variant="purple" size="md">
-              {logs.length} رویداد ثبت‌شده
-            </Badge>
-          </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            ثبت غیرقابل تغییر (Audit Trail) تمامی اقدامات ادمین‌ها در سیستم
-          </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#f1f3f5] tracking-tight">
+            تاریخچه عملیات
+          </h1>
+          <Badge variant="purple" size="md">
+            {logs.length} رویداد
+          </Badge>
         </div>
 
         <Button
@@ -108,9 +103,9 @@ export const AuditLogsPage: React.FC = () => {
       </div>
 
       {/* Filter and Search */}
-      <div className="bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl p-3 sm:p-4 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-          <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 ml-1 hidden sm:inline-flex items-center gap-1.5 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-slate-400 dark:text-[#858a94] ml-1 hidden sm:inline-flex items-center gap-1.5 uppercase tracking-wider">
             <Filter className="w-3.5 h-3.5 text-indigo-500" /> فیلتر:
           </span>
           {[
@@ -124,8 +119,8 @@ export const AuditLogsPage: React.FC = () => {
               onClick={() => setActionFilter(item.id)}
               className={`text-xs sm:text-sm px-3.5 py-1.5 rounded-xl font-medium transition-all ${
                 actionFilter === item.id
-                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-xs dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30'
-                  : 'bg-slate-100 dark:bg-[#0E1422] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-slate-800/60 border border-transparent'
+                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs dark:bg-[#282a30] dark:text-[#f1f3f5] dark:border-[#383b44]'
+                  : 'bg-slate-100 dark:bg-[#24262b] text-slate-600 dark:text-[#9ca3af] hover:text-slate-900 dark:hover:text-[#f1f3f5] hover:bg-slate-200/70 dark:hover:bg-[#282a30] border border-transparent'
               }`}
             >
               {item.label}
@@ -139,26 +134,26 @@ export const AuditLogsPage: React.FC = () => {
             placeholder="جستجو در لاگ‌ها، ادمین یا شناسه..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-sm rounded-xl bg-slate-50 dark:bg-[#0E1422] border border-slate-300 dark:border-slate-800 pl-9 pr-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:ring-indigo-500/25 dark:focus:border-indigo-500 transition-all"
+            className="w-full text-sm rounded-xl bg-slate-50 dark:bg-[#24262b] border border-slate-300 dark:border-[#363842] pl-9 pr-4 py-2 text-slate-900 dark:text-[#f1f3f5] placeholder-slate-400 dark:placeholder-[#858a94] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
         </div>
       </div>
 
       {/* Logs Table */}
-      <div className="bg-white dark:bg-[#111726] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl shadow-2xs overflow-hidden">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
             <div className="w-8 h-8 border-3 border-indigo-500/20 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin" />
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">در حال دریافت تاریخچه عملیات...</p>
+            <p className="text-sm font-medium text-slate-500 dark:text-[#9ca3af]">در حال دریافت تاریخچه عملیات...</p>
           </div>
         ) : filteredLogs.length === 0 ? (
-          <div className="text-center py-20 px-4">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-4 shadow-xs">
-              <History className="w-7 h-7" />
+          <div className="text-center py-16 px-4">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-[#282a30] border border-slate-200 dark:border-[#383b44] text-slate-600 dark:text-slate-300 flex items-center justify-center mx-auto mb-3 shadow-2xs">
+              <History className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">لاگی با این مشخصات یافت نشد</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+            <h3 className="text-base font-bold text-slate-800 dark:text-[#f1f3f5]">لاگی با این مشخصات یافت نشد</h3>
+            <p className="text-sm text-slate-500 dark:text-[#9ca3af] mt-1 max-w-sm mx-auto">
               {searchQuery ? 'موردی با این عبارت جستجو یافت نشد.' : 'هنوز رکورد لاگی ثبت نشده است.'}
             </p>
           </div>
@@ -166,19 +161,19 @@ export const AuditLogsPage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-[#0E1422]/90 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  <th className="py-4 px-4">زمان ثبت</th>
-                  <th className="py-4 px-4">مدیر اقدام‌کننده</th>
-                  <th className="py-4 px-4">عنوان اقدام</th>
-                  <th className="py-4 px-4">موجودیت و شناسه</th>
-                  <th className="py-4 px-4 text-left">جزئیات فنی</th>
+                <tr className="border-b border-slate-200 dark:border-[#2d3037] bg-slate-50/70 dark:bg-[#1b1c1f] text-xs font-semibold text-slate-500 dark:text-[#9ca3af] uppercase tracking-wider">
+                  <th className="py-3.5 px-4">زمان ثبت</th>
+                  <th className="py-3.5 px-4">مدیر اقدام‌کننده</th>
+                  <th className="py-3.5 px-4">عنوان اقدام</th>
+                  <th className="py-3.5 px-4">موجودیت و شناسه</th>
+                  <th className="py-3.5 px-4 text-left">جزئیات فنی</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
+              <tbody className="divide-y divide-slate-100 dark:divide-[#2d3037] text-sm">
                 {filteredLogs.map((log) => (
                   <tr
                     key={log.id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-[#151D30]/60 transition-colors"
+                    className="hover:bg-slate-50/80 dark:hover:bg-[#282a30] transition-colors"
                   >
                     {/* Timestamp */}
                     <td className="py-4 px-4 whitespace-nowrap">
@@ -226,7 +221,7 @@ export const AuditLogsPage: React.FC = () => {
                       <div className="flex items-center gap-1.5 text-xs sm:text-sm">
                         <span className="font-semibold text-slate-800 dark:text-slate-300">{log.targetType}</span>
                         <span className="text-slate-400">&bull;</span>
-                        <span className="font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#0E1422] px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-800 text-xs tabular-nums" dir="ltr">
+                        <span className="font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#24262b] px-2 py-0.5 rounded-md border border-slate-200 dark:border-[#2d3037] text-xs tabular-nums" dir="ltr">
                           {log.targetId}
                         </span>
                       </div>
