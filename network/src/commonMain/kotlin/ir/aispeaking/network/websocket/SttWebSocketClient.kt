@@ -28,6 +28,7 @@ class SttWebSocketClient(
     private val baseUrl get() = NetworkConfig.baseUrl
     private var activeSession: DefaultClientWebSocketSession? = null
     private val sessionMutex = Mutex()
+    private val pendingChunks = mutableListOf<ByteArray>()
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -50,10 +51,22 @@ class SttWebSocketClient(
         var session: DefaultClientWebSocketSession? = null
         try {
             session = client.webSocketSession(urlString = wsUrl)
+            val bufferedToFlush: List<ByteArray>
             sessionMutex.withLock {
                 activeSession = session
+                bufferedToFlush = pendingChunks.toList()
+                pendingChunks.clear()
             }
             "STT WebSocket connected successfully".dLog(tag = "SttWebSocketClient")
+
+            // Flush any initial audio frames captured while connecting so start of speech is preserved
+            for (chunk in bufferedToFlush) {
+                try {
+                    session.send(Frame.Binary(fin = true, data = chunk))
+                } catch (e: Throwable) {
+                    "Failed to flush pending STT chunk: ${e.message}".dLog(tag = "SttWebSocketClient")
+                }
+            }
 
             for (frame in session.incoming) {
                 when (frame) {
@@ -84,6 +97,7 @@ class SttWebSocketClient(
                 if (activeSession === session) {
                     activeSession = null
                 }
+                pendingChunks.clear()
             }
             try {
                 session?.close(CloseReason(CloseReason.Codes.NORMAL, "Session ended"))
@@ -94,6 +108,7 @@ class SttWebSocketClient(
 
     /**
      * Sends a chunk of raw mono 16kHz PCM16 audio bytes as a binary frame.
+     * If the session is still connecting, buffers the chunk so initial speech is not lost.
      */
     suspend fun sendAudioChunk(pcm16Bytes: ByteArray) {
         sessionMutex.withLock {
@@ -101,7 +116,25 @@ class SttWebSocketClient(
             if (session != null) {
                 session.send(Frame.Binary(fin = true, data = pcm16Bytes))
             } else {
-                "Cannot send audio chunk: STT WebSocket session is not active".dLog(tag = "SttWebSocketClient")
+                // Buffer up to 60 chunks (~7.5s) while establishing connection
+                if (pendingChunks.size < 60) {
+                    pendingChunks.add(pcm16Bytes)
+                }
+            }
+        }
+    }
+
+    /**
+     * Sends a stop/finish control frame to notify the server that audio input is complete,
+     * triggering a final decode flush.
+     */
+    suspend fun sendStop() {
+        sessionMutex.withLock {
+            val session = activeSession
+            if (session != null) {
+                try {
+                    session.send(Frame.Text("{\"type\":\"stop\"}"))
+                } catch (_: Throwable) {}
             }
         }
     }
@@ -111,6 +144,7 @@ class SttWebSocketClient(
      */
     suspend fun close() {
         sessionMutex.withLock {
+            pendingChunks.clear()
             val session = activeSession
             activeSession = null
             try {

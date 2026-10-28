@@ -25,6 +25,7 @@ import ir.aispeaking.domain.usecase.stage.RequestStageHintUseCase
 import ir.aispeaking.domain.usecase.stage.SubmitStageEvaluationUseCase
 import ir.aispeaking.domain.usecase.stt.CloseSttSessionUseCase
 import ir.aispeaking.domain.usecase.stt.SendAudioChunkUseCase
+import ir.aispeaking.domain.usecase.stt.SendStopSttUseCase
 import ir.aispeaking.domain.usecase.stt.StreamSpeechToTextUseCase
 import ir.aispeaking.domain.usecase.user.GetUserProfileUseCase
 import ir.aispeaking.chat.audio.StageAudioController
@@ -90,6 +91,7 @@ class ChatViewModel(
     private val streamSpeechToTextUseCase: StreamSpeechToTextUseCase,
     private val sendAudioChunkUseCase: SendAudioChunkUseCase,
     private val closeSttSessionUseCase: CloseSttSessionUseCase,
+    private val sendStopSttUseCase: SendStopSttUseCase? = null,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
     private val isGuideCompletedUseCase: IsGuideCompletedUseCase? = null,
@@ -411,62 +413,76 @@ class ChatViewModel(
         audioController.stopVoice()
         _uiState.update { it.copy(isRecording = true, sttError = null, hintError = null) }
 
-            audioSenderJob?.cancel()
-            audioChunkChannel?.close()
-            val chunkChannel = Channel<ByteArray>(capacity = Channel.BUFFERED)
-            audioChunkChannel = chunkChannel
+        audioSenderJob?.cancel()
+        audioChunkChannel?.close()
+        val chunkChannel = Channel<ByteArray>(capacity = Channel.UNLIMITED)
+        audioChunkChannel = chunkChannel
 
-            audioSenderJob = viewModelScope.launch {
-                for (chunk in chunkChannel) {
-                    try {
-                        sendAudioChunkUseCase(chunk)
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (_: Exception) {
-                    }
+        audioSenderJob = viewModelScope.launch {
+            for (chunk in chunkChannel) {
+                try {
+                    sendAudioChunkUseCase(chunk)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
                 }
             }
+        }
 
-            audioController.onAudioChunkCaptured = { pcm16Bytes ->
-                audioChunkChannel?.trySend(pcm16Bytes)
-            }
+        audioController.onAudioChunkCaptured = { pcm16Bytes ->
+            audioChunkChannel?.trySend(pcm16Bytes)
+        }
 
-            sttStreamJob?.cancel()
-            sttStreamJob = viewModelScope.launch {
-                var sessionFinalizedText = ""
-                try {
-                    streamSpeechToTextUseCase().collect { event ->
-                        when (event) {
-                            is SttStreamEvent.Ready -> {
-                                audioController.onAudioChunkCaptured = { pcm16Bytes ->
-                                    audioChunkChannel?.trySend(pcm16Bytes)
-                                }
+        sttStreamJob?.cancel()
+        sttStreamJob = viewModelScope.launch {
+            var sessionFinalizedText = ""
+            try {
+                streamSpeechToTextUseCase().collect { event ->
+                    when (event) {
+                        is SttStreamEvent.Ready -> {
+                            audioController.onAudioChunkCaptured = { pcm16Bytes ->
+                                audioChunkChannel?.trySend(pcm16Bytes)
                             }
-                            is SttStreamEvent.PartialTranscript -> {
-                                if (event.text.isNotBlank()) {
-                                    val combined = if (sessionFinalizedText.isEmpty()) {
-                                        event.text
-                                    } else {
-                                        "$sessionFinalizedText ${event.text}"
-                                    }
-                                    _uiState.update { it.copy(messageText = combined) }
+                        }
+                        is SttStreamEvent.PartialTranscript -> {
+                            if (event.text.isNotBlank()) {
+                                audioController.notifyVoiceActivity()
+                                val combined = if (sessionFinalizedText.isEmpty()) {
+                                    event.text
+                                } else {
+                                    "$sessionFinalizedText ${event.text}"
                                 }
+                                _uiState.update { it.copy(messageText = combined) }
                             }
-                            is SttStreamEvent.FinalTranscript -> {
-                                if (event.text.isNotBlank()) {
-                                    sessionFinalizedText = if (sessionFinalizedText.isEmpty()) {
-                                        event.text
-                                    } else {
-                                        "$sessionFinalizedText ${event.text}"
-                                    }
-                                    _uiState.update { it.copy(messageText = sessionFinalizedText) }
+                        }
+                        is SttStreamEvent.FinalTranscript -> {
+                            if (event.text.isNotBlank()) {
+                                audioController.notifyVoiceActivity()
+                                sessionFinalizedText = if (sessionFinalizedText.isEmpty()) {
+                                    event.text
+                                } else {
+                                    "$sessionFinalizedText ${event.text}"
                                 }
+                                _uiState.update { it.copy(messageText = sessionFinalizedText) }
                             }
-                            is SttStreamEvent.Error -> {
+                        }
+                        is SttStreamEvent.Error -> {
+                            stopRecordingSession()
+                            val errorMsg = event.message.ifBlank {
+                                "خطا در سرویس تشخیص گفتار. لطفاً دوباره تلاش کنید."
+                            }
+                            _uiState.update {
+                                it.copy(
+                                    isRecording = false,
+                                    sttError = errorMsg,
+                                    hintError = errorMsg
+                                )
+                            }
+                        }
+                        is SttStreamEvent.Disconnected -> {
+                            if (_uiState.value.isRecording) {
                                 stopRecordingSession()
-                                val errorMsg = event.message.ifBlank {
-                                    "خطا در سرویس تشخیص گفتار. لطفاً دوباره تلاش کنید."
-                                }
+                                val errorMsg = "اتصال وب‌سوکت تشخیص گفتار قطع شد."
                                 _uiState.update {
                                     it.copy(
                                         isRecording = false,
@@ -475,62 +491,62 @@ class ChatViewModel(
                                     )
                                 }
                             }
-                            is SttStreamEvent.Disconnected -> {
-                                if (_uiState.value.isRecording) {
-                                    stopRecordingSession()
-                                    val errorMsg = "اتصال وب‌سوکت تشخیص گفتار قطع شد."
-                                    _uiState.update {
-                                        it.copy(
-                                            isRecording = false,
-                                            sttError = errorMsg,
-                                            hintError = errorMsg
-                                        )
-                                    }
-                                }
-                            }
                         }
                     }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    stopRecordingSession()
-                    val errorMsg = e.message?.takeIf { it.isNotBlank() }
-                        ?: "خطا در ارتباط با سرویس تشخیص گفتار."
-                    _uiState.update {
-                        it.copy(
-                            isRecording = false,
-                            sttError = errorMsg,
-                            hintError = errorMsg
-                        )
-                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                stopRecordingSession()
+                val errorMsg = e.message?.takeIf { it.isNotBlank() }
+                    ?: "خطا در ارتباط با سرویس تشخیص گفتار."
+                _uiState.update {
+                    it.copy(
+                        isRecording = false,
+                        sttError = errorMsg,
+                        hintError = errorMsg
+                    )
                 }
             }
+        }
 
-            audioController.startRecording(
-                onSpeechRecognized = { text ->
+        audioController.startRecording(
+            onSpeechRecognized = { text ->
+                if (_uiState.value.messageText.isBlank() && text.isNotBlank()) {
                     _uiState.update { it.copy(messageText = text) }
-                },
-                onSilenceDetected = {
-                    // 5-second silence detected -> auto pause & stop recording
-                    stopRecordingSession()
-                    _uiState.update { it.copy(isRecording = false) }
                 }
-            )
+            },
+            onSilenceDetected = {
+                // Silence detected -> auto pause & stop recording
+                stopRecordingSession()
+                _uiState.update { it.copy(isRecording = false) }
+            }
+        )
     }
 
     private fun stopRecordingSession() {
         audioController.onAudioChunkCaptured = null
         audioController.stopRecording()
-        audioChunkChannel?.close()
+        val channel = audioChunkChannel
         audioChunkChannel = null
-        audioSenderJob?.cancel()
+        channel?.close()
+        val senderJob = audioSenderJob
         audioSenderJob = null
-        sttStreamJob?.cancel()
+        val streamJob = sttStreamJob
         sttStreamJob = null
+
         viewModelScope.launch {
             try {
+                senderJob?.join()
+            } catch (_: Throwable) {}
+            try {
+                sendStopSttUseCase?.invoke()
+                delay(300)
+            } catch (_: Throwable) {}
+            try {
+                streamJob?.cancel()
                 closeSttSessionUseCase()
-            } catch (_: Exception) {}
+            } catch (_: Throwable) {}
         }
     }
 

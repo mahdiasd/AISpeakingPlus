@@ -21,6 +21,10 @@ class SttRepositoryImpl(
         sttWebSocketClient.sendAudioChunk(pcm16Bytes)
     }
 
+    override suspend fun sendStop() {
+        sttWebSocketClient.sendStop()
+    }
+
     override suspend fun closeSession() {
         sttWebSocketClient.close()
     }
