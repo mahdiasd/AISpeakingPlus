@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 interface SttRepository {
     fun connectSttStream(): Flow<SttStreamEvent>
     suspend fun sendAudioChunk(pcm16Bytes: ByteArray)
+    suspend fun sendStop()
     suspend fun closeSession()
     fun isSessionActive(): Boolean
 }

@@ -58,7 +58,7 @@ fun IntroVideoScreen(
     onFinished: () -> Unit,
     onSkip: () -> Unit,
     modifier: Modifier = Modifier,
-    videoUrl: String = "/resources/video/intro.mp4"
+    videoUrl: String = "/resources/video/intro.mp4?v=2"
 ) {
     var isPlayingVideo by remember { mutableStateOf(false) }
 
@@ -241,7 +241,7 @@ fun IntroVideoScreen(
                                     size = 14.sp,
                                     lineHeight = 23.sp,
                                     color = Game.TextSecondary,
-                                    align = TextAlign.Center
+                                    align = TextAlign.Justify
                                 )
                             }
 

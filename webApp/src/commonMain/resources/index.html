@@ -447,7 +447,7 @@
             },
 
             _downsampleBuffer: function(buffer, sourceRate, targetRate) {
-                if (sourceRate === targetRate) return buffer;
+                if (sourceRate === targetRate || !buffer || buffer.length === 0) return buffer;
                 var ratio = sourceRate / targetRate;
                 var newLength = Math.round(buffer.length / ratio);
                 var result = new Float32Array(newLength);
@@ -508,12 +508,16 @@
 
                 var self = this;
 
-                // 1. Prime AudioContext synchronously in current user gesture
+                // 1. Prime AudioContext synchronously in current user gesture (native 16000Hz preferred)
                 var AudioContextClass = window.AudioContext || window.webkitAudioContext;
                 if (AudioContextClass) {
                     try {
                         if (!window._aiSpeakingAudioCtx || window._aiSpeakingAudioCtx.state === 'closed') {
-                            window._aiSpeakingAudioCtx = new AudioContextClass();
+                            try {
+                                window._aiSpeakingAudioCtx = new AudioContextClass({ sampleRate: 16000 });
+                            } catch (errRate) {
+                                window._aiSpeakingAudioCtx = new AudioContextClass();
+                            }
                         }
                         self.audioContext = window._aiSpeakingAudioCtx;
                         if (self.audioContext && self.audioContext.state === 'suspended') {
@@ -556,7 +560,11 @@
 
                     try {
                         if (!self.audioContext || self.audioContext.state === 'closed') {
-                            self.audioContext = new AudioContextClass();
+                            try {
+                                self.audioContext = new AudioContextClass({ sampleRate: 16000 });
+                            } catch (errRate) {
+                                self.audioContext = new AudioContextClass();
+                            }
                         }
                         if (self.audioContext.state === 'suspended') {
                             self.audioContext.resume().catch(function(){});
@@ -569,7 +577,7 @@
                         self.audioProcessor.onaudioprocess = function(e) {
                             if (!self.isRecording) return;
                             var rawInput = e.inputBuffer.getChannelData(0);
-                            var ctxRate = self.audioContext.sampleRate || 16000;
+                            var ctxRate = (self.audioContext && self.audioContext.sampleRate) ? self.audioContext.sampleRate : 16000;
                             var downsampled = self._downsampleBuffer(rawInput, ctxRate, 16000);
                             if (!downsampled || downsampled.length === 0) return;
 
@@ -578,7 +586,8 @@
                                 sumSquares += downsampled[k] * downsampled[k];
                             }
                             var rms = Math.sqrt(sumSquares / downsampled.length);
-                            if (rms > 0.012) {
+                            // Sensitive voice activity threshold (natural conversational level in Chrome is ~0.003 - 0.008)
+                            if (rms > 0.003) {
                                 self._hasVoiceActivity = true;
                                 self._lastVoiceActivityTime = Date.now();
                             }
@@ -590,7 +599,7 @@
                                 try { window.onAiSpeakingAudioChunk(b64Chunk); } catch(err) {}
                             }
 
-                            if (self._pcmChunkQueue.length > 80) {
+                            if (self._pcmChunkQueue.length > 200) {
                                 self._pcmChunkQueue.shift();
                             }
                             self._pcmChunkQueue.push(b64Chunk);

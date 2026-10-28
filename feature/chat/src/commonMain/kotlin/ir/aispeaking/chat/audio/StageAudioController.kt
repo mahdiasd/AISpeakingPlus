@@ -17,6 +17,7 @@ interface StageAudioController {
     )
     fun stopRecording()
     fun isRecording(): Boolean
+    fun notifyVoiceActivity() {}
 
     fun checkMicrophonePermission(onResult: (Boolean) -> Unit) {
         onResult(true)
@@ -57,7 +58,7 @@ class DefaultStageAudioController : StageAudioController {
         onAudioChunkCaptured?.invoke(bytes)
     }
 
-    fun notifyVoiceActivity() {
+    override fun notifyVoiceActivity() {
         currentOnSilenceDetected?.let { resetSilenceTimer(it) }
     }
 

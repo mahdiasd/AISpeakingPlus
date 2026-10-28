@@ -23,6 +23,7 @@ import ir.aispeaking.domain.usecase.stage.RequestStageHintUseCase
 import ir.aispeaking.domain.usecase.stage.SubmitStageEvaluationUseCase
 import ir.aispeaking.domain.usecase.stt.CloseSttSessionUseCase
 import ir.aispeaking.domain.usecase.stt.SendAudioChunkUseCase
+import ir.aispeaking.domain.usecase.stt.SendStopSttUseCase
 import ir.aispeaking.domain.usecase.stt.StreamSpeechToTextUseCase
 import ir.aispeaking.domain.usecase.user.GetUserProfileUseCase
 import ir.aispeaking.utils.analytics.AnalyticsTracker
@@ -62,6 +63,8 @@ class ChatViewModelSttTest {
         override suspend fun sendAudioChunk(pcm16Bytes: ByteArray) {
             sentChunks.add(pcm16Bytes)
         }
+
+        override suspend fun sendStop() {}
 
         override suspend fun closeSession() {
             closed = true
@@ -195,6 +198,7 @@ class ChatViewModelSttTest {
             streamSpeechToTextUseCase = StreamSpeechToTextUseCase(sttRepo),
             sendAudioChunkUseCase = SendAudioChunkUseCase(sttRepo),
             closeSttSessionUseCase = CloseSttSessionUseCase(sttRepo),
+            sendStopSttUseCase = SendStopSttUseCase(sttRepo),
             analyticsTracker = FakeAnalyticsTracker(),
             crashReporter = DefaultCrashReporter()
         )
@@ -261,7 +265,7 @@ class ChatViewModelSttTest {
         assertTrue(viewModel.uiState.value.isRecording)
 
         viewModel.toggleRecording(false)
-        runCurrent()
+        advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isRecording)
         assertNull(audioController.onAudioChunkCaptured)

@@ -24,6 +24,15 @@ class SendAudioChunkUseCase(
 }
 
 @Factory
+class SendStopSttUseCase(
+    private val sttRepository: SttRepository
+) {
+    suspend operator fun invoke() {
+        sttRepository.sendStop()
+    }
+}
+
+@Factory
 class CloseSttSessionUseCase(
     private val sttRepository: SttRepository
 ) {
