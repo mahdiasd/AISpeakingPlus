@@ -241,7 +241,7 @@ fun IntroVideoScreen(
                                     size = 14.sp,
                                     lineHeight = 23.sp,
                                     color = Game.TextSecondary,
-                                    align = TextAlign.Center
+                                    align = TextAlign.Justify
                                 )
                             }
 

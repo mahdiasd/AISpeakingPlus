@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -146,7 +147,8 @@ fun AppGuideCard(
                     text = desc,
                     size = 12.5.sp,
                     lineHeight = 19.sp,
-                    color = Game.TextPrimary
+                    color = Game.TextPrimary,
+                    align = TextAlign.Justify
                 )
             }
 

@@ -178,7 +178,7 @@ fun AnnouncementDialog(
                     size = 14.sp,
                     bold = false,
                     color = Game.TextSecondary,
-                    align = TextAlign.Center,
+                    align = TextAlign.Justify,
                     lineHeight = 22.sp,
                     modifier = Modifier.fillMaxWidth()
                 )

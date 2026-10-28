@@ -212,7 +212,8 @@ private fun AppleInsetCard(
             text = body,
             size = 13.sp,
             lineHeight = 22.sp,
-            color = Game.TextPrimary
+            color = Game.TextPrimary,
+            align = TextAlign.Justify
         )
 
         if (latinSubtext != null) {

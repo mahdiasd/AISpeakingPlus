@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -151,6 +152,7 @@ fun AiChatItem(
                                         size = 14.sp,
                                         lineHeight = 23.sp,
                                         color = Game.TextSecondary,
+                                        align = TextAlign.Justify,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
