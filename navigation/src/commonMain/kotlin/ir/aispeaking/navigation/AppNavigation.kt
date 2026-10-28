@@ -42,7 +42,8 @@ import org.koin.compose.viewmodel.koinViewModel
  */
 @Composable
 fun AppNavigation(
-    onBackStackCreated: @Composable (NavBackStack<NavKey>) -> Unit = {}
+    onBackStackCreated: @Composable (NavBackStack<NavKey>) -> Unit = {},
+    onExitApp: (() -> Unit)? = null
 ) {
     val backStack = rememberNavBackStack(navigationConfig, SplashRoute)
     onBackStackCreated(backStack)
@@ -139,6 +140,16 @@ fun AppNavigation(
                         activeAnnouncement = fresh
                         showAnnouncementDialog = true
                     }
+                }
+            }
+            "EXIT_APP", "EXIT", "CLOSE_APP" -> {
+                showAnnouncementDialog = false
+                if (onExitApp != null) {
+                    onExitApp()
+                } else {
+                    try {
+                        uriHandler.openUri("/")
+                    } catch (_: Throwable) {}
                 }
             }
             "CLOSE" -> {

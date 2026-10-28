@@ -181,7 +181,7 @@ class AppActivity : ComponentActivity() {
         setContent {
             AppTheme {
                 ThemeChanged(AppTheme.isDark)
-                AppNavigation()
+                AppNavigation(onExitApp = { finishAffinity() })
             }
         }
     }

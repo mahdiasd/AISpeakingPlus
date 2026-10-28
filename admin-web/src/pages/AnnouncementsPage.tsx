@@ -228,6 +228,8 @@ export const AnnouncementsPage: React.FC = () => {
 
   const getActionLabel = (act: AnnouncementActionType) => {
     switch (act) {
+      case 'EXIT_APP':
+        return 'بستن اپلیکیشن';
       case 'OPEN_URL':
         return 'باز کردن لینک خارجی';
       case 'NAVIGATE':
@@ -607,6 +609,7 @@ export const AnnouncementsPage: React.FC = () => {
                       className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
                     >
                       <option value="CLOSE">بستن دیالوگ</option>
+                      <option value="EXIT_APP">بستن اپلیکیشن (خروج از برنامه)</option>
                       <option value="OPEN_URL">باز کردن لینک خارجی (URL)</option>
                       <option value="NAVIGATE">هدایت به صفحه‌ای از اپ</option>
                       <option value="RELOAD">ریفرش مجدد برنامه</option>
@@ -667,6 +670,7 @@ export const AnnouncementsPage: React.FC = () => {
                           className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
                         >
                           <option value="CLOSE">بستن دیالوگ</option>
+                          <option value="EXIT_APP">بستن اپلیکیشن (خروج از برنامه)</option>
                           <option value="OPEN_URL">باز کردن لینک خارجی (URL)</option>
                           <option value="NAVIGATE">هدایت به صفحه‌ای از اپ</option>
                           <option value="RELOAD">ریفرش مجدد برنامه</option>

@@ -40,6 +40,7 @@ import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import ir.aispeaking.web.WebBrowserNavigation
+import ir.aispeaking.web.exitWebApp
 import ir.aispeaking.web.setupWebAudioBridge
 import ir.aispeaking.web.setupWebVideoBridge
 import org.jetbrains.compose.resources.painterResource
@@ -114,7 +115,10 @@ fun main() {
                                     .clip(frame)
                                     .background(Game.Ink)
                             ) {
-                                AppNavigation(onBackStackCreated = { WebBrowserNavigation(it) })
+                                AppNavigation(
+                                    onBackStackCreated = { WebBrowserNavigation(it) },
+                                    onExitApp = { exitWebApp() }
+                                )
                             }
 
                             if (showSidePanel) {
@@ -128,7 +132,10 @@ fun main() {
                                 .fillMaxSize()
                                 .background(Game.Ink)
                         ) {
-                            AppNavigation(onBackStackCreated = { WebBrowserNavigation(it) })
+                            AppNavigation(
+                                onBackStackCreated = { WebBrowserNavigation(it) },
+                                onExitApp = { exitWebApp() }
+                            )
                         }
                     }
                 }

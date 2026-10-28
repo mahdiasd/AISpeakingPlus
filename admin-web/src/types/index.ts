@@ -311,7 +311,7 @@ export interface AdminNotificationResponse {
 
 // In-App Announcements Models
 export type AnnouncementType = 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS';
-export type AnnouncementActionType = 'CLOSE' | 'OPEN_URL' | 'NAVIGATE' | 'RELOAD';
+export type AnnouncementActionType = 'CLOSE' | 'EXIT_APP' | 'OPEN_URL' | 'NAVIGATE' | 'RELOAD';
 
 export interface AnnouncementItem {
   id: string;

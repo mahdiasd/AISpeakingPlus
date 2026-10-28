@@ -38,6 +38,15 @@ private external fun jsReplaceUrl(url: String)
 @JsFun("() => window.aiSpeakingRouter ? window.aiSpeakingRouter.getPopCounter() : 0")
 private external fun jsGetPopCounter(): Int
 
+@JsFun("() => { try { window.close(); } catch(e){} window.location.href = '/'; }")
+private external fun jsExitApp()
+
+fun exitWebApp() {
+    try {
+        jsExitApp()
+    } catch (_: Throwable) {}
+}
+
 /**
  * Modern HTML5 History navigation bridge for Compose Multiplatform.
  * Eliminates URL hash fragments (#main) and maps Compose NavBackStack to clean paths
