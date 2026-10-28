@@ -49,6 +49,7 @@ import ir.aispeaking.sharedui.ic_crown
 import ir.aispeaking.sharedui.ic_history
 import ir.aispeaking.sharedui.ic_play
 import ir.aispeaking.sharedui.ic_profile
+import ir.aispeaking.sharedui.ic_roadmap
 import ir.aispeaking.sharedui.ic_star
 import ir.aispeaking.sharedui.ui.component.AsyncStageBackground
 import ir.aispeaking.sharedui.ui.game.Game
@@ -62,6 +63,11 @@ import ir.aispeaking.sharedui.ui.game.GameStatPill
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.GlassPanel
 import ir.aispeaking.sharedui.ui.game.fa
+import ir.aispeaking.sharedui.ui.guide.AppGuideHost
+import ir.aispeaking.sharedui.ui.guide.GuideAlignment
+import ir.aispeaking.sharedui.ui.guide.GuideStep
+import ir.aispeaking.sharedui.ui.guide.guideTarget
+import ir.aispeaking.sharedui.ui.guide.rememberGuideState
 import ir.aispeaking.sharedui.utils.lifecycle.OnResume
 import kotlinx.coroutines.delay
 
@@ -105,6 +111,34 @@ fun JourneyMapScreen(
     }
 
     val currentStage = uiState.currentStage
+
+    val guideState = rememberGuideState(screenKey = "journey_map") { key ->
+        viewModel.markGuideCompleted(key)
+    }
+
+    LaunchedEffect(currentStage) {
+        if (currentStage != null && !viewModel.isGuideCompleted("journey_map")) {
+            delay(700)
+            guideState.start(
+                listOf(
+                    GuideStep(
+                        key = "journey_active_stage",
+                        title = "مرحله فعال شما",
+                        description = "این مرحله، درس و داستان جاری شماست. برای شروع تمرین مکالمه، از این دکمه وارد شوید.",
+                        icon = Res.drawable.ic_play,
+                        alignment = GuideAlignment.Top
+                    ),
+                    GuideStep(
+                        key = "journey_stages_list",
+                        title = "فهرست کامل مرحله‌ها",
+                        description = "برای مشاهده تمام مراحل در یک لیست و مرور پیشرفت، از این قسمت به نمای فهرست بروید.",
+                        icon = Res.drawable.ic_roadmap,
+                        alignment = GuideAlignment.Top
+                    )
+                )
+            )
+        }
+    }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Box(
@@ -192,6 +226,8 @@ fun JourneyMapScreen(
                             pastCount = uiState.pastStages.size,
                             onStart = { viewModel.onStartCurrentStage() },
                             onOpenList = onNavigateToStagesList,
+                            startModifier = Modifier.guideTarget("journey_active_stage", guideState),
+                            listModifier = Modifier.guideTarget("journey_stages_list", guideState),
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
                                 .navigationBarsPadding()
@@ -257,6 +293,8 @@ fun JourneyMapScreen(
                     onDismiss = { viewModel.dismissLeaderboard() }
                 )
             }
+
+            AppGuideHost(state = guideState)
         }
     }
 }
@@ -319,6 +357,8 @@ private fun StageCard(
     pastCount: Int,
     onStart: () -> Unit,
     onOpenList: () -> Unit,
+    startModifier: Modifier = Modifier,
+    listModifier: Modifier = Modifier,
     modifier: Modifier = Modifier
 ) {
     val stars = stage.userProgress?.stars ?: 0
@@ -386,7 +426,7 @@ private fun StageCard(
             GameButton(
                 text = ctaText,
                 onClick = onStart,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().then(startModifier),
                 style = ctaStyle,
                 icon = if (stage.lockStatus == StageLockStatus.UNLOCKED) Res.drawable.ic_play else null
             )
@@ -394,7 +434,7 @@ private fun StageCard(
             GameButton(
                 text = if (pastCount > 0) "همه مرحله‌ها و پیشرفت (${pastCount.fa()} انجام شده)" else "همه مرحله‌ها و پیشرفت",
                 onClick = onOpenList,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().then(listModifier),
                 style = GameButtonStyle.Glass,
                 height = 44.dp,
                 textSize = 13.sp

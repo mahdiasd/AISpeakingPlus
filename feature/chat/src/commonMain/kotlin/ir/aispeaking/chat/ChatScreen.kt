@@ -54,11 +54,19 @@ import ir.aispeaking.domain.model.chat.Chat
 import ir.aispeaking.domain.model.stage.EvaluationSession
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_done
+import ir.aispeaking.sharedui.ic_lamp
+import ir.aispeaking.sharedui.ic_microphone
+import ir.aispeaking.sharedui.ic_spell_check
 import ir.aispeaking.sharedui.ui.component.AsyncStageBackground
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameAvatar
 import ir.aispeaking.sharedui.ui.game.GameChip
 import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.guide.AppGuideHost
+import ir.aispeaking.sharedui.ui.guide.GuideAlignment
+import ir.aispeaking.sharedui.ui.guide.GuideStep
+import ir.aispeaking.sharedui.ui.guide.guideTarget
+import ir.aispeaking.sharedui.ui.guide.rememberGuideState
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
@@ -133,6 +141,41 @@ fun ChatScreen(
 
     val stage = uiState.stage
 
+    val guideState = rememberGuideState(screenKey = "chat") { key ->
+        viewModel.markGuideCompleted(key)
+    }
+
+    LaunchedEffect(stage) {
+        if (stage != null && !viewModel.isGuideCompleted("chat")) {
+            delay(800)
+            guideState.start(
+                listOf(
+                    GuideStep(
+                        key = "chat_mic",
+                        title = "ضبط و ارسال صدا",
+                        description = "برای صحبت کردن به زبان انگلیسی، این دکمه را لمس کنید. هوش مصنوعی صدای شما را می‌شنود و تحلیل می‌کند.",
+                        icon = Res.drawable.ic_microphone,
+                        alignment = GuideAlignment.Top
+                    ),
+                    GuideStep(
+                        key = "chat_objective",
+                        title = "اهداف مرحله",
+                        description = "از اینجا ماموریت‌ها و اهداف این مکالمه را مشاهده کنید تا بدانید سناریو درباره چیست.",
+                        icon = Res.drawable.ic_lamp,
+                        alignment = GuideAlignment.Bottom
+                    ),
+                    GuideStep(
+                        key = "chat_hint",
+                        title = "درخواست راهنمایی",
+                        description = "اگر در پاسخ دادن به انگلیسی مطمئن نبودید، این دکمه جملات پیشنهادی متناسب با گفتگو را به شما ارائه می‌دهد.",
+                        icon = Res.drawable.ic_spell_check,
+                        alignment = GuideAlignment.Top
+                    )
+                )
+            )
+        }
+    }
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         AsyncStageBackground(
             backgroundUrl = stage?.backgroundUrl,
@@ -171,7 +214,8 @@ fun ChatScreen(
                     isFinishing = uiState.isSubmittingEvaluation,
                     onBackClick = onNavigateBack,
                     onObjectiveClick = { showObjectiveSheet = true },
-                    onFinishConversationClick = { viewModel.submitEvaluation() }
+                    onFinishConversationClick = { viewModel.submitEvaluation() },
+                    objectiveModifier = Modifier.guideTarget("chat_objective", guideState)
                 )
 
                 // Main Transcript Viewport
@@ -278,7 +322,9 @@ fun ChatScreen(
                         onInputModeChange = { viewModel.setInputMode(it) },
                         onVoiceToggle = { start -> viewModel.toggleRecording(start) },
                         onSendClick = { viewModel.sendMessage() },
-                        onHintClick = { showHintConfirmDialog = true }
+                        onHintClick = { showHintConfirmDialog = true },
+                        micModifier = Modifier.guideTarget("chat_mic", guideState),
+                        hintModifier = Modifier.guideTarget("chat_hint", guideState)
                     )
                 }
             }
@@ -364,6 +410,9 @@ fun ChatScreen(
                     }
                 }
             }
+
+            // In-app onboarding & feature spotlight tour
+            AppGuideHost(state = guideState)
         }
     }
 }
