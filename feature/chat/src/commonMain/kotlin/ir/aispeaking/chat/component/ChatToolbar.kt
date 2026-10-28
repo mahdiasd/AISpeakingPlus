@@ -58,7 +58,8 @@ fun ChatToolbar(
     isFinishing: Boolean = false,
     onBackClick: () -> Unit,
     onObjectiveClick: () -> Unit = {},
-    onFinishConversationClick: () -> Unit
+    onFinishConversationClick: () -> Unit,
+    objectiveModifier: Modifier = Modifier
 ) {
     val maxTurns = stage?.maxTurns?.coerceAtLeast(1) ?: 10
     val isDark = AppTheme.isDark
@@ -165,7 +166,8 @@ fun ChatToolbar(
             // Objective Chip (Serene Cyan glow, strictly NO green)
             AppleObjectiveChip(
                 text = "هدف مرحله",
-                onClick = onObjectiveClick
+                onClick = onObjectiveClick,
+                modifier = objectiveModifier
             )
 
             // Progress Tracker HUD
@@ -228,13 +230,14 @@ fun ChatToolbar(
 @Composable
 private fun AppleObjectiveChip(
     text: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(50)
     val accent = if (isDark) AppleChatTheme.SuccessCyan else AppleChatTheme.PrimaryAzure
     Row(
-        modifier = Modifier
+        modifier = modifier
             .applePressEffect(targetScale = 0.94f, onClick = onClick)
             .clip(shape)
             .background(if (isDark) Color(0xD9181A28) else Color(0xD9EBF5FF))

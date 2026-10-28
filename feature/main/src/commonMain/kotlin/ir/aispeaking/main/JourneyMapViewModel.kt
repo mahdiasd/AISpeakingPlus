@@ -11,6 +11,8 @@ import ir.aispeaking.domain.model.stage.StageLockStatus
 import ir.aispeaking.domain.usecase.auth.GetCurrentAccessTierUseCase
 import ir.aispeaking.domain.usecase.auth.SendOtpUseCase
 import ir.aispeaking.domain.usecase.auth.VerifyOtpUseCase
+import ir.aispeaking.domain.usecase.guide.IsGuideCompletedUseCase
+import ir.aispeaking.domain.usecase.guide.MarkGuideCompletedUseCase
 import ir.aispeaking.domain.usecase.stage.GetJourneyLeaderboardUseCase
 import ir.aispeaking.domain.usecase.stage.GetStagesUseCase
 import ir.aispeaking.domain.usecase.stage.SyncGuestProgressUseCase
@@ -80,8 +82,15 @@ class JourneyMapViewModel(
     private val sendOtpUseCase: SendOtpUseCase,
     private val verifyOtpUseCase: VerifyOtpUseCase,
     private val getJourneyLeaderboardUseCase: GetJourneyLeaderboardUseCase,
-    private val analyticsTracker: AnalyticsTracker
+    private val analyticsTracker: AnalyticsTracker,
+    private val isGuideCompletedUseCase: IsGuideCompletedUseCase? = null,
+    private val markGuideCompletedUseCase: MarkGuideCompletedUseCase? = null
 ) : ViewModel() {
+
+    fun isGuideCompleted(key: String): Boolean = isGuideCompletedUseCase?.invoke(key) ?: true
+    fun markGuideCompleted(key: String) {
+        markGuideCompletedUseCase?.invoke(key)
+    }
 
     private val _uiState = MutableStateFlow(JourneyMapUiState())
     val uiState: StateFlow<JourneyMapUiState> = _uiState.asStateFlow()

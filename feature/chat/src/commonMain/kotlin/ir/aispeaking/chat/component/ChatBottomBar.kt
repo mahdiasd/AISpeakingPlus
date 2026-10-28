@@ -106,7 +106,9 @@ fun ChatBottomBar(
     onInputModeChange: (ChatInputMode) -> Unit,
     onVoiceToggle: (Boolean) -> Unit,
     onSendClick: () -> Unit,
-    onHintClick: () -> Unit = {}
+    onHintClick: () -> Unit = {},
+    micModifier: Modifier = Modifier,
+    hintModifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
@@ -147,7 +149,9 @@ fun ChatBottomBar(
                     onSwitchToText = { onInputModeChange(ChatInputMode.TEXT) },
                     onVoiceToggle = onVoiceToggle,
                     onSendClick = onSendClick,
-                    onHintClick = onHintClick
+                    onHintClick = onHintClick,
+                    micModifier = micModifier,
+                    hintModifier = hintModifier
                 )
 
                 ChatInputMode.TEXT -> CompactTextRow(
@@ -177,7 +181,9 @@ private fun CompactVoiceRow(
     onSwitchToText: () -> Unit,
     onVoiceToggle: (Boolean) -> Unit,
     onSendClick: () -> Unit,
-    onHintClick: () -> Unit
+    onHintClick: () -> Unit,
+    micModifier: Modifier = Modifier,
+    hintModifier: Modifier = Modifier
 ) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Row(
@@ -206,7 +212,8 @@ private fun CompactVoiceRow(
                 } else {
                     AppleRecordPill(
                         hasText = text.isNotBlank(),
-                        onClick = { onVoiceToggle(true) }
+                        onClick = { onVoiceToggle(true) },
+                        modifier = micModifier
                     )
                 }
             }
@@ -219,7 +226,8 @@ private fun CompactVoiceRow(
                     hintsUsedCount = hintsUsedCount,
                     isRequesting = isRequestingHint,
                     size = 42.dp,
-                    onClick = onHintClick
+                    onClick = onHintClick,
+                    modifier = hintModifier
                 )
             }
         }
@@ -486,7 +494,8 @@ private fun AppleRecordingActivePill(onStop: () -> Unit) {
 @Composable
 private fun AppleRecordPill(
     hasText: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val transition = rememberInfiniteTransition(label = "idle_breathing")
     val breathGlow by transition.animateFloat(
@@ -511,7 +520,7 @@ private fun AppleRecordPill(
     val accentColor = if (hasText) Game.TextPrimary else (if (isDark) AppleChatTheme.SuccessCyan else AppleChatTheme.PrimaryAzure)
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .applePressEffect(targetScale = 0.95f, onClick = onClick)
             .clip(shape)
             .background(pillBg)
@@ -566,11 +575,12 @@ private fun AppleHintButton(
     hintsUsedCount: Int,
     isRequesting: Boolean,
     size: androidx.compose.ui.unit.Dp = 42.dp,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val isDark = AppTheme.isDark
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(size)
             .applePressEffect(enabled = !isRequesting, targetScale = 0.92f, onClick = onClick)
             .clip(CircleShape)

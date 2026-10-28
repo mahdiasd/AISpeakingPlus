@@ -6,4 +6,5 @@ object SharedKeyConstant {
     const val THEME_MODE = "theme_mode"
     const val HAS_SEEN_INTRO_VIDEO = "has_seen_intro_video"
     const val ANNOUNCEMENT_SUPPRESS_PREFIX = "announcement_suppress_"
+    const val GUIDE_COMPLETED_PREFIX = "guide_completed_"
 }
