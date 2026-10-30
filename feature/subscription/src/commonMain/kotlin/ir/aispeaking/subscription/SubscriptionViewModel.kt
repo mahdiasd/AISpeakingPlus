@@ -9,14 +9,20 @@ import ir.aispeaking.domain.model.payment.AppMarket
 import ir.aispeaking.domain.model.payment.MarketPurchaseResult
 import ir.aispeaking.domain.model.stage.SubscriptionPlan
 import ir.aispeaking.domain.repository.PlatformMarketDetector
+import ir.aispeaking.domain.usecase.auth.IsLoggedInUseCase
+import ir.aispeaking.domain.usecase.auth.SendOtpUseCase
+import ir.aispeaking.domain.usecase.auth.VerifyOtpUseCase
 import ir.aispeaking.domain.usecase.stage.CheckSubscriptionStatusUseCase
 import ir.aispeaking.domain.usecase.stage.CreateDirectCheckoutUseCase
 import ir.aispeaking.domain.usecase.stage.GetSubscriptionPlansUseCase
 import ir.aispeaking.domain.usecase.stage.SubscribePlanUseCase
+import ir.aispeaking.domain.usecase.stage.SyncGuestProgressUseCase
 import ir.aispeaking.domain.usecase.stage.ValidateMarketPromoUseCase
 import ir.aispeaking.domain.usecase.stage.VerifyMarketPurchaseUseCase
 import ir.aispeaking.utils.analytics.AnalyticsTracker
 import ir.aispeaking.utils.analytics.AnalyticsEvents
+import ir.aispeaking.utils.analytics.logLogin
+import ir.aispeaking.utils.analytics.logSignUp
 import ir.aispeaking.utils.crashlytics.CrashReporter
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +41,10 @@ class SubscriptionViewModel(
     private val validateMarketPromoUseCase: ValidateMarketPromoUseCase,
     private val verifyMarketPurchaseUseCase: VerifyMarketPurchaseUseCase,
     private val createDirectCheckoutUseCase: CreateDirectCheckoutUseCase,
+    private val isLoggedInUseCase: IsLoggedInUseCase,
+    private val sendOtpUseCase: SendOtpUseCase,
+    private val verifyOtpUseCase: VerifyOtpUseCase,
+    private val syncGuestProgressUseCase: SyncGuestProgressUseCase,
     private val marketDetector: PlatformMarketDetector,
     private val billingGateway: MarketBillingGateway,
     private val analyticsTracker: AnalyticsTracker,
@@ -59,6 +69,10 @@ class SubscriptionViewModel(
             is SubscriptionIntent.ApplyPromoCode -> applyPromoCode()
             is SubscriptionIntent.PurchaseSelectedPlan -> purchaseSelectedPlan()
             is SubscriptionIntent.DismissError -> dismissError()
+            is SubscriptionIntent.SendRegisterOtp -> sendRegisterOtp(intent.phone)
+            is SubscriptionIntent.VerifyRegisterOtp -> verifyRegisterOtp(intent.phone, intent.otp)
+            is SubscriptionIntent.ResetRegisterStep -> resetRegisterStep()
+            is SubscriptionIntent.DismissRegisterDialog -> dismissRegisterDialog()
         }
     }
 
@@ -221,20 +235,38 @@ class SubscriptionViewModel(
     }
 
     private fun purchaseSelectedPlan() {
-        val state = _uiState.value
-        val plan = state.selectedPlan ?: return
-        val market = state.detectedMarket
-
-        analyticsTracker.logEvent(
-            AnalyticsEvents.EVENT_SUBSCRIPTION_PURCHASE_STARTED,
-            mapOf(
-                AnalyticsEvents.PARAM_PLAN_ID to plan.id,
-                AnalyticsEvents.PARAM_MARKET to market.name,
-                "price" to plan.priceTomans
-            )
-        )
-
         viewModelScope.launch {
+            val isLoggedIn = try {
+                isLoggedInUseCase()
+            } catch (_: Throwable) {
+                false
+            }
+
+            if (!isLoggedIn) {
+                _uiState.update {
+                    it.copy(
+                        showRegisterDialog = true,
+                        registerStep = 1,
+                        registerError = null,
+                        isRegisterLoading = false
+                    )
+                }
+                return@launch
+            }
+
+            val state = _uiState.value
+            val plan = state.selectedPlan ?: return@launch
+            val market = state.detectedMarket
+
+            analyticsTracker.logEvent(
+                AnalyticsEvents.EVENT_SUBSCRIPTION_PURCHASE_STARTED,
+                mapOf(
+                    AnalyticsEvents.PARAM_PLAN_ID to plan.id,
+                    AnalyticsEvents.PARAM_MARKET to market.name,
+                    "price" to plan.priceTomans
+                )
+            )
+
             if (market == AppMarket.CAFE_BAZAAR || market == AppMarket.MYKET) {
                 _uiState.update {
                     it.copy(
@@ -294,6 +326,18 @@ class SubscriptionViewModel(
                                 )
                             }
                             is DataResult.Failure -> {
+                                if (verifyResult.appError is ir.aispeaking.domain.model.error.NetworkError.Unauthorized) {
+                                    _uiState.update {
+                                        it.copy(
+                                            isPurchasing = false,
+                                            purchaseProgressMessage = null,
+                                            showRegisterDialog = true,
+                                            registerStep = 1,
+                                            registerError = "نشست کاربری شما منقضی شده است. لطفاً مجدداً وارد شوید."
+                                        )
+                                    }
+                                    return@launch
+                                }
                                 val errorMsg = verifyResult.appError.getErrorMessage().ifBlank {
                                     "خطا در تایید خرید توسط سرور. لطفاً با پشتیبانی تماس بگیرید."
                                 }
@@ -381,6 +425,18 @@ class SubscriptionViewModel(
                         _effect.send(SubscriptionEffect.OpenWebUrl(result.data.paymentUrl))
                     }
                     is DataResult.Failure -> {
+                        if (result.appError is ir.aispeaking.domain.model.error.NetworkError.Unauthorized) {
+                            _uiState.update {
+                                it.copy(
+                                    isPurchasing = false,
+                                    purchaseProgressMessage = null,
+                                    showRegisterDialog = true,
+                                    registerStep = 1,
+                                    registerError = "نشست کاربری شما منقضی شده است. لطفاً مجدداً وارد شوید."
+                                )
+                            }
+                            return@launch
+                        }
                         val errorMsg = result.appError.getErrorMessage().ifBlank {
                             "خطا در برقراری ارتباط با درگاه پرداخت مستقیم"
                         }
@@ -406,6 +462,111 @@ class SubscriptionViewModel(
                 }
             }
         }
+    }
+
+    private fun normalizeDigits(input: String): String = buildString(input.length) {
+        for (ch in input.trim()) {
+            when (ch) {
+                in '۰'..'۹' -> append('0' + (ch - '۰'))
+                in '٠'..'٩' -> append('0' + (ch - '٠'))
+                else -> append(ch)
+            }
+        }
+    }
+
+    fun sendRegisterOtp(phone: String) {
+        val cleanPhone = normalizeDigits(phone)
+        if (cleanPhone.length != 11 || !cleanPhone.startsWith("09")) {
+            _uiState.update { it.copy(registerError = "شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود.") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRegisterLoading = true, registerError = null) }
+            when (val result = sendOtpUseCase(cleanPhone)) {
+                is DataResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isRegisterLoading = false,
+                            registerStep = 2,
+                            registerError = null
+                        )
+                    }
+                }
+                is DataResult.Failure -> {
+                    val msg = result.appError.getErrorMessage().ifBlank { "خطا در ارسال کد تایید" }
+                    _uiState.update {
+                        it.copy(
+                            isRegisterLoading = false,
+                            registerError = msg
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun verifyRegisterOtp(phone: String, otp: String) {
+        val cleanPhone = normalizeDigits(phone)
+        val cleanOtp = normalizeDigits(otp)
+        if (cleanOtp.length < 4) {
+            _uiState.update { it.copy(registerError = "کد تایید را کامل وارد کن.") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRegisterLoading = true, registerError = null) }
+            when (val result = verifyOtpUseCase(cleanPhone, cleanOtp)) {
+                is DataResult.Success -> {
+                    val user = result.data
+                    analyticsTracker.setUserId(user.uid)
+                    analyticsTracker.logSignUp(
+                        userId = user.uid,
+                        method = "otp_subscription_modal",
+                        platform = "compose_multiplatform",
+                        userLevel = user.languageLevel.ifBlank { "A1" }
+                    )
+                    analyticsTracker.logLogin(
+                        userId = user.uid,
+                        method = "otp_subscription_modal",
+                        platform = "compose_multiplatform",
+                        userLevel = user.languageLevel.ifBlank { "A1" }
+                    )
+                    try {
+                        syncGuestProgressUseCase()
+                    } catch (_: Throwable) {}
+
+                    val statusRes = checkSubscriptionStatusUseCase()
+                    val currentStatus = if (statusRes is DataResult.Success) statusRes.data else null
+
+                    _uiState.update {
+                        it.copy(
+                            isRegisterLoading = false,
+                            showRegisterDialog = false,
+                            registerStep = 1,
+                            registerError = null,
+                            currentStatus = currentStatus
+                        )
+                    }
+                    purchaseSelectedPlan()
+                }
+                is DataResult.Failure -> {
+                    val msg = result.appError.getErrorMessage().ifBlank { "کد تایید اشتباه است یا منقضی شده است" }
+                    _uiState.update {
+                        it.copy(
+                            isRegisterLoading = false,
+                            registerError = msg
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun resetRegisterStep() {
+        _uiState.update { it.copy(registerStep = 1, registerError = null, isRegisterLoading = false) }
+    }
+
+    fun dismissRegisterDialog() {
+        _uiState.update { it.copy(showRegisterDialog = false, registerStep = 1, registerError = null, isRegisterLoading = false) }
     }
 
     private fun dismissError() {

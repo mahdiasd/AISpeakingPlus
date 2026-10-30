@@ -33,6 +33,8 @@ class SttUseCasesTest {
             closed = true
         }
 
+        override suspend fun sendStop() {}
+
         override fun isSessionActive(): Boolean = !closed
     }
 

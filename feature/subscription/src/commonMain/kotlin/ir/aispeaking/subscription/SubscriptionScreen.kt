@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_back
 import ir.aispeaking.sharedui.ic_crown
+import ir.aispeaking.sharedui.ui.dialog.RegisterBottomSheet
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
@@ -257,6 +258,21 @@ fun SubscriptionScreen(
                     )
                 }
             }
+
+            RegisterBottomSheet(
+                visible = uiState.showRegisterDialog,
+                title = "ورود یا ثبت‌نام جهت خرید اشتراک",
+                subtitle = "برای خرید و فعال‌سازی اشتراک ویژه، ابتدا باید شماره موبایل خود را وارد و تایید کنید.",
+                confirmButtonText = "تایید و ادامه خرید",
+                onDismiss = { viewModel.processIntent(SubscriptionIntent.DismissRegisterDialog) },
+                onRegisterSuccess = {},
+                isLoading = uiState.isRegisterLoading,
+                step = uiState.registerStep,
+                errorMessage = uiState.registerError,
+                onSendOtp = { phone -> viewModel.processIntent(SubscriptionIntent.SendRegisterOtp(phone)) },
+                onVerifyOtp = { phone, otp -> viewModel.processIntent(SubscriptionIntent.VerifyRegisterOtp(phone, otp)) },
+                onEditPhone = { viewModel.processIntent(SubscriptionIntent.ResetRegisterStep) }
+            )
         }
     }
 }
