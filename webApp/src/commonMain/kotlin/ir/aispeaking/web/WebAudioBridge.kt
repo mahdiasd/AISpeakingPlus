@@ -98,7 +98,7 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
 
                 // 1. Initialization grace period: wait for recording to start (e.g. during mic permission prompt or initialization)
                 var graceElapsedMs = 0
-                val maxGraceMs = 3000
+                val maxGraceMs = 15000
                 while (!jsIsSpeechRecording() && graceElapsedMs < maxGraceMs && isActive) {
                     delay(50)
                     graceElapsedMs += 50
@@ -114,7 +114,7 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
                 while (isActive) {
                     if (!jsIsSpeechRecording()) {
                         // Short grace check to absorb momentary restarts between utterances
-                        delay(150)
+                        delay(350)
                         if (!jsIsSpeechRecording()) {
                             break
                         }
