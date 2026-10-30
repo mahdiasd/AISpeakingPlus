@@ -979,6 +979,57 @@
     "reason" : { }
   }
 };
+            defs["AnnouncementDto"] = {
+  "title" : "AnnouncementDto",
+  "required" : [ "createdAt", "id", "message", "title", "type", "updatedAt" ],
+  "properties" : {
+    "id" : { },
+    "title" : { },
+    "message" : { },
+    "type" : { },
+    "imageUrl" : { },
+    "isBlocking" : { },
+    "isActive" : { },
+    "primaryButtonText" : { },
+    "primaryButtonAction" : { },
+    "primaryButtonValue" : { },
+    "secondaryButtonText" : { },
+    "secondaryButtonAction" : { },
+    "secondaryButtonValue" : { },
+    "createdAt" : { },
+    "updatedAt" : { }
+  }
+};
+            defs["AnnouncementListResponse"] = {
+  "title" : "AnnouncementListResponse",
+  "required" : [ "announcements" ],
+  "properties" : {
+    "announcements" : {
+      "items" : {
+        "$ref" : "#/components/schemas/AnnouncementDto"
+      }
+    },
+    "activeAnnouncementId" : { }
+  }
+};
+            defs["AnnouncementUpsertRequest"] = {
+  "title" : "AnnouncementUpsertRequest",
+  "required" : [ "message", "title" ],
+  "properties" : {
+    "title" : { },
+    "message" : { },
+    "type" : { },
+    "imageUrl" : { },
+    "isBlocking" : { },
+    "isActive" : { },
+    "primaryButtonText" : { },
+    "primaryButtonAction" : { },
+    "primaryButtonValue" : { },
+    "secondaryButtonText" : { },
+    "secondaryButtonAction" : { },
+    "secondaryButtonValue" : { }
+  }
+};
             defs["AuthResponse"] = {
   "title" : "AuthResponse",
   "required" : [ "token", "user" ],
@@ -1542,6 +1593,22 @@
             -->
             <li class="nav-fixed nav-header active" data-group="_"><a href="#api-_">API Summary</a></li>
 
+                  <li class="nav-header" data-group="AdminAnnouncements"><a href="#api-AdminAnnouncements">API Methods - AdminAnnouncements</a></li>
+                    <li data-group="AdminAnnouncements" data-name="apiAdminAnnouncementsGet" class="">
+                      <a href="#api-AdminAnnouncements-apiAdminAnnouncementsGet">apiAdminAnnouncementsGet</a>
+                    </li>
+                    <li data-group="AdminAnnouncements" data-name="apiAdminAnnouncementsIdDelete" class="">
+                      <a href="#api-AdminAnnouncements-apiAdminAnnouncementsIdDelete">apiAdminAnnouncementsIdDelete</a>
+                    </li>
+                    <li data-group="AdminAnnouncements" data-name="apiAdminAnnouncementsIdPut" class="">
+                      <a href="#api-AdminAnnouncements-apiAdminAnnouncementsIdPut">apiAdminAnnouncementsIdPut</a>
+                    </li>
+                    <li data-group="AdminAnnouncements" data-name="apiAdminAnnouncementsIdToggleActivePost" class="">
+                      <a href="#api-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost">apiAdminAnnouncementsIdToggleActivePost</a>
+                    </li>
+                    <li data-group="AdminAnnouncements" data-name="apiAdminAnnouncementsPost" class="">
+                      <a href="#api-AdminAnnouncements-apiAdminAnnouncementsPost">apiAdminAnnouncementsPost</a>
+                    </li>
                   <li class="nav-header" data-group="AdminAuth"><a href="#api-AdminAuth">API Methods - AdminAuth</a></li>
                     <li data-group="AdminAuth" data-name="apiAdminAuthLoginPost" class="">
                       <a href="#api-AdminAuth-apiAdminAuthLoginPost">apiAdminAuthLoginPost</a>
@@ -1618,6 +1685,10 @@
                     </li>
                     <li data-group="AdminUsers" data-name="apiAdminUsersUserIdStatusPost" class="">
                       <a href="#api-AdminUsers-apiAdminUsersUserIdStatusPost">apiAdminUsersUserIdStatusPost</a>
+                    </li>
+                  <li class="nav-header" data-group="Announcements"><a href="#api-Announcements">API Methods - Announcements</a></li>
+                    <li data-group="Announcements" data-name="apiAnnouncementsActiveGet" class="">
+                      <a href="#api-Announcements-apiAnnouncementsActiveGet">apiAnnouncementsActiveGet</a>
                     </li>
                   <li class="nav-header" data-group="Auth"><a href="#api-Auth">API Methods - Auth</a></li>
                     <li data-group="Auth" data-name="apiV2AuthLogoutPost" class="">
@@ -1773,6 +1844,1625 @@
           </div>
         </div>
         <div id="sections">
+                <section id="api-AdminAnnouncements">
+                  <h1>AdminAnnouncements</h1>
+                    <div id="api-AdminAnnouncements-apiAdminAnnouncementsGet">
+                      <article id="api-AdminAnnouncements-apiAdminAnnouncementsGet-0" data-group="User" data-name="apiAdminAnnouncementsGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminAnnouncementsGet</h1>
+                          <p>List all announcements</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Get list of all announcements with their active status and button configurations</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/admin/announcements</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+"//api/admin/announcements"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminAnnouncementsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminAnnouncementsApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminAnnouncementsApi apiInstance = new AdminAnnouncementsApi();
+        try {
+            Object result = apiInstance.apiAdminAnnouncementsGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminAnnouncementsApi#apiAdminAnnouncementsGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminAnnouncementsApi;
+
+public class AdminAnnouncementsApiExample {
+
+    public static void main(String[] args) {
+        AdminAnnouncementsApi apiInstance = new AdminAnnouncementsApi();
+        try {
+            Object result = apiInstance.apiAdminAnnouncementsGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminAnnouncementsApi#apiAdminAnnouncementsGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+
+AdminAnnouncementsApi *apiInstance = [[AdminAnnouncementsApi alloc] init];
+
+// List all announcements
+[apiInstance apiAdminAnnouncementsGetWithCompletionHandler: 
+              ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminAnnouncementsApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminAnnouncementsGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminAnnouncementsGetExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminAnnouncementsApi();
+
+            try
+            {
+                // List all announcements
+                Object result = apiInstance.apiAdminAnnouncementsGet();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminAnnouncementsApi.apiAdminAnnouncementsGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminAnnouncementsApi();
+
+try {
+    $result = $api_instance->apiAdminAnnouncementsGet();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminAnnouncementsApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminAnnouncementsApi->new();
+
+eval { 
+    my $result = $api_instance->apiAdminAnnouncementsGet();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminAnnouncementsApi()
+
+try: 
+    # List all announcements
+    api_response = api_instance.api_admin_announcements_get()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Announcements list </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminAnnouncementsGet-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminAnnouncementsGet-200-schema">
+                                  <div id='responses-apiAdminAnnouncementsGet-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Announcements list",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AnnouncementListResponse"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminAnnouncementsGet-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminAnnouncementsGet-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminAnnouncementsGet-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AdminAnnouncements-apiAdminAnnouncementsIdDelete">
+                      <article id="api-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0" data-group="User" data-name="apiAdminAnnouncementsIdDelete" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminAnnouncementsIdDelete</h1>
+                          <p>Delete an announcement</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Delete an announcement permanently</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="delete"><code><span class="pln">/api/admin/announcements/{id}</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X DELETE\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+"//api/admin/announcements/{id}"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminAnnouncementsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminAnnouncementsApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminAnnouncementsApi apiInstance = new AdminAnnouncementsApi();
+         id = ; //  | 
+        try {
+            Object result = apiInstance.apiAdminAnnouncementsIdDelete(id);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminAnnouncementsApi#apiAdminAnnouncementsIdDelete");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminAnnouncementsApi;
+
+public class AdminAnnouncementsApiExample {
+
+    public static void main(String[] args) {
+        AdminAnnouncementsApi apiInstance = new AdminAnnouncementsApi();
+         id = ; //  | 
+        try {
+            Object result = apiInstance.apiAdminAnnouncementsIdDelete(id);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminAnnouncementsApi#apiAdminAnnouncementsIdDelete");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+ *id = ; // 
+
+AdminAnnouncementsApi *apiInstance = [[AdminAnnouncementsApi alloc] init];
+
+// Delete an announcement
+[apiInstance apiAdminAnnouncementsIdDeleteWith:id
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminAnnouncementsApi()
+var id = ; // {{}} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminAnnouncementsIdDelete(id, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminAnnouncementsIdDeleteExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminAnnouncementsApi();
+            var id = new (); //  | 
+
+            try
+            {
+                // Delete an announcement
+                Object result = apiInstance.apiAdminAnnouncementsIdDelete(id);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminAnnouncementsApi.apiAdminAnnouncementsIdDelete: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminAnnouncementsApi();
+$id = ; //  | 
+
+try {
+    $result = $api_instance->apiAdminAnnouncementsIdDelete($id);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsIdDelete: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminAnnouncementsApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminAnnouncementsApi->new();
+my $id = ; #  | 
+
+eval { 
+    my $result = $api_instance->apiAdminAnnouncementsIdDelete(id => $id);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsIdDelete: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdDelete-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminAnnouncementsApi()
+id =  #  | 
+
+try: 
+    # Delete an announcement
+    api_response = api_instance.api_admin_announcements_id_delete(id)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsIdDelete: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">id*</td>
+                                  <td>
+                                  
+                                  
+                                      <div id="d2e199_apiAdminAnnouncementsIdDelete_id">
+                                          <div class="json-schema-view">
+                                              <div class="primitive">
+                                                  <span class="type">
+                                                      
+                                                  </span>
+                                  
+                                              </div>
+                                                  <div class="inner required">
+                                                      Required
+                                                  </div>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  </tr>
+                            </table>
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Deletion confirmation </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminAnnouncementsIdDelete-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminAnnouncementsIdDelete-200-schema">
+                                  <div id='responses-apiAdminAnnouncementsIdDelete-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Deletion confirmation",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "additionalProperties" : { }
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminAnnouncementsIdDelete-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminAnnouncementsIdDelete-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminAnnouncementsIdDelete-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AdminAnnouncements-apiAdminAnnouncementsIdPut">
+                      <article id="api-AdminAnnouncements-apiAdminAnnouncementsIdPut-0" data-group="User" data-name="apiAdminAnnouncementsIdPut" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminAnnouncementsIdPut</h1>
+                          <p>Update an announcement</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Update an existing announcement</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="put"><code><span class="pln">/api/admin/announcements/{id}</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X PUT\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/admin/announcements/{id}"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminAnnouncementsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminAnnouncementsApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminAnnouncementsApi apiInstance = new AdminAnnouncementsApi();
+         id = ; //  | 
+        AnnouncementUpsertRequest body = ; // AnnouncementUpsertRequest | Announcement update payload
+        try {
+            Object result = apiInstance.apiAdminAnnouncementsIdPut(id, body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminAnnouncementsApi#apiAdminAnnouncementsIdPut");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminAnnouncementsApi;
+
+public class AdminAnnouncementsApiExample {
+
+    public static void main(String[] args) {
+        AdminAnnouncementsApi apiInstance = new AdminAnnouncementsApi();
+         id = ; //  | 
+        AnnouncementUpsertRequest body = ; // AnnouncementUpsertRequest | Announcement update payload
+        try {
+            Object result = apiInstance.apiAdminAnnouncementsIdPut(id, body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminAnnouncementsApi#apiAdminAnnouncementsIdPut");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+ *id = ; // 
+AnnouncementUpsertRequest *body = ; // Announcement update payload (optional)
+
+AdminAnnouncementsApi *apiInstance = [[AdminAnnouncementsApi alloc] init];
+
+// Update an announcement
+[apiInstance apiAdminAnnouncementsIdPutWith:id
+    body:body
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminAnnouncementsApi()
+var id = ; // {{}} 
+var opts = { 
+  'body':  // {{AnnouncementUpsertRequest}} Announcement update payload
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminAnnouncementsIdPut(id, opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminAnnouncementsIdPutExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminAnnouncementsApi();
+            var id = new (); //  | 
+            var body = new AnnouncementUpsertRequest(); // AnnouncementUpsertRequest | Announcement update payload (optional) 
+
+            try
+            {
+                // Update an announcement
+                Object result = apiInstance.apiAdminAnnouncementsIdPut(id, body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminAnnouncementsApi.apiAdminAnnouncementsIdPut: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminAnnouncementsApi();
+$id = ; //  | 
+$body = ; // AnnouncementUpsertRequest | Announcement update payload
+
+try {
+    $result = $api_instance->apiAdminAnnouncementsIdPut($id, $body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsIdPut: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminAnnouncementsApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminAnnouncementsApi->new();
+my $id = ; #  | 
+my $body = WWW::SwaggerClient::Object::AnnouncementUpsertRequest->new(); # AnnouncementUpsertRequest | Announcement update payload
+
+eval { 
+    my $result = $api_instance->apiAdminAnnouncementsIdPut(id => $id, body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsIdPut: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdPut-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminAnnouncementsApi()
+id =  #  | 
+body =  # AnnouncementUpsertRequest | Announcement update payload (optional)
+
+try: 
+    # Update an announcement
+    api_response = api_instance.api_admin_announcements_id_put(id, body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsIdPut: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">id*</td>
+                                  <td>
+                                  
+                                  
+                                      <div id="d2e199_apiAdminAnnouncementsIdPut_id">
+                                          <div class="json-schema-view">
+                                              <div class="primitive">
+                                                  <span class="type">
+                                                      
+                                                  </span>
+                                  
+                                              </div>
+                                                  <div class="inner required">
+                                                      Required
+                                                  </div>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  </tr>
+                            </table>
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Announcement update payload",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/AnnouncementUpsertRequest"
+      }
+    }
+  }
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiAdminAnnouncementsIdPut_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiAdminAnnouncementsIdPut_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Updated announcement </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminAnnouncementsIdPut-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminAnnouncementsIdPut-200-schema">
+                                  <div id='responses-apiAdminAnnouncementsIdPut-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Updated announcement",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AnnouncementDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminAnnouncementsIdPut-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminAnnouncementsIdPut-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminAnnouncementsIdPut-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost">
+                      <article id="api-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0" data-group="User" data-name="apiAdminAnnouncementsIdToggleActivePost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminAnnouncementsIdToggleActivePost</h1>
+                          <p>Toggle announcement active status</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Activate or deactivate an announcement. Activating one automatically deactivates all others.</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/admin/announcements/{id}/toggle-active</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+"//api/admin/announcements/{id}/toggle-active"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminAnnouncementsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminAnnouncementsApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminAnnouncementsApi apiInstance = new AdminAnnouncementsApi();
+         id = ; //  | 
+        try {
+            Object result = apiInstance.apiAdminAnnouncementsIdToggleActivePost(id);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminAnnouncementsApi#apiAdminAnnouncementsIdToggleActivePost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminAnnouncementsApi;
+
+public class AdminAnnouncementsApiExample {
+
+    public static void main(String[] args) {
+        AdminAnnouncementsApi apiInstance = new AdminAnnouncementsApi();
+         id = ; //  | 
+        try {
+            Object result = apiInstance.apiAdminAnnouncementsIdToggleActivePost(id);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminAnnouncementsApi#apiAdminAnnouncementsIdToggleActivePost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+ *id = ; // 
+
+AdminAnnouncementsApi *apiInstance = [[AdminAnnouncementsApi alloc] init];
+
+// Toggle announcement active status
+[apiInstance apiAdminAnnouncementsIdToggleActivePostWith:id
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminAnnouncementsApi()
+var id = ; // {{}} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminAnnouncementsIdToggleActivePost(id, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminAnnouncementsIdToggleActivePostExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminAnnouncementsApi();
+            var id = new (); //  | 
+
+            try
+            {
+                // Toggle announcement active status
+                Object result = apiInstance.apiAdminAnnouncementsIdToggleActivePost(id);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminAnnouncementsApi.apiAdminAnnouncementsIdToggleActivePost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminAnnouncementsApi();
+$id = ; //  | 
+
+try {
+    $result = $api_instance->apiAdminAnnouncementsIdToggleActivePost($id);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsIdToggleActivePost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminAnnouncementsApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminAnnouncementsApi->new();
+my $id = ; #  | 
+
+eval { 
+    my $result = $api_instance->apiAdminAnnouncementsIdToggleActivePost(id => $id);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsIdToggleActivePost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsIdToggleActivePost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminAnnouncementsApi()
+id =  #  | 
+
+try: 
+    # Toggle announcement active status
+    api_response = api_instance.api_admin_announcements_id_toggle_active_post(id)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsIdToggleActivePost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">id*</td>
+                                  <td>
+                                  
+                                  
+                                      <div id="d2e199_apiAdminAnnouncementsIdToggleActivePost_id">
+                                          <div class="json-schema-view">
+                                              <div class="primitive">
+                                                  <span class="type">
+                                                      
+                                                  </span>
+                                  
+                                              </div>
+                                                  <div class="inner required">
+                                                      Required
+                                                  </div>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  </tr>
+                            </table>
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Updated announcement status </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminAnnouncementsIdToggleActivePost-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminAnnouncementsIdToggleActivePost-200-schema">
+                                  <div id='responses-apiAdminAnnouncementsIdToggleActivePost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Updated announcement status",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AnnouncementDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminAnnouncementsIdToggleActivePost-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminAnnouncementsIdToggleActivePost-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminAnnouncementsIdToggleActivePost-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AdminAnnouncements-apiAdminAnnouncementsPost">
+                      <article id="api-AdminAnnouncements-apiAdminAnnouncementsPost-0" data-group="User" data-name="apiAdminAnnouncementsPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAdminAnnouncementsPost</h1>
+                          <p>Create an announcement</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Create a new announcement with primary and optional secondary action buttons</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/admin/announcements</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/admin/announcements"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AdminAnnouncementsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminAnnouncementsApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AdminAnnouncementsApi apiInstance = new AdminAnnouncementsApi();
+        AnnouncementUpsertRequest body = ; // AnnouncementUpsertRequest | Announcement creation payload
+        try {
+            Object result = apiInstance.apiAdminAnnouncementsPost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminAnnouncementsApi#apiAdminAnnouncementsPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AdminAnnouncementsApi;
+
+public class AdminAnnouncementsApiExample {
+
+    public static void main(String[] args) {
+        AdminAnnouncementsApi apiInstance = new AdminAnnouncementsApi();
+        AnnouncementUpsertRequest body = ; // AnnouncementUpsertRequest | Announcement creation payload
+        try {
+            Object result = apiInstance.apiAdminAnnouncementsPost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminAnnouncementsApi#apiAdminAnnouncementsPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+AnnouncementUpsertRequest *body = ; // Announcement creation payload (optional)
+
+AdminAnnouncementsApi *apiInstance = [[AdminAnnouncementsApi alloc] init];
+
+// Create an announcement
+[apiInstance apiAdminAnnouncementsPostWith:body
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.AdminAnnouncementsApi()
+var opts = { 
+  'body':  // {{AnnouncementUpsertRequest}} Announcement creation payload
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAdminAnnouncementsPost(opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAdminAnnouncementsPostExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AdminAnnouncementsApi();
+            var body = new AnnouncementUpsertRequest(); // AnnouncementUpsertRequest | Announcement creation payload (optional) 
+
+            try
+            {
+                // Create an announcement
+                Object result = apiInstance.apiAdminAnnouncementsPost(body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AdminAnnouncementsApi.apiAdminAnnouncementsPost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAdminAnnouncementsApi();
+$body = ; // AnnouncementUpsertRequest | Announcement creation payload
+
+try {
+    $result = $api_instance->apiAdminAnnouncementsPost($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsPost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AdminAnnouncementsApi;
+
+
+my $api_instance = WWW::SwaggerClient::AdminAnnouncementsApi->new();
+my $body = WWW::SwaggerClient::Object::AnnouncementUpsertRequest->new(); # AnnouncementUpsertRequest | Announcement creation payload
+
+eval { 
+    my $result = $api_instance->apiAdminAnnouncementsPost(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsPost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminAnnouncements-apiAdminAnnouncementsPost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AdminAnnouncementsApi()
+body =  # AnnouncementUpsertRequest | Announcement creation payload (optional)
+
+try: 
+    # Create an announcement
+    api_response = api_instance.api_admin_announcements_post(body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminAnnouncementsApi->apiAdminAnnouncementsPost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Announcement creation payload",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/AnnouncementUpsertRequest"
+      }
+    }
+  }
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiAdminAnnouncementsPost_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiAdminAnnouncementsPost_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 201 - Created announcement </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAdminAnnouncementsPost-201-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAdminAnnouncementsPost-201-schema">
+                                  <div id='responses-apiAdminAnnouncementsPost-201-schema-201' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Created announcement",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AnnouncementDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAdminAnnouncementsPost-201-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAdminAnnouncementsPost-201-schema-201');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAdminAnnouncementsPost-201-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                  </section>
                 <section id="api-AdminAuth">
                   <h1>AdminAuth</h1>
                     <div id="api-AdminAuth-apiAdminAuthLoginPost">
@@ -9603,6 +11293,280 @@ except ApiException as e:
                                     </script>
                                   </div>
                                   <input id='responses-apiAdminUsersUserIdStatusPost-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                  </section>
+                <section id="api-Announcements">
+                  <h1>Announcements</h1>
+                    <div id="api-Announcements-apiAnnouncementsActiveGet">
+                      <article id="api-Announcements-apiAnnouncementsActiveGet-0" data-group="User" data-name="apiAnnouncementsActiveGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiAnnouncementsActiveGet</h1>
+                          <p>Get active announcement</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Get current active system-wide broadcast announcement for in-app dialogs</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/announcements/active</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Announcements-apiAnnouncementsActiveGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Announcements-apiAnnouncementsActiveGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Announcements-apiAnnouncementsActiveGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Announcements-apiAnnouncementsActiveGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Announcements-apiAnnouncementsActiveGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Announcements-apiAnnouncementsActiveGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Announcements-apiAnnouncementsActiveGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Announcements-apiAnnouncementsActiveGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Announcements-apiAnnouncementsActiveGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Announcements-apiAnnouncementsActiveGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Announcements-apiAnnouncementsActiveGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Announcements-apiAnnouncementsActiveGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+-H "Accept: application/json"\
+"//api/announcements/active"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Announcements-apiAnnouncementsActiveGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AnnouncementsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AnnouncementsApiExample {
+
+    public static void main(String[] args) {
+        
+        AnnouncementsApi apiInstance = new AnnouncementsApi();
+        try {
+            Object result = apiInstance.apiAnnouncementsActiveGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AnnouncementsApi#apiAnnouncementsActiveGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Announcements-apiAnnouncementsActiveGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AnnouncementsApi;
+
+public class AnnouncementsApiExample {
+
+    public static void main(String[] args) {
+        AnnouncementsApi apiInstance = new AnnouncementsApi();
+        try {
+            Object result = apiInstance.apiAnnouncementsActiveGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AnnouncementsApi#apiAnnouncementsActiveGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Announcements-apiAnnouncementsActiveGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Announcements-apiAnnouncementsActiveGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+AnnouncementsApi *apiInstance = [[AnnouncementsApi alloc] init];
+
+// Get active announcement
+[apiInstance apiAnnouncementsActiveGetWithCompletionHandler: 
+              ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Announcements-apiAnnouncementsActiveGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+
+var api = new AiSpeakingPlusApi.AnnouncementsApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiAnnouncementsActiveGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Announcements-apiAnnouncementsActiveGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Announcements-apiAnnouncementsActiveGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiAnnouncementsActiveGetExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AnnouncementsApi();
+
+            try
+            {
+                // Get active announcement
+                Object result = apiInstance.apiAnnouncementsActiveGet();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AnnouncementsApi.apiAnnouncementsActiveGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Announcements-apiAnnouncementsActiveGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAnnouncementsApi();
+
+try {
+    $result = $api_instance->apiAnnouncementsActiveGet();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AnnouncementsApi->apiAnnouncementsActiveGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Announcements-apiAnnouncementsActiveGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AnnouncementsApi;
+
+my $api_instance = WWW::SwaggerClient::AnnouncementsApi->new();
+
+eval { 
+    my $result = $api_instance->apiAnnouncementsActiveGet();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AnnouncementsApi->apiAnnouncementsActiveGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Announcements-apiAnnouncementsActiveGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AnnouncementsApi()
+
+try: 
+    # Get active announcement
+    api_response = api_instance.api_announcements_active_get()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AnnouncementsApi->apiAnnouncementsActiveGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Active announcement or null </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiAnnouncementsActiveGet-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiAnnouncementsActiveGet-200-schema">
+                                  <div id='responses-apiAnnouncementsActiveGet-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Active announcement or null",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AnnouncementDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiAnnouncementsActiveGet-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiAnnouncementsActiveGet-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiAnnouncementsActiveGet-200-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 
