@@ -10,16 +10,22 @@ import io.ktor.server.testing.*
 import ir.speaking.core.configureTestDatabases
 import ir.speaking.core.configureTestSecurity
 import ir.speaking.core.network.api.SmsApiService
+import ir.speaking.feature.admin.promo.service.AdminPromoService
 import ir.speaking.feature.stage.repository.StageRepository
 import ir.speaking.feature.stage.routing.stageRouting
+import ir.speaking.feature.subscription.db.MarketPaymentTable
 import ir.speaking.feature.subscription.repository.SubscriptionRepo
 import ir.speaking.feature.subscription.routing.subscriptionRouting
+import ir.speaking.feature.subscription.service.DynamicDiscountService
+import ir.speaking.feature.subscription.service.ZarinPalService
 import ir.speaking.feature.user.repository.UserRepo
 import ir.speaking.feature.user.routing.authRouting
 import ir.speaking.feature.user.service.AuthService
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Test
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
@@ -46,6 +52,9 @@ class SubscriptionRoutingTest {
                         single { StageRepository() }
                         single { SubscriptionRepo() }
                         single { UserRepo(subscriptionRepo = get()) }
+                        single { DynamicDiscountService() }
+                        single { AdminPromoService() }
+                        single { ZarinPalService() }
                     }
                 )
             }
@@ -64,12 +73,10 @@ class SubscriptionRoutingTest {
 
         // 2. Stage 3 unauthenticated or non-subscriber should return 401 or 402
         val stage3Response = client.get("/api/v2/stages/stage-03-baggage-claim")
-        if (stage3Response.status != HttpStatusCode.InternalServerError) {
-            assertTrue(
-                stage3Response.status == HttpStatusCode.Unauthorized ||
-                stage3Response.status == HttpStatusCode.PaymentRequired
-            )
-        }
+        assertTrue(
+            stage3Response.status == HttpStatusCode.Unauthorized ||
+            stage3Response.status == HttpStatusCode.PaymentRequired
+        )
     }
 
     @Test
@@ -85,6 +92,9 @@ class SubscriptionRoutingTest {
             val subscriptionRepo = SubscriptionRepo()
             val userRepo = UserRepo(subscriptionRepo = subscriptionRepo)
             val authService = AuthService(userRepo, smsMock)
+            val dynamicDiscountService = DynamicDiscountService()
+            val adminPromoService = AdminPromoService()
+            val zarinPalService = ZarinPalService()
 
             install(Koin) {
                 modules(module {
@@ -92,6 +102,9 @@ class SubscriptionRoutingTest {
                     single { subscriptionRepo }
                     single { smsMock }
                     single { authService }
+                    single { dynamicDiscountService }
+                    single { adminPromoService }
+                    single { zarinPalService }
                 })
             }
 
@@ -142,14 +155,22 @@ class SubscriptionRoutingTest {
         }
         assertEquals(HttpStatusCode.BadRequest, invalidPromoRes.status)
 
-        // 5. Authenticated POST /api/v2/subscriptions/subscribe with valid plan -> 200
-        val subscribeRes = client.post("/api/v2/subscriptions/subscribe") {
+        // 4.2 Security check: Paid plan without 100% discount via /subscribe -> 402 PaymentRequired
+        val paidWithoutPromoRes = client.post("/api/v2/subscriptions/subscribe") {
             header(HttpHeaders.Authorization, "Bearer $token")
             contentType(ContentType.Application.Json)
             setBody("""{"planId":"plan-3m","promoCode":"GOLD20"}""")
         }
-        assertEquals(HttpStatusCode.OK, subscribeRes.status)
-        val subBody = json.parseToJsonElement(subscribeRes.bodyAsText()).jsonObject
+        assertEquals(HttpStatusCode.PaymentRequired, paidWithoutPromoRes.status)
+
+        // 5. Authenticated POST /api/v2/subscriptions/subscribe with 100% free promo (FREE100) -> 200
+        val freeSubscribeRes = client.post("/api/v2/subscriptions/subscribe") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+            contentType(ContentType.Application.Json)
+            setBody("""{"planId":"plan-3m","promoCode":"FREE100"}""")
+        }
+        assertEquals(HttpStatusCode.OK, freeSubscribeRes.status)
+        val subBody = json.parseToJsonElement(freeSubscribeRes.bodyAsText()).jsonObject
         val subData = subBody["data"]?.jsonObject
         assertNotNull(subData)
         assertEquals("true", subData["isSubscriber"]?.jsonPrimitive?.content)
@@ -157,19 +178,38 @@ class SubscriptionRoutingTest {
         val firstRemainingDays = subData["remainingDays"]?.jsonPrimitive?.content?.toInt() ?: 0
         assertTrue(firstRemainingDays >= 89)
 
-        // 6. Cumulative renewal: subscribe to 1_MONTH while active -> adds 30 days cumulatively
-        val renewRes = client.post("/api/v2/subscriptions/subscribe") {
+        // 6. Direct Checkout creation -> 200 with payment URL and authority
+        val directCheckoutRes = client.post("/api/v2/subscriptions/direct-checkout") {
             header(HttpHeaders.Authorization, "Bearer $token")
             contentType(ContentType.Application.Json)
             setBody("""{"planId":"plan-1m"}""")
         }
-        assertEquals(HttpStatusCode.OK, renewRes.status)
-        val renewData = json.parseToJsonElement(renewRes.bodyAsText()).jsonObject["data"]?.jsonObject
-        assertNotNull(renewData)
-        val renewedRemainingDays = renewData["remainingDays"]?.jsonPrimitive?.content?.toInt() ?: 0
-        assertTrue(renewedRemainingDays >= firstRemainingDays + 29)
+        assertEquals(HttpStatusCode.OK, directCheckoutRes.status)
+        val checkoutData = json.parseToJsonElement(directCheckoutRes.bodyAsText()).jsonObject["data"]?.jsonObject
+        assertNotNull(checkoutData)
+        val paymentUrl = checkoutData["paymentUrl"]?.jsonPrimitive?.content
+        assertNotNull(paymentUrl)
+        assertTrue(paymentUrl.contains("http"))
 
-        // 7. Verified subscription status -> true
+        // Lookup authority stored in MarketPaymentTable
+        val pendingAuthority = transaction {
+            MarketPaymentTable.selectAll()
+                .where { MarketPaymentTable.sku eq "plan-1m" }
+                .firstOrNull()?.get(MarketPaymentTable.purchaseToken)
+        }
+        assertNotNull(pendingAuthority)
+
+        // 6.1 Handle ZarinPal Callback -> redirect and verify (disable followRedirects to capture 302 Found)
+        val noRedirectClient = createClient {
+            followRedirects = false
+        }
+        val callbackRes = noRedirectClient.get("/api/v2/subscriptions/payment/callback?Authority=$pendingAuthority&Status=OK")
+        assertEquals(HttpStatusCode.Found, callbackRes.status)
+        val redirectLocation = callbackRes.headers[HttpHeaders.Location]
+        assertNotNull(redirectLocation)
+        assertTrue(redirectLocation.contains("payment_status=success"))
+
+        // 7. Verified cumulative subscription status -> true, extended by 30 days
         val finalStatusRes = client.get("/api/v2/subscriptions/status") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
@@ -178,7 +218,7 @@ class SubscriptionRoutingTest {
         val finalData = finalBody["data"]?.jsonObject
         assertNotNull(finalData)
         assertEquals("true", finalData["isSubscriber"]?.jsonPrimitive?.content)
-        assertEquals("1_MONTH", finalData["planType"]?.jsonPrimitive?.content)
+        val cumulativeDays = finalData["remainingDays"]?.jsonPrimitive?.content?.toInt() ?: 0
+        assertTrue(cumulativeDays >= firstRemainingDays + 29)
     }
 }
-

@@ -36,7 +36,9 @@ internal fun Application.configureTestDatabases(dropTables: Boolean = false) {
                         ir.speaking.feature.admin.db.AdminAuditTable,
                         ir.speaking.feature.admin.db.AdminUserTable,
                         ir.speaking.feature.subscription.db.PromoCodeRedemptionTable,
-                        ir.speaking.feature.subscription.db.PromoCodeTable
+                        ir.speaking.feature.subscription.db.PromoCodeTable,
+                        ir.speaking.feature.subscription.db.MarketPaymentTable,
+                        ir.speaking.feature.announcement.db.AnnouncementTable
                     )
                 }
                 SchemaUtils.create(
@@ -47,7 +49,9 @@ internal fun Application.configureTestDatabases(dropTables: Boolean = false) {
                     ir.speaking.feature.admin.db.AdminUserTable,
                     ir.speaking.feature.admin.db.AdminAuditTable,
                     ir.speaking.feature.subscription.db.PromoCodeTable,
-                    ir.speaking.feature.subscription.db.PromoCodeRedemptionTable
+                    ir.speaking.feature.subscription.db.PromoCodeRedemptionTable,
+                    ir.speaking.feature.subscription.db.MarketPaymentTable,
+                    ir.speaking.feature.announcement.db.AnnouncementTable
                 )
                 seedSuperAdminIfEmpty()
                 seedOrSyncStages()
@@ -57,6 +61,18 @@ internal fun Application.configureTestDatabases(dropTables: Boolean = false) {
                         it[title] = "Test Promo Code"
                         it[discountType] = "PERCENTAGE"
                         it[discountValue] = 20
+                        it[applicablePlans] = "ALL"
+                        it[isOncePerUser] = false
+                        it[isActive] = true
+                        it[isDeleted] = false
+                    }
+                }
+                if (ir.speaking.feature.subscription.db.PromoCodeTable.selectAll().where { ir.speaking.feature.subscription.db.PromoCodeTable.code eq "FREE100" }.empty()) {
+                    ir.speaking.feature.subscription.db.PromoCodeTable.insert {
+                        it[code] = "FREE100"
+                        it[title] = "100% Free Promo Code"
+                        it[discountType] = "PERCENTAGE"
+                        it[discountValue] = 100
                         it[applicablePlans] = "ALL"
                         it[isOncePerUser] = false
                         it[isActive] = true
