@@ -15,9 +15,11 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.koin.core.annotation.Single
 import java.util.UUID
 import kotlin.math.min
 
+@Single
 class AdminPromoService {
 
     private val planPrices = mapOf(

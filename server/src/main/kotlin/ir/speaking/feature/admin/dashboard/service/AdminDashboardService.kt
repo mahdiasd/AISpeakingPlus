@@ -9,18 +9,22 @@ import kotlinx.datetime.Clock
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.koin.core.annotation.Single
 
+@Single
 class AdminDashboardService {
 
     suspend fun getStats(): AdminDashboardStatsDto = newSuspendedTransaction(Dispatchers.IO) {
         val now = Clock.System.now()
         val totalUsers = UserTable.selectAll().count()
         val activeUsers = UserTable.selectAll().where { UserTable.status eq "ACTIVE" }.count()
-        val activeSubscriptions = SubscriptionTable.selectAll()
+        val activeSubscriptions = SubscriptionTable
+            .select(SubscriptionTable.userId)
             .where {
                 (SubscriptionTable.status eq "ACTIVE") and
                 (SubscriptionTable.expiresAt greater now)
             }
+            .withDistinct()
             .count()
         val totalStages = StageTable.selectAll().count()
         val publishedStages = StageTable.selectAll().where { StageTable.status eq "PUBLISHED" }.count()
