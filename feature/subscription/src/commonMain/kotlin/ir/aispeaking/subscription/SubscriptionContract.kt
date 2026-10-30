@@ -22,7 +22,13 @@ data class SubscriptionUiState(
     // Purchasing state
     val isPurchasing: Boolean = false,
     val purchaseProgressMessage: String? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+
+    // Auth / Register bottom sheet state
+    val showRegisterDialog: Boolean = false,
+    val isRegisterLoading: Boolean = false,
+    val registerStep: Int = 1,
+    val registerError: String? = null
 ) {
     val selectedPlan: SubscriptionPlan?
         get() = plans.find { it.id == selectedPlanId } ?: plans.firstOrNull()
@@ -42,6 +48,10 @@ sealed interface SubscriptionIntent {
     data object ApplyPromoCode : SubscriptionIntent
     data object PurchaseSelectedPlan : SubscriptionIntent
     data object DismissError : SubscriptionIntent
+    data class SendRegisterOtp(val phone: String) : SubscriptionIntent
+    data class VerifyRegisterOtp(val phone: String, val otp: String) : SubscriptionIntent
+    data object ResetRegisterStep : SubscriptionIntent
+    data object DismissRegisterDialog : SubscriptionIntent
 }
 
 sealed interface SubscriptionEffect {

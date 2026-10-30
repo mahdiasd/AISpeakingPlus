@@ -33,6 +33,9 @@ class AuthUseCasesTest {
             currentUser?.let { DataResult.Success(it) } ?: DataResult.Failure(ir.aispeaking.domain.model.error.NetworkError.Unauthorized())
         override suspend fun fetchCurrentUserRemote(): DataResult<User> =
             currentUser?.let { DataResult.Success(it) } ?: DataResult.Failure(ir.aispeaking.domain.model.error.NetworkError.NotFound())
+        private var seenIntro: Boolean = false
+        override fun hasSeenIntroVideo(): Boolean = seenIntro
+        override fun setHasSeenIntroVideo(seen: Boolean) { this.seenIntro = seen }
     }
 
     @Test

@@ -285,7 +285,7 @@ fun Application.subscriptionRouting() {
                     val userId = uidString?.let { try { UUID.fromString(it) } catch (_: Exception) { null } }
 
                     if (userId == null) {
-                        call.failureRespond(HttpStatusCode.Unauthorized, "User authentication required")
+                        call.failureRespond(HttpStatusCode.Unauthorized, "برای خرید و استفاده از اشتراک، ابتدا وارد حساب کاربری خود شوید.")
                         return@get
                     }
 
@@ -325,7 +325,7 @@ fun Application.subscriptionRouting() {
                     val userId = uidString?.let { try { UUID.fromString(it) } catch (_: Exception) { null } }
 
                     if (userId == null) {
-                        call.failureRespond(HttpStatusCode.Unauthorized, "User authentication required")
+                        call.failureRespond(HttpStatusCode.Unauthorized, "برای خرید و استفاده از اشتراک، ابتدا وارد حساب کاربری خود شوید.")
                         return@post
                     }
 
@@ -426,7 +426,7 @@ fun Application.subscriptionRouting() {
                     val userId = uidString?.let { try { UUID.fromString(it) } catch (_: Exception) { null } }
 
                     if (userId == null) {
-                        call.failureRespond(HttpStatusCode.Unauthorized, "User authentication required")
+                        call.failureRespond(HttpStatusCode.Unauthorized, "برای خرید و استفاده از اشتراک، ابتدا وارد حساب کاربری خود شوید.")
                         return@post
                     }
 
@@ -552,7 +552,7 @@ fun Application.subscriptionRouting() {
                     val userId = uidString?.let { try { UUID.fromString(it) } catch (_: Exception) { null } }
 
                     if (userId == null) {
-                        call.failureRespond(HttpStatusCode.Unauthorized, "User authentication required")
+                        call.failureRespond(HttpStatusCode.Unauthorized, "برای خرید و استفاده از اشتراک، ابتدا وارد حساب کاربری خود شوید.")
                         return@post
                     }
 
