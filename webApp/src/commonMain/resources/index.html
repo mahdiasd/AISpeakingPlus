@@ -409,6 +409,7 @@
             audioInputSource: null,
             audioProcessor: null,
             _pcmChunkQueue: [],
+            _fallbackPcmChunks: [],
             _hasVoiceActivity: false,
             _lastVoiceActivityTime: 0,
             isRecording: false,
@@ -421,6 +422,7 @@
             _consecutiveErrors: 0,
             _isMobile: false,
             _isIOS: false,
+            _usingFallback: false,
 
             _initDevice: function() {
                 var ua = navigator.userAgent || '';
@@ -488,6 +490,26 @@
                 return window.btoa(binary);
             },
 
+            _pcmToWav: function(pcmBytes, sampleRate) {
+                var buffer = new ArrayBuffer(44 + pcmBytes.length);
+                var view = new DataView(buffer);
+                view.setUint32(0, 0x52494646, false); // "RIFF"
+                view.setUint32(4, 36 + pcmBytes.length, true);
+                view.setUint32(8, 0x57415645, false); // "WAVE"
+                view.setUint32(12, 0x666d7420, false); // "fmt "
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true);
+                view.setUint16(22, 1, true);
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, sampleRate * 2, true);
+                view.setUint16(32, 2, true);
+                view.setUint16(34, 16, true);
+                view.setUint32(36, 0x64617461, false); // "data"
+                view.setUint32(40, pcmBytes.length, true);
+                new Uint8Array(buffer, 44).set(pcmBytes);
+                return new Blob([buffer], { type: 'audio/wav' });
+            },
+
             start: function() {
                 this._initDevice();
                 this._checkSecureContext();
@@ -503,187 +525,28 @@
                 this._accumulatedTranscript = "";
                 this._currentSessionTranscript = "";
                 this._pcmChunkQueue = [];
+                this._fallbackPcmChunks = [];
                 this._hasVoiceActivity = false;
                 this._consecutiveErrors = 0;
+                this._usingFallback = false;
 
-                var self = this;
-
-                // 1. Prime AudioContext synchronously in current user gesture (native 16000Hz preferred)
-                var AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                if (AudioContextClass) {
-                    try {
-                        if (!window._aiSpeakingAudioCtx || window._aiSpeakingAudioCtx.state === 'closed') {
-                            try {
-                                window._aiSpeakingAudioCtx = new AudioContextClass({ sampleRate: 16000 });
-                            } catch (errRate) {
-                                window._aiSpeakingAudioCtx = new AudioContextClass();
-                            }
-                        }
-                        self.audioContext = window._aiSpeakingAudioCtx;
-                        if (self.audioContext && self.audioContext.state === 'suspended') {
-                            self.audioContext.resume().catch(function(){});
-                        }
-                    } catch(e) {
-                        console.warn("[aiSpeakingSpeech] AudioContext pre-creation error:", e);
-                    }
-                }
-
-                var navMedia = navigator.mediaDevices;
-                var getUserMediaFn = null;
-                if (navMedia && navMedia.getUserMedia) {
-                    getUserMediaFn = function(c) { return navMedia.getUserMedia(c); };
-                } else if (navigator.getUserMedia) {
-                    getUserMediaFn = function(c) { return new Promise(function(res, rej) { navigator.getUserMedia(c, res, rej); }); };
-                } else if (navigator.webkitGetUserMedia) {
-                    getUserMediaFn = function(c) { return new Promise(function(res, rej) { navigator.webkitGetUserMedia(c, res, rej); }); };
-                }
-
-                if (!getUserMediaFn) {
-                    console.warn("[aiSpeakingSpeech] getUserMedia not available, trying speech recognition fallback");
+                var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (SpeechRec) {
                     this._startRecognitionInstance();
-                    return;
+                } else {
+                    console.info("[aiSpeakingSpeech] SpeechRecognition not available in this browser. Using audio capture fallback.");
+                    this._startAudioRecordingFallback();
                 }
-
-                var handleStreamAcquired = function(stream) {
-                    if (!self._userWantsRecording) {
-                        try { stream.getTracks().forEach(function(t) { t.stop(); }); } catch(e) {}
-                        return;
-                    }
-
-                    self.mediaStream = stream;
-
-                    if (!AudioContextClass) {
-                        console.warn("[aiSpeakingSpeech] AudioContext not available, falling back to SpeechRecognition");
-                        self._startRecognitionInstance();
-                        return;
-                    }
-
-                    try {
-                        if (!self.audioContext || self.audioContext.state === 'closed') {
-                            try {
-                                self.audioContext = new AudioContextClass({ sampleRate: 16000 });
-                            } catch (errRate) {
-                                self.audioContext = new AudioContextClass();
-                            }
-                        }
-                        if (self.audioContext.state === 'suspended') {
-                            self.audioContext.resume().catch(function(){});
-                        }
-
-                        self.audioInputSource = self.audioContext.createMediaStreamSource(stream);
-                        self.audioProcessor = self.audioContext.createScriptProcessor(2048, 1, 1);
-                        window._activeAudioProcessor = self.audioProcessor; // Keep reference to prevent GC in WebKit
-
-                        self.audioProcessor.onaudioprocess = function(e) {
-                            if (!self.isRecording) return;
-                            var rawInput = e.inputBuffer.getChannelData(0);
-                            var ctxRate = (self.audioContext && self.audioContext.sampleRate) ? self.audioContext.sampleRate : 16000;
-                            var downsampled = self._downsampleBuffer(rawInput, ctxRate, 16000);
-                            if (!downsampled || downsampled.length === 0) return;
-
-                            var sumSquares = 0;
-                            for (var k = 0; k < downsampled.length; k++) {
-                                sumSquares += downsampled[k] * downsampled[k];
-                            }
-                            var rms = Math.sqrt(sumSquares / downsampled.length);
-                            // Sensitive voice activity threshold (natural conversational level in Chrome is ~0.003 - 0.008)
-                            if (rms > 0.003) {
-                                self._hasVoiceActivity = true;
-                                self._lastVoiceActivityTime = Date.now();
-                            }
-
-                            var pcm16Bytes = self._floatToPcm16(downsampled);
-                            var b64Chunk = self._uint8ToBase64(pcm16Bytes);
-
-                            if (typeof window.onAiSpeakingAudioChunk === 'function') {
-                                try { window.onAiSpeakingAudioChunk(b64Chunk); } catch(err) {}
-                            }
-
-                            if (self._pcmChunkQueue.length > 200) {
-                                self._pcmChunkQueue.shift();
-                            }
-                            self._pcmChunkQueue.push(b64Chunk);
-                        };
-
-                        var zeroGain = self.audioContext.createGain();
-                        zeroGain.gain.value = 0;
-                        self.zeroGain = zeroGain;
-
-                        self.audioInputSource.connect(self.audioProcessor);
-                        self.audioProcessor.connect(zeroGain);
-                        zeroGain.connect(self.audioContext.destination);
-                        self.isRecording = true;
-                    } catch(err) {
-                        console.error("[aiSpeakingSpeech] Web Audio processing graph error:", err);
-                        self._startRecognitionInstance();
-                    }
-                };
-
-                // On iOS WebKit (Safari & Chrome iOS), directly use { audio: true } to prevent user gesture token expiration
-                var preferredConstraints = this._isIOS ? { audio: true } : {
-                    audio: {
-                        echoCancellation: { ideal: true },
-                        noiseSuppression: { ideal: true },
-                        autoGainControl: { ideal: true }
-                    }
-                };
-
-                getUserMediaFn(preferredConstraints).then(handleStreamAcquired).catch(function(err) {
-                    if (self._isIOS) {
-                        console.error("[aiSpeakingSpeech] getUserMedia iOS error:", err);
-                        self.isRecording = false;
-                        self._userWantsRecording = false;
-                        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                            var msg = "دسترسی به میکروفون تایید نشد.\nلطفاً در تنظیمات آیفون (Settings > Chrome یا Safari > Microphone) دسترسی میکروفون را فعال کنید.";
-                            if (!self._checkSecureContext()) {
-                                msg += "\n\n(نکته: در مرورگرهای موبایل، دسترسی به میکروفون نیازمند HTTPS است.)";
-                            }
-                            alert(msg);
-                        } else {
-                            self._startRecognitionInstance();
-                        }
-                        return;
-                    }
-
-                    console.warn("[aiSpeakingSpeech] Preferred getUserMedia failed, retrying with basic { audio: true }:", err);
-                    getUserMediaFn({ audio: true }).then(handleStreamAcquired).catch(function(finalErr) {
-                        console.error("[aiSpeakingSpeech] getUserMedia final error:", finalErr);
-                        self.isRecording = false;
-                        self._userWantsRecording = false;
-                        if (finalErr.name === 'NotAllowedError' || finalErr.name === 'PermissionDeniedError') {
-                            var msg = "دسترسی به میکروفون رد شد. لطفاً دسترسی به میکروفون را در تنظیمات مرورگر فعال کنید.";
-                            if (!self._checkSecureContext()) {
-                                msg += "\n\n(نکته: در مرورگرهای موبایل و شبکه محلی، دسترسی به میکروفون نیازمند HTTPS است.)";
-                            }
-                            alert(msg);
-                        } else {
-                            self._startRecognitionInstance();
-                        }
-                    });
-                });
-            },
-
-            drainPcmChunks: function() {
-                if (!this._pcmChunkQueue || this._pcmChunkQueue.length === 0) {
-                    return "";
-                }
-                var drained = this._pcmChunkQueue.splice(0, this._pcmChunkQueue.length);
-                return drained.join("|");
-            },
-
-            hasVoiceActivity: function() {
-                var active = this._hasVoiceActivity;
-                this._hasVoiceActivity = false;
-                return active;
             },
 
             _startRecognitionInstance: function() {
-                if (!this._userWantsRecording) {
-                    return;
-                }
+                if (!this._userWantsRecording) return;
 
                 var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SpeechRec) return;
+                if (!SpeechRec) {
+                    this._startAudioRecordingFallback();
+                    return;
+                }
 
                 if (this.recognition) {
                     try {
@@ -704,26 +567,43 @@
                 recognition.interimResults = true;
                 recognition.maxAlternatives = 1;
 
-                recognition.onresult = function(event) {
+                recognition.onstart = function() {
+                    self.isRecording = true;
                     self._consecutiveErrors = 0;
-                    var sessionText = '';
-                    for (var i = 0; i < event.results.length; ++i) {
-                        var chunk = (event.results[i][0].transcript || '').trim();
-                        if (chunk) {
-                            sessionText += (sessionText ? ' ' : '') + chunk;
+                };
+
+                recognition.onresult = function(event) {
+                    self._hasVoiceActivity = true;
+                    self._lastVoiceActivityTime = Date.now();
+                    self._consecutiveErrors = 0;
+
+                    var interimText = '';
+                    var currentSessionFinal = '';
+                    for (var i = event.resultIndex; i < event.results.length; ++i) {
+                        var res = event.results[i];
+                        var chunk = (res[0].transcript || '').trim();
+                        if (res.isFinal) {
+                            currentSessionFinal += (currentSessionFinal ? ' ' : '') + chunk;
+                        } else {
+                            interimText += (interimText ? ' ' : '') + chunk;
                         }
                     }
-                    self._currentSessionTranscript = sessionText;
-                    var full = self._accumulatedTranscript;
-                    if (sessionText) {
-                        full = (full ? full + ' ' : '') + sessionText;
+
+                    if (currentSessionFinal) {
+                        self._accumulatedTranscript += (self._accumulatedTranscript ? self._accumulatedTranscript + ' ' : '') + currentSessionFinal;
                     }
-                    self.transcript = full.trim();
+                    self._currentSessionTranscript = interimText;
+
+                    var combined = self._accumulatedTranscript;
+                    if (interimText) {
+                        combined = (combined ? combined + ' ' : '') + interimText;
+                    }
+                    self.transcript = combined.trim();
                 };
 
                 recognition.onerror = function(event) {
                     var err = event.error || (event.message || 'unknown');
-                    console.warn("[aiSpeakingSpeech] STT error:", err);
+                    console.warn("[aiSpeakingSpeech] SpeechRecognition error:", err);
 
                     if (err === 'no-speech' || err === 'audio-capture' || err === 'aborted') {
                         return;
@@ -732,12 +612,19 @@
                     if (err === 'not-allowed' || err === 'service-not-allowed') {
                         self._userWantsRecording = false;
                         self.isRecording = false;
+                        alert("دسترسی به میکروفون تایید نشد.\nلطفاً در تنظیمات مرورگر، دسترسی میکروفون را فعال نمایید.");
+                        return;
+                    }
+
+                    if (err === 'network') {
+                        console.warn("[aiSpeakingSpeech] Network error in SpeechRecognition. Falling back to audio recording.");
+                        self._startAudioRecordingFallback();
                         return;
                     }
 
                     self._consecutiveErrors++;
-                    if (self._consecutiveErrors > 5) {
-                        self.stop();
+                    if (self._consecutiveErrors > 4) {
+                        self._startAudioRecordingFallback();
                     }
                 };
 
@@ -748,13 +635,13 @@
                         self.transcript = self._accumulatedTranscript.trim();
                     }
 
-                    if (self._userWantsRecording) {
+                    if (self._userWantsRecording && !self._usingFallback) {
                         self._restartTimeout = setTimeout(function() {
-                            if (self._userWantsRecording) {
+                            if (self._userWantsRecording && !self._usingFallback) {
                                 self._startRecognitionInstance();
                             }
-                        }, 150);
-                    } else {
+                        }, 100);
+                    } else if (!self._usingFallback) {
                         self.isRecording = false;
                     }
                 };
@@ -772,20 +659,171 @@
                             return;
                         } catch(e) {}
                     }
-
-                    if (this._userWantsRecording) {
-                        this._restartTimeout = setTimeout(function() {
-                            if (self._userWantsRecording) {
-                                self._startRecognitionInstance();
-                            }
-                        }, 500);
-                    } else {
-                        this.isRecording = false;
-                    }
+                    this._startAudioRecordingFallback();
                 }
             },
 
+            _startAudioRecordingFallback: function() {
+                var self = this;
+                self._usingFallback = true;
+                self._fallbackPcmChunks = [];
+
+                if (self.recognition) {
+                    try {
+                        self.recognition.onend = null;
+                        self.recognition.onerror = null;
+                        self.recognition.stop();
+                    } catch(e) {}
+                    self.recognition = null;
+                }
+
+                var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                var navMedia = navigator.mediaDevices;
+                var getUserMediaFn = (navMedia && navMedia.getUserMedia) ?
+                    function(c) { return navMedia.getUserMedia(c); } : null;
+
+                if (!getUserMediaFn) {
+                    console.error("[aiSpeakingSpeech] Neither SpeechRecognition nor getUserMedia available.");
+                    self.isRecording = false;
+                    self._userWantsRecording = false;
+                    return;
+                }
+
+                getUserMediaFn({ audio: true }).then(function(stream) {
+                    if (!self._userWantsRecording) {
+                        try { stream.getTracks().forEach(function(t) { t.stop(); }); } catch(e) {}
+                        return;
+                    }
+
+                    self.mediaStream = stream;
+                    if (!AudioContextClass) return;
+
+                    try {
+                        if (!self.audioContext || self.audioContext.state === 'closed') {
+                            try {
+                                self.audioContext = new AudioContextClass({ sampleRate: 16000 });
+                            } catch (e) {
+                                self.audioContext = new AudioContextClass();
+                            }
+                        }
+                        if (self.audioContext.state === 'suspended') {
+                            self.audioContext.resume().catch(function(){});
+                        }
+
+                        self.audioInputSource = self.audioContext.createMediaStreamSource(stream);
+                        self.audioProcessor = self.audioContext.createScriptProcessor(2048, 1, 1);
+                        window._activeAudioProcessor = self.audioProcessor;
+
+                        self.audioProcessor.onaudioprocess = function(e) {
+                            if (!self.isRecording) return;
+                            var rawInput = e.inputBuffer.getChannelData(0);
+                            var ctxRate = (self.audioContext && self.audioContext.sampleRate) ? self.audioContext.sampleRate : 16000;
+                            var downsampled = self._downsampleBuffer(rawInput, ctxRate, 16000);
+                            if (!downsampled || downsampled.length === 0) return;
+
+                            var sumSquares = 0;
+                            for (var k = 0; k < downsampled.length; k++) {
+                                sumSquares += downsampled[k] * downsampled[k];
+                            }
+                            var rms = Math.sqrt(sumSquares / downsampled.length);
+                            if (rms > 0.003) {
+                                self._hasVoiceActivity = true;
+                                self._lastVoiceActivityTime = Date.now();
+                            }
+
+                            var pcm16Bytes = self._floatToPcm16(downsampled);
+                            self._fallbackPcmChunks.push(pcm16Bytes);
+
+                            var b64Chunk = self._uint8ToBase64(pcm16Bytes);
+                            if (typeof window.onAiSpeakingAudioChunk === 'function') {
+                                try { window.onAiSpeakingAudioChunk(b64Chunk); } catch(err) {}
+                            }
+                            if (self._pcmChunkQueue.length > 200) {
+                                self._pcmChunkQueue.shift();
+                            }
+                            self._pcmChunkQueue.push(b64Chunk);
+                        };
+
+                        var zeroGain = self.audioContext.createGain();
+                        zeroGain.gain.value = 0;
+                        self.zeroGain = zeroGain;
+
+                        self.audioInputSource.connect(self.audioProcessor);
+                        self.audioProcessor.connect(zeroGain);
+                        zeroGain.connect(self.audioContext.destination);
+                        self.isRecording = true;
+                    } catch(err) {
+                        console.error("[aiSpeakingSpeech] Fallback AudioContext graph error:", err);
+                    }
+                }).catch(function(err) {
+                    console.error("[aiSpeakingSpeech] getUserMedia fallback error:", err);
+                    self.isRecording = false;
+                    self._userWantsRecording = false;
+                });
+            },
+
+            _sendFallbackAudioToTranscribe: function() {
+                var self = this;
+                if (!self._fallbackPcmChunks || self._fallbackPcmChunks.length === 0) return;
+                var totalLen = 0;
+                for (var i = 0; i < self._fallbackPcmChunks.length; i++) {
+                    totalLen += self._fallbackPcmChunks[i].length;
+                }
+                var combined = new Uint8Array(totalLen);
+                var offset = 0;
+                for (var j = 0; j < self._fallbackPcmChunks.length; j++) {
+                    combined.set(self._fallbackPcmChunks[j], offset);
+                    offset += self._fallbackPcmChunks[j].length;
+                }
+                self._fallbackPcmChunks = [];
+                var wavBlob = self._pcmToWav(combined, 16000);
+
+                var token = "";
+                try {
+                    token = localStorage.getItem("token") || "";
+                    if (!token) {
+                        var authRaw = localStorage.getItem("auth_data");
+                        if (authRaw) token = JSON.parse(authRaw).token || "";
+                    }
+                } catch(e) {}
+
+                var headers = { "Content-Type": "audio/wav" };
+                if (token) headers["Authorization"] = "Bearer " + token;
+
+                fetch("/api/v2/stt/transcribe", {
+                    method: "POST",
+                    headers: headers,
+                    body: wavBlob
+                }).then(function(res) {
+                    return res.json();
+                }).then(function(data) {
+                    if (data && data.data && data.data.text) {
+                        var text = data.data.text.trim();
+                        if (text) {
+                            self.transcript = text;
+                        }
+                    }
+                }).catch(function(err) {
+                    console.warn("[aiSpeakingSpeech] fallback transcribe error:", err);
+                });
+            },
+
+            drainPcmChunks: function() {
+                if (!this._pcmChunkQueue || this._pcmChunkQueue.length === 0) {
+                    return "";
+                }
+                var drained = this._pcmChunkQueue.splice(0, this._pcmChunkQueue.length);
+                return drained.join("|");
+            },
+
+            hasVoiceActivity: function() {
+                var active = this._hasVoiceActivity;
+                this._hasVoiceActivity = false;
+                return active;
+            },
+
             stop: function() {
+                var wasFallback = this._usingFallback;
                 this._userWantsRecording = false;
                 this.isRecording = false;
 
@@ -841,6 +879,10 @@
                     this._accumulatedTranscript = (this._accumulatedTranscript ? this._accumulatedTranscript + ' ' : '') + this._currentSessionTranscript;
                     this._currentSessionTranscript = "";
                     this.transcript = this._accumulatedTranscript.trim();
+                }
+
+                if (wasFallback) {
+                    this._sendFallbackAudioToTranscribe();
                 }
             },
 

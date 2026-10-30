@@ -3,6 +3,7 @@ package ir.aispeaking.androidApp
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.AudioFormat
@@ -10,6 +11,10 @@ import android.media.AudioRecord
 import android.media.MediaPlayer
 import android.media.MediaRecorder.AudioSource
 import android.net.Uri
+import android.os.Bundle
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import androidx.core.content.ContextCompat
 import ir.aispeaking.chat.audio.DefaultStageAudioController
 import kotlinx.coroutines.CoroutineScope
@@ -38,6 +43,7 @@ class AndroidAudioBridge(
     private var mediaPlayer: MediaPlayer? = null
     private var audioRecord: AudioRecord? = null
     private var recordingJob: Job? = null
+    private var speechRecognizer: SpeechRecognizer? = null
 
     @Volatile
     private var isCapturingAudio = false
@@ -91,7 +97,7 @@ class AndroidAudioBridge(
             stopAudio()
         }
 
-        controller.onPlatformStartRecording = { _, onSilence ->
+        controller.onPlatformStartRecording = { onSpeech, onSilence ->
             stopRecordingAudio()
             val hasPermission = ContextCompat.checkSelfPermission(
                 context,
@@ -99,11 +105,11 @@ class AndroidAudioBridge(
             ) == PackageManager.PERMISSION_GRANTED
 
             if (hasPermission) {
-                startAudioRecordCapture(onSilence)
+                startRecordingSession(onSpeech, onSilence)
             } else if (onRequestRecordPermission != null) {
                 onRequestRecordPermission.invoke { granted ->
                     if (granted) {
-                        startAudioRecordCapture(onSilence)
+                        startRecordingSession(onSpeech, onSilence)
                     } else {
                         onSilence()
                     }
@@ -137,6 +143,85 @@ class AndroidAudioBridge(
                 ) == PackageManager.PERMISSION_GRANTED
                 callback(hasPermission)
             }
+        }
+    }
+
+    private fun startRecordingSession(onSpeech: (String) -> Unit, onSilence: () -> Unit) {
+        bridgeScope.launch(Dispatchers.Main) {
+            stopRecordingAudio()
+
+            if (SpeechRecognizer.isRecognitionAvailable(context)) {
+                startSpeechRecognizer(onSpeech, onSilence)
+            } else {
+                startAudioRecordCapture(onSilence)
+            }
+        }
+    }
+
+    private fun startSpeechRecognizer(onSpeech: (String) -> Unit, onSilence: () -> Unit) {
+        try {
+            val recognizer = SpeechRecognizer.createSpeechRecognizer(context)
+            speechRecognizer = recognizer
+
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US")
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-US")
+                putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, "en-US")
+                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+                putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
+            }
+
+            recognizer.setRecognitionListener(object : RecognitionListener {
+                override fun onReadyForSpeech(params: Bundle?) {}
+
+                override fun onBeginningOfSpeech() {
+                    controller.notifyVoiceActivity()
+                }
+
+                override fun onRmsChanged(rmsdB: Float) {
+                    if (rmsdB > 2.0f) {
+                        controller.notifyVoiceActivity()
+                    }
+                }
+
+                override fun onBufferReceived(buffer: ByteArray?) {}
+
+                override fun onEndOfSpeech() {
+                    controller.notifyVoiceActivity()
+                }
+
+                override fun onError(error: Int) {
+                    if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                        onSilence()
+                    }
+                }
+
+                override fun onResults(results: Bundle?) {
+                    val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                    val text = matches?.firstOrNull()?.trim()
+                    if (!text.isNullOrBlank()) {
+                        onSpeech(text)
+                    }
+                    onSilence()
+                }
+
+                override fun onPartialResults(partialResults: Bundle?) {
+                    val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                    val text = matches?.firstOrNull()?.trim()
+                    if (!text.isNullOrBlank()) {
+                        controller.notifyVoiceActivity()
+                        onSpeech(text)
+                    }
+                }
+
+                override fun onEvent(eventType: Int, params: Bundle?) {}
+            })
+
+            recognizer.startListening(intent)
+        } catch (_: Exception) {
+            startAudioRecordCapture(onSilence)
         }
     }
 
@@ -246,6 +331,15 @@ class AndroidAudioBridge(
         isCapturingAudio = false
         recordingJob?.cancel()
         recordingJob = null
+        val recognizer = speechRecognizer
+        speechRecognizer = null
+        if (recognizer != null) {
+            try {
+                recognizer.stopListening()
+                recognizer.cancel()
+                recognizer.destroy()
+            } catch (_: Exception) {}
+        }
         val record = audioRecord
         audioRecord = null
         if (record != null) {

@@ -467,52 +467,39 @@ class ChatViewModel(
                             }
                         }
                         is SttStreamEvent.Error -> {
-                            stopRecordingSession()
-                            val errorMsg = event.message.ifBlank {
-                                "خطا در سرویس تشخیص گفتار. لطفاً دوباره تلاش کنید."
-                            }
-                            _uiState.update {
-                                it.copy(
-                                    isRecording = false,
-                                    sttError = errorMsg,
-                                    hintError = errorMsg
-                                )
-                            }
-                        }
-                        is SttStreamEvent.Disconnected -> {
-                            if (_uiState.value.isRecording) {
-                                stopRecordingSession()
-                                val errorMsg = "اتصال وب‌سوکت تشخیص گفتار قطع شد."
+                            if (_uiState.value.messageText.isBlank()) {
+                                val errorMsg = event.message.ifBlank {
+                                    "خطا در سرویس تشخیص گفتار. لطفاً دوباره تلاش کنید."
+                                }
                                 _uiState.update {
                                     it.copy(
-                                        isRecording = false,
                                         sttError = errorMsg,
                                         hintError = errorMsg
                                     )
                                 }
                             }
                         }
+                        is SttStreamEvent.Disconnected -> {
+                            // Background socket disconnect does not disrupt native speech recognition
+                        }
                     }
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                stopRecordingSession()
-                val errorMsg = e.message?.takeIf { it.isNotBlank() }
-                    ?: "خطا در ارتباط با سرویس تشخیص گفتار."
-                _uiState.update {
-                    it.copy(
-                        isRecording = false,
-                        sttError = errorMsg,
-                        hintError = errorMsg
-                    )
+                if (_uiState.value.messageText.isBlank()) {
+                    val errorMsg = e.message?.takeIf { it.isNotBlank() }
+                        ?: "خطا در ارتباط با سرویس تشخیص گفتار."
+                    _uiState.update {
+                        it.copy(sttError = errorMsg)
+                    }
                 }
             }
         }
 
         audioController.startRecording(
             onSpeechRecognized = { text ->
-                if (_uiState.value.messageText.isBlank() && text.isNotBlank()) {
+                if (text.isNotBlank()) {
                     _uiState.update { it.copy(messageText = text) }
                 }
             },
