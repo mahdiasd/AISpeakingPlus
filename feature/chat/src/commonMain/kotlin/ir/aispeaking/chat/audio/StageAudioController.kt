@@ -94,7 +94,6 @@ class DefaultStageAudioController : StageAudioController {
 
     override fun stopVoice() {
         isPlayingState = false
-        currentOnEnded?.invoke()
         currentOnEnded = null
         onPlatformStopVoice?.invoke()
     }
