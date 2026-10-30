@@ -63,11 +63,8 @@ class MarketVerificationService(
         purchaseToken: String,
         developerPayload: String? = null
     ): MarketVerifyResult {
-        // Test / mock token support for local development and QA tests
-        if (purchaseToken.startsWith("test_") ||
-            (market == "CAFE_BAZAAR" && bazaarClientId == "bazaar_client_id") ||
-            (market == "MYKET" && myketAccessToken == "myket_access_token")
-        ) {
+        // Test / mock token support for test suite or explicit mock tokens
+        if (purchaseToken.startsWith("test_mock_token_") || System.getenv("APP_ENV") == "test") {
             PrintHelper.info("MarketVerification: using simulated verification for token: $purchaseToken ($market)")
             return MarketVerifyResult(
                 isValid = true,
@@ -76,6 +73,19 @@ class MarketVerificationService(
                 consumptionState = 0,
                 developerPayload = developerPayload,
                 rawResponse = """{"purchaseState":0,"simulated":true,"market":"$market"}"""
+            )
+        }
+
+        if (market.uppercase() in listOf("CAFE_BAZAAR", "BAZAAR") && (bazaarClientId == "bazaar_client_id" || bazaarClientSecret == "bazaar_client_secret")) {
+            return MarketVerifyResult(
+                isValid = false,
+                errorMessage = "Cafe Bazaar API credentials are not configured on server"
+            )
+        }
+        if (market.uppercase() == "MYKET" && myketAccessToken == "myket_access_token") {
+            return MarketVerifyResult(
+                isValid = false,
+                errorMessage = "Myket API credentials are not configured on server"
             )
         }
 
