@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,6 +45,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -505,7 +507,9 @@ private fun GrammarTipCard(
                 text = feedback,
                 size = 12.sp,
                 lineHeight = 19.sp,
-                color = if (correctedSentence.isNullOrBlank()) Game.TextPrimary else Game.TextSecondary
+                color = if (correctedSentence.isNullOrBlank()) Game.TextPrimary else Game.TextSecondary,
+                align = TextAlign.Justify,
+                modifier = Modifier.fillMaxWidth()
             )
         } else if (correctedSentence.isNullOrBlank()) {
             GameText(

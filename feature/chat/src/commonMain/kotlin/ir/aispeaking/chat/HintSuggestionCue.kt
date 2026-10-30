@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
@@ -140,7 +141,9 @@ fun HintSuggestionCue(
                             text = explanationFa,
                             size = 13.sp,
                             lineHeight = 21.sp,
-                            color = Game.TextSecondary
+                            color = Game.TextSecondary,
+                            align = TextAlign.Justify,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
 

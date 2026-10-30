@@ -220,7 +220,9 @@ fun FinishConversationDialog(
                             text = evaluation.feedbackFa,
                             size = 12.sp,
                             lineHeight = 19.sp,
-                            color = Game.TextPrimary
+                            color = Game.TextPrimary,
+                            align = TextAlign.Justify,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }

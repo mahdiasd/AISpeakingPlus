@@ -106,7 +106,9 @@ fun HintConfirmDialog(
                     text = "هر بار گرفتن راهنما از ستاره‌های این مرحله کم می‌کند. برای گرفتن ۳ ستاره، بدون راهنما و بدون خطا جلو برو.",
                     size = 13.sp,
                     lineHeight = 21.sp,
-                    color = Game.TextPrimary
+                    color = Game.TextPrimary,
+                    align = TextAlign.Justify,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 if (hintsUsedCount > 0) {
                     GameText(
