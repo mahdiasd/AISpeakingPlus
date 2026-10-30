@@ -417,6 +417,7 @@
             _micPermissionGranted: false,
             _restartTimeout: null,
             _accumulatedTranscript: "",
+            _currentSessionFinalTranscript: "",
             _currentSessionTranscript: "",
             transcript: "",
             _consecutiveErrors: 0,
@@ -523,6 +524,7 @@
                 this.isRecording = true;
                 this.transcript = "";
                 this._accumulatedTranscript = "";
+                this._currentSessionFinalTranscript = "";
                 this._currentSessionTranscript = "";
                 this._pcmChunkQueue = [];
                 this._fallbackPcmChunks = [];
@@ -578,23 +580,26 @@
                     self._consecutiveErrors = 0;
 
                     var interimText = '';
-                    var currentSessionFinal = '';
-                    for (var i = event.resultIndex; i < event.results.length; ++i) {
+                    var finalChunks = [];
+                    for (var i = 0; i < event.results.length; ++i) {
                         var res = event.results[i];
                         var chunk = (res[0].transcript || '').trim();
+                        if (!chunk) continue;
                         if (res.isFinal) {
-                            currentSessionFinal += (currentSessionFinal ? ' ' : '') + chunk;
+                            finalChunks.push(chunk);
                         } else {
                             interimText += (interimText ? ' ' : '') + chunk;
                         }
                     }
 
-                    if (currentSessionFinal) {
-                        self._accumulatedTranscript += (self._accumulatedTranscript ? self._accumulatedTranscript + ' ' : '') + currentSessionFinal;
-                    }
+                    var sessionFinal = finalChunks.join(' ').trim();
+                    self._currentSessionFinalTranscript = sessionFinal;
                     self._currentSessionTranscript = interimText;
 
                     var combined = self._accumulatedTranscript;
+                    if (sessionFinal) {
+                        combined = (combined ? combined + ' ' : '') + sessionFinal;
+                    }
                     if (interimText) {
                         combined = (combined ? combined + ' ' : '') + interimText;
                     }
@@ -629,11 +634,19 @@
                 };
 
                 recognition.onend = function() {
-                    if (self._currentSessionTranscript) {
-                        self._accumulatedTranscript = (self._accumulatedTranscript ? self._accumulatedTranscript + ' ' : '') + self._currentSessionTranscript;
-                        self._currentSessionTranscript = "";
-                        self.transcript = self._accumulatedTranscript.trim();
+                    var sessionText = '';
+                    if (self._currentSessionFinalTranscript) {
+                        sessionText = self._currentSessionFinalTranscript;
                     }
+                    if (self._currentSessionTranscript) {
+                        sessionText = (sessionText ? sessionText + ' ' : '') + self._currentSessionTranscript;
+                    }
+                    if (sessionText) {
+                        self._accumulatedTranscript = (self._accumulatedTranscript ? self._accumulatedTranscript + ' ' : '') + sessionText;
+                    }
+                    self._currentSessionFinalTranscript = "";
+                    self._currentSessionTranscript = "";
+                    self.transcript = self._accumulatedTranscript.trim();
 
                     if (self._userWantsRecording && !self._usingFallback) {
                         self._restartTimeout = setTimeout(function() {
@@ -875,11 +888,19 @@
                     this.recognition = null;
                 }
 
-                if (this._currentSessionTranscript) {
-                    this._accumulatedTranscript = (this._accumulatedTranscript ? this._accumulatedTranscript + ' ' : '') + this._currentSessionTranscript;
-                    this._currentSessionTranscript = "";
-                    this.transcript = this._accumulatedTranscript.trim();
+                var sessionText = '';
+                if (this._currentSessionFinalTranscript) {
+                    sessionText = this._currentSessionFinalTranscript;
                 }
+                if (this._currentSessionTranscript) {
+                    sessionText = (sessionText ? sessionText + ' ' : '') + this._currentSessionTranscript;
+                }
+                if (sessionText) {
+                    this._accumulatedTranscript = (this._accumulatedTranscript ? this._accumulatedTranscript + ' ' : '') + sessionText;
+                }
+                this._currentSessionFinalTranscript = "";
+                this._currentSessionTranscript = "";
+                this.transcript = this._accumulatedTranscript.trim();
 
                 if (wasFallback) {
                     this._sendFallbackAudioToTranscribe();
