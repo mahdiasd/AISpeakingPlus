@@ -6,6 +6,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -37,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.AnnotatedString
@@ -161,43 +165,24 @@ fun AiChatItem(
                     }
                 }
 
-                // Apple Labelled Action Chips
+                // Apple Labelled Action Chips (Stable Size & Zero Layout Shift)
                 if (chat.message.isNotBlank()) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        when (chat.voiceState) {
-                            AiVoiceState.PendingToPlay -> GameChip(
-                                text = "در حال آماده‌سازی",
-                                accent = AppleChatTheme.PrimaryAzure,
-                                border = AppleChatTheme.SubtleBorderColor,
-                                keepContainerOnActive = true
-                            )
-                            AiVoiceState.Playing -> PlayingVoiceChip(onClick = onStopVoice)
-                            AiVoiceState.Stopped -> if (!chat.audioUrl.isNullOrBlank()) {
-                                GameChip(
-                                    text = "پخش صدا",
-                                    icon = Res.drawable.ic_play,
-                                    accent = AppleChatTheme.PrimaryAzure,
-                                    border = AppleChatTheme.SubtleBorderColor,
-                                    keepContainerOnActive = true,
-                                    onClick = onPlayVoice
-                                )
-                            }
-                        }
+                        AiVoiceChip(
+                            voiceState = chat.voiceState,
+                            hasAudio = !chat.audioUrl.isNullOrBlank(),
+                            onPlayVoice = onPlayVoice,
+                            onStopVoice = onStopVoice
+                        )
 
-                        if (hasTranslation) {
-                            GameChip(
-                                text = if (showTranslation) "پنهان کردن ترجمه" else "ترجمه",
-                                icon = Res.drawable.ic_translate,
-                                accent = AppleChatTheme.PrimaryAzure,
-                                border = AppleChatTheme.SubtleBorderColor,
-                                active = showTranslation,
-                                keepContainerOnActive = true,
-                                onClick = { showTranslation = !showTranslation }
-                            )
-                        }
+                        AiTranslateChip(
+                            hasTranslation = hasTranslation,
+                            showTranslation = showTranslation,
+                            onToggleTranslation = { showTranslation = !showTranslation }
+                        )
 
                         GameChip(
                             text = if (copied) "کپی شد" else "کپی",
@@ -206,6 +191,7 @@ fun AiChatItem(
                             border = AppleChatTheme.SubtleBorderColor,
                             active = copied,
                             keepContainerOnActive = true,
+                            modifier = Modifier.defaultMinSize(minWidth = 72.dp, minHeight = 32.dp),
                             onClick = {
                                 clipboardManager.setText(AnnotatedString(chat.message))
                                 copied = true
@@ -220,17 +206,37 @@ fun AiChatItem(
 }
 
 /**
- * Dynamic Audio Playing Equalizer Chip in Serene Cyan.
+ * Unified Audio Voice Chip with 100% stable width across Pending, Stopped, and Playing states.
  */
 @Composable
-private fun PlayingVoiceChip(
-    onClick: () -> Unit,
+private fun AiVoiceChip(
+    voiceState: AiVoiceState,
+    hasAudio: Boolean,
+    onPlayVoice: () -> Unit,
+    onStopVoice: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isPlaying = voiceState == AiVoiceState.Playing
+    val isPending = voiceState == AiVoiceState.PendingToPlay || !hasAudio
+    val isReady = hasAudio && voiceState == AiVoiceState.Stopped
+
     val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(50)
     val accent = AppleChatTheme.PrimaryAzure
     val containerBg = if (isDark) Color(0xEB181A22) else Color(0xCCFFFFFF)
+
+    val targetAlpha = if (isPending) 0.42f else 1f
+    val alphaAnim by animateFloatAsState(
+        targetValue = targetAlpha,
+        animationSpec = tween(220),
+        label = "ai_voice_chip_alpha"
+    )
+
+    val strokeColor = when {
+        isPlaying -> accent.copy(alpha = 0.65f)
+        isReady -> AppleChatTheme.SubtleBorderColor
+        else -> AppleChatTheme.SubtleBorderColor.copy(alpha = 0.4f)
+    }
 
     val transition = rememberInfiniteTransition(label = "audio_wave_pulse")
     val bar1 by transition.animateFloat(
@@ -260,47 +266,127 @@ private fun PlayingVoiceChip(
         ),
         label = "bar3"
     )
-    val bar4 by transition.animateFloat(
-        initialValue = 0.7f,
-        targetValue = 0.25f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(350, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "bar4"
-    )
+
+    val clickAction: (() -> Unit)? = when {
+        isPlaying -> onStopVoice
+        isReady -> onPlayVoice
+        else -> null
+    }
 
     Row(
         modifier = modifier
-            .applePressEffect(targetScale = 0.95f, onClick = onClick)
+            .graphicsLayer { this.alpha = alphaAnim }
+            .applePressEffect(enabled = !isPending, targetScale = 0.95f, onClick = clickAction)
             .clip(shape)
             .background(containerBg)
-            .border(1.5.dp, accent.copy(alpha = 0.65f), shape)
+            .border(if (isPlaying) 1.5.dp else 1.dp, strokeColor, shape)
+            .defaultMinSize(minWidth = 104.dp, minHeight = 32.dp)
             .padding(horizontal = 12.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.Center
+    ) {
+        if (isPlaying) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_speaker_off),
+                contentDescription = "توقف صدا",
+                tint = accent,
+                modifier = Modifier.size(15.dp)
+            )
+            Spacer(Modifier.width(5.dp))
+            GameText(
+                text = "پخش صدا",
+                size = 13.sp,
+                color = accent,
+                bold = true
+            )
+            Spacer(Modifier.width(5.dp))
+            Row(
+                modifier = Modifier.height(13.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(1.5.dp)
+            ) {
+                listOf(bar1, bar2, bar3).forEach { barVal ->
+                    Box(
+                        modifier = Modifier
+                            .width(2.dp)
+                            .height((3 + 9 * barVal).dp)
+                            .background(accent, RoundedCornerShape(1.dp))
+                    )
+                }
+            }
+        } else {
+            Icon(
+                painter = painterResource(Res.drawable.ic_play),
+                contentDescription = "پخش صدا",
+                tint = if (isReady) accent else Game.TextSecondary.copy(alpha = 0.6f),
+                modifier = Modifier.size(15.dp)
+            )
+            Spacer(Modifier.width(5.dp))
+            GameText(
+                text = "پخش صدا",
+                size = 13.sp,
+                color = if (isReady) Game.TextPrimary else Game.TextSecondary.copy(alpha = 0.7f),
+                bold = isReady
+            )
+        }
+    }
+}
+
+/**
+ * Unified Translation Action Chip with 100% stable width across Pending, Closed, and Open states.
+ */
+@Composable
+private fun AiTranslateChip(
+    hasTranslation: Boolean,
+    showTranslation: Boolean,
+    onToggleTranslation: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isPending = !hasTranslation
+    val isDark = AppTheme.isDark
+    val shape = RoundedCornerShape(50)
+    val accent = AppleChatTheme.PrimaryAzure
+    val containerBg = if (isDark) Color(0xEB181A22) else Color(0xCCFFFFFF)
+
+    val targetAlpha = if (isPending) 0.42f else 1f
+    val alphaAnim by animateFloatAsState(
+        targetValue = targetAlpha,
+        animationSpec = tween(220),
+        label = "ai_translate_chip_alpha"
+    )
+
+    val isActive = showTranslation && hasTranslation
+    val strokeColor = when {
+        isActive -> accent.copy(alpha = 0.65f)
+        hasTranslation -> AppleChatTheme.SubtleBorderColor
+        else -> AppleChatTheme.SubtleBorderColor.copy(alpha = 0.4f)
+    }
+
+    Row(
+        modifier = modifier
+            .graphicsLayer { this.alpha = alphaAnim }
+            .applePressEffect(enabled = hasTranslation, targetScale = 0.95f, onClick = onToggleTranslation)
+            .clip(shape)
+            .background(containerBg)
+            .border(if (isActive) 1.5.dp else 1.dp, strokeColor, shape)
+            .defaultMinSize(minWidth = 84.dp, minHeight = 32.dp)
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
         Icon(
-            painter = painterResource(Res.drawable.ic_speaker_off),
-            contentDescription = "توقف صدا",
-            tint = accent,
+            painter = painterResource(Res.drawable.ic_translate),
+            contentDescription = "ترجمه",
+            tint = if (isActive || hasTranslation) accent else Game.TextSecondary.copy(alpha = 0.6f),
             modifier = Modifier.size(15.dp)
         )
-        Row(
-            modifier = Modifier.height(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            val bars = listOf(bar1, bar2, bar3, bar4)
-            bars.forEach { barVal ->
-                Box(
-                    modifier = Modifier
-                        .width(2.5.dp)
-                        .height((4 + 10 * barVal).dp)
-                        .background(accent, RoundedCornerShape(1.dp))
-                )
-            }
-        }
+        Spacer(Modifier.width(5.dp))
+        GameText(
+            text = "ترجمه",
+            size = 13.sp,
+            color = if (isActive) accent else if (hasTranslation) Game.TextPrimary else Game.TextSecondary.copy(alpha = 0.7f),
+            bold = isActive
+        )
     }
 }
 
