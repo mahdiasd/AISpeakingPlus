@@ -6,16 +6,33 @@ interface LandingHeroProps {
 }
 
 export const LandingHero: React.FC<LandingHeroProps> = ({ onLaunchApp }) => {
+  const [isMobile, setIsMobile] = React.useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+
   return (
     <section className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center text-center px-4 select-none">
-      {/* Background Video */}
+      {/* Background Video (Responsive: Desktop & Mobile) */}
       <video
+        key={isMobile ? 'mobile' : 'desktop'}
         autoPlay
         loop
         muted
         playsInline
+        preload="auto"
         className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
-        src="https://cdn.sceneai.art/Hero%20Section%20Video/01d1f8de-fec0-4bf5-8b48-9fc2dbc8c6b0.mp4"
+        src={isMobile ? '/videos/hero-mobile.mp4' : '/videos/hero-desktop.mp4'}
       />
 
       {/* Dark Gradient Overlay */}

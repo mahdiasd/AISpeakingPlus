@@ -65,3 +65,7 @@ audio_cache/
 *.tar.bz2
 *.part
 *.download
+
+# Video generation working files
+AiSpeaking_Intro_Video_Master.mp4
+generated_scenes/
