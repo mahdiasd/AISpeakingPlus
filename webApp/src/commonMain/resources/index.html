@@ -34,6 +34,9 @@
 
             html,
             body {
+                position: fixed;
+                top: 0;
+                left: 0;
                 width: 100%;
                 height: 100%;
                 margin: 0;
@@ -532,7 +535,9 @@
             },
 
             isPlaying: function() {
-                return window._isAudioPlaying === true;
+                var audio = getOrCreateAudioElement();
+                var isDomPlaying = !!(audio && !audio.paused && !audio.ended && audio.currentTime > 0);
+                return window._isAudioPlaying === true || isDomPlaying;
             },
 
             preload: function(url) {
@@ -543,7 +548,6 @@
                         var a = new Audio();
                         a.preload = "auto";
                         a.src = fullUrl;
-                        a.load();
                         window._aiSpeakingAudioPool[fullUrl] = a;
                     } catch(e) {
                         console.warn("[aiSpeakingAudio] preload error:", e);
@@ -563,18 +567,8 @@
                 var self = this;
                 self._currentUrl = fullUrl;
 
-                // On iOS Safari, reuse the already-unlocked singleton audio element
                 var audio = getOrCreateAudioElement();
                 self.audio = audio;
-                window._isAudioPlaying = true;
-
-                try {
-                    audio.pause();
-                    audio.currentTime = 0;
-                } catch(e){}
-
-                audio.src = fullUrl;
-                audio.load();
 
                 var finish = function() {
                     if (self._currentUrl === fullUrl) {
@@ -584,30 +578,77 @@
 
                 audio.onended = finish;
                 audio.onerror = function(e) {
-                    console.warn("[aiSpeakingAudio] Playback error, falling back:", e);
+                    console.warn("[aiSpeakingAudio] Playback error:", e);
                     finish();
                 };
 
-                var playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(function() {
-                        window._isAudioPlaying = true;
-                    }).catch(function(err) {
-                        console.warn("[aiSpeakingAudio] Play prevented or failed:", err);
-                        finish();
-                    });
+                // Check if already pointed to this exact media URL (replay scenario)
+                var isSame = (audio.src === fullUrl || audio.currentSrc === fullUrl || (audio.src && audio.src.indexOf(url) !== -1));
+
+                if (isSame && audio.duration > 0 && !isNaN(audio.duration)) {
+                    // Safe replay: rewind to 0 and trigger play without calling .load()
+                    try {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    } catch(e) {}
+                    window._isAudioPlaying = true;
+                    var playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(function() {
+                            window._isAudioPlaying = true;
+                        }).catch(function(err) {
+                            if (err && err.name === 'AbortError') {
+                                setTimeout(function() {
+                                    if (self._currentUrl === fullUrl) {
+                                        audio.play().then(function() {
+                                            window._isAudioPlaying = true;
+                                        }).catch(finish);
+                                    }
+                                }, 50);
+                            } else {
+                                console.warn("[aiSpeakingAudio] Replay error:", err);
+                                finish();
+                            }
+                        });
+                    }
+                } else {
+                    // Fresh or different URL: assign src and play (do NOT call .load() as it triggers AbortError on iOS)
+                    try {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    } catch(e) {}
+                    audio.src = fullUrl;
+                    window._isAudioPlaying = true;
+                    var playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(function() {
+                            window._isAudioPlaying = true;
+                        }).catch(function(err) {
+                            if (err && err.name === 'AbortError') {
+                                setTimeout(function() {
+                                    if (self._currentUrl === fullUrl) {
+                                        audio.play().then(function() {
+                                            window._isAudioPlaying = true;
+                                        }).catch(finish);
+                                    }
+                                }, 50);
+                            } else {
+                                console.warn("[aiSpeakingAudio] Play error:", err);
+                                finish();
+                            }
+                        });
+                    }
                 }
             },
 
             stop: function() {
                 window._isAudioPlaying = false;
-                if (this.audio) {
-                    try {
-                        this.audio.pause();
-                        this.audio.currentTime = 0;
-                    } catch(e){}
-                    this.audio = null;
-                }
+                this._currentUrl = null;
+                var audio = getOrCreateAudioElement();
+                try {
+                    audio.pause();
+                    audio.currentTime = 0;
+                } catch(e){}
             }
         };
 
@@ -1632,7 +1673,7 @@
                     proxyInput.setAttribute('enterkeyhint', 'done');
                     proxyInput.setAttribute('tabindex', '-1');
                     // 16px font-size prevents iOS Safari/WebKit auto-zoom on focus
-                    proxyInput.style.cssText = 'position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.001; font-size: 16px; border: none; outline: none; background: transparent; pointer-events: none; z-index: 99998;';
+                    proxyInput.style.cssText = 'position: fixed; bottom: 12px; left: 20px; width: 1px; height: 1px; opacity: 0.001; font-size: 16px; border: none; outline: none; background: transparent; pointer-events: none; z-index: 99998;';
                 }
                 if (!proxyInput.isConnected && document.body) {
                     document.body.appendChild(proxyInput);
@@ -1665,6 +1706,10 @@
                 var tag = (el.tagName || '').toUpperCase();
                 if (tag === 'INPUT' || tag === 'TEXTAREA') {
                     if (el.id === 'cmp_ios_keyboard_proxy') return;
+                    el.style.setProperty('position', 'fixed', 'important');
+                    el.style.setProperty('bottom', '12px', 'important');
+                    el.style.setProperty('left', '20px', 'important');
+                    el.style.setProperty('top', 'auto', 'important');
                     el.style.setProperty('z-index', '99999', 'important');
                     el.style.setProperty('pointer-events', 'auto', 'important');
                     el.style.setProperty('opacity', '0.001', 'important');
@@ -1802,12 +1847,7 @@
                 }
 
                 if (hitTextbox) {
-                    var safeTop = Math.max(10, Math.min(window.innerHeight - 50, y));
-                    var safeLeft = Math.max(10, Math.min(window.innerWidth - 50, x));
-                    if (proxyInput) {
-                        proxyInput.style.top = safeTop + 'px';
-                        proxyInput.style.left = safeLeft + 'px';
-                    }
+                    var proxy = ensureProxyInput();
 
                     // Check if an elevated backing input is already available in any shadow root
                     var backingInput = null;
@@ -1819,12 +1859,10 @@
                     if (backingInput) {
                         elevateBackingInput(backingInput);
                         try {
-                            backingInput.style.top = safeTop + 'px';
-                            backingInput.style.left = safeLeft + 'px';
                             backingInput.focus();
                         } catch(e) {}
-                    } else if (proxyInput) {
-                        try { proxyInput.focus(); } catch(e) {}
+                    } else if (proxy) {
+                        try { proxy.focus(); } catch(e) {}
                     }
                 }
             }
@@ -1852,6 +1890,9 @@
                     if (window.scrollY !== 0) {
                         window.scrollTo(0, 0);
                     }
+                    if (document.body.scrollTop !== 0) {
+                        document.body.scrollTop = 0;
+                    }
                 } else {
                     document.documentElement.style.height = '100%';
                     document.body.style.height = '100%';
@@ -1862,7 +1903,12 @@
             }
 
             window.visualViewport.addEventListener('resize', syncViewport);
-            window.visualViewport.addEventListener('scroll', syncViewport);
+            window.visualViewport.addEventListener('scroll', function() {
+                if (window.scrollY !== 0) {
+                    window.scrollTo(0, 0);
+                }
+                syncViewport();
+            });
         })();
 
         // App Loader Controller: Fades out loader when Compose canvas mounts & first frame paints
@@ -1904,5 +1950,5 @@
             setTimeout(window.hideAppLoader, 10000);
         })();
     </script>
-    <script src="webApp.js?v=20261031v4"></script>
+    <script src="webApp.js?v=20261031v5"></script>
 </html>
