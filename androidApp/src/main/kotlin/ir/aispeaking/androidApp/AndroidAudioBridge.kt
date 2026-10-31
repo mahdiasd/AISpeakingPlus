@@ -50,6 +50,14 @@ class AndroidAudioBridge(
     private val bridgeScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     fun attach() {
+        controller.onPlatformHasNativeSpeechRecognition = {
+            try {
+                SpeechRecognizer.isRecognitionAvailable(context)
+            } catch (_: Throwable) {
+                false
+            }
+        }
+
         controller.onPlatformPlayVoice = { rawUrl, onEnded ->
             stopAudio()
             if (rawUrl.isNullOrBlank()) {

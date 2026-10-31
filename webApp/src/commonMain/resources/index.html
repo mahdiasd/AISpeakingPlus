@@ -733,7 +733,7 @@
                 this.recognition = recognition;
 
                 recognition.lang = 'en-US';
-                recognition.continuous = !this._isIOS;
+                recognition.continuous = !this._isMobile;
                 recognition.interimResults = true;
                 recognition.maxAlternatives = 1;
 
@@ -805,9 +805,8 @@
                     var sessionText = '';
                     if (self._currentSessionFinalTranscript) {
                         sessionText = self._currentSessionFinalTranscript;
-                    }
-                    if (self._currentSessionTranscript) {
-                        sessionText = (sessionText ? sessionText + ' ' : '') + self._currentSessionTranscript;
+                    } else if (self._currentSessionTranscript) {
+                        sessionText = self._currentSessionTranscript;
                     }
                     if (sessionText) {
                         self._accumulatedTranscript = (self._accumulatedTranscript ? self._accumulatedTranscript + ' ' : '') + sessionText;
@@ -1049,19 +1048,17 @@
 
                 if (this.recognition) {
                     try {
-                        this.recognition.onend = null;
-                        this.recognition.onerror = null;
-                        this.recognition.stop();
+                        var rec = this.recognition;
+                        this.recognition = null;
+                        rec.stop();
                     } catch(e) {}
-                    this.recognition = null;
                 }
 
                 var sessionText = '';
                 if (this._currentSessionFinalTranscript) {
                     sessionText = this._currentSessionFinalTranscript;
-                }
-                if (this._currentSessionTranscript) {
-                    sessionText = (sessionText ? sessionText + ' ' : '') + this._currentSessionTranscript;
+                } else if (this._currentSessionTranscript) {
+                    sessionText = this._currentSessionTranscript;
                 }
                 if (sessionText) {
                     this._accumulatedTranscript = (this._accumulatedTranscript ? this._accumulatedTranscript + ' ' : '') + sessionText;
@@ -1073,6 +1070,10 @@
                 if (wasFallback) {
                     this._sendFallbackAudioToTranscribe();
                 }
+            },
+
+            hasNativeRecognition: function() {
+                return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
             },
 
             getTranscript: function() {
