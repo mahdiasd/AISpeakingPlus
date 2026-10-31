@@ -411,87 +411,98 @@ class ChatViewModel(
 
     private fun startRecordingInternal() {
         audioController.stopVoice()
-        _uiState.update { it.copy(isRecording = true, sttError = null, hintError = null) }
+        _uiState.update {
+            it.copy(
+                isRecording = true,
+                messageText = "",
+                sttError = null,
+                hintError = null
+            )
+        }
 
-        audioSenderJob?.cancel()
-        audioChunkChannel?.close()
-        val chunkChannel = Channel<ByteArray>(capacity = Channel.UNLIMITED)
-        audioChunkChannel = chunkChannel
+        val hasNativeStt = audioController.hasNativeSpeechRecognition()
 
-        audioSenderJob = viewModelScope.launch {
-            for (chunk in chunkChannel) {
-                try {
-                    sendAudioChunkUseCase(chunk)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (_: Exception) {
+        if (!hasNativeStt) {
+            audioSenderJob?.cancel()
+            audioChunkChannel?.close()
+            val chunkChannel = Channel<ByteArray>(capacity = Channel.UNLIMITED)
+            audioChunkChannel = chunkChannel
+
+            audioSenderJob = viewModelScope.launch {
+                for (chunk in chunkChannel) {
+                    try {
+                        sendAudioChunkUseCase(chunk)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                    }
                 }
             }
-        }
 
-        audioController.onAudioChunkCaptured = { pcm16Bytes ->
-            audioChunkChannel?.trySend(pcm16Bytes)
-        }
+            audioController.onAudioChunkCaptured = { pcm16Bytes ->
+                audioChunkChannel?.trySend(pcm16Bytes)
+            }
 
-        sttStreamJob?.cancel()
-        sttStreamJob = viewModelScope.launch {
-            var sessionFinalizedText = ""
-            try {
-                streamSpeechToTextUseCase().collect { event ->
-                    when (event) {
-                        is SttStreamEvent.Ready -> {
-                            audioController.onAudioChunkCaptured = { pcm16Bytes ->
-                                audioChunkChannel?.trySend(pcm16Bytes)
-                            }
-                        }
-                        is SttStreamEvent.PartialTranscript -> {
-                            if (event.text.isNotBlank()) {
-                                audioController.notifyVoiceActivity()
-                                val combined = if (sessionFinalizedText.isEmpty()) {
-                                    event.text
-                                } else {
-                                    "$sessionFinalizedText ${event.text}"
+            sttStreamJob?.cancel()
+            sttStreamJob = viewModelScope.launch {
+                var sessionFinalizedText = ""
+                try {
+                    streamSpeechToTextUseCase().collect { event ->
+                        when (event) {
+                            is SttStreamEvent.Ready -> {
+                                audioController.onAudioChunkCaptured = { pcm16Bytes ->
+                                    audioChunkChannel?.trySend(pcm16Bytes)
                                 }
-                                _uiState.update { it.copy(messageText = combined) }
                             }
-                        }
-                        is SttStreamEvent.FinalTranscript -> {
-                            if (event.text.isNotBlank()) {
-                                audioController.notifyVoiceActivity()
-                                sessionFinalizedText = if (sessionFinalizedText.isEmpty()) {
-                                    event.text
-                                } else {
-                                    "$sessionFinalizedText ${event.text}"
+                            is SttStreamEvent.PartialTranscript -> {
+                                if (event.text.isNotBlank()) {
+                                    audioController.notifyVoiceActivity()
+                                    val combined = if (sessionFinalizedText.isEmpty()) {
+                                        event.text
+                                    } else {
+                                        "$sessionFinalizedText ${event.text}"
+                                    }
+                                    _uiState.update { it.copy(messageText = combined) }
                                 }
-                                _uiState.update { it.copy(messageText = sessionFinalizedText) }
                             }
-                        }
-                        is SttStreamEvent.Error -> {
-                            if (_uiState.value.messageText.isBlank()) {
+                            is SttStreamEvent.FinalTranscript -> {
+                                if (event.text.isNotBlank()) {
+                                    audioController.notifyVoiceActivity()
+                                    sessionFinalizedText = if (sessionFinalizedText.isEmpty()) {
+                                        event.text
+                                    } else {
+                                        "$sessionFinalizedText ${event.text}"
+                                    }
+                                    _uiState.update { it.copy(messageText = sessionFinalizedText) }
+                                }
+                            }
+                            is SttStreamEvent.Error -> {
+                                stopRecordingSession()
                                 val errorMsg = event.message.ifBlank {
                                     "خطا در سرویس تشخیص گفتار. لطفاً دوباره تلاش کنید."
                                 }
                                 _uiState.update {
                                     it.copy(
+                                        isRecording = false,
                                         sttError = errorMsg,
                                         hintError = errorMsg
                                     )
                                 }
                             }
-                        }
-                        is SttStreamEvent.Disconnected -> {
-                            // Background socket disconnect does not disrupt native speech recognition
+                            is SttStreamEvent.Disconnected -> {
+                                // Background socket disconnect does not disrupt native speech recognition
+                            }
                         }
                     }
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                if (_uiState.value.messageText.isBlank()) {
-                    val errorMsg = e.message?.takeIf { it.isNotBlank() }
-                        ?: "خطا در ارتباط با سرویس تشخیص گفتار."
-                    _uiState.update {
-                        it.copy(sttError = errorMsg)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    if (_uiState.value.messageText.isBlank()) {
+                        val errorMsg = e.message?.takeIf { it.isNotBlank() }
+                            ?: "خطا در ارتباط با سرویس تشخیص گفتار."
+                        _uiState.update {
+                            it.copy(sttError = errorMsg)
+                        }
                     }
                 }
             }

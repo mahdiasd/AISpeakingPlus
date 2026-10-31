@@ -6,6 +6,8 @@ import org.koin.core.annotation.Single
 interface StageAudioController {
     var onAudioChunkCaptured: ((ByteArray) -> Unit)?
 
+    fun hasNativeSpeechRecognition(): Boolean = false
+
     fun playVoice(url: String?, onEnded: () -> Unit)
     fun stopVoice()
     fun isVoicePlaying(): Boolean
@@ -40,6 +42,7 @@ class DefaultStageAudioController : StageAudioController {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     // Platform callback bridges (can be set by platform host like Web/Android)
+    var onPlatformHasNativeSpeechRecognition: (() -> Boolean)? = null
     var onPlatformPlayVoice: ((String?, () -> Unit) -> Unit)? = null
     var onPlatformPreloadVoice: ((String?) -> Unit)? = null
     var onPlatformStopVoice: (() -> Unit)? = null
@@ -47,6 +50,10 @@ class DefaultStageAudioController : StageAudioController {
     var onPlatformStopRecording: (() -> Unit)? = null
     var onPlatformCheckMicrophonePermission: (((Boolean) -> Unit) -> Unit)? = null
     var onPlatformRequestMicrophonePermission: (((Boolean) -> Unit) -> Unit)? = null
+
+    override fun hasNativeSpeechRecognition(): Boolean {
+        return onPlatformHasNativeSpeechRecognition?.invoke() ?: false
+    }
 
     override fun preloadVoice(url: String?) {
         if (!url.isNullOrBlank()) {

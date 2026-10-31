@@ -373,7 +373,7 @@ private fun CompactTranscriptCapsule(
                     size = 14.sp,
                     lineHeight = 20.sp,
                     latin = true,
-                    maxLines = 2,
+                    maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )

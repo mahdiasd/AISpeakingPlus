@@ -366,4 +366,28 @@ class ChatViewModelSttTest {
         assertFalse(viewModel.uiState.value.isRecording, "Recording must not start without permission")
         assertTrue(viewModel.uiState.value.showMicPermissionDialog, "Permission dialog must be shown")
     }
+
+    @Test
+    fun testWhenNativeSpeechRecognitionAvailableDoesNotStreamToBackend() = runTest {
+        audioController.onPlatformHasNativeSpeechRecognition = { true }
+        var speechCallback: ((String) -> Unit)? = null
+        audioController.onPlatformStartRecording = { onSpeech, _ ->
+            speechCallback = onSpeech
+        }
+
+        viewModel.toggleRecording(true)
+        runCurrent()
+
+        assertTrue(viewModel.uiState.value.isRecording)
+        // audioChunkCaptured callback must NOT be set when native STT is active
+        assertNull(audioController.onAudioChunkCaptured)
+        // No chunks sent to backend WebSocket
+        assertTrue(sttRepo.sentChunks.isEmpty())
+
+        // When native speech recognition delivers text
+        speechCallback?.invoke("Hello from native speech")
+        runCurrent()
+
+        assertEquals("Hello from native speech", viewModel.uiState.value.messageText)
+    }
 }

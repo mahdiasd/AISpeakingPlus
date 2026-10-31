@@ -28,6 +28,9 @@ private external fun jsStopSpeech()
 @JsFun("() => window.aiSpeakingSpeech ? window.aiSpeakingSpeech.getTranscript() : ''")
 private external fun jsGetSpeechTranscript(): String
 
+@JsFun("() => (window.aiSpeakingSpeech && typeof window.aiSpeakingSpeech.hasNativeRecognition === 'function') ? window.aiSpeakingSpeech.hasNativeRecognition() : !!(window.SpeechRecognition || window.webkitSpeechRecognition)")
+private external fun jsHasSpeechRecognition(): Boolean
+
 @JsFun("() => !!(window.aiSpeakingSpeech && window.aiSpeakingSpeech.isRecording)")
 private external fun jsIsSpeechRecording(): Boolean
 
@@ -56,6 +59,14 @@ private val bridgeScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
 fun setupWebAudioBridge(controller: DefaultStageAudioController) {
     try {
+        controller.onPlatformHasNativeSpeechRecognition = {
+            try {
+                jsHasSpeechRecognition()
+            } catch (_: Throwable) {
+                false
+            }
+        }
+
         var playJob: Job? = null
         controller.onPlatformPlayVoice = { url, onEnded ->
             playJob?.cancel()
