@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.kotlin.datetime)
     implementation(libs.postgresql)
+    implementation(libs.hikaricp)
 
     // Koin for Kotlin apps
     implementation(libs.koin.ktor)

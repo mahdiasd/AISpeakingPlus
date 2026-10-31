@@ -6,7 +6,11 @@ import ir.speaking.feature.leaderboard.dto.LeaderboardItem
 import ir.speaking.feature.leaderboard.dto.LeaderboardResponse
 import ir.speaking.feature.stage_progress.db.StageProgressTable
 import ir.speaking.feature.user.db.UserTable
+import org.jetbrains.exposed.sql.Case
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.intLiteral
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.sum
 import org.koin.core.annotation.Single
 import java.util.*
 
@@ -30,19 +34,27 @@ class LeaderboardRepo {
         page: Int = 1,
         pageSize: Int = 20
     ): LeaderboardResponse = suspendTransaction {
-        // Compute user scores from StageProgressTable:
-        // compositeScore = (total_stars * 1000) + (completed_stages * 100) + aggregate_points
-        val allProgress = StageProgressTable.selectAll().toList()
-        val userGroups = allProgress.groupBy { it[StageProgressTable.userId].value }
+        // SQL-level aggregation to prevent memory bloat and OOM
+        val totalStarsCol = StageProgressTable.stars.sum()
+        val totalPointsCol = StageProgressTable.bestScore.sum()
+        val completedCol = Case()
+            .When(StageProgressTable.stars greater 0, intLiteral(1))
+            .Else(intLiteral(0))
+            .sum()
 
-        val rankedList = userGroups.map { (userId, progressRows) ->
-            val totalStars = progressRows.sumOf { it[StageProgressTable.stars] }
-            val completedStages = progressRows.count { it[StageProgressTable.stars] > 0 }
-            val totalPoints = progressRows.sumOf { it[StageProgressTable.bestScore] }
-            val compositeScore = (totalStars * 1000L) + (completedStages * 100L) + totalPoints
+        val rankedList = StageProgressTable
+            .select(StageProgressTable.userId, totalStarsCol, totalPointsCol, completedCol)
+            .groupBy(StageProgressTable.userId)
+            .map { row ->
+                val userId = row[StageProgressTable.userId].value
+                val totalStars = row[totalStarsCol] ?: 0
+                val totalPoints = row[totalPointsCol] ?: 0
+                val completedStages = row[completedCol] ?: 0
+                val compositeScore = (totalStars * 1000L) + (completedStages * 100L) + totalPoints
 
-            Triple(userId, compositeScore, Pair(totalStars, completedStages))
-        }.sortedByDescending { it.second }
+                Triple(userId, compositeScore, Pair(totalStars, completedStages))
+            }
+            .sortedByDescending { it.second }
 
         val totalCount = rankedList.size.toLong()
         val fromIndex = ((page - 1) * pageSize).coerceAtLeast(0)

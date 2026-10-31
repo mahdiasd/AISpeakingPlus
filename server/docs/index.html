@@ -1777,6 +1777,9 @@
                     <li data-group="Subscriptions" data-name="apiV2SubscriptionsDirectCheckoutPost" class="">
                       <a href="#api-Subscriptions-apiV2SubscriptionsDirectCheckoutPost">apiV2SubscriptionsDirectCheckoutPost</a>
                     </li>
+                    <li data-group="Subscriptions" data-name="apiV2SubscriptionsPaymentCallbackGet" class="">
+                      <a href="#api-Subscriptions-apiV2SubscriptionsPaymentCallbackGet">apiV2SubscriptionsPaymentCallbackGet</a>
+                    </li>
                     <li data-group="Subscriptions" data-name="apiV2SubscriptionsPlansGet" class="">
                       <a href="#api-Subscriptions-apiV2SubscriptionsPlansGet">apiV2SubscriptionsPlansGet</a>
                     </li>
@@ -20854,6 +20857,214 @@ except ApiException as e:
                                   </div>
                                   <input id='responses-apiV2SubscriptionsDirectCheckoutPost-401-schema-data' type='hidden' value=''></input>
                                 </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Subscriptions-apiV2SubscriptionsPaymentCallbackGet">
+                      <article id="api-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0" data-group="User" data-name="apiV2SubscriptionsPaymentCallbackGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2SubscriptionsPaymentCallbackGet</h1>
+                          <p>ZarinPal Payment Callback</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Handle bank callback from ZarinPal payment gateway and activate subscription</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v2/subscriptions/payment/callback</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+"//api/v2/subscriptions/payment/callback"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.SubscriptionsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class SubscriptionsApiExample {
+
+    public static void main(String[] args) {
+        
+        SubscriptionsApi apiInstance = new SubscriptionsApi();
+        try {
+            apiInstance.apiV2SubscriptionsPaymentCallbackGet();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling SubscriptionsApi#apiV2SubscriptionsPaymentCallbackGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.SubscriptionsApi;
+
+public class SubscriptionsApiExample {
+
+    public static void main(String[] args) {
+        SubscriptionsApi apiInstance = new SubscriptionsApi();
+        try {
+            apiInstance.apiV2SubscriptionsPaymentCallbackGet();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling SubscriptionsApi#apiV2SubscriptionsPaymentCallbackGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+SubscriptionsApi *apiInstance = [[SubscriptionsApi alloc] init];
+
+// ZarinPal Payment Callback
+[apiInstance apiV2SubscriptionsPaymentCallbackGetWithCompletionHandler: 
+              ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+
+var api = new AiSpeakingPlusApi.SubscriptionsApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.apiV2SubscriptionsPaymentCallbackGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2SubscriptionsPaymentCallbackGetExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new SubscriptionsApi();
+
+            try
+            {
+                // ZarinPal Payment Callback
+                apiInstance.apiV2SubscriptionsPaymentCallbackGet();
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling SubscriptionsApi.apiV2SubscriptionsPaymentCallbackGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiSubscriptionsApi();
+
+try {
+    $api_instance->apiV2SubscriptionsPaymentCallbackGet();
+} catch (Exception $e) {
+    echo 'Exception when calling SubscriptionsApi->apiV2SubscriptionsPaymentCallbackGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::SubscriptionsApi;
+
+my $api_instance = WWW::SwaggerClient::SubscriptionsApi->new();
+
+eval { 
+    $api_instance->apiV2SubscriptionsPaymentCallbackGet();
+};
+if ($@) {
+    warn "Exception when calling SubscriptionsApi->apiV2SubscriptionsPaymentCallbackGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Subscriptions-apiV2SubscriptionsPaymentCallbackGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.SubscriptionsApi()
+
+try: 
+    # ZarinPal Payment Callback
+    api_instance.api_v2_subscriptions_payment_callback_get()
+except ApiException as e:
+    print("Exception when calling SubscriptionsApi->apiV2SubscriptionsPaymentCallbackGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 302 - Redirect to web app with payment status </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
                             </div>
 
                         </article>

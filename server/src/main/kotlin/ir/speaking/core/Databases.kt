@@ -1,5 +1,7 @@
 package ir.speaking.core
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import ir.speaking.core.network.utils.PrintHelper
 import ir.speaking.feature.admin.db.AdminAuditTable
 import ir.speaking.feature.admin.db.AdminUserTable
@@ -36,18 +38,38 @@ private val allTables = arrayOf<Table>(
     AnnouncementTable
 )
 
+fun createHikariDataSource(): HikariDataSource {
+    val dbUrl = System.getenv("DATABASE_URL")
+        ?: "jdbc:postgresql://localhost:5432/ai_speaking"
+    val dbUser = System.getenv("DATABASE_USER") ?: "postgres"
+    val dbPassword = System.getenv("DATABASE_PASSWORD") ?: ""
+
+    val config = HikariConfig().apply {
+        jdbcUrl = dbUrl
+        username = dbUser
+        password = dbPassword
+        driverClassName = if (dbUrl.contains("h2")) "org.h2.Driver" else "org.postgresql.Driver"
+        maximumPoolSize = System.getenv("DB_POOL_MAX_SIZE")?.toIntOrNull() ?: 15
+        minimumIdle = System.getenv("DB_POOL_MIN_IDLE")?.toIntOrNull() ?: 3
+        idleTimeout = 300000L
+        maxLifetime = 1200000L
+        connectionTimeout = 10000L
+        leakDetectionThreshold = 30000L
+        poolName = "AISpeakingHikariPool"
+
+        if (!dbUrl.contains("h2")) {
+            addDataSourceProperty("cachePrepStmts", "true")
+            addDataSourceProperty("prepStmtCacheSize", "250")
+            addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
+        }
+    }
+    return HikariDataSource(config)
+}
+
 fun configureDatabases() {
     try {
-        val dbUrl = System.getenv("DATABASE_URL")
-            ?: "jdbc:postgresql://localhost:5432/ai_speaking"
-        val dbUser = System.getenv("DATABASE_USER") ?: "postgres"
-        val dbPassword = System.getenv("DATABASE_PASSWORD") ?: "asdfasWERASDCASDF89845@af"
-
-        Database.connect(
-            url = dbUrl,
-            user = dbUser,
-            password = dbPassword
-        )
+        val dataSource = createHikariDataSource()
+        Database.connect(dataSource)
 
         transaction {
             if (allTables.isNotEmpty()) {

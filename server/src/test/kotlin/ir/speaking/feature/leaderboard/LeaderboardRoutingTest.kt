@@ -42,14 +42,9 @@ class LeaderboardRoutingTest {
         }
 
         val response = client.get("/api/v2/leaderboard/journey?page=1&pageSize=10")
-        if (response.status == HttpStatusCode.OK) {
-            val body = response.bodyAsText()
-            println("LEADERBOARD BODY: $body")
-            assertTrue(body.contains("items"))
-            assertTrue(body.contains("totalCount"))
-        } else {
-            // DB connection wasn't established in CI environment, verify route matched
-            assertTrue(response.status != HttpStatusCode.NotFound)
-        }
+        assertEquals(HttpStatusCode.OK, response.status)
+        val body = response.bodyAsText()
+        assertTrue(body.contains("items"))
+        assertTrue(body.contains("totalCount"))
     }
 }

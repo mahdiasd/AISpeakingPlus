@@ -76,20 +76,16 @@ class StageRoutingTest {
 
         // 1. Unauthenticated GET /api/v2/stages
         val catalogResponse = client.get("/api/v2/stages")
-        // If DB is not available in test env, status might be 500 or 200; verify routing logic
-        if (catalogResponse.status == HttpStatusCode.OK) {
-            val body = catalogResponse.bodyAsText()
-            assertTrue(body.contains("GUEST"))
-            assertTrue(body.contains("stage-01-inflight-london"))
-        }
+        assertEquals(HttpStatusCode.OK, catalogResponse.status)
+        val body = catalogResponse.bodyAsText()
+        assertTrue(body.contains("GUEST"))
+        assertTrue(body.contains("stage-01-inflight-london"))
 
         // 2. Unauthenticated GET /api/v2/stages/stage-02-heathrow-border
         val stage2Response = client.get("/api/v2/stages/stage-02-heathrow-border")
-        if (stage2Response.status != HttpStatusCode.InternalServerError) {
-            assertEquals(HttpStatusCode.Unauthorized, stage2Response.status)
-            val body = stage2Response.bodyAsText()
-            assertTrue(body.contains("AUTH_REQUIRED"))
-        }
+        assertEquals(HttpStatusCode.Unauthorized, stage2Response.status)
+        val stage2Body = stage2Response.bodyAsText()
+        assertTrue(stage2Body.contains("AUTH_REQUIRED"))
     }
 
     @Test

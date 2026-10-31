@@ -699,7 +699,15 @@ class ReplyStreamParser(
             replyFinished = true
             rawReplySoFar.substring(0, closeQuoteIndex)
         } else {
-            rawReplySoFar
+            var trailingSlashes = 0
+            for (idx in rawReplySoFar.indices.reversed()) {
+                if (rawReplySoFar[idx] == '\\') trailingSlashes++ else break
+            }
+            if (trailingSlashes % 2 != 0) {
+                rawReplySoFar.dropLast(1)
+            } else {
+                rawReplySoFar
+            }
         }
 
         val unescaped = unescapeJsonString(currentReplyText)
@@ -743,8 +751,24 @@ class ReplyStreamParser(
                     'n' -> { sb.append('\n'); i += 2 }
                     'r' -> { sb.append('\r'); i += 2 }
                     't' -> { sb.append('\t'); i += 2 }
+                    'u' -> {
+                        if (i + 5 < str.length) {
+                            try {
+                                val code = str.substring(i + 2, i + 6).toInt(16)
+                                sb.append(code.toChar())
+                                i += 6
+                            } catch (_: Exception) {
+                                sb.append(c)
+                                i++
+                            }
+                        } else {
+                            break
+                        }
+                    }
                     else -> { sb.append(c); i++ }
                 }
+            } else if (c == '\\') {
+                break
             } else {
                 sb.append(c)
                 i++
