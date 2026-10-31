@@ -16,6 +16,9 @@ private external fun jsPreloadAudio(url: String)
 @JsFun("() => window.aiSpeakingAudio ? window.aiSpeakingAudio.stop() : null")
 private external fun jsStopAudio()
 
+@JsFun("() => window.aiSpeakingAudio && typeof window.aiSpeakingAudio.unlock === 'function' ? window.aiSpeakingAudio.unlock() : null")
+private external fun jsUnlockAudio()
+
 @JsFun("() => !!(window.aiSpeakingAudio && window.aiSpeakingAudio.isPlaying())")
 private external fun jsIsAudioPlaying(): Boolean
 
@@ -28,7 +31,7 @@ private external fun jsStopSpeech()
 @JsFun("() => window.aiSpeakingSpeech ? window.aiSpeakingSpeech.getTranscript() : ''")
 private external fun jsGetSpeechTranscript(): String
 
-@JsFun("() => (window.aiSpeakingSpeech && typeof window.aiSpeakingSpeech.hasNativeRecognition === 'function') ? window.aiSpeakingSpeech.hasNativeRecognition() : !!(window.SpeechRecognition || window.webkitSpeechRecognition)")
+@JsFun("() => (window.aiSpeakingSpeech && typeof window.aiSpeakingSpeech.hasNativeRecognition === 'function') ? window.aiSpeakingSpeech.hasNativeRecognition() : false")
 private external fun jsHasSpeechRecognition(): Boolean
 
 @JsFun("() => !!(window.aiSpeakingSpeech && window.aiSpeakingSpeech.isRecording)")
@@ -59,6 +62,12 @@ private val bridgeScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
 fun setupWebAudioBridge(controller: DefaultStageAudioController) {
     try {
+        controller.onPlatformPrimeAudioPlayback = {
+            try {
+                jsUnlockAudio()
+            } catch (_: Throwable) {}
+        }
+
         controller.onPlatformHasNativeSpeechRecognition = {
             try {
                 jsHasSpeechRecognition()

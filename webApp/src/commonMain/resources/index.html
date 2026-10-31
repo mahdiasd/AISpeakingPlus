@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <base href="/app/">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
         <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
         <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
@@ -479,9 +479,57 @@
 
         window._isAudioPlaying = false;
         window._aiSpeakingAudioPool = window._aiSpeakingAudioPool || {};
+
+        // iOS Safari Audio Autoplay & Web Audio Unlocker
+        var SILENT_AUDIO_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+        var _unlockedAudio = null;
+        var _isAudioUnlocked = false;
+
+        function getOrCreateAudioElement() {
+            if (!_unlockedAudio) {
+                _unlockedAudio = new Audio();
+                _unlockedAudio.setAttribute("playsinline", "");
+                _unlockedAudio.setAttribute("webkit-playsinline", "");
+                _unlockedAudio.preload = "auto";
+            }
+            return _unlockedAudio;
+        }
+
+        function unlockAudioContextAndElement() {
+            var audio = getOrCreateAudioElement();
+            if (!_isAudioUnlocked) {
+                audio.src = SILENT_AUDIO_WAV;
+                var p = audio.play();
+                if (p !== undefined) {
+                    p.then(function() {
+                        _isAudioUnlocked = true;
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }).catch(function() {});
+                }
+            }
+            try {
+                if (window.aiSpeakingSpeech && window.aiSpeakingSpeech.audioContext && window.aiSpeakingSpeech.audioContext.state === 'suspended') {
+                    window.aiSpeakingSpeech.audioContext.resume().catch(function(){});
+                }
+                if (window._aiSpeakingAudioCtx && window._aiSpeakingAudioCtx.state === 'suspended') {
+                    window._aiSpeakingAudioCtx.resume().catch(function(){});
+                }
+            } catch(e) {}
+        }
+
+        // Attach unlock to all user gesture events on the document
+        ['touchstart', 'touchend', 'click', 'mousedown', 'keydown'].forEach(function(evt) {
+            document.addEventListener(evt, unlockAudioContextAndElement, { passive: true, capture: true });
+        });
+
         window.aiSpeakingAudio = {
             audio: null,
             _currentUrl: null,
+
+            unlock: function() {
+                unlockAudioContextAndElement();
+            },
 
             isPlaying: function() {
                 return window._isAudioPlaying === true;
@@ -509,33 +557,24 @@
                     return;
                 }
 
-                if (this.audio) {
-                    try {
-                        this.audio.pause();
-                        this.audio.currentTime = 0;
-                    } catch(e){}
-                    this.audio = null;
-                }
+                unlockAudioContextAndElement();
 
                 var fullUrl = (url.startsWith("http://") || url.startsWith("https://")) ? url : (window.location.origin + (url.startsWith("/") ? url : "/" + url));
                 var self = this;
                 self._currentUrl = fullUrl;
 
-                var audio = window._aiSpeakingAudioPool[fullUrl];
-                if (!audio) {
-                    audio = new Audio();
-                    audio.preload = "auto";
-                    audio.src = fullUrl;
-                    window._aiSpeakingAudioPool[fullUrl] = audio;
-                }
-
+                // On iOS Safari, reuse the already-unlocked singleton audio element
+                var audio = getOrCreateAudioElement();
                 self.audio = audio;
                 window._isAudioPlaying = true;
 
-                // Reset position so replay is immediate
                 try {
+                    audio.pause();
                     audio.currentTime = 0;
-                } catch(e) {}
+                } catch(e){}
+
+                audio.src = fullUrl;
+                audio.load();
 
                 var finish = function() {
                     if (self._currentUrl === fullUrl) {
@@ -551,7 +590,9 @@
 
                 var playPromise = audio.play();
                 if (playPromise !== undefined) {
-                    playPromise.catch(function(err) {
+                    playPromise.then(function() {
+                        window._isAudioPlaying = true;
+                    }).catch(function(err) {
                         console.warn("[aiSpeakingAudio] Play prevented or failed:", err);
                         finish();
                     });
@@ -700,6 +741,13 @@
                 this._consecutiveErrors = 0;
                 this._usingFallback = false;
 
+                // On iOS WebKit, SpeechRecognition is frequently unavailable, blocked, or hangs on cloud dictation.
+                // Fall back directly to real-time Web Audio API capture, streaming PCM to server-side STT.
+                if (this._isIOS) {
+                    this._startAudioRecordingFallback();
+                    return;
+                }
+
                 var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (SpeechRec) {
                     this._startRecognitionInstance();
@@ -778,7 +826,13 @@
                     var err = event.error || (event.message || 'unknown');
                     console.warn("[aiSpeakingSpeech] SpeechRecognition error:", err);
 
-                    if (err === 'no-speech' || err === 'audio-capture' || err === 'aborted') {
+                    if (err === 'audio-capture') {
+                        console.warn("[aiSpeakingSpeech] audio-capture error in SpeechRecognition. Falling back to audio recording.");
+                        self._startAudioRecordingFallback();
+                        return;
+                    }
+
+                    if (err === 'no-speech' || err === 'aborted') {
                         return;
                     }
 
@@ -869,7 +923,15 @@
                     return;
                 }
 
-                getUserMediaFn({ audio: true }).then(function(stream) {
+                var audioConstraints = {
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                };
+
+                getUserMediaFn(audioConstraints).then(function(stream) {
                     if (!self._userWantsRecording) {
                         try { stream.getTracks().forEach(function(t) { t.stop(); }); } catch(e) {}
                         return;
@@ -880,11 +942,9 @@
 
                     try {
                         if (!self.audioContext || self.audioContext.state === 'closed') {
-                            try {
-                                self.audioContext = new AudioContextClass({ sampleRate: 16000 });
-                            } catch (e) {
-                                self.audioContext = new AudioContextClass();
-                            }
+                            // On iOS Safari / WebKit, AudioContext with custom sampleRate throws NotSupportedError.
+                            // Always use native hardware rate (44.1kHz / 48kHz) and downsample in software.
+                            self.audioContext = new AudioContextClass();
                         }
                         if (self.audioContext.state === 'suspended') {
                             self.audioContext.resume().catch(function(){});
@@ -1073,6 +1133,10 @@
             },
 
             hasNativeRecognition: function() {
+                this._initDevice();
+                if (this._isIOS) {
+                    return false; // Force robust backend STT with PCM Web Audio streaming on iOS WebKit
+                }
                 return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
             },
 
@@ -1702,12 +1766,20 @@
                     if (a11y) checkA11yRoot(a11y);
                 }
 
+                // Synchronously unlock audio and resume any suspended audio contexts on iOS
+                try {
+                    unlockAudioContextAndElement();
+                } catch(e) {}
+
                 // Check hit on Mic permission buttons to trigger synchronous getUserMedia on iOS Chrome / Safari
                 for (var m = 0; m < micButtons.length; m++) {
                     var mb = micButtons[m];
                     var mRect = mb.getBoundingClientRect();
                     if (x >= mRect.left && x <= mRect.right && y >= mRect.top && y <= mRect.bottom) {
                         try {
+                            if (window.aiSpeakingSpeech && window.aiSpeakingSpeech.audioContext && window.aiSpeakingSpeech.audioContext.state === 'suspended') {
+                                window.aiSpeakingSpeech.audioContext.resume().catch(function(){});
+                            }
                             if (window.aiSpeakingPermission && typeof window.aiSpeakingPermission.request === 'function') {
                                 window.aiSpeakingPermission.request();
                             }
@@ -1730,6 +1802,13 @@
                 }
 
                 if (hitTextbox) {
+                    var safeTop = Math.max(10, Math.min(window.innerHeight - 50, y));
+                    var safeLeft = Math.max(10, Math.min(window.innerWidth - 50, x));
+                    if (proxyInput) {
+                        proxyInput.style.top = safeTop + 'px';
+                        proxyInput.style.left = safeLeft + 'px';
+                    }
+
                     // Check if an elevated backing input is already available in any shadow root
                     var backingInput = null;
                     for (var s = 0; s < roots.length; s++) {
@@ -1739,7 +1818,11 @@
 
                     if (backingInput) {
                         elevateBackingInput(backingInput);
-                        try { backingInput.focus(); } catch(e) {}
+                        try {
+                            backingInput.style.top = safeTop + 'px';
+                            backingInput.style.left = safeLeft + 'px';
+                            backingInput.focus();
+                        } catch(e) {}
                     } else if (proxyInput) {
                         try { proxyInput.focus(); } catch(e) {}
                     }
@@ -1748,6 +1831,38 @@
 
             window.addEventListener('touchstart', onNativeTouch, { capture: true, passive: true });
             window.addEventListener('touchend', onNativeTouch, { capture: true, passive: true });
+        })();
+
+        // Dynamic visualViewport synchronization for iOS Safari virtual keyboard
+        (function() {
+            var ua = navigator.userAgent || '';
+            var isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            if (!isIOS || !window.visualViewport) return;
+
+            function syncViewport() {
+                var vv = window.visualViewport;
+                if (!vv) return;
+                var currentH = Math.round(vv.height);
+                var winH = window.innerHeight;
+                var isKeyboardVisible = (winH - currentH) > 100;
+
+                if (isKeyboardVisible) {
+                    document.documentElement.style.height = currentH + 'px';
+                    document.body.style.height = currentH + 'px';
+                    if (window.scrollY !== 0) {
+                        window.scrollTo(0, 0);
+                    }
+                } else {
+                    document.documentElement.style.height = '100%';
+                    document.body.style.height = '100%';
+                }
+
+                // Notify Compose Multiplatform Canvas to update its layout immediately!
+                window.dispatchEvent(new Event('resize'));
+            }
+
+            window.visualViewport.addEventListener('resize', syncViewport);
+            window.visualViewport.addEventListener('scroll', syncViewport);
         })();
 
         // App Loader Controller: Fades out loader when Compose canvas mounts & first frame paints
@@ -1789,5 +1904,5 @@
             setTimeout(window.hideAppLoader, 10000);
         })();
     </script>
-    <script src="webApp.js?v=20261026v2"></script>
+    <script src="webApp.js?v=20261031v4"></script>
 </html>

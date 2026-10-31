@@ -386,6 +386,7 @@ class ChatViewModel(
     // Requirements 4 & 5: Voice recording, realtime transcription, and 5-second silence auto-pause
     fun toggleRecording(start: Boolean) {
         if (start) {
+            audioController.primeAudioPlayback()
             if (!_uiState.value.isMicPermissionGranted) {
                 audioController.checkMicrophonePermission { isGranted ->
                     if (isGranted) {
@@ -577,6 +578,9 @@ class ChatViewModel(
 
         val content = stateSnapshot.messageText.trim()
         if (content.isBlank()) return
+
+        // Prime the audio player synchronously during the user click to satisfy iOS WebKit autoplay policy
+        audioController.primeAudioPlayback()
 
         analyticsTracker.logEvent(
             AnalyticsEvents.EVENT_CHAT_MESSAGE_SENT,

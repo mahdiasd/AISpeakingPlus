@@ -134,7 +134,9 @@ fun ChatScreen(
     }
 
     LaunchedEffect(lastChatMessageLength) {
-        if (uiState.chats.isNotEmpty()) {
+        if (uiState.chats.isNotEmpty() && lastChatMessageLength > 0) {
+            // Throttle scroll updates during streaming so Skiko Canvas maintains a smooth 60fps on mobile
+            delay(120)
             listState.scrollToItem(bottomAnchorIndex, scrollOffset = 10000)
         }
     }

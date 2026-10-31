@@ -12,6 +12,7 @@ interface StageAudioController {
     fun stopVoice()
     fun isVoicePlaying(): Boolean
     fun preloadVoice(url: String?) {}
+    fun primeAudioPlayback() {}
 
     fun startRecording(
         onSpeechRecognized: (String) -> Unit,
@@ -45,6 +46,7 @@ class DefaultStageAudioController : StageAudioController {
     var onPlatformHasNativeSpeechRecognition: (() -> Boolean)? = null
     var onPlatformPlayVoice: ((String?, () -> Unit) -> Unit)? = null
     var onPlatformPreloadVoice: ((String?) -> Unit)? = null
+    var onPlatformPrimeAudioPlayback: (() -> Unit)? = null
     var onPlatformStopVoice: (() -> Unit)? = null
     var onPlatformStartRecording: (((String) -> Unit, () -> Unit) -> Unit)? = null
     var onPlatformStopRecording: (() -> Unit)? = null
@@ -59,6 +61,10 @@ class DefaultStageAudioController : StageAudioController {
         if (!url.isNullOrBlank()) {
             onPlatformPreloadVoice?.invoke(url)
         }
+    }
+
+    override fun primeAudioPlayback() {
+        onPlatformPrimeAudioPlayback?.invoke()
     }
 
     fun dispatchAudioChunk(bytes: ByteArray) {

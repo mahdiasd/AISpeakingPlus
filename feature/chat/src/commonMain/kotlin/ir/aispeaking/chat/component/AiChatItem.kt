@@ -1,7 +1,6 @@
 package ir.aispeaking.chat.component
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -127,8 +126,7 @@ fun AiChatItem(
                         .clip(bubbleShape)
                         .background(AppleChatTheme.BubbleAi)
                         .border(1.dp, AppleChatTheme.SpecularStrokeBrush, bubbleShape)
-                        .padding(horizontal = 15.dp, vertical = 11.dp)
-                        .animateContentSize(),
+                        .padding(horizontal = 15.dp, vertical = 11.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (chat.message.isEmpty()) {
