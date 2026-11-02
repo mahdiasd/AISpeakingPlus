@@ -28,6 +28,9 @@ private external fun jsStartSpeech()
 @JsFun("() => window.aiSpeakingSpeech ? window.aiSpeakingSpeech.stop() : null")
 private external fun jsStopSpeech()
 
+@JsFun("() => window.aiSpeakingSpeech && typeof window.aiSpeakingSpeech.clearTranscript === 'function' ? window.aiSpeakingSpeech.clearTranscript() : null")
+private external fun jsClearSpeechTranscript()
+
 @JsFun("() => window.aiSpeakingSpeech ? window.aiSpeakingSpeech.getTranscript() : ''")
 private external fun jsGetSpeechTranscript(): String
 
@@ -202,6 +205,9 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
         }
 
         controller.onPlatformStopRecording = {
+            currentOnSpeech = null
+            recordJob?.cancel()
+            recordJob = null
             jsStopSpeech()
             val remainingPayload = jsDrainPcmChunks()
             if (remainingPayload.isNotEmpty()) {
@@ -216,13 +222,9 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
                     }
                 }
             }
-            val finalText = jsGetSpeechTranscript()
-            if (finalText.isNotEmpty()) {
-                currentOnSpeech?.invoke(finalText)
-            }
-            recordJob?.cancel()
-            recordJob = null
-            currentOnSpeech = null
+            try {
+                jsClearSpeechTranscript()
+            } catch (_: Throwable) {}
         }
 
         controller.onPlatformCheckMicrophonePermission = { callback ->

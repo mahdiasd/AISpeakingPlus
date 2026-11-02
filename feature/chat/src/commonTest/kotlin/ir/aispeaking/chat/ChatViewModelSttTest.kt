@@ -74,6 +74,19 @@ class ChatViewModelSttTest {
     }
 
     private class FakeStageRepo : StageRepository {
+        var controllableStreamFlow: MutableSharedFlow<ir.aispeaking.domain.model.chat.StageChatStreamEvent>? = null
+
+        override fun streamStageChatMessage(
+            stageId: String,
+            userMessage: String?,
+            history: List<Pair<String, String>>,
+            userLevel: String?
+        ): Flow<ir.aispeaking.domain.model.chat.StageChatStreamEvent> {
+            val custom = controllableStreamFlow
+            if (custom != null) return custom
+            return super.streamStageChatMessage(stageId, userMessage, history, userLevel)
+        }
+
         override suspend fun getStages(tier: AccessTier): DataResult<List<Stage>> = DataResult.Success(emptyList())
 
         override suspend fun getStageDetail(stageId: String, tier: AccessTier): DataResult<Stage> =
@@ -175,6 +188,7 @@ class ChatViewModelSttTest {
     }
 
     private lateinit var sttRepo: FakeSttRepo
+    private lateinit var stageRepo: FakeStageRepo
     private lateinit var audioController: DefaultStageAudioController
     private lateinit var viewModel: ChatViewModel
 
@@ -182,8 +196,8 @@ class ChatViewModelSttTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         sttRepo = FakeSttRepo()
+        stageRepo = FakeStageRepo()
         audioController = DefaultStageAudioController()
-        val stageRepo = FakeStageRepo()
         val authRepo = FakeAuthRepo()
         val userProfileRepo = FakeUserProfileRepo()
 
@@ -389,5 +403,76 @@ class ChatViewModelSttTest {
         runCurrent()
 
         assertEquals("Hello from native speech", viewModel.uiState.value.messageText)
+    }
+
+    @Test
+    fun testCannotRecordVoiceOrTypeWhileModelSpeaking() = runTest {
+        viewModel.initStage("stage-1")
+        advanceUntilIdle()
+
+        val aiStream = MutableSharedFlow<ir.aispeaking.domain.model.chat.StageChatStreamEvent>(extraBufferCapacity = 10)
+        stageRepo.controllableStreamFlow = aiStream
+
+        // Set message text and send to put model in speaking state
+        viewModel.onMessageTextChanged("Hello AI")
+        viewModel.sendMessage()
+        runCurrent()
+
+        aiStream.emit(ir.aispeaking.domain.model.chat.StageChatStreamEvent.Chunk("Thinking..."))
+        runCurrent()
+
+        assertTrue(viewModel.uiState.value.isModelSpeaking, "Model must be in speaking/streaming state")
+
+        // Attempting to record voice while model is speaking must be blocked
+        viewModel.toggleRecording(true)
+        runCurrent()
+        assertFalse(viewModel.uiState.value.isRecording, "User must NOT be able to record voice while AI is speaking")
+
+        // Attempting to type while model is speaking must be blocked
+        viewModel.onMessageTextChanged("Trying to type")
+        runCurrent()
+        assertEquals("", viewModel.uiState.value.messageText, "Typing must be blocked while AI is speaking")
+    }
+
+    @Test
+    fun testSttTranscriptDoesNotReappearAfterMessageSent() = runTest {
+        viewModel.initStage("stage-1")
+        advanceUntilIdle()
+
+        val aiStream = MutableSharedFlow<ir.aispeaking.domain.model.chat.StageChatStreamEvent>(extraBufferCapacity = 10)
+        stageRepo.controllableStreamFlow = aiStream
+
+        // 1. User records first voice
+        viewModel.toggleRecording(true)
+        runCurrent()
+        assertTrue(viewModel.uiState.value.isRecording)
+
+        // 2. STT transcribes speech
+        sttRepo.streamFlow.emit(SttStreamEvent.PartialTranscript("My first voice message"))
+        runCurrent()
+        assertEquals("My first voice message", viewModel.uiState.value.messageText)
+
+        // 3. User sends the message
+        viewModel.sendMessage()
+        runCurrent()
+
+        // Message text must be cleared and recording stopped
+        assertEquals("", viewModel.uiState.value.messageText)
+        assertFalse(viewModel.uiState.value.isRecording)
+        assertTrue(viewModel.uiState.value.isModelSpeaking)
+
+        // 4. Any late incoming STT event from backend MUST NOT repopulate messageText
+        sttRepo.streamFlow.emit(SttStreamEvent.FinalTranscript("My first voice message"))
+        runCurrent()
+
+        assertEquals("", viewModel.uiState.value.messageText, "STT transcript must NOT reappear after sending message")
+
+        // 5. Complete AI stream
+        aiStream.emit(ir.aispeaking.domain.model.chat.StageChatStreamEvent.Done(
+            StageChatTurnResult("Reply", "پاسخ", null, false, null, "", false)
+        ))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isModelSpeaking)
+        assertEquals("", viewModel.uiState.value.messageText)
     }
 }

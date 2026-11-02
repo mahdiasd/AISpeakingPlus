@@ -100,6 +100,8 @@ fun ChatBottomBar(
     inputMode: ChatInputMode,
     text: String,
     isRecording: Boolean,
+    isModelSpeaking: Boolean = false,
+    enabled: Boolean = true,
     hintsUsedCount: Int = 0,
     isRequestingHint: Boolean = false,
     onTextChange: (String) -> Unit,
@@ -110,20 +112,23 @@ fun ChatBottomBar(
     micModifier: Modifier = Modifier,
     hintModifier: Modifier = Modifier
 ) {
+    val isInteractive = enabled && !isModelSpeaking
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
             .imePadding()
     ) {
-        // Floating Transcript Preview Capsule (shown when speech recognition has recognized text)
+        // Floating Transcript Preview Capsule (shown when speech recognition has recognized text and AI not speaking)
         AnimatedVisibility(
-            visible = text.isNotBlank() && inputMode == ChatInputMode.VOICE,
+            visible = text.isNotBlank() && inputMode == ChatInputMode.VOICE && !isModelSpeaking,
             enter = fadeIn(tween(140)) + slideInVertically(tween(160)) { it / 2 },
             exit = fadeOut(tween(100)) + slideOutVertically(tween(120)) { it / 2 }
         ) {
             CompactTranscriptCapsule(
                 text = text,
+                enabled = isInteractive,
                 onEdit = { onInputModeChange(ChatInputMode.TEXT) },
                 onClear = { onTextChange("") }
             )
@@ -144,6 +149,8 @@ fun ChatBottomBar(
                 ChatInputMode.VOICE -> CompactVoiceRow(
                     text = text,
                     isRecording = isRecording,
+                    isModelSpeaking = isModelSpeaking,
+                    enabled = enabled,
                     hintsUsedCount = hintsUsedCount,
                     isRequestingHint = isRequestingHint,
                     onSwitchToText = { onInputModeChange(ChatInputMode.TEXT) },
@@ -156,6 +163,8 @@ fun ChatBottomBar(
 
                 ChatInputMode.TEXT -> CompactTextRow(
                     text = text,
+                    isModelSpeaking = isModelSpeaking,
+                    enabled = enabled,
                     hintsUsedCount = hintsUsedCount,
                     isRequestingHint = isRequestingHint,
                     onTextChange = onTextChange,
@@ -176,6 +185,8 @@ fun ChatBottomBar(
 private fun CompactVoiceRow(
     text: String,
     isRecording: Boolean,
+    isModelSpeaking: Boolean,
+    enabled: Boolean,
     hintsUsedCount: Int,
     isRequestingHint: Boolean,
     onSwitchToText: () -> Unit,
@@ -185,6 +196,8 @@ private fun CompactVoiceRow(
     micModifier: Modifier = Modifier,
     hintModifier: Modifier = Modifier
 ) {
+    val isInteractive = enabled && !isModelSpeaking
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -194,12 +207,13 @@ private fun CompactVoiceRow(
             // Mode toggle to Keyboard
             GameIconButton(
                 icon = Res.drawable.ic_keyboard,
-                onClick = onSwitchToText,
+                onClick = { if (isInteractive) onSwitchToText() },
                 contentDescription = "تایپ متنی",
                 size = 42.dp,
                 iconSize = 20.dp,
                 container = if (AppTheme.isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF),
-                border = AppleChatTheme.SubtleBorderColor
+                border = AppleChatTheme.SubtleBorderColor,
+                modifier = Modifier.graphicsLayer { alpha = if (isInteractive) 1f else 0.38f }
             )
 
             // Center: Interactive Recording Pill
@@ -212,7 +226,9 @@ private fun CompactVoiceRow(
                 } else {
                     AppleRecordPill(
                         hasText = text.isNotBlank(),
-                        onClick = { onVoiceToggle(true) },
+                        enabled = enabled,
+                        isModelSpeaking = isModelSpeaking,
+                        onClick = { if (isInteractive) onVoiceToggle(true) },
                         modifier = micModifier
                     )
                 }
@@ -220,13 +236,18 @@ private fun CompactVoiceRow(
 
             // Trailing: Send when text is ready, otherwise Hint button
             if (text.isNotBlank()) {
-                AppleSendButton(onClick = onSendClick, size = 42.dp)
+                AppleSendButton(
+                    onClick = { if (isInteractive) onSendClick() },
+                    size = 42.dp,
+                    enabled = isInteractive
+                )
             } else {
                 AppleHintButton(
                     hintsUsedCount = hintsUsedCount,
                     isRequesting = isRequestingHint,
                     size = 42.dp,
-                    onClick = onHintClick,
+                    enabled = isInteractive,
+                    onClick = { if (isInteractive) onHintClick() },
                     modifier = hintModifier
                 )
             }
@@ -241,6 +262,8 @@ private fun CompactVoiceRow(
 @Composable
 private fun CompactTextRow(
     text: String,
+    isModelSpeaking: Boolean,
+    enabled: Boolean,
     hintsUsedCount: Int,
     isRequestingHint: Boolean,
     onTextChange: (String) -> Unit,
@@ -248,12 +271,15 @@ private fun CompactTextRow(
     onSendClick: () -> Unit,
     onHintClick: () -> Unit
 ) {
-    val canSend = text.isNotBlank()
+    val isInteractive = enabled && !isModelSpeaking
+    val canSend = text.isNotBlank() && isInteractive
     val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        try {
-            focusRequester.requestFocus()
-        } catch (_: Throwable) {}
+    LaunchedEffect(isInteractive) {
+        if (isInteractive) {
+            try {
+                focusRequester.requestFocus()
+            } catch (_: Throwable) {}
+        }
     }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -265,18 +291,20 @@ private fun CompactTextRow(
             // Mode toggle to Voice
             GameIconButton(
                 icon = Res.drawable.ic_microphone,
-                onClick = onSwitchToVoice,
+                onClick = { if (isInteractive) onSwitchToVoice() },
                 contentDescription = "مکالمه صوتی",
                 size = 42.dp,
                 iconSize = 20.dp,
                 container = if (AppTheme.isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF),
-                border = AppleChatTheme.SubtleBorderColor
+                border = AppleChatTheme.SubtleBorderColor,
+                modifier = Modifier.graphicsLayer { alpha = if (isInteractive) 1f else 0.38f }
             )
 
             // Apple Compact Input Pill
             val fieldShape = RoundedCornerShape(22.dp)
+            val isDark = AppTheme.isDark
             val textStyle = TextStyle(
-                color = Game.TextPrimary,
+                color = if (isInteractive) Game.TextPrimary else Game.TextMuted,
                 fontSize = 15.sp,
                 lineHeight = 22.sp,
                 fontFamily = AppTheme.typography.bodyLarge.fontFamily,
@@ -284,7 +312,9 @@ private fun CompactTextRow(
             )
             BasicTextField(
                 value = text,
-                onValueChange = onTextChange,
+                onValueChange = { if (isInteractive) onTextChange(it) },
+                enabled = isInteractive,
+                readOnly = !isInteractive,
                 modifier = Modifier
                     .weight(1f)
                     .focusRequester(focusRequester)
@@ -307,10 +337,13 @@ private fun CompactTextRow(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 42.dp, max = 110.dp)
-                            .background(AppleChatTheme.GlassPanelRaised, fieldShape)
+                            .background(
+                                if (isInteractive) AppleChatTheme.GlassPanelRaised else (if (isDark) Color(0x14FFFFFF) else Color(0x40FFFFFF)),
+                                fieldShape
+                            )
                             .border(
                                 1.dp,
-                                if (canSend) AppleChatTheme.PrimaryAzure.copy(alpha = 0.7f) else AppleChatTheme.SubtleBorderColor,
+                                if (canSend) AppleChatTheme.PrimaryAzure.copy(alpha = 0.7f) else AppleChatTheme.SubtleBorderColor.copy(alpha = if (isInteractive) 1f else 0.4f),
                                 fieldShape
                             )
                             .padding(horizontal = 16.dp, vertical = 9.dp),
@@ -318,7 +351,7 @@ private fun CompactTextRow(
                     ) {
                         if (text.isEmpty()) {
                             GameText(
-                                text = "Type in English…",
+                                text = if (isModelSpeaking) "Waiting for AI response…" else "Type in English…",
                                 size = 14.sp,
                                 latin = true,
                                 color = Game.TextMuted
@@ -331,13 +364,18 @@ private fun CompactTextRow(
 
             // Trailing: Send when entered, otherwise Hint
             if (canSend) {
-                AppleSendButton(onClick = onSendClick, size = 42.dp)
+                AppleSendButton(
+                    onClick = { if (isInteractive) onSendClick() },
+                    size = 42.dp,
+                    enabled = isInteractive
+                )
             } else {
                 AppleHintButton(
                     hintsUsedCount = hintsUsedCount,
                     isRequesting = isRequestingHint,
                     size = 42.dp,
-                    onClick = onHintClick
+                    enabled = isInteractive,
+                    onClick = { if (isInteractive) onHintClick() }
                 )
             }
         }
@@ -348,6 +386,7 @@ private fun CompactTextRow(
 @Composable
 private fun CompactTranscriptCapsule(
     text: String,
+    enabled: Boolean = true,
     onEdit: () -> Unit,
     onClear: () -> Unit
 ) {
@@ -382,23 +421,25 @@ private fun CompactTranscriptCapsule(
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 GameIconButton(
                     icon = Res.drawable.ic_edit,
-                    onClick = onEdit,
+                    onClick = { if (enabled) onEdit() },
                     contentDescription = "ویرایش",
                     size = 34.dp,
                     iconSize = 16.dp,
                     tint = AppleChatTheme.SuccessCyan,
                     container = if (AppTheme.isDark) Color(0x18FFFFFF) else Color(0xB8FFFFFF),
-                    border = AppleChatTheme.SubtleBorderColor
+                    border = AppleChatTheme.SubtleBorderColor,
+                    modifier = Modifier.graphicsLayer { alpha = if (enabled) 1f else 0.38f }
                 )
                 GameIconButton(
                     icon = Res.drawable.ic_clear,
-                    onClick = onClear,
+                    onClick = { if (enabled) onClear() },
                     contentDescription = "پاک کردن",
                     size = 34.dp,
                     iconSize = 16.dp,
                     tint = AppleChatTheme.Coral,
                     container = if (AppTheme.isDark) Color(0x18FFFFFF) else Color(0xB8FFFFFF),
-                    border = AppleChatTheme.SubtleBorderColor
+                    border = AppleChatTheme.SubtleBorderColor,
+                    modifier = Modifier.graphicsLayer { alpha = if (enabled) 1f else 0.38f }
                 )
             }
         }
@@ -490,10 +531,13 @@ private fun AppleRecordingActivePill(onStop: () -> Unit) {
 /**
  * 2026 Apple Record pill in idle state.
  * Features subtle ambient breathing light in Royal Azure / Indigo (replacing green).
+ * When disabled or AI speaking, disables interaction and displays appropriate status.
  */
 @Composable
 private fun AppleRecordPill(
     hasText: Boolean,
+    enabled: Boolean = true,
+    isModelSpeaking: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -505,23 +549,41 @@ private fun AppleRecordPill(
         label = "breath_glow"
     )
 
+    val isInteractive = enabled && !isModelSpeaking
     val shape = RoundedCornerShape(22.dp)
     val isDark = AppTheme.isDark
-    val pillBg = if (hasText) {
+    val pillBg = if (!isInteractive) {
+        if (isDark) Color(0x14FFFFFF) else Color(0x40FFFFFF)
+    } else if (hasText) {
         if (isDark) Color(0x22FFFFFF) else Color(0xB8FFFFFF)
     } else {
         AppleChatTheme.PrimaryAzure.copy(alpha = breathGlow)
     }
-    val pillBorder = if (hasText) {
+    val pillBorder = if (!isInteractive) {
+        AppleChatTheme.SubtleBorderColor.copy(alpha = 0.35f)
+    } else if (hasText) {
         AppleChatTheme.SpecularBorderColor
     } else {
         AppleChatTheme.PrimaryAzure.copy(alpha = 0.55f)
     }
-    val accentColor = if (hasText) Game.TextPrimary else (if (isDark) AppleChatTheme.SuccessCyan else AppleChatTheme.PrimaryAzure)
+    val accentColor = if (!isInteractive) {
+        Game.TextMuted
+    } else if (hasText) {
+        Game.TextPrimary
+    } else {
+        if (isDark) AppleChatTheme.SuccessCyan else AppleChatTheme.PrimaryAzure
+    }
+
+    val pillText = when {
+        isModelSpeaking -> "هوش مصنوعی در حال پاسخ…"
+        !enabled -> "لطفاً صبر کنید…"
+        hasText -> "ضبط مجدد صدا"
+        else -> "برای صحبت لمس کنید"
+    }
 
     Row(
         modifier = modifier
-            .applePressEffect(targetScale = 0.95f, onClick = onClick)
+            .applePressEffect(enabled = isInteractive, targetScale = 0.95f, onClick = onClick)
             .clip(shape)
             .background(pillBg)
             .border(1.dp, pillBorder, shape)
@@ -529,14 +591,22 @@ private fun AppleRecordPill(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_microphone),
-            contentDescription = "ضبط صدا",
-            tint = accentColor,
-            modifier = Modifier.size(18.dp)
-        )
+        if (isModelSpeaking) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(16.dp),
+                strokeWidth = 2.dp,
+                color = AppleChatTheme.PrimaryAzure.copy(alpha = 0.8f)
+            )
+        } else {
+            Icon(
+                painter = painterResource(Res.drawable.ic_microphone),
+                contentDescription = "ضبط صدا",
+                tint = accentColor,
+                modifier = Modifier.size(18.dp)
+            )
+        }
         GameText(
-            text = if (hasText) "ضبط مجدد صدا" else "برای صحبت لمس کنید",
+            text = pillText,
             size = 13.sp,
             bold = true,
             color = accentColor
@@ -546,11 +616,16 @@ private fun AppleRecordPill(
 
 /** Apple circular vibrant Send button with Royal Azure gradient */
 @Composable
-private fun AppleSendButton(onClick: () -> Unit, size: androidx.compose.ui.unit.Dp) {
+private fun AppleSendButton(
+    onClick: () -> Unit,
+    size: androidx.compose.ui.unit.Dp,
+    enabled: Boolean = true
+) {
     Box(
         modifier = Modifier
             .size(size)
-            .applePressEffect(targetScale = 0.92f, onClick = onClick)
+            .graphicsLayer { alpha = if (enabled) 1f else 0.4f }
+            .applePressEffect(enabled = enabled, targetScale = 0.92f, onClick = onClick)
             .clip(CircleShape)
             .background(
                 Brush.verticalGradient(
@@ -575,14 +650,17 @@ private fun AppleHintButton(
     hintsUsedCount: Int,
     isRequesting: Boolean,
     size: androidx.compose.ui.unit.Dp = 42.dp,
+    enabled: Boolean = true,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isDark = AppTheme.isDark
+    val isInteractive = enabled && !isRequesting
     Box(
         modifier = modifier
             .size(size)
-            .applePressEffect(enabled = !isRequesting, targetScale = 0.92f, onClick = onClick)
+            .graphicsLayer { alpha = if (enabled) 1f else 0.38f }
+            .applePressEffect(enabled = isInteractive, targetScale = 0.92f, onClick = onClick)
             .clip(CircleShape)
             .background(
                 if (hintsUsedCount > 0) AppleChatTheme.Gold.copy(alpha = 0.2f) else if (isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF)

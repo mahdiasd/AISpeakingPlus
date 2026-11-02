@@ -1147,7 +1147,7 @@
                 }).then(function(res) {
                     return res.json();
                 }).then(function(data) {
-                    if (data && data.data && data.data.text) {
+                    if (data && data.data && data.data.text && self.isRecording && self._userWantsRecording) {
                         var text = data.data.text.trim();
                         if (text) {
                             self.transcript = text;
@@ -1156,6 +1156,13 @@
                 }).catch(function(err) {
                     console.warn("[aiSpeakingSpeech] fallback transcribe error:", err);
                 });
+            },
+
+            clearTranscript: function() {
+                this.transcript = "";
+                this._accumulatedTranscript = "";
+                this._currentSessionFinalTranscript = "";
+                this._currentSessionTranscript = "";
             },
 
             drainPcmChunks: function() {

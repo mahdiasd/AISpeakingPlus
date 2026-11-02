@@ -387,6 +387,7 @@ class ChatViewModel(
     // Requirements 4 & 5: Voice recording, realtime transcription, and 5-second silence auto-pause
     fun toggleRecording(start: Boolean) {
         if (start) {
+            if (_uiState.value.isModelSpeaking || _uiState.value.isSubmittingEvaluation) return
             audioController.primeAudioPlayback()
             if (!_uiState.value.isMicPermissionGranted) {
                 audioController.checkMicrophonePermission { isGranted ->
@@ -412,6 +413,7 @@ class ChatViewModel(
     }
 
     private fun startRecordingInternal() {
+        if (_uiState.value.isModelSpeaking || _uiState.value.isSubmittingEvaluation) return
         audioController.stopVoice()
         _uiState.update {
             it.copy(
@@ -457,7 +459,7 @@ class ChatViewModel(
                                 }
                             }
                             is SttStreamEvent.PartialTranscript -> {
-                                if (event.text.isNotBlank()) {
+                                if (_uiState.value.isRecording && !_uiState.value.isModelSpeaking && event.text.isNotBlank()) {
                                     audioController.notifyVoiceActivity()
                                     val combined = if (sessionFinalizedText.isEmpty()) {
                                         event.text
@@ -468,7 +470,7 @@ class ChatViewModel(
                                 }
                             }
                             is SttStreamEvent.FinalTranscript -> {
-                                if (event.text.isNotBlank()) {
+                                if (_uiState.value.isRecording && !_uiState.value.isModelSpeaking && event.text.isNotBlank()) {
                                     audioController.notifyVoiceActivity()
                                     sessionFinalizedText = if (sessionFinalizedText.isEmpty()) {
                                         event.text
@@ -512,7 +514,7 @@ class ChatViewModel(
 
         audioController.startRecording(
             onSpeechRecognized = { text ->
-                if (text.isNotBlank()) {
+                if (_uiState.value.isRecording && !_uiState.value.isModelSpeaking && text.isNotBlank()) {
                     _uiState.update { it.copy(messageText = text) }
                 }
             },
@@ -535,26 +537,26 @@ class ChatViewModel(
         val streamJob = sttStreamJob
         sttStreamJob = null
 
+        streamJob?.cancel()
+        senderJob?.cancel()
+
         viewModelScope.launch {
             try {
-                senderJob?.join()
-            } catch (_: Throwable) {}
-            try {
                 sendStopSttUseCase?.invoke()
-                delay(300)
             } catch (_: Throwable) {}
             try {
-                streamJob?.cancel()
                 closeSttSessionUseCase()
             } catch (_: Throwable) {}
         }
     }
 
     fun onMessageTextChanged(newText: String) {
+        if (_uiState.value.isModelSpeaking || _uiState.value.isSubmittingEvaluation) return
         _uiState.update { it.copy(messageText = newText) }
     }
 
     fun setInputMode(mode: ChatInputMode) {
+        if (_uiState.value.isModelSpeaking || _uiState.value.isSubmittingEvaluation) return
         if (mode == ChatInputMode.TEXT && _uiState.value.isRecording) {
             stopRecordingSession()
             _uiState.update { it.copy(isRecording = false, inputMode = mode) }
@@ -592,10 +594,8 @@ class ChatViewModel(
             )
         )
 
-        if (stateSnapshot.isRecording) {
-            stopRecordingSession()
-            _uiState.update { it.copy(isRecording = false) }
-        }
+        stopRecordingSession()
+        _uiState.update { it.copy(isRecording = false) }
 
         val userUid = "user_${Clock.System.now().toEpochMilliseconds()}"
         val userChat = Chat.User(
@@ -787,6 +787,7 @@ class ChatViewModel(
     }
 
     fun requestHint() {
+        if (_uiState.value.isModelSpeaking || _uiState.value.isSubmittingEvaluation) return
         val stageId = _uiState.value.stage?.id ?: return
         analyticsTracker.logEvent(
             AnalyticsEvents.EVENT_HINT_REQUESTED,

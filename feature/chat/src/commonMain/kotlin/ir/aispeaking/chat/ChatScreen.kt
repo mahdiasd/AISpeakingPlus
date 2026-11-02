@@ -314,6 +314,8 @@ fun ChatScreen(
                         inputMode = uiState.inputMode,
                         text = uiState.messageText,
                         isRecording = uiState.isRecording,
+                        isModelSpeaking = uiState.isModelSpeaking,
+                        enabled = !uiState.isModelSpeaking && !uiState.isSubmittingEvaluation,
                         hintsUsedCount = uiState.hintsUsedCount,
                         isRequestingHint = uiState.isRequestingHint,
                         onTextChange = { viewModel.onMessageTextChanged(it) },
