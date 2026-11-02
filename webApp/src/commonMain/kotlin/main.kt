@@ -44,15 +44,20 @@ import ir.aispeaking.sharedui.ic_logo
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.them.AppTheme
-import ir.aispeaking.web.IosPwaBanner
+import ir.aispeaking.web.IosChromeGuideModal
 import ir.aispeaking.web.IosPwaTutorialModal
+import ir.aispeaking.web.IosSafariCompassIcon
+import ir.aispeaking.web.IosShareIcon
+import ir.aispeaking.web.IosTopNoticeBanner
 import ir.aispeaking.web.WebBrowserNavigation
-import ir.aispeaking.web.dismissIosPwaBanner
+import ir.aispeaking.web.dismissIosA2hsBanner
+import ir.aispeaking.web.dismissIosChromeBanner
 import ir.aispeaking.web.exitWebApp
 import ir.aispeaking.web.isUserInAppBrowser
 import ir.aispeaking.web.setupWebAudioBridge
 import ir.aispeaking.web.setupWebVideoBridge
-import ir.aispeaking.web.shouldShowIosPwaBanner
+import ir.aispeaking.web.shouldShowIosA2hsBanner
+import ir.aispeaking.web.shouldShowIosChromeBanner
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.context.GlobalContext
 
@@ -74,8 +79,10 @@ fun main() {
     ComposeViewport {
         AppTheme {
             val isDark = AppTheme.isDark
-            var showIosBanner by remember { mutableStateOf(shouldShowIosPwaBanner()) }
+            var showA2hsBanner by remember { mutableStateOf(shouldShowIosA2hsBanner()) }
+            var showChromeBanner by remember { mutableStateOf(shouldShowIosChromeBanner()) }
             var showIosTutorialModal by remember { mutableStateOf(false) }
+            var showChromeGuideModal by remember { mutableStateOf(false) }
             val isInApp = remember { isUserInAppBrowser() }
 
             // Apple-style ambient backdrop shown around the phone frame on large screens.
@@ -130,12 +137,18 @@ fun main() {
                                     .background(Game.Ink)
                             ) {
                                 Column(modifier = Modifier.fillMaxSize()) {
-                                    IosPwaBanner(
-                                        visible = showIosBanner,
-                                        onOpenGuide = { showIosTutorialModal = true },
-                                        onDismiss = {
-                                            showIosBanner = false
-                                            dismissIosPwaBanner()
+                                    AppTopBannerSection(
+                                        showChromeBanner = showChromeBanner,
+                                        showA2hsBanner = showA2hsBanner,
+                                        onOpenChromeGuide = { showChromeGuideModal = true },
+                                        onDismissChrome = {
+                                            showChromeBanner = false
+                                            dismissIosChromeBanner()
+                                        },
+                                        onOpenA2hsGuide = { showIosTutorialModal = true },
+                                        onDismissA2hs = {
+                                            showA2hsBanner = false
+                                            dismissIosA2hsBanner()
                                         }
                                     )
                                     Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -159,12 +172,18 @@ fun main() {
                                 .background(Game.Ink)
                         ) {
                             Column(modifier = Modifier.fillMaxSize()) {
-                                IosPwaBanner(
-                                    visible = showIosBanner,
-                                    onOpenGuide = { showIosTutorialModal = true },
-                                    onDismiss = {
-                                        showIosBanner = false
-                                        dismissIosPwaBanner()
+                                AppTopBannerSection(
+                                    showChromeBanner = showChromeBanner,
+                                    showA2hsBanner = showA2hsBanner,
+                                    onOpenChromeGuide = { showChromeGuideModal = true },
+                                    onDismissChrome = {
+                                        showChromeBanner = false
+                                        dismissIosChromeBanner()
+                                    },
+                                    onOpenA2hsGuide = { showIosTutorialModal = true },
+                                    onDismissA2hs = {
+                                        showA2hsBanner = false
+                                        dismissIosA2hsBanner()
                                     }
                                 )
                                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -185,8 +204,57 @@ fun main() {
                         onDismiss = { showIosTutorialModal = false }
                     )
                 }
+
+                if (showChromeGuideModal) {
+                    IosChromeGuideModal(
+                        visible = showChromeGuideModal,
+                        onDismiss = { showChromeGuideModal = false }
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun AppTopBannerSection(
+    showChromeBanner: Boolean,
+    showA2hsBanner: Boolean,
+    onOpenChromeGuide: () -> Unit,
+    onDismissChrome: () -> Unit,
+    onOpenA2hsGuide: () -> Unit,
+    onDismissA2hs: () -> Unit
+) {
+    if (showChromeBanner) {
+        IosTopNoticeBanner(
+            visible = true,
+            text = "در آیفون، دسترسی میکروفون فقط در Safari فعال است. لطفاً با سافاری باز کنید.",
+            actionText = "راهنما ›",
+            badgeColor = Color(0xFFFF9500),
+            badgeIcon = {
+                IosSafariCompassIcon(
+                    color = Color(0xFFFFB340),
+                    modifier = Modifier.size(14.dp)
+                )
+            },
+            onActionClick = onOpenChromeGuide,
+            onDismiss = onDismissChrome
+        )
+    } else if (showA2hsBanner) {
+        IosTopNoticeBanner(
+            visible = true,
+            text = "برای عملکرد بهتر و روان‌تر، برنامه را به صفحه اصلی اضافه کنید",
+            actionText = "راهنما ›",
+            badgeColor = Color(0xFF0A84FF),
+            badgeIcon = {
+                IosShareIcon(
+                    color = Color(0xFF38BDF8),
+                    modifier = Modifier.size(12.dp)
+                )
+            },
+            onActionClick = onOpenA2hsGuide,
+            onDismiss = onDismissA2hs
+        )
     }
 }
 

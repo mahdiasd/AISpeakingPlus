@@ -1406,6 +1406,11 @@
                 var isIPadOS = (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
                 return /iPhone|iPad|iPod/i.test(ua) || isIPadOS;
             },
+            isIosNonSafari: function() {
+                var ua = window.navigator.userAgent || '';
+                var isIos = this.isIos();
+                return isIos && (/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua));
+            },
             isStandalone: function() {
                 if (window.navigator.standalone === true) return true;
                 if (window.matchMedia) {
@@ -1418,25 +1423,55 @@
                 var ua = window.navigator.userAgent || '';
                 return /FBAN|FBAV|Instagram|Telegram|Line|Twitter|Snapchat|BytedanceWebview/i.test(ua);
             },
-            isDismissed: function() {
+            isA2hsDismissed: function() {
                 try {
                     return localStorage.getItem('ios_a2hs_dismissed') === 'true';
                 } catch(e) {
                     return false;
                 }
             },
-            dismissBanner: function() {
+            dismissA2hsBanner: function() {
                 try {
                     localStorage.setItem('ios_a2hs_dismissed', 'true');
                 } catch(e) {}
             },
-            shouldShowBanner: function() {
+            shouldShowA2hsBanner: function() {
                 try {
                     if (window.location.search && window.location.search.indexOf('test_ios_banner=1') !== -1) {
                         return !this.isStandalone();
                     }
                 } catch(e) {}
-                return this.isIos() && !this.isStandalone() && !this.isDismissed();
+                if (this.isIosNonSafari()) return false;
+                return this.isIos() && !this.isStandalone() && !this.isA2hsDismissed();
+            },
+            isChromeDismissed: function() {
+                try {
+                    return localStorage.getItem('ios_chrome_banner_dismissed') === 'true';
+                } catch(e) {
+                    return false;
+                }
+            },
+            dismissChromeBanner: function() {
+                try {
+                    localStorage.setItem('ios_chrome_banner_dismissed', 'true');
+                } catch(e) {}
+            },
+            shouldShowChromeBanner: function() {
+                try {
+                    if (window.location.search && window.location.search.indexOf('test_ios_chrome=1') !== -1) {
+                        return true;
+                    }
+                } catch(e) {}
+                return this.isIosNonSafari() && !this.isChromeDismissed();
+            },
+            copyCurrentUrl: function() {
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(window.location.href);
+                        return true;
+                    }
+                } catch(e) {}
+                return false;
             }
         };
 
