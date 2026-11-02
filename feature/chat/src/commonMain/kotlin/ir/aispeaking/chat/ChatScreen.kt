@@ -109,10 +109,6 @@ fun ChatScreen(
         uiState.evaluationSession?.let { lastEvaluation = it }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.checkMicrophonePermission()
-    }
-
     LaunchedEffect(stageId) {
         viewModel.initStage(stageId)
     }

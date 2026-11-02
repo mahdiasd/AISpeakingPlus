@@ -162,7 +162,8 @@ class ChatViewModel(
                     if (stage.initialSpeaker == "Model") {
                         requestInitialAiGreeting(stageId)
                     }
-                    checkMicrophonePermission()
+                    // Silently check if permission was already granted previously without showing a modal on screen enter
+                    checkMicrophonePermission(showDialogIfDenied = false)
                 }
                 is DataResult.Failure -> {
                     analyticsTracker.logEvent(
@@ -355,12 +356,12 @@ class ChatViewModel(
         }
     }
 
-    fun checkMicrophonePermission() {
+    fun checkMicrophonePermission(showDialogIfDenied: Boolean = true) {
         audioController.checkMicrophonePermission { isGranted ->
             _uiState.update {
                 it.copy(
                     isMicPermissionGranted = isGranted,
-                    showMicPermissionDialog = !isGranted,
+                    showMicPermissionDialog = if (showDialogIfDenied) !isGranted else false,
                     isMicPermissionPermanentlyDenied = false
                 )
             }
