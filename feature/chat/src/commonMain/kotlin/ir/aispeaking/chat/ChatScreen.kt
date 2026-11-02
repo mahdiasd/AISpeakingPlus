@@ -187,17 +187,17 @@ fun ChatScreen(
             val isDark = AppTheme.isDark
             val vignetteBrush = if (isDark) {
                 Brush.verticalGradient(
-                    0f to Color(0xCC070810),
-                    0.2f to Color(0x38090C18),
-                    0.55f to Color(0x55090C18),
-                    1f to Color(0xF2070810)
+                    0f to Color(0xE6070810),
+                    0.2f to Color(0x52090C18),
+                    0.55f to Color(0x6E090C18),
+                    1f to Color(0xFA070810)
                 )
             } else {
                 Brush.verticalGradient(
-                    0f to Color(0x33000000),
-                    0.2f to Color(0x0D000000),
-                    0.55f to Color(0x1A000000),
-                    1f to Color(0x55000000)
+                    0f to Color(0x4D000000),
+                    0.2f to Color(0x26000000),
+                    0.55f to Color(0x33000000),
+                    1f to Color(0x6E000000)
                 )
             }
             // High-clarity Apple vignette scrims: lets artwork shine through while keeping glass chrome legible

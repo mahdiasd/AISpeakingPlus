@@ -84,9 +84,15 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
             } else {
                 jsPlayAudio(url)
                 playJob = bridgeScope.launch {
-                    delay(300)
+                    // Grace period: allow up to 1200ms for audio subsystem to fetch/decode and report playing
+                    var graceElapsed = 0
+                    while (!jsIsAudioPlaying() && graceElapsed < 1200 && isActive) {
+                        delay(50)
+                        graceElapsed += 50
+                    }
+
                     var elapsed = 0
-                    while (jsIsAudioPlaying() && elapsed < 60000) {
+                    while (jsIsAudioPlaying() && elapsed < 60000 && isActive) {
                         delay(100)
                         elapsed += 100
                     }
