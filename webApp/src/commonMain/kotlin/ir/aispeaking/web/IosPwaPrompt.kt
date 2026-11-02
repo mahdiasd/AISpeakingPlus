@@ -22,7 +22,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,23 +47,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_close
+import ir.aispeaking.sharedui.ic_copy
 import ir.aispeaking.sharedui.ic_done
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameModal
 import ir.aispeaking.sharedui.ui.game.GameText
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * Compact, subtle top banner shown exclusively to iPhone / iOS Safari users who haven't
- * installed the app to Home Screen yet. Encourages A2HS for optimal audio and full-screen experience.
+ * Universal top notice banner with strict layout guarantees:
+ * - Description text occupies all remaining space (weight(1f)) and can gracefully wrap into 2 lines.
+ * - Action button ("راهنما ›") has intrinsic width and NEVER wraps into multiple lines.
+ * - Close button (✕) dismisses permanently and triggers callback.
  */
 @Composable
-fun IosPwaBanner(
+fun IosTopNoticeBanner(
     modifier: Modifier = Modifier,
     visible: Boolean = true,
-    onOpenGuide: () -> Unit,
+    text: String,
+    actionText: String = "راهنما ›",
+    badgeColor: Color = Color(0xFF0A84FF),
+    badgeIcon: @Composable () -> Unit,
+    onActionClick: () -> Unit,
     onDismiss: () -> Unit
 ) {
     AnimatedVisibility(
@@ -81,58 +93,62 @@ fun IosPwaBanner(
                     )
                     .border(
                         width = 0.5.dp,
-                        color = Color(0x3338BDF8),
+                        color = badgeColor.copy(alpha = 0.35f),
                         shape = RoundedCornerShape(0.dp)
                     )
-                    .clickable { onOpenGuide() }
-                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                    .clickable { onActionClick() }
+                    .padding(horizontal = 10.dp, vertical = 7.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Right side in RTL: Icon badge + text message + action hint
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    // 1. Right side in RTL: Icon badge
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(badgeColor.copy(alpha = 0.18f))
+                            .border(0.5.dp, badgeColor.copy(alpha = 0.55f), RoundedCornerShape(6.dp)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .clip(RoundedCornerShape(5.dp))
-                                .background(Color(0xFF0A84FF).copy(alpha = 0.2f))
-                                .border(0.5.dp, Color(0xFF0A84FF).copy(alpha = 0.6f), RoundedCornerShape(5.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            IosShareIcon(
-                                color = Color(0xFF38BDF8),
-                                modifier = Modifier.size(11.dp)
-                            )
-                        }
+                        badgeIcon()
+                    }
 
-                        GameText(
-                            text = "برای عملکرد بهتر و روان‌تر، برنامه را به صفحه اصلی اضافه کنید",
-                            size = 11.5.sp,
-                            bold = true,
-                            color = Color(0xFFF1F5F9),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                    // 2. Middle in RTL: Description text (flexible weight, wraps up to 2 lines cleanly)
+                    GameText(
+                        text = text,
+                        modifier = Modifier.weight(1f),
+                        size = 11.5.sp,
+                        bold = true,
+                        color = Color(0xFFF1F5F9),
+                        maxLines = 2,
+                        lineHeight = 16.sp,
+                        overflow = TextOverflow.Ellipsis
+                    )
 
+                    // 3. Action button: intrinsic width, single line, NEVER breaks into two lines!
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(badgeColor.copy(alpha = 0.18f))
+                            .border(0.5.dp, badgeColor.copy(alpha = 0.6f), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 7.dp, vertical = 4.dp)
+                    ) {
                         GameText(
-                            text = "راهنما ›",
-                            size = 11.5.sp,
+                            text = actionText,
+                            size = 11.sp,
                             bold = true,
-                            color = Color(0xFF38BDF8)
+                            color = Color(0xFF38BDF8),
+                            maxLines = 1
                         )
                     }
 
-                    // Left side in RTL: Close button
+                    // 4. Left side in RTL: Close button (✕)
                     Box(
                         modifier = Modifier
-                            .size(22.dp)
+                            .size(26.dp)
                             .clip(CircleShape)
                             .clickable(
                                 onClick = onDismiss,
@@ -268,6 +284,140 @@ fun IosPwaTutorialModal(
             GameButton(
                 text = "متوجه شدم",
                 style = GameButtonStyle.Primary,
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onDismiss
+            )
+        }
+    }
+}
+
+/**
+ * Educational Modal for Chrome / non-Safari iOS users explaining that WebKit / Apple
+ * restricts direct microphone capture inside third-party iOS browsers, and guiding
+ * them to copy the link and open Safari.
+ */
+@Composable
+fun IosChromeGuideModal(
+    visible: Boolean,
+    onDismiss: () -> Unit
+) {
+    var isCopied by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isCopied) {
+        if (isCopied) {
+            delay(2500)
+            isCopied = false
+        }
+    }
+
+    GameModal(
+        visible = visible,
+        onDismiss = onDismiss,
+        dismissOnScrimClick = true
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header Compass Badge
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFFF9500).copy(alpha = 0.15f))
+                    .border(1.dp, Color(0xFFFF9500).copy(alpha = 0.5f), RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                IosSafariCompassIcon(
+                    color = Color(0xFFFFB340),
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            // Title & Subtitle
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                GameText(
+                    text = "باز کردن در مرورگر Safari",
+                    size = 18.sp,
+                    bold = true,
+                    align = TextAlign.Center
+                )
+                GameText(
+                    text = "در آیفون، سیستم‌عامل iOS به مرورگر Chrome اجازه دسترسی کامل به میکروفون را نمی‌دهد. برای مکالمه صوتی با هوش مصنوعی، لطفاً برنامه را با Safari باز کنید:",
+                    size = 12.5.sp,
+                    lineHeight = 19.sp,
+                    color = Game.TextSecondary,
+                    align = TextAlign.Center
+                )
+            }
+
+            // Steps Container
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                IosTutorialStepItem(
+                    stepNumber = "۱",
+                    title = "کپی آدرس سایت",
+                    description = "دکمه «کپی آدرس سایت» در پایین را لمس کنید تا لینک در حافظه کپی شود.",
+                    icon = {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_copy),
+                            contentDescription = null,
+                            tint = Color(0xFF38BDF8),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                )
+
+                IosTutorialStepItem(
+                    stepNumber = "۲",
+                    title = "باز کردن مرورگر Safari",
+                    description = "برنامه سافاری (مرورگر اصلی و پیش‌فرض آیفون) را باز کنید.",
+                    icon = {
+                        IosSafariCompassIcon(
+                            color = Color(0xFF0A84FF),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                )
+
+                IosTutorialStepItem(
+                    stepNumber = "۳",
+                    title = "جای‌گذاری آدرس (Paste)",
+                    description = "آدرس را در نوار بالای سافاری وارد کرده و کلید Go را لمس کنید.",
+                    icon = {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_done),
+                            contentDescription = null,
+                            tint = Color(0xFF34C759),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                )
+            }
+
+            // Copy Link CTA
+            GameButton(
+                text = if (isCopied) "✓ آدرس کپی شد!" else "کپی آدرس سایت",
+                style = if (isCopied) GameButtonStyle.Gold else GameButtonStyle.Primary,
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    copyCurrentUrlToClipboard()
+                    isCopied = true
+                }
+            )
+
+            // Got it CTA
+            GameButton(
+                text = "متوجه شدم",
+                style = GameButtonStyle.Glass,
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onDismiss
             )
@@ -452,5 +602,76 @@ fun IosAddIcon(
             strokeWidth = strokeWidth,
             cap = StrokeCap.Round
         )
+    }
+}
+
+/**
+ * Authentic Safari Compass Icon with compass needle.
+ */
+@Composable
+fun IosSafariCompassIcon(
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val cx = w * 0.5f
+        val cy = h * 0.5f
+        val radius = (w.coerceAtMost(h) * 0.44f)
+        val strokeWidth = (w * 0.08f).coerceAtLeast(1.5f)
+
+        // Outer circle
+        drawCircle(
+            color = color,
+            radius = radius,
+            center = Offset(cx, cy),
+            style = Stroke(width = strokeWidth)
+        )
+
+        val needleLen = radius * 0.72f
+        val needleWidth = radius * 0.2f
+
+        val trTip = Offset(cx + needleLen * 0.707f, cy - needleLen * 0.707f)
+        val blTip = Offset(cx - needleLen * 0.707f, cy + needleLen * 0.707f)
+        val c1 = Offset(cx - needleWidth * 0.707f, cy - needleWidth * 0.707f)
+        val c2 = Offset(cx + needleWidth * 0.707f, cy + needleWidth * 0.707f)
+
+        // Red tip (top right)
+        val pathTop = Path().apply {
+            moveTo(trTip.x, trTip.y)
+            lineTo(c1.x, c1.y)
+            lineTo(cx, cy)
+            close()
+        }
+        drawPath(pathTop, color = Color(0xFFFF3B30))
+
+        val pathTop2 = Path().apply {
+            moveTo(trTip.x, trTip.y)
+            lineTo(c2.x, c2.y)
+            lineTo(cx, cy)
+            close()
+        }
+        drawPath(pathTop2, color = Color(0xFFFF6961))
+
+        // White/silver tip (bottom left)
+        val pathBottom = Path().apply {
+            moveTo(blTip.x, blTip.y)
+            lineTo(c1.x, c1.y)
+            lineTo(cx, cy)
+            close()
+        }
+        drawPath(pathBottom, color = Color(0xFFF2F2F7))
+
+        val pathBottom2 = Path().apply {
+            moveTo(blTip.x, blTip.y)
+            lineTo(c2.x, c2.y)
+            lineTo(cx, cy)
+            close()
+        }
+        drawPath(pathBottom2, color = Color(0xFFD1D1D6))
+
+        // Center pin
+        drawCircle(color = color, radius = radius * 0.12f, center = Offset(cx, cy))
     }
 }
