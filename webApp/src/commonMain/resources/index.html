@@ -483,76 +483,95 @@
         window._isAudioPlaying = false;
         window._aiSpeakingAudioPool = window._aiSpeakingAudioPool || {};
 
-        // iOS Safari Audio Autoplay & Web Audio Unlocker
-        var SILENT_AUDIO_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
-        var _unlockedAudio = null;
-        var _isAudioUnlocked = false;
+        // Robust Web Audio API & iOS Safari Engine
+        var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        window._aiSpeakingAudioCtx = window._aiSpeakingAudioCtx || null;
 
-        function getOrCreateAudioElement() {
-            if (!_unlockedAudio) {
-                _unlockedAudio = new Audio();
-                _unlockedAudio.setAttribute("playsinline", "");
-                _unlockedAudio.setAttribute("webkit-playsinline", "");
-                _unlockedAudio.preload = "auto";
+        function getOrCreateAudioContext() {
+            if (!window._aiSpeakingAudioCtx || window._aiSpeakingAudioCtx.state === 'closed') {
+                if (AudioContextClass) {
+                    try {
+                        window._aiSpeakingAudioCtx = new AudioContextClass();
+                    } catch(e) {
+                        console.warn("[aiSpeakingAudio] AudioContext init error:", e);
+                    }
+                }
             }
-            return _unlockedAudio;
+            return window._aiSpeakingAudioCtx;
         }
 
-        function unlockAudioContextAndElement() {
-            var audio = getOrCreateAudioElement();
-            if (!_isAudioUnlocked) {
-                audio.src = SILENT_AUDIO_WAV;
-                var p = audio.play();
-                if (p !== undefined) {
-                    p.then(function() {
-                        _isAudioUnlocked = true;
-                        audio.pause();
-                        audio.currentTime = 0;
-                    }).catch(function() {});
+        var _isWebAudioUnlocked = false;
+
+        function unlockAudioEngine() {
+            var ctx = getOrCreateAudioContext();
+            if (ctx) {
+                if (ctx.state === 'suspended') {
+                    ctx.resume().catch(function(){});
+                }
+                if (!_isWebAudioUnlocked) {
+                    try {
+                        var buffer = ctx.createBuffer(1, 1, 22050);
+                        var src = ctx.createBufferSource();
+                        src.buffer = buffer;
+                        src.connect(ctx.destination);
+                        src.start(0);
+                        _isWebAudioUnlocked = true;
+                    } catch(e) {}
                 }
             }
             try {
                 if (window.aiSpeakingSpeech && window.aiSpeakingSpeech.audioContext && window.aiSpeakingSpeech.audioContext.state === 'suspended') {
                     window.aiSpeakingSpeech.audioContext.resume().catch(function(){});
                 }
-                if (window._aiSpeakingAudioCtx && window._aiSpeakingAudioCtx.state === 'suspended') {
-                    window._aiSpeakingAudioCtx.resume().catch(function(){});
-                }
             } catch(e) {}
         }
 
-        // Attach unlock to all user gesture events on the document
+        // Attach unlock to user gestures without ever interrupting or pausing active audio
         ['touchstart', 'touchend', 'click', 'mousedown', 'keydown'].forEach(function(evt) {
-            document.addEventListener(evt, unlockAudioContextAndElement, { passive: true, capture: true });
+            document.addEventListener(evt, unlockAudioEngine, { passive: true, capture: true });
         });
+
+        var _audioBufferCache = {};
+        var _currentSourceNode = null;
+        var _currentFallbackAudio = null;
+        var _currentPlaybackId = 0;
 
         window.aiSpeakingAudio = {
             audio: null,
             _currentUrl: null,
 
             unlock: function() {
-                unlockAudioContextAndElement();
+                unlockAudioEngine();
             },
 
             isPlaying: function() {
-                var audio = getOrCreateAudioElement();
-                var isDomPlaying = !!(audio && !audio.paused && !audio.ended && audio.currentTime > 0);
-                return window._isAudioPlaying === true || isDomPlaying;
+                if (window._isAudioPlaying === true) return true;
+                if (_currentFallbackAudio && !_currentFallbackAudio.paused && !_currentFallbackAudio.ended) return true;
+                return false;
             },
 
             preload: function(url) {
                 if (!url) return;
                 var fullUrl = (url.startsWith("http://") || url.startsWith("https://")) ? url : (window.location.origin + (url.startsWith("/") ? url : "/" + url));
-                if (!window._aiSpeakingAudioPool[fullUrl]) {
-                    try {
-                        var a = new Audio();
-                        a.preload = "auto";
-                        a.src = fullUrl;
-                        window._aiSpeakingAudioPool[fullUrl] = a;
-                    } catch(e) {
-                        console.warn("[aiSpeakingAudio] preload error:", e);
-                    }
-                }
+                if (_audioBufferCache[fullUrl]) return;
+                var ctx = getOrCreateAudioContext();
+                if (!ctx) return;
+                fetch(fullUrl)
+                    .then(function(res) {
+                        if (!res.ok) throw new Error("HTTP " + res.status);
+                        return res.arrayBuffer();
+                    })
+                    .then(function(buf) {
+                        return new Promise(function(resolve, reject) {
+                            ctx.decodeAudioData(buf, resolve, reject);
+                        });
+                    })
+                    .then(function(decoded) {
+                        _audioBufferCache[fullUrl] = decoded;
+                    })
+                    .catch(function(e) {
+                        // Preload is best effort
+                    });
             },
 
             play: function(url) {
@@ -561,94 +580,144 @@
                     return;
                 }
 
-                unlockAudioContextAndElement();
+                unlockAudioEngine();
 
                 var fullUrl = (url.startsWith("http://") || url.startsWith("https://")) ? url : (window.location.origin + (url.startsWith("/") ? url : "/" + url));
                 var self = this;
+                self.stop();
+
+                var playbackId = ++_currentPlaybackId;
                 self._currentUrl = fullUrl;
+                window._isAudioPlaying = true;
 
-                var audio = getOrCreateAudioElement();
-                self.audio = audio;
+                var ctx = getOrCreateAudioContext();
 
-                var finish = function() {
-                    if (self._currentUrl === fullUrl) {
-                        window._isAudioPlaying = false;
-                    }
-                };
-
-                audio.onended = finish;
-                audio.onerror = function(e) {
-                    console.warn("[aiSpeakingAudio] Playback error:", e);
-                    finish();
-                };
-
-                // Check if already pointed to this exact media URL (replay scenario)
-                var isSame = (audio.src === fullUrl || audio.currentSrc === fullUrl || (audio.src && audio.src.indexOf(url) !== -1));
-
-                if (isSame && audio.duration > 0 && !isNaN(audio.duration)) {
-                    // Safe replay: rewind to 0 and trigger play without calling .load()
+                function playDecoded(decodedBuffer) {
+                    if (playbackId !== _currentPlaybackId) return;
                     try {
-                        audio.pause();
-                        audio.currentTime = 0;
-                    } catch(e) {}
-                    window._isAudioPlaying = true;
-                    var playPromise = audio.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(function() {
-                            window._isAudioPlaying = true;
-                        }).catch(function(err) {
-                            if (err && err.name === 'AbortError') {
-                                setTimeout(function() {
-                                    if (self._currentUrl === fullUrl) {
-                                        audio.play().then(function() {
-                                            window._isAudioPlaying = true;
-                                        }).catch(finish);
-                                    }
-                                }, 50);
-                            } else {
-                                console.warn("[aiSpeakingAudio] Replay error:", err);
-                                finish();
+                        var source = ctx.createBufferSource();
+                        source.buffer = decodedBuffer;
+                        source.connect(ctx.destination);
+                        _currentSourceNode = source;
+                        source.onended = function() {
+                            if (playbackId === _currentPlaybackId) {
+                                window._isAudioPlaying = false;
+                                _currentSourceNode = null;
                             }
+                        };
+                        source.start(0);
+                        window._isAudioPlaying = true;
+                    } catch(err) {
+                        console.warn("[aiSpeakingAudio] AudioBufferSource start error:", err);
+                        playFallback(fullUrl, playbackId);
+                    }
+                }
+
+                function playFallback(mediaUrl, id) {
+                    if (id !== _currentPlaybackId) return;
+                    try {
+                        var audio = new Audio();
+                        audio.setAttribute("playsinline", "");
+                        audio.setAttribute("webkit-playsinline", "");
+                        audio.src = mediaUrl;
+                        _currentFallbackAudio = audio;
+                        self.audio = audio;
+                        audio.onended = function() {
+                            if (id === _currentPlaybackId) {
+                                window._isAudioPlaying = false;
+                                _currentFallbackAudio = null;
+                            }
+                        };
+                        audio.onerror = function(err) {
+                            console.warn("[aiSpeakingAudio] Fallback audio error:", err);
+                            if (id === _currentPlaybackId) {
+                                window._isAudioPlaying = false;
+                                _currentFallbackAudio = null;
+                            }
+                        };
+                        var p = audio.play();
+                        if (p !== undefined) {
+                            p.then(function() {
+                                if (id === _currentPlaybackId) {
+                                    window._isAudioPlaying = true;
+                                }
+                            }).catch(function(err) {
+                                console.warn("[aiSpeakingAudio] Fallback audio.play error:", err);
+                                if (id === _currentPlaybackId) {
+                                    window._isAudioPlaying = false;
+                                }
+                            });
+                        }
+                    } catch(e) {
+                        console.warn("[aiSpeakingAudio] Fallback creation error:", e);
+                        if (id === _currentPlaybackId) {
+                            window._isAudioPlaying = false;
+                        }
+                    }
+                }
+
+                if (ctx) {
+                    var proceed = function() {
+                        if (playbackId !== _currentPlaybackId) return;
+                        if (_audioBufferCache[fullUrl]) {
+                            playDecoded(_audioBufferCache[fullUrl]);
+                        } else if (typeof fetch === 'function') {
+                            fetch(fullUrl)
+                                .then(function(res) {
+                                    if (!res.ok) throw new Error("HTTP " + res.status);
+                                    return res.arrayBuffer();
+                                })
+                                .then(function(buf) {
+                                    return new Promise(function(res, rej) {
+                                        ctx.decodeAudioData(buf, res, rej);
+                                    });
+                                })
+                                .then(function(decoded) {
+                                    _audioBufferCache[fullUrl] = decoded;
+                                    playDecoded(decoded);
+                                })
+                                .catch(function(err) {
+                                    console.warn("[aiSpeakingAudio] WebAudio decode failed, falling back to HTMLAudioElement:", err);
+                                    playFallback(fullUrl, playbackId);
+                                });
+                        } else {
+                            playFallback(fullUrl, playbackId);
+                        }
+                    };
+
+                    if (ctx.state === 'suspended') {
+                        ctx.resume().then(function() {
+                            proceed();
+                        }).catch(function() {
+                            // Autoplay blocked by browser policy without user gesture
+                            window._isAudioPlaying = false;
                         });
+                    } else {
+                        proceed();
                     }
                 } else {
-                    // Fresh or different URL: assign src and play (do NOT call .load() as it triggers AbortError on iOS)
-                    try {
-                        audio.pause();
-                        audio.currentTime = 0;
-                    } catch(e) {}
-                    audio.src = fullUrl;
-                    window._isAudioPlaying = true;
-                    var playPromise = audio.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(function() {
-                            window._isAudioPlaying = true;
-                        }).catch(function(err) {
-                            if (err && err.name === 'AbortError') {
-                                setTimeout(function() {
-                                    if (self._currentUrl === fullUrl) {
-                                        audio.play().then(function() {
-                                            window._isAudioPlaying = true;
-                                        }).catch(finish);
-                                    }
-                                }, 50);
-                            } else {
-                                console.warn("[aiSpeakingAudio] Play error:", err);
-                                finish();
-                            }
-                        });
-                    }
+                    playFallback(fullUrl, playbackId);
                 }
             },
 
             stop: function() {
+                _currentPlaybackId++;
                 window._isAudioPlaying = false;
                 this._currentUrl = null;
-                var audio = getOrCreateAudioElement();
-                try {
-                    audio.pause();
-                    audio.currentTime = 0;
-                } catch(e){}
+                if (_currentSourceNode) {
+                    try {
+                        _currentSourceNode.stop(0);
+                        _currentSourceNode.disconnect();
+                    } catch(e) {}
+                    _currentSourceNode = null;
+                }
+                if (_currentFallbackAudio) {
+                    try {
+                        _currentFallbackAudio.pause();
+                        _currentFallbackAudio.currentTime = 0;
+                    } catch(e) {}
+                    _currentFallbackAudio = null;
+                }
             }
         };
 
@@ -1813,7 +1882,7 @@
 
                 // Synchronously unlock audio and resume any suspended audio contexts on iOS
                 try {
-                    unlockAudioContextAndElement();
+                    unlockAudioEngine();
                 } catch(e) {}
 
                 // Check hit on Mic permission buttons to trigger synchronous getUserMedia on iOS Chrome / Safari
