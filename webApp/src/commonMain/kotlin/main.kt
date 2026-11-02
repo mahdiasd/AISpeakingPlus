@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +18,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -39,10 +44,15 @@ import ir.aispeaking.sharedui.ic_logo
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.them.AppTheme
+import ir.aispeaking.web.IosPwaBanner
+import ir.aispeaking.web.IosPwaTutorialModal
 import ir.aispeaking.web.WebBrowserNavigation
+import ir.aispeaking.web.dismissIosPwaBanner
 import ir.aispeaking.web.exitWebApp
+import ir.aispeaking.web.isUserInAppBrowser
 import ir.aispeaking.web.setupWebAudioBridge
 import ir.aispeaking.web.setupWebVideoBridge
+import ir.aispeaking.web.shouldShowIosPwaBanner
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.context.GlobalContext
 
@@ -64,6 +74,10 @@ fun main() {
     ComposeViewport {
         AppTheme {
             val isDark = AppTheme.isDark
+            var showIosBanner by remember { mutableStateOf(shouldShowIosPwaBanner()) }
+            var showIosTutorialModal by remember { mutableStateOf(false) }
+            val isInApp = remember { isUserInAppBrowser() }
+
             // Apple-style ambient backdrop shown around the phone frame on large screens.
             val backdropBrush = if (isDark) {
                 Brush.radialGradient(
@@ -115,10 +129,22 @@ fun main() {
                                     .clip(frame)
                                     .background(Game.Ink)
                             ) {
-                                AppNavigation(
-                                    onBackStackCreated = { WebBrowserNavigation(it) },
-                                    onExitApp = { exitWebApp() }
-                                )
+                                Column(modifier = Modifier.fillMaxSize()) {
+                                    IosPwaBanner(
+                                        visible = showIosBanner,
+                                        onOpenGuide = { showIosTutorialModal = true },
+                                        onDismiss = {
+                                            showIosBanner = false
+                                            dismissIosPwaBanner()
+                                        }
+                                    )
+                                    Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                                        AppNavigation(
+                                            onBackStackCreated = { WebBrowserNavigation(it) },
+                                            onExitApp = { exitWebApp() }
+                                        )
+                                    }
+                                }
                             }
 
                             if (showSidePanel) {
@@ -132,12 +158,32 @@ fun main() {
                                 .fillMaxSize()
                                 .background(Game.Ink)
                         ) {
-                            AppNavigation(
-                                onBackStackCreated = { WebBrowserNavigation(it) },
-                                onExitApp = { exitWebApp() }
-                            )
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                IosPwaBanner(
+                                    visible = showIosBanner,
+                                    onOpenGuide = { showIosTutorialModal = true },
+                                    onDismiss = {
+                                        showIosBanner = false
+                                        dismissIosPwaBanner()
+                                    }
+                                )
+                                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                                    AppNavigation(
+                                        onBackStackCreated = { WebBrowserNavigation(it) },
+                                        onExitApp = { exitWebApp() }
+                                    )
+                                }
+                            }
                         }
                     }
+                }
+
+                if (showIosTutorialModal) {
+                    IosPwaTutorialModal(
+                        visible = showIosTutorialModal,
+                        isInAppBrowser = isInApp,
+                        onDismiss = { showIosTutorialModal = false }
+                    )
                 }
             }
         }
