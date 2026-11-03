@@ -31,7 +31,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -402,6 +401,7 @@ private fun CompactTranscriptCapsule(
                 .clip(shape)
                 .background(AppleChatTheme.GlassPanelRaised)
                 .border(1.dp, AppleChatTheme.SpecularStrokeBrush, shape)
+                .applePressEffect(enabled = enabled, targetScale = 0.985f, onClick = { if (enabled) onEdit() })
                 .padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -592,10 +592,9 @@ private fun AppleRecordPill(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         if (isModelSpeaking) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
-                strokeWidth = 2.dp,
-                color = AppleChatTheme.PrimaryAzure.copy(alpha = 0.8f)
+            ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator(
+                size = 16.dp,
+                color = AppleChatTheme.PrimaryAzure.copy(alpha = 0.85f)
             )
         } else {
             Icon(
@@ -673,9 +672,8 @@ private fun AppleHintButton(
         contentAlignment = Alignment.Center
     ) {
         if (isRequesting) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
-                strokeWidth = 2.dp,
+            ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator(
+                size = 16.dp,
                 color = AppleChatTheme.Gold
             )
         } else {

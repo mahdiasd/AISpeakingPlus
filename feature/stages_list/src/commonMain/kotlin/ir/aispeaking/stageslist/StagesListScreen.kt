@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -128,10 +127,9 @@ fun StagesListScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            CircularProgressIndicator(
+                            ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator(
                                 color = Game.Gold,
-                                strokeWidth = 3.dp,
-                                modifier = Modifier.size(40.dp)
+                                size = 40.dp
                             )
                             GameText(text = "در حال بارگذاری مرحله‌ها…", size = 14.sp, color = Game.TextSecondary)
                         }

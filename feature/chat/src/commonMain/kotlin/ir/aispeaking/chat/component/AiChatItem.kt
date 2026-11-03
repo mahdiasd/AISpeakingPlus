@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -52,8 +53,8 @@ import ir.aispeaking.domain.model.chat.Chat
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_copy
 import ir.aispeaking.sharedui.ic_done
+import ir.aispeaking.sharedui.ic_pause
 import ir.aispeaking.sharedui.ic_play
-import ir.aispeaking.sharedui.ic_speaker_off
 import ir.aispeaking.sharedui.ic_translate
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameAvatar
@@ -238,31 +239,40 @@ private fun AiVoiceChip(
 
     val transition = rememberInfiniteTransition(label = "audio_wave_pulse")
     val bar1 by transition.animateFloat(
-        initialValue = 0.3f,
+        initialValue = 0.35f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(450, easing = FastOutSlowInEasing),
+            animation = tween(420, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "bar1"
     )
     val bar2 by transition.animateFloat(
         initialValue = 0.9f,
-        targetValue = 0.2f,
+        targetValue = 0.25f,
         animationSpec = infiniteRepeatable(
-            animation = tween(380, easing = FastOutSlowInEasing),
+            animation = tween(360, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "bar2"
     )
     val bar3 by transition.animateFloat(
-        initialValue = 0.4f,
+        initialValue = 0.45f,
         targetValue = 0.95f,
         animationSpec = infiniteRepeatable(
-            animation = tween(420, easing = FastOutSlowInEasing),
+            animation = tween(480, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "bar3"
+    )
+    val bar4 by transition.animateFloat(
+        initialValue = 0.75f,
+        targetValue = 0.3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bar4"
     )
 
     val clickAction: (() -> Unit)? = when {
@@ -278,37 +288,38 @@ private fun AiVoiceChip(
             .clip(shape)
             .background(containerBg)
             .border(if (isPlaying) 1.5.dp else 1.dp, strokeColor, shape)
-            .defaultMinSize(minWidth = 104.dp, minHeight = 32.dp)
-            .padding(horizontal = 12.dp, vertical = 7.dp),
+            .defaultMinSize(minWidth = if (isPlaying) 76.dp else 98.dp, minHeight = 32.dp)
+            .padding(horizontal = if (isPlaying) 14.dp else 11.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
         if (isPlaying) {
             Icon(
-                painter = painterResource(Res.drawable.ic_speaker_off),
+                painter = painterResource(Res.drawable.ic_pause),
                 contentDescription = "توقف صدا",
                 tint = accent,
                 modifier = Modifier.size(15.dp)
             )
-            Spacer(Modifier.width(5.dp))
-            GameText(
-                text = "پخش صدا",
-                size = 13.sp,
-                color = accent,
-                bold = true
-            )
-            Spacer(Modifier.width(5.dp))
+            Spacer(Modifier.width(8.dp))
             Row(
-                modifier = Modifier.height(13.dp),
+                modifier = Modifier.height(15.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(1.5.dp)
+                horizontalArrangement = Arrangement.spacedBy(2.5.dp)
             ) {
-                listOf(bar1, bar2, bar3).forEach { barVal ->
+                listOf(bar1, bar2, bar3, bar4, bar2).forEach { barVal ->
                     Box(
                         modifier = Modifier
-                            .width(2.dp)
-                            .height((3 + 9 * barVal).dp)
-                            .background(accent, RoundedCornerShape(1.dp))
+                            .width(2.5.dp)
+                            .height((4 + 11 * barVal).dp)
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        accent,
+                                        AppleChatTheme.PrimaryIndigo
+                                    )
+                                ),
+                                RoundedCornerShape(1.5.dp)
+                            )
                     )
                 }
             }

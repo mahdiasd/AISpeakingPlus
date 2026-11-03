@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -457,7 +456,10 @@ private fun CenterMessage(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             if (loading) {
-                CircularProgressIndicator(color = Game.Gold, strokeWidth = 3.dp, modifier = Modifier.size(44.dp))
+                ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator(
+                    color = Game.Gold,
+                    size = 42.dp
+                )
             }
             GameText(text = text, size = 15.sp, lineHeight = 24.sp, color = Game.TextSecondary, align = TextAlign.Center)
             if (actionText != null) {
