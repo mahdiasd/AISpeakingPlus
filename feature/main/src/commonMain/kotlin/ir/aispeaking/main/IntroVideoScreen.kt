@@ -62,12 +62,25 @@ fun IntroVideoScreen(
 ) {
     var isPlayingVideo by remember { mutableStateOf(false) }
 
+    val handleFinished: () -> Unit = remember(onFinished) {
+        {
+            isPlayingVideo = false
+            onFinished()
+        }
+    }
+    val handleSkip: () -> Unit = remember(onSkip) {
+        {
+            isPlayingVideo = false
+            onSkip()
+        }
+    }
+
     if (isPlayingVideo) {
         DisposableEffect(Unit) {
             VideoPlayerBridgeHolder.bridge?.play(
                 url = videoUrl,
-                onEnded = onFinished,
-                onSkip = onSkip
+                onEnded = handleFinished,
+                onSkip = handleSkip
             )
             onDispose {
                 VideoPlayerBridgeHolder.bridge?.stop()
@@ -106,7 +119,7 @@ fun IntroVideoScreen(
                         )
                         GameButton(
                             text = "رد کردن و ورود به مراحل ›",
-                            onClick = onSkip,
+                            onClick = handleSkip,
                             style = GameButtonStyle.Glass,
                             height = 38.dp,
                             textSize = 13.sp

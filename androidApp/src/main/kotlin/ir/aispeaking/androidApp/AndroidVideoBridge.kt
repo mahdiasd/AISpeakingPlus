@@ -17,6 +17,7 @@ import android.widget.FrameLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.VideoView
+import co.touchlab.kermit.Logger
 import ir.aispeaking.network.resolveMediaUrl
 import ir.aispeaking.sharedui.ui.video.VideoPlayerBridge
 import ir.aispeaking.sharedui.ui.video.VideoPlayerBridgeHolder
@@ -25,9 +26,18 @@ class AndroidVideoBridge(
     private val activity: Activity
 ) : VideoPlayerBridge {
 
+    private val logger = Logger.withTag("AndroidVideoBridge")
     private var currentDialog: Dialog? = null
     private var currentVideoView: VideoView? = null
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    private fun runOnMain(block: () -> Unit) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            block()
+        } else {
+            mainHandler.post(block)
+        }
+    }
 
     fun attach() {
         VideoPlayerBridgeHolder.bridge = this
@@ -40,16 +50,40 @@ class AndroidVideoBridge(
         }
     }
 
+    private fun stopInternal() {
+        try {
+            currentVideoView?.stopPlayback()
+        } catch (e: Throwable) {
+            logger.w(e) { "Error stopping VideoView playback" }
+        }
+        currentVideoView = null
+
+        try {
+            if (currentDialog?.isShowing == true) {
+                currentDialog?.dismiss()
+            }
+        } catch (e: Throwable) {
+            logger.w(e) { "Error dismissing video Dialog" }
+        }
+        currentDialog = null
+    }
+
     override fun play(url: String, onEnded: () -> Unit, onSkip: () -> Unit) {
-        mainHandler.post {
-            if (activity.isFinishing || activity.isDestroyed) return@post
-            stop()
+        runOnMain {
+            if (activity.isFinishing || activity.isDestroyed) return@runOnMain
+            stopInternal()
 
             val fullUrl = resolveMediaUrl(url)
+            logger.i { "Playing video: url=$url, resolved fullUrl=$fullUrl" }
 
             val dialog = Dialog(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen).apply {
                 requestWindowFeature(Window.FEATURE_NO_TITLE)
-                setCancelable(false)
+                setCancelable(true)
+                setOnCancelListener {
+                    logger.i { "Video dialog cancelled via back button" }
+                    stopInternal()
+                    onSkip()
+                }
             }
 
             val rootLayout = FrameLayout(activity).apply {
@@ -66,6 +100,7 @@ class AndroidVideoBridge(
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     Gravity.CENTER
                 )
+                keepScreenOn = true
             }
             rootLayout.addView(videoView)
 
@@ -104,32 +139,34 @@ class AndroidVideoBridge(
                     setMargins(dp16, dp36, dp16, dp16)
                 }
                 setOnClickListener {
-                    stop()
+                    logger.i { "Video skipped by user" }
+                    stopInternal()
                     onSkip()
                 }
             }
             rootLayout.addView(skipButton)
 
             videoView.setOnPreparedListener { mp ->
+                logger.i { "Video prepared: duration=${mp.duration}ms, starting playback" }
                 progressBar.visibility = View.GONE
                 mp.isLooping = false
                 videoView.start()
             }
 
             videoView.setOnCompletionListener {
-                stop()
+                logger.i { "Video playback completed" }
+                stopInternal()
                 onEnded()
             }
 
-            videoView.setOnErrorListener { _, _, _ ->
-                // On error, safely dismiss and allow the user to continue via onSkip
-                stop()
+            videoView.setOnErrorListener { _, what, extra ->
+                logger.e { "Video playback error: what=$what, extra=$extra" }
+                stopInternal()
                 onSkip()
                 true
             }
 
             try {
-                videoView.setVideoURI(Uri.parse(fullUrl))
                 dialog.setContentView(rootLayout)
                 dialog.window?.let { win ->
                     win.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
@@ -139,26 +176,19 @@ class AndroidVideoBridge(
 
                 currentDialog = dialog
                 currentVideoView = videoView
-            } catch (_: Exception) {
-                stop()
+
+                videoView.setVideoURI(Uri.parse(fullUrl))
+            } catch (e: Exception) {
+                logger.e(e) { "Failed to setup and show video dialog" }
+                stopInternal()
                 onSkip()
             }
         }
     }
 
     override fun stop() {
-        mainHandler.post {
-            try {
-                currentVideoView?.stopPlayback()
-            } catch (_: Throwable) {}
-            currentVideoView = null
-
-            try {
-                if (currentDialog?.isShowing == true) {
-                    currentDialog?.dismiss()
-                }
-            } catch (_: Throwable) {}
-            currentDialog = null
+        runOnMain {
+            stopInternal()
         }
     }
 }
