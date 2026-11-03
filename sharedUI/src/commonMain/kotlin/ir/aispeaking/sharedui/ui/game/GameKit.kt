@@ -40,7 +40,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -236,10 +235,11 @@ fun GameButton(
             modifier = Modifier.padding(horizontal = 16.dp),
         ) {
             if (loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
+                ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator(
+                    size = 18.dp,
                     strokeWidth = 2.dp,
                     color = content,
+                    trackColor = content.copy(alpha = 0.2f)
                 )
             } else if (icon != null) {
                 Icon(

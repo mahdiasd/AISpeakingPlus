@@ -25,7 +25,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -169,7 +168,10 @@ fun ProfileScreen(
                             verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
                             val accentColor = if (isDark) Color(0xFF0A84FF) else Color(0xFF007AFF)
-                            CircularProgressIndicator(color = accentColor, modifier = Modifier.size(38.dp))
+                            ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator(
+                                color = accentColor,
+                                size = 38.dp
+                            )
                             GameText(
                                 text = "در حال دریافت اطلاعات کاربر…",
                                 size = 13.sp,

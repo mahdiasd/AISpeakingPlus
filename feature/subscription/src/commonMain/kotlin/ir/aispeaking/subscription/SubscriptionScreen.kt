@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -123,7 +122,10 @@ fun SubscriptionScreen(
                             .weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = Game.Gold, strokeWidth = 3.dp)
+                        ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator(
+                            color = Game.Gold,
+                            size = 40.dp
+                        )
                     }
                 } else if (uiState.errorMessage != null && uiState.plans.isEmpty()) {
                     Box(

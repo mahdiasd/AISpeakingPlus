@@ -13,10 +13,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -25,11 +27,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +42,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -134,6 +137,24 @@ fun ChatScreen(
             // Throttle scroll updates during streaming so Skiko Canvas maintains a smooth 60fps on mobile
             delay(120)
             listState.scrollToItem(bottomAnchorIndex, scrollOffset = 10000)
+        }
+    }
+
+    val imeInsets = WindowInsets.ime
+    val density = LocalDensity.current
+    val imeBottom by remember { derivedStateOf { imeInsets.getBottom(density) } }
+
+    LaunchedEffect(imeBottom) {
+        if (imeBottom > 0 && uiState.chats.isNotEmpty()) {
+            delay(150)
+            listState.animateScrollToItem(bottomAnchorIndex, scrollOffset = 10000)
+        }
+    }
+
+    LaunchedEffect(uiState.inputMode) {
+        if (uiState.inputMode == ChatInputMode.TEXT && uiState.chats.isNotEmpty()) {
+            delay(200)
+            listState.animateScrollToItem(bottomAnchorIndex, scrollOffset = 10000)
         }
     }
 
@@ -434,9 +455,8 @@ private fun LoadingState(modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                strokeWidth = 2.5.dp,
+            ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator(
+                size = 20.dp,
                 color = AppleChatTheme.PrimaryAzure
             )
             GameText(

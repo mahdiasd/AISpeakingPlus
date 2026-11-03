@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -84,13 +83,10 @@ fun AppAsyncImage(
         loading = {
             it.dLog(tag = "Coil3", plusTag = "loading")
             imageState = ImageState.Loading
-            Box(modifier = Modifier.matchParentSize()) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.Center),
-                    color = AppTheme.colors.primary,
-                    strokeWidth = 2.dp
+            Box(modifier = Modifier.matchParentSize(), contentAlignment = Alignment.Center) {
+                ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator(
+                    size = 24.dp,
+                    color = AppTheme.colors.primary
                 )
             }
         },
