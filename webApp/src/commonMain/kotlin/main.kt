@@ -54,6 +54,7 @@ import ir.aispeaking.web.dismissIosA2hsBanner
 import ir.aispeaking.web.dismissIosChromeBanner
 import ir.aispeaking.web.exitWebApp
 import ir.aispeaking.web.isUserInAppBrowser
+import ir.aispeaking.web.setupWebAnalyticsBridge
 import ir.aispeaking.web.setupWebAudioBridge
 import ir.aispeaking.web.setupWebVideoBridge
 import ir.aispeaking.web.shouldShowIosA2hsBanner
@@ -64,6 +65,10 @@ import org.koin.core.context.GlobalContext
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     initKoin()
+    try {
+        setupWebAnalyticsBridge()
+    } catch (_: Throwable) {}
+
     try {
         val audioController = (GlobalContext.get().getOrNull<StageAudioController>() as? DefaultStageAudioController)
             ?: GlobalContext.get().getOrNull<DefaultStageAudioController>()

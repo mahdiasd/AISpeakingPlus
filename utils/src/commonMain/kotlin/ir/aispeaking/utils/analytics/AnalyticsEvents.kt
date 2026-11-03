@@ -21,6 +21,8 @@ object AnalyticsEvents {
     const val EVENT_SUBSCRIPTION_PURCHASE_SUCCESS = "subscription_purchase_success"
     const val EVENT_SUBSCRIPTION_PURCHASE_FAILED = "subscription_purchase_failed"
     const val EVENT_LEADERBOARD_OPENED = "leaderboard_opened"
+    const val EVENT_STT_RECORDING_STARTED = "stt_recording_started"
+    const val EVENT_STT_FALLBACK_TRIGGERED = "stt_fallback_triggered"
 
     // Parameters
     const val PARAM_SCREEN_NAME = "screen_name"
@@ -42,6 +44,13 @@ object AnalyticsEvents {
     const val PARAM_MARKET = "market"
     const val PARAM_ERROR = "error"
     const val PARAM_INPUT_MODE = "input_mode"
+    const val PARAM_STT_ENGINE = "stt_engine"
+    const val PARAM_FALLBACK_REASON = "fallback_reason"
+
+    // Values for PARAM_STT_ENGINE
+    const val STT_ENGINE_NATIVE = "native"
+    const val STT_ENGINE_WEBSOCKET = "websocket"
+    const val STT_ENGINE_FALLBACK = "fallback"
 
     // User properties
     const val USER_PROP_PLATFORM = "platform"
@@ -166,4 +175,31 @@ fun AnalyticsTracker.logStageLockedClick(
             AnalyticsEvents.PARAM_LOCK_STATUS to lockStatus
         )
     )
+}
+
+fun AnalyticsTracker.logSttRecordingStarted(
+    sttEngine: String,
+    stageId: String? = null
+) {
+    val params = mutableMapOf<String, Any?>(
+        AnalyticsEvents.PARAM_STT_ENGINE to sttEngine
+    )
+    if (!stageId.isNullOrBlank()) {
+        params[AnalyticsEvents.PARAM_STAGE_ID] = stageId
+    }
+    logEvent(AnalyticsEvents.EVENT_STT_RECORDING_STARTED, params)
+}
+
+fun AnalyticsTracker.logSttFallbackTriggered(
+    reason: String? = null,
+    stageId: String? = null
+) {
+    val params = mutableMapOf<String, Any?>()
+    if (!reason.isNullOrBlank()) {
+        params[AnalyticsEvents.PARAM_FALLBACK_REASON] = reason
+    }
+    if (!stageId.isNullOrBlank()) {
+        params[AnalyticsEvents.PARAM_STAGE_ID] = stageId
+    }
+    logEvent(AnalyticsEvents.EVENT_STT_FALLBACK_TRIGGERED, params)
 }

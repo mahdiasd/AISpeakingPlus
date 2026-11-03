@@ -854,7 +854,7 @@
                 // On iOS WebKit, SpeechRecognition is frequently unavailable, blocked, or hangs on cloud dictation.
                 // Fall back directly to real-time Web Audio API capture, streaming PCM to server-side STT.
                 if (this._isIOS) {
-                    this._startAudioRecordingFallback();
+                    this._startAudioRecordingFallback('ios_webkit');
                     return;
                 }
 
@@ -863,7 +863,7 @@
                     this._startRecognitionInstance();
                 } else {
                     console.info("[aiSpeakingSpeech] SpeechRecognition not available in this browser. Using audio capture fallback.");
-                    this._startAudioRecordingFallback();
+                    this._startAudioRecordingFallback('unsupported_browser');
                 }
             },
 
@@ -872,7 +872,7 @@
 
                 var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (!SpeechRec) {
-                    this._startAudioRecordingFallback();
+                    this._startAudioRecordingFallback('unsupported_browser');
                     return;
                 }
 
@@ -938,7 +938,7 @@
 
                     if (err === 'audio-capture') {
                         console.warn("[aiSpeakingSpeech] audio-capture error in SpeechRecognition. Falling back to audio recording.");
-                        self._startAudioRecordingFallback();
+                        self._startAudioRecordingFallback('audio_capture_error');
                         return;
                     }
 
@@ -955,13 +955,13 @@
 
                     if (err === 'network') {
                         console.warn("[aiSpeakingSpeech] Network error in SpeechRecognition. Falling back to audio recording.");
-                        self._startAudioRecordingFallback();
+                        self._startAudioRecordingFallback('network_error');
                         return;
                     }
 
                     self._consecutiveErrors++;
                     if (self._consecutiveErrors > 4) {
-                        self._startAudioRecordingFallback();
+                        self._startAudioRecordingFallback('consecutive_errors');
                     }
                 };
 
@@ -1003,14 +1003,21 @@
                             return;
                         } catch(e) {}
                     }
-                    this._startAudioRecordingFallback();
+                    this._startAudioRecordingFallback('start_failed');
                 }
             },
 
-            _startAudioRecordingFallback: function() {
+            _startAudioRecordingFallback: function(reason) {
                 var self = this;
                 self._usingFallback = true;
                 self._fallbackPcmChunks = [];
+
+                if (window.aiSpeakingAnalytics && typeof window.aiSpeakingAnalytics.logEvent === 'function') {
+                    window.aiSpeakingAnalytics.logEvent('stt_fallback_triggered', {
+                        stt_engine: 'fallback',
+                        fallback_reason: reason || 'recognition_failed'
+                    });
+                }
 
                 if (self.recognition) {
                     try {
@@ -1485,11 +1492,46 @@
         try { window.aiSpeakingPermission.check(); } catch(e) {}
     </script>
 
-    <!-- Firebase Web SDK Compat scripts for Cloud Messaging -->
+    <!-- Firebase Web SDK Compat scripts for Cloud Messaging & Analytics -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
 
     <script>
+        window.aiSpeakingAnalytics = {
+            logEvent: function(name, paramsJson) {
+                try {
+                    var params = {};
+                    if (typeof paramsJson === 'string' && paramsJson.length > 0) {
+                        try { params = JSON.parse(paramsJson); } catch(_) {}
+                    } else if (typeof paramsJson === 'object' && paramsJson !== null) {
+                        params = paramsJson;
+                    }
+                    if (typeof firebase !== 'undefined' && typeof firebase.analytics === 'function') {
+                        firebase.analytics().logEvent(name, params);
+                    }
+                } catch(e) {
+                    console.warn('[Analytics Web] logEvent error:', e);
+                }
+            },
+            setUserId: function(userId) {
+                try {
+                    if (typeof firebase !== 'undefined' && typeof firebase.analytics === 'function') {
+                        firebase.analytics().setUserId(userId);
+                    }
+                } catch(e) {}
+            },
+            setUserProperty: function(name, value) {
+                try {
+                    if (typeof firebase !== 'undefined' && typeof firebase.analytics === 'function') {
+                        var props = {};
+                        props[name] = value;
+                        firebase.analytics().setUserProperties(props);
+                    }
+                } catch(e) {}
+            }
+        };
+
         window.aiSpeakingPush = {
             fcmToken: null,
             messaging: null,

@@ -182,7 +182,10 @@ class ChatViewModelSttTest {
     }
 
     private class FakeAnalyticsTracker : AnalyticsTracker {
-        override fun logEvent(name: String, params: Map<String, Any?>) {}
+        val loggedEvents = mutableListOf<Pair<String, Map<String, Any?>>>()
+        override fun logEvent(name: String, params: Map<String, Any?>) {
+            loggedEvents.add(name to params)
+        }
         override fun setUserId(userId: String?) {}
         override fun setUserProperty(name: String, value: String?) {}
     }
@@ -190,6 +193,7 @@ class ChatViewModelSttTest {
     private lateinit var sttRepo: FakeSttRepo
     private lateinit var stageRepo: FakeStageRepo
     private lateinit var audioController: DefaultStageAudioController
+    private lateinit var analyticsTracker: FakeAnalyticsTracker
     private lateinit var viewModel: ChatViewModel
 
     @BeforeTest
@@ -198,6 +202,7 @@ class ChatViewModelSttTest {
         sttRepo = FakeSttRepo()
         stageRepo = FakeStageRepo()
         audioController = DefaultStageAudioController()
+        analyticsTracker = FakeAnalyticsTracker()
         val authRepo = FakeAuthRepo()
         val userProfileRepo = FakeUserProfileRepo()
 
@@ -213,7 +218,7 @@ class ChatViewModelSttTest {
             sendAudioChunkUseCase = SendAudioChunkUseCase(sttRepo),
             closeSttSessionUseCase = CloseSttSessionUseCase(sttRepo),
             sendStopSttUseCase = SendStopSttUseCase(sttRepo),
-            analyticsTracker = FakeAnalyticsTracker(),
+            analyticsTracker = analyticsTracker,
             crashReporter = DefaultCrashReporter()
         )
     }
@@ -474,5 +479,51 @@ class ChatViewModelSttTest {
         advanceUntilIdle()
         assertFalse(viewModel.uiState.value.isModelSpeaking)
         assertEquals("", viewModel.uiState.value.messageText)
+    }
+
+    @Test
+    fun testSttRecordingStartedLogsWebsocketWhenNoNativeSpeechRecognition() = runTest {
+        audioController.onPlatformHasNativeSpeechRecognition = { false }
+
+        viewModel.toggleRecording(true)
+        runCurrent()
+
+        val event = analyticsTracker.loggedEvents.find { it.first == ir.aispeaking.utils.analytics.AnalyticsEvents.EVENT_STT_RECORDING_STARTED }
+        assertNotNull(event, "EVENT_STT_RECORDING_STARTED should be logged")
+        assertEquals(
+            ir.aispeaking.utils.analytics.AnalyticsEvents.STT_ENGINE_WEBSOCKET,
+            event.second[ir.aispeaking.utils.analytics.AnalyticsEvents.PARAM_STT_ENGINE]
+        )
+    }
+
+    @Test
+    fun testSttRecordingStartedLogsNativeWhenHasNativeSpeechRecognition() = runTest {
+        audioController.onPlatformHasNativeSpeechRecognition = { true }
+
+        viewModel.toggleRecording(true)
+        runCurrent()
+
+        val event = analyticsTracker.loggedEvents.find { it.first == ir.aispeaking.utils.analytics.AnalyticsEvents.EVENT_STT_RECORDING_STARTED }
+        assertNotNull(event, "EVENT_STT_RECORDING_STARTED should be logged")
+        assertEquals(
+            ir.aispeaking.utils.analytics.AnalyticsEvents.STT_ENGINE_NATIVE,
+            event.second[ir.aispeaking.utils.analytics.AnalyticsEvents.PARAM_STT_ENGINE]
+        )
+    }
+
+    @Test
+    fun testSendMessageIncludesSttEngineInAnalytics() = runTest {
+        audioController.onPlatformHasNativeSpeechRecognition = { true }
+        viewModel.onMessageTextChanged("Hello there")
+
+        viewModel.sendMessage()
+        runCurrent()
+
+        val event = analyticsTracker.loggedEvents.find { it.first == ir.aispeaking.utils.analytics.AnalyticsEvents.EVENT_CHAT_MESSAGE_SENT }
+        assertNotNull(event, "EVENT_CHAT_MESSAGE_SENT should be logged")
+        assertEquals(
+            ir.aispeaking.utils.analytics.AnalyticsEvents.STT_ENGINE_NATIVE,
+            event.second[ir.aispeaking.utils.analytics.AnalyticsEvents.PARAM_STT_ENGINE]
+        )
     }
 }

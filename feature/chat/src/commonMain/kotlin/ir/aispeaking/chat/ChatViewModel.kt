@@ -34,6 +34,7 @@ import ir.aispeaking.utils.analytics.AnalyticsTracker
 import ir.aispeaking.utils.analytics.AnalyticsEvents
 import ir.aispeaking.utils.analytics.logStageOpened
 import ir.aispeaking.utils.analytics.logStageCompleted
+import ir.aispeaking.utils.analytics.logSttRecordingStarted
 import ir.aispeaking.utils.crashlytics.CrashReporter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -425,6 +426,11 @@ class ChatViewModel(
         }
 
         val hasNativeStt = audioController.hasNativeSpeechRecognition()
+        val sttEngine = if (hasNativeStt) AnalyticsEvents.STT_ENGINE_NATIVE else AnalyticsEvents.STT_ENGINE_WEBSOCKET
+        analyticsTracker.logSttRecordingStarted(
+            sttEngine = sttEngine,
+            stageId = currentStageId
+        )
 
         if (!hasNativeStt) {
             audioSenderJob?.cancel()
@@ -585,12 +591,19 @@ class ChatViewModel(
         // Prime the audio player synchronously during the user click to satisfy iOS WebKit autoplay policy
         audioController.primeAudioPlayback()
 
+        val sttEngine = if (stateSnapshot.inputMode == ChatInputMode.VOICE) {
+            if (audioController.hasNativeSpeechRecognition()) AnalyticsEvents.STT_ENGINE_NATIVE else AnalyticsEvents.STT_ENGINE_WEBSOCKET
+        } else {
+            "none"
+        }
+
         analyticsTracker.logEvent(
             AnalyticsEvents.EVENT_CHAT_MESSAGE_SENT,
             mapOf(
                 AnalyticsEvents.PARAM_STAGE_ID to currentStageId,
                 AnalyticsEvents.PARAM_INPUT_MODE to stateSnapshot.inputMode.name,
-                AnalyticsEvents.PARAM_TURNS_COUNT to stateSnapshot.turnsCount
+                AnalyticsEvents.PARAM_TURNS_COUNT to stateSnapshot.turnsCount,
+                AnalyticsEvents.PARAM_STT_ENGINE to sttEngine
             )
         )
 
