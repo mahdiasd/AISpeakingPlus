@@ -59,6 +59,7 @@ data class ChatUiState(
     val inputMode: ChatInputMode = ChatInputMode.VOICE,
     val messageText: String = "",
     val isRecording: Boolean = false,
+    val isRecordingPreparing: Boolean = false,
     val isModelSpeaking: Boolean = false,
     val isRequestingHint: Boolean = false,
     val hintsUsedCount: Int = 0,
@@ -409,7 +410,7 @@ class ChatViewModel(
             startRecordingInternal()
         } else {
             stopRecordingSession()
-            _uiState.update { it.copy(isRecording = false) }
+            _uiState.update { it.copy(isRecording = false, isRecordingPreparing = false) }
         }
     }
 
@@ -419,10 +420,22 @@ class ChatViewModel(
         _uiState.update {
             it.copy(
                 isRecording = true,
+                isRecordingPreparing = true,
                 messageText = "",
                 sttError = null,
                 hintError = null
             )
+        }
+
+        audioController.onRecordingReady = {
+            _uiState.update { it.copy(isRecordingPreparing = false) }
+        }
+
+        viewModelScope.launch {
+            delay(1500)
+            if (_uiState.value.isRecording && _uiState.value.isRecordingPreparing) {
+                _uiState.update { it.copy(isRecordingPreparing = false) }
+            }
         }
 
         val hasNativeStt = audioController.hasNativeSpeechRecognition()
@@ -494,6 +507,7 @@ class ChatViewModel(
                                 _uiState.update {
                                     it.copy(
                                         isRecording = false,
+                                        isRecordingPreparing = false,
                                         sttError = errorMsg,
                                         hintError = errorMsg
                                     )
@@ -527,7 +541,7 @@ class ChatViewModel(
             onSilenceDetected = {
                 // Silence detected -> auto pause & stop recording
                 stopRecordingSession()
-                _uiState.update { it.copy(isRecording = false) }
+                _uiState.update { it.copy(isRecording = false, isRecordingPreparing = false) }
             }
         )
     }
@@ -565,7 +579,7 @@ class ChatViewModel(
         if (_uiState.value.isModelSpeaking || _uiState.value.isSubmittingEvaluation) return
         if (mode == ChatInputMode.TEXT && _uiState.value.isRecording) {
             stopRecordingSession()
-            _uiState.update { it.copy(isRecording = false, inputMode = mode) }
+            _uiState.update { it.copy(isRecording = false, isRecordingPreparing = false, inputMode = mode) }
         } else {
             _uiState.update { it.copy(inputMode = mode) }
         }
@@ -608,7 +622,7 @@ class ChatViewModel(
         )
 
         stopRecordingSession()
-        _uiState.update { it.copy(isRecording = false) }
+        _uiState.update { it.copy(isRecording = false, isRecordingPreparing = false) }
 
         val userUid = "user_${Clock.System.now().toEpochMilliseconds()}"
         val userChat = Chat.User(

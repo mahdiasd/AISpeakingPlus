@@ -139,6 +139,9 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
                     return@launch
                 }
 
+                // Microphone is actively streaming audio buffers
+                controller.notifyRecordingReady()
+
                 // 2. Active recording loop: drain PCM chunks and stream to controller
                 while (isActive) {
                     if (!jsIsSpeechRecording()) {

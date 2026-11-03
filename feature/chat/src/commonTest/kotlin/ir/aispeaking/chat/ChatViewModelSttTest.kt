@@ -526,4 +526,27 @@ class ChatViewModelSttTest {
             event.second[ir.aispeaking.utils.analytics.AnalyticsEvents.PARAM_STT_ENGINE]
         )
     }
+
+    @Test
+    fun testRecordingStartsInPreparingStateAndTransitionsOnReady() = runTest {
+        viewModel.toggleRecording(true)
+        runCurrent()
+
+        assertTrue(viewModel.uiState.value.isRecording, "Recording should be active")
+        assertTrue(viewModel.uiState.value.isRecordingPreparing, "Should start in preparing state")
+
+        // Trigger recording ready
+        audioController.notifyRecordingReady()
+        runCurrent()
+
+        assertTrue(viewModel.uiState.value.isRecording, "Recording should remain active")
+        assertFalse(viewModel.uiState.value.isRecordingPreparing, "Should exit preparing state once ready")
+
+        // Stop recording
+        viewModel.toggleRecording(false)
+        runCurrent()
+
+        assertFalse(viewModel.uiState.value.isRecording)
+        assertFalse(viewModel.uiState.value.isRecordingPreparing)
+    }
 }

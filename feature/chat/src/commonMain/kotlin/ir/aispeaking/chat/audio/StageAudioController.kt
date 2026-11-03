@@ -14,6 +14,11 @@ interface StageAudioController {
     fun preloadVoice(url: String?) {}
     fun primeAudioPlayback() {}
 
+    var onRecordingReady: (() -> Unit)?
+        get() = null
+        set(_) {}
+    fun notifyRecordingReady() {}
+
     fun startRecording(
         onSpeechRecognized: (String) -> Unit,
         onSilenceDetected: () -> Unit
@@ -34,6 +39,11 @@ interface StageAudioController {
 @Single
 class DefaultStageAudioController : StageAudioController {
     override var onAudioChunkCaptured: ((ByteArray) -> Unit)? = null
+    override var onRecordingReady: (() -> Unit)? = null
+
+    override fun notifyRecordingReady() {
+        onRecordingReady?.invoke()
+    }
 
     private var isPlayingState = false
     private var isRecordingState = false
@@ -118,8 +128,10 @@ class DefaultStageAudioController : StageAudioController {
         onSilenceDetected: () -> Unit
     ) {
         val savedChunkCallback = onAudioChunkCaptured
+        val savedReadyCallback = onRecordingReady
         stopRecording()
         onAudioChunkCaptured = savedChunkCallback
+        onRecordingReady = savedReadyCallback
         isRecordingState = true
         currentOnSilenceDetected = onSilenceDetected
 
@@ -162,6 +174,7 @@ class DefaultStageAudioController : StageAudioController {
         silenceJob = null
         currentOnSilenceDetected = null
         onAudioChunkCaptured = null
+        onRecordingReady = null
         onPlatformStopRecording?.invoke()
     }
 

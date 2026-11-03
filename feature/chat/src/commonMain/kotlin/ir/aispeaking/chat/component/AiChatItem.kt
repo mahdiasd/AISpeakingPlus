@@ -83,6 +83,7 @@ fun AiChatItem(
     characterName: String = "",
     characterAvatarUrl: String? = null,
     isLastChat: Boolean = false,
+    isStreaming: Boolean = false,
     onPlayVoice: () -> Unit = {},
     onStopVoice: () -> Unit = {},
     onCopied: () -> Unit = {}
@@ -91,6 +92,33 @@ fun AiChatItem(
     var showTranslation by remember { mutableStateOf(false) }
     var copied by remember { mutableStateOf(false) }
     val hasTranslation = !chat.translatedMessage.isNullOrBlank()
+
+    var displayedLength by remember(chat.uid) {
+        mutableStateOf(if (isStreaming) 0 else chat.message.length)
+    }
+
+    LaunchedEffect(chat.message, isStreaming) {
+        if (!isStreaming) {
+            displayedLength = chat.message.length
+        } else {
+            while (displayedLength < chat.message.length) {
+                val remaining = chat.message.length - displayedLength
+                val step = when {
+                    remaining > 50 -> 4
+                    remaining > 20 -> 2
+                    else -> 1
+                }
+                displayedLength = (displayedLength + step).coerceAtMost(chat.message.length)
+                delay(18)
+            }
+        }
+    }
+
+    val visibleText = if (displayedLength >= chat.message.length) {
+        chat.message
+    } else {
+        chat.message.take(displayedLength)
+    }
 
     LaunchedEffect(copied) {
         if (copied) {
@@ -130,11 +158,11 @@ fun AiChatItem(
                         .padding(horizontal = 15.dp, vertical = 11.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (chat.message.isEmpty()) {
+                    if (visibleText.isEmpty()) {
                         IridescentTypingDots()
                     } else {
                         GameText(
-                            text = chat.message,
+                            text = visibleText,
                             size = 16.sp,
                             lineHeight = 24.sp,
                             latin = true,

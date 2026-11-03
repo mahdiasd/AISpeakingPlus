@@ -182,7 +182,9 @@ class AndroidAudioBridge(
             }
 
             recognizer.setRecognitionListener(object : RecognitionListener {
-                override fun onReadyForSpeech(params: Bundle?) {}
+                override fun onReadyForSpeech(params: Bundle?) {
+                    controller.notifyRecordingReady()
+                }
 
                 override fun onBeginningOfSpeech() {
                     controller.notifyVoiceActivity()
@@ -281,6 +283,7 @@ class AndroidAudioBridge(
 
         audioRecord = record
         isCapturingAudio = true
+        controller.notifyRecordingReady()
 
         recordingJob = bridgeScope.launch(Dispatchers.IO) {
             val buffer = ByteArray(BUFFER_SIZE_BYTES)

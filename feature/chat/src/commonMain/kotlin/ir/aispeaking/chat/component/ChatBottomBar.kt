@@ -18,14 +18,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -99,6 +104,7 @@ fun ChatBottomBar(
     inputMode: ChatInputMode,
     text: String,
     isRecording: Boolean,
+    isRecordingPreparing: Boolean = false,
     isModelSpeaking: Boolean = false,
     enabled: Boolean = true,
     hintsUsedCount: Int = 0,
@@ -116,8 +122,9 @@ fun ChatBottomBar(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
-            .imePadding()
+            .windowInsetsPadding(
+                WindowInsets.navigationBars.union(WindowInsets.ime).only(WindowInsetsSides.Bottom)
+            )
     ) {
         // Floating Transcript Preview Capsule (shown when speech recognition has recognized text and AI not speaking)
         AnimatedVisibility(
@@ -148,6 +155,7 @@ fun ChatBottomBar(
                 ChatInputMode.VOICE -> CompactVoiceRow(
                     text = text,
                     isRecording = isRecording,
+                    isRecordingPreparing = isRecordingPreparing,
                     isModelSpeaking = isModelSpeaking,
                     enabled = enabled,
                     hintsUsedCount = hintsUsedCount,
@@ -184,6 +192,7 @@ fun ChatBottomBar(
 private fun CompactVoiceRow(
     text: String,
     isRecording: Boolean,
+    isRecordingPreparing: Boolean = false,
     isModelSpeaking: Boolean,
     enabled: Boolean,
     hintsUsedCount: Int,
@@ -221,7 +230,11 @@ private fun CompactVoiceRow(
                 contentAlignment = Alignment.Center
             ) {
                 if (isRecording) {
-                    AppleRecordingActivePill(onStop = { onVoiceToggle(false) })
+                    if (isRecordingPreparing) {
+                        AppleRecordingPreparingPill(onStop = { onVoiceToggle(false) })
+                    } else {
+                        AppleRecordingActivePill(onStop = { onVoiceToggle(false) })
+                    }
                 } else {
                     AppleRecordPill(
                         hasText = text.isNotBlank(),
@@ -443,6 +456,74 @@ private fun CompactTranscriptCapsule(
                 )
             }
         }
+    }
+}
+
+/** Apple Voice preparation pill shown while microphone hardware/browser audio engine initializes */
+@Composable
+private fun AppleRecordingPreparingPill(
+    onStop: () -> Unit
+) {
+    val transition = rememberInfiniteTransition(label = "prep_transition")
+    val alpha by transition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(550, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "prep_alpha"
+    )
+    val amberColor = Color(0xFFFFB236)
+    val shape = RoundedCornerShape(22.dp)
+
+    Row(
+        modifier = Modifier
+            .applePressEffect(targetScale = 0.95f, onClick = onStop)
+            .clip(shape)
+            .background(amberColor.copy(alpha = 0.14f))
+            .border(1.dp, amberColor.copy(alpha = 0.45f), shape)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Pulsing preparation dot
+        Box(
+            modifier = Modifier
+                .size(9.dp)
+                .graphicsLayer { this.alpha = alpha }
+                .background(amberColor, CircleShape)
+        )
+
+        // 3 subtle animated dots
+        Row(
+            modifier = Modifier.height(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            val d1 by transition.animateFloat(0.3f, 1f, infiniteRepeatable(tween(450, delayMillis = 0), RepeatMode.Reverse), label = "d1")
+            val d2 by transition.animateFloat(0.3f, 1f, infiniteRepeatable(tween(450, delayMillis = 150), RepeatMode.Reverse), label = "d2")
+            val d3 by transition.animateFloat(0.3f, 1f, infiniteRepeatable(tween(450, delayMillis = 300), RepeatMode.Reverse), label = "d3")
+            listOf(d1, d2, d3).forEach { dotAlpha ->
+                Box(
+                    modifier = Modifier
+                        .size(3.5.dp)
+                        .graphicsLayer { this.alpha = dotAlpha }
+                        .background(amberColor, CircleShape)
+                )
+            }
+        }
+
+        GameText(
+            text = "آماده‌سازی میکروفون…",
+            size = 12.sp,
+            bold = true,
+            color = amberColor
+        )
+
+        // Cancel / stop icon
+        Box(
+            modifier = Modifier
+                .size(13.dp)
+                .background(amberColor.copy(alpha = 0.8f), RoundedCornerShape(3.dp))
+        )
     }
 }
 

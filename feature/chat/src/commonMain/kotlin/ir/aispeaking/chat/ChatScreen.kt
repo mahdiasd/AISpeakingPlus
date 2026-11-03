@@ -146,15 +146,15 @@ fun ChatScreen(
 
     LaunchedEffect(imeBottom) {
         if (imeBottom > 0 && uiState.chats.isNotEmpty()) {
-            delay(150)
-            listState.animateScrollToItem(bottomAnchorIndex, scrollOffset = 10000)
+            delay(50)
+            listState.animateScrollToItem(bottomAnchorIndex)
         }
     }
 
     LaunchedEffect(uiState.inputMode) {
         if (uiState.inputMode == ChatInputMode.TEXT && uiState.chats.isNotEmpty()) {
-            delay(200)
-            listState.animateScrollToItem(bottomAnchorIndex, scrollOffset = 10000)
+            delay(100)
+            listState.animateScrollToItem(bottomAnchorIndex)
         }
     }
 
@@ -291,6 +291,8 @@ fun ChatScreen(
                                                 chat = chat,
                                                 characterName = stage.characterName,
                                                 characterAvatarUrl = stage.characterAvatarUrl,
+                                                isLastChat = chat.uid == uiState.chats.lastOrNull()?.uid,
+                                                isStreaming = uiState.isModelSpeaking && chat.uid == uiState.chats.lastOrNull()?.uid,
                                                 onPlayVoice = { viewModel.playAiVoice(chat.uid) },
                                                 onStopVoice = { viewModel.stopAiVoice(chat.uid) },
                                                 onCopied = { toastMessage = "متن پیام در کلیپ‌بورد کپی شد" }
@@ -335,6 +337,7 @@ fun ChatScreen(
                         inputMode = uiState.inputMode,
                         text = uiState.messageText,
                         isRecording = uiState.isRecording,
+                        isRecordingPreparing = uiState.isRecordingPreparing,
                         isModelSpeaking = uiState.isModelSpeaking,
                         enabled = !uiState.isModelSpeaking && !uiState.isSubmittingEvaluation,
                         hintsUsedCount = uiState.hintsUsedCount,
