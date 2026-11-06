@@ -23,6 +23,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +45,7 @@ import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.GlassPanel
 import ir.aispeaking.sharedui.utils.lifecycle.OnResume
 import kotlinx.coroutines.delay
+import ir.aispeaking.stageslist.component.PhaseHeaderCard
 import ir.aispeaking.stageslist.component.StageListItemCard
 import ir.aispeaking.stageslist.component.StagesHeaderStatsCard
 
@@ -66,8 +68,13 @@ fun StagesListScreen(
     // Auto-scroll to current active stage when list is loaded
     LaunchedEffect(uiState.isLoading, uiState.stages) {
         if (!uiState.isLoading && uiState.stages.isNotEmpty()) {
-            val targetIndex = uiState.currentActiveStageIndex.coerceIn(0, uiState.stages.size - 1)
-            listState.animateScrollToItem(targetIndex)
+            val curr = uiState.currentStage
+            if (curr != null) {
+                val phaseCountBefore = (curr.phaseNumber - 1).coerceAtLeast(0)
+                val stageIdx = uiState.stages.indexOfFirst { it.id == curr.id }
+                val targetIndex = (stageIdx + phaseCountBefore + 1).coerceIn(0, uiState.stages.size + 10)
+                listState.animateScrollToItem(targetIndex)
+            }
         }
     }
 
@@ -106,6 +113,29 @@ fun StagesListScreen(
                 }
 
                 if (uiState.stages.isNotEmpty()) {
+                    // Season indicator badge
+                    val seasonTitle = uiState.stages.firstOrNull()?.seasonTitleFa ?: "فصل اول: روزهای آغازین در لندن"
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 2.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Game.Gold.copy(alpha = 0.12f))
+                                .padding(horizontal = 16.dp, vertical = 5.dp)
+                        ) {
+                            GameText(
+                                text = seasonTitle,
+                                size = 13.sp,
+                                bold = true,
+                                color = Game.Gold
+                            )
+                        }
+                    }
+
                     StagesHeaderStatsCard(
                         totalStars = uiState.totalStarsEarned,
                         maxStars = uiState.maxPossibleStars,
@@ -161,6 +191,7 @@ fun StagesListScreen(
                         }
                     }
                 } else {
+                    val phaseGroups = uiState.stages.groupBy { it.phaseNumber }
                     LazyColumn(
                         state = listState,
                         modifier = Modifier
@@ -169,29 +200,44 @@ fun StagesListScreen(
                         contentPadding = PaddingValues(
                             start = 14.dp,
                             end = 14.dp,
-                            top = 10.dp,
+                            top = 8.dp,
                             bottom = 28.dp
                         )
                     ) {
-                        itemsIndexed(
-                            items = uiState.stages,
-                            key = { _, stage -> stage.id }
-                        ) { index, stage ->
-                            StageListItemCard(
-                                stage = stage,
-                                isActiveCurrentStage = index == uiState.currentActiveStageIndex,
-                                isFirst = index == 0,
-                                isLast = index == uiState.stages.lastIndex,
-                                onStageClick = { clickedStage ->
-                                    viewModel.onAction(StagesListUiAction.StageClicked(clickedStage))
-                                    handleStageClick(
-                                        stage = clickedStage,
-                                        onNavigateToChat = onNavigateToStageChat,
-                                        onNavigateToSubscription = onNavigateToSubscription,
-                                        onNavigateToLogin = onNavigateToLogin
-                                    )
-                                }
-                            )
+                        phaseGroups.forEach { (phaseNum, stagesInPhase) ->
+                            item(key = "phase_header_$phaseNum") {
+                                val completedCount = stagesInPhase.count { (it.userProgress?.stars ?: 0) > 0 }
+                                val phaseTitle = stagesInPhase.firstOrNull()?.phaseTitleFa ?: "فاز $phaseNum"
+                                PhaseHeaderCard(
+                                    phaseNumber = phaseNum,
+                                    phaseTitleFa = phaseTitle,
+                                    completedStages = completedCount,
+                                    totalStages = stagesInPhase.size
+                                )
+                            }
+                            itemsIndexed(
+                                items = stagesInPhase,
+                                key = { _, stage -> stage.id }
+                            ) { idxInPhase, stage ->
+                                val isFirstInPhase = idxInPhase == 0
+                                val isLastInPhase = idxInPhase == stagesInPhase.lastIndex
+                                val globalIdx = uiState.stages.indexOf(stage)
+                                StageListItemCard(
+                                    stage = stage,
+                                    isActiveCurrentStage = globalIdx == uiState.currentActiveStageIndex,
+                                    isFirst = isFirstInPhase,
+                                    isLast = isLastInPhase,
+                                    onStageClick = { clickedStage ->
+                                        viewModel.onAction(StagesListUiAction.StageClicked(clickedStage))
+                                        handleStageClick(
+                                            stage = clickedStage,
+                                            onNavigateToChat = onNavigateToStageChat,
+                                            onNavigateToSubscription = onNavigateToSubscription,
+                                            onNavigateToLogin = onNavigateToLogin
+                                        )
+                                    }
+                                )
+                            }
                         }
                     }
                 }

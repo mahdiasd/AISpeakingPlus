@@ -12,6 +12,10 @@ fun StageSummaryDto.toDomain(): Stage {
     return Stage(
         id = id,
         orderIndex = orderIndex,
+        seasonNumber = seasonNumber,
+        seasonTitleFa = seasonTitleFa,
+        phaseNumber = phaseNumber,
+        phaseTitleFa = phaseTitleFa,
         title = title,
         titleFa = titleFa,
         briefing = "",
@@ -35,6 +39,10 @@ fun StageDetailDto.toDomain(): Stage {
     return Stage(
         id = id,
         orderIndex = orderIndex,
+        seasonNumber = seasonNumber,
+        seasonTitleFa = seasonTitleFa,
+        phaseNumber = phaseNumber,
+        phaseTitleFa = phaseTitleFa,
         title = title,
         titleFa = titleFa,
         briefing = briefing,

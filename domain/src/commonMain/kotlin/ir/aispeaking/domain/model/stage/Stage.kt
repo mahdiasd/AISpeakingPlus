@@ -6,6 +6,10 @@ import kotlinx.serialization.Serializable
 data class Stage(
     val id: String,
     val orderIndex: Int,
+    val seasonNumber: Int = 1,
+    val seasonTitleFa: String = "فصل اول: روزهای آغازین در لندن",
+    val phaseNumber: Int = 1,
+    val phaseTitleFa: String = "فاز ۱: ورود و استقرار اولیه",
     val title: String,
     val titleFa: String,
     val briefing: String,
