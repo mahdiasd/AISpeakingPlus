@@ -2,7 +2,6 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Phone,
-  Sparkles,
   AlertCircle,
   ArrowRight,
   RotateCcw,
@@ -15,7 +14,6 @@ import {
   CupertinoPinInput,
 } from '../cupertino';
 import { useAuthFlow } from '../../hooks/useAuthFlow';
-import { TEST_ACCOUNT } from '../../api/client';
 
 export interface LoginDialogProps {
   isOpen: boolean;
@@ -44,7 +42,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
     verifyOtp,
     resendOtp,
     changePhone,
-    loginWithTestAccount,
     resetFlow,
   } = useAuthFlow({
     initialPhone,
@@ -78,26 +75,6 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({
       }
     >
       <div className="space-y-4">
-        {/* Quick Bypass Test Account Card */}
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-apple-blue/20 to-apple-indigo/20 border border-apple-blue/30 space-y-2">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-apple-blue">
-            <Sparkles className="w-4 h-4" />
-            <span>حساب تستی آماده (بدون نیاز به پیامک واقعی)</span>
-          </div>
-          <p className="text-[11px] text-apple-gray-300 leading-relaxed">
-            شماره {TEST_ACCOUNT.mobile} با کد ثابت {TEST_ACCOUNT.otp}
-          </p>
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={loginWithTestAccount}
-            className="w-full py-2.5 px-3 rounded-xl bg-apple-blue text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-apple-sm active:scale-95 transition-transform"
-          >
-            {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-            <span>ورود آنی با حساب تستی (Bypass)</span>
-          </button>
-        </div>
-
         {/* Error Banner */}
         {error && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-apple-red/15 border border-apple-red/30 text-apple-red text-xs">

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Target, Flag, Sparkles, RefreshCw } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CupertinoNavBar, CupertinoSkeleton } from '../components/cupertino';
+import { CupertinoSkeleton } from '../components/cupertino';
+import { ChatToolbar } from '../components/chat/ChatToolbar';
 import { AiMessageItem } from '../components/chat/AiMessageItem';
 import { UserMessageItem } from '../components/chat/UserMessageItem';
 import { ChatBottomBar } from '../components/chat/ChatBottomBar';
@@ -21,6 +22,7 @@ import { stageApi, saveLocalGuestProgress } from '../api/stageApi';
 import { Stage } from '../types/stage';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useAuth } from '../hooks/useAuth';
 
 interface ChatBubble {
   id: string;
@@ -37,6 +39,7 @@ interface ChatBubble {
 export const ChatPage: React.FC = () => {
   const { stageId } = useParams<{ stageId: string }>();
   const navigate = useNavigate();
+  const { profile } = useAuth();
 
   const [stage, setStage] = useState<Stage | null>(null);
   const [isLoadingStage, setIsLoadingStage] = useState(true);
@@ -119,7 +122,6 @@ export const ChatPage: React.FC = () => {
     setIsModelSpeaking(true);
     const aiMessageId = `ai_init_${Date.now()}`;
 
-    // Add empty placeholder bubble
     setChats([
       {
         id: aiMessageId,
@@ -145,12 +147,11 @@ export const ChatPage: React.FC = () => {
         },
       ]);
 
-      // Play greeting audio
       if (response.message) {
         audioPlayer.play(aiMessageId, response.message, response.audioUrl);
       }
     } catch (err) {
-      console.warn('Initial AI greeting failed, using stage fallback briefing', err);
+      console.warn('Initial AI greeting failed, using fallback briefing', err);
       const fallbackGreeting =
         currentStage.briefing || `Hello! Welcome to ${currentStage.title}. How can I help you today?`;
 
@@ -176,7 +177,6 @@ export const ChatPage: React.FC = () => {
     const newTurnsCount = turnsCount + 1;
     setTurnsCount(newTurnsCount);
 
-    // Append user message immediately
     const updatedChats: ChatBubble[] = [
       ...chats,
       {
@@ -191,7 +191,6 @@ export const ChatPage: React.FC = () => {
     setIsModelSpeaking(true);
 
     const aiMessageId = `ai_${Date.now()}`;
-    // Add AI placeholder bubble
     setChats((prev) => [
       ...prev,
       {
@@ -202,14 +201,12 @@ export const ChatPage: React.FC = () => {
       },
     ]);
 
-    // Build dialogue history for server
     const historyPayload = updatedChats.map((c) => ({
       sender: (c.sender === 'User' ? 'User' : 'Model') as 'User' | 'Model',
       content: c.text,
     }));
 
     try {
-      // Stream AI response via chatApi
       let accumulatedDelta = '';
       await chatApi.streamChatMessage(
         stageId,
@@ -225,7 +222,6 @@ export const ChatPage: React.FC = () => {
             );
           },
           onDone: (turnResult: StageChatTurnResult) => {
-            // Update user message with grammar feedback if error detected
             if (turnResult.hasGrammarError) {
               setChats((prev) =>
                 prev.map((c) =>
@@ -250,7 +246,6 @@ export const ChatPage: React.FC = () => {
               ]);
             }
 
-            // Update AI message with final payload
             setChats((prev) =>
               prev.map((c) =>
                 c.id === aiMessageId
@@ -267,10 +262,9 @@ export const ChatPage: React.FC = () => {
 
             if (turnResult.objectiveCompleted) {
               setIsObjectiveCompleted(true);
-              showToast('هدف ماموریت مرحله با موفقیت تکمیل شد! آفرین!');
+              showToast('هدف ماموریت مرحله با موفقیت تکمیل شد!');
             }
 
-            // Auto-play audio voice
             if (turnResult.message) {
               audioPlayer.play(aiMessageId, turnResult.message, turnResult.audioUrl);
             }
@@ -416,49 +410,37 @@ export const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0c0c0e] text-white selection:bg-apple-blue selection:text-white pb-32">
-      {/* 1. Cupertino Top App Bar */}
-      <CupertinoNavBar
-        title={stage ? stage.titleFa : 'اتاق مکالمه هوشمند'}
-        subtitle={
-          stage
-            ? `نوبت ${turnsCount} از ${stage.maxTurns || 10} • ${stage.characterName}`
-            : 'در حال بارگذاری...'
-        }
-        onBack={handleBackClick}
-        endSlot={
-          <div className="flex items-center gap-1.5">
-            {/* Objective Modal Button */}
-            <button
-              type="button"
-              onClick={() => setIsObjectiveOpen(true)}
-              className="p-2 rounded-2xl bg-white/10 hover:bg-white/15 text-apple-blue active:scale-95 transition-all"
-              title="مشاهده اهداف مرحله"
-            >
-              <Target className="w-5 h-5" />
-            </button>
+    <div className="relative flex flex-col min-h-screen bg-[#07080c] text-white selection:bg-apple-blue selection:text-white pb-32 overflow-hidden">
+      {/* 1. Fullscreen Ambient Stage Background with Frosted Glass Scrim */}
+      {stage && stage.backgroundUrl ? (
+        <div className="fixed inset-0 z-0 select-none pointer-events-none overflow-hidden">
+          <img
+            src={stage.backgroundUrl}
+            alt={stage.title}
+            className="w-full h-full object-cover object-center filter blur-lg brightness-[0.28] contrast-[1.1] scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#090a12]/92 via-[#0e111c]/88 to-[#080910]/95" />
+        </div>
+      ) : (
+        <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#090a12] via-[#0e111c] to-[#080910]" />
+      )}
 
-            {/* Finish Conversation Button */}
-            <button
-              type="button"
-              onClick={handleFinishConversation}
-              disabled={chats.length === 0 || isSubmittingEvaluation}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-2xl bg-apple-green/20 hover:bg-apple-green/30 text-apple-green text-xs font-bold active:scale-95 disabled:opacity-40 transition-all border border-apple-green/30"
-              title="پایان مکالمه و دریافت کارنامه"
-            >
-              {isSubmittingEvaluation ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Flag className="w-3.5 h-3.5" />
-              )}
-              <span className="hidden sm:inline">پایان مرحله</span>
-            </button>
-          </div>
-        }
-      />
+      {/* 2. Compose-Matched 2-Row Glass Toolbar */}
+      <header className="sticky top-0 z-30 bg-[#0c0d15]/85 backdrop-blur-2xl border-b border-white/10">
+        <ChatToolbar
+          stage={stage}
+          turnsCount={turnsCount}
+          maxTurns={stage?.maxTurns || 10}
+          userLevel={profile?.languageLevel || 'A1'}
+          isFinishing={isSubmittingEvaluation}
+          onBackClick={handleBackClick}
+          onObjectiveClick={() => setIsObjectiveOpen(true)}
+          onFinishClick={handleFinishConversation}
+        />
+      </header>
 
-      {/* 2. Main Chat Conversation Feed */}
-      <main className="flex-1 max-w-lg w-full mx-auto px-3.5 pt-4">
+      {/* 3. Main Chat Conversation Feed */}
+      <main className="relative z-10 flex-1 max-w-lg w-full mx-auto px-3.5 pt-3">
         {/* Loading State */}
         {isLoadingStage && (
           <div className="space-y-4 pt-6">
@@ -486,35 +468,7 @@ export const ChatPage: React.FC = () => {
 
         {/* Conversation Bubbles */}
         {!isLoadingStage && stage && (
-          <div className="space-y-2">
-            {/* Stage Ambient Header Card */}
-            <div className="relative rounded-3xl overflow-hidden p-4 mb-4 border border-white/10 apple-glass">
-              {stage.backgroundUrl && (
-                <img
-                  src={stage.backgroundUrl}
-                  alt={stage.title}
-                  className="absolute inset-0 w-full h-full object-cover opacity-20 filter blur-sm"
-                />
-              )}
-              <div className="relative z-10 flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] text-apple-teal font-semibold block">
-                    {stage.seasonTitleFa} • {stage.phaseTitleFa}
-                  </span>
-                  <h2 className="text-sm font-bold text-white">{stage.titleFa}</h2>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsObjectiveOpen(true)}
-                  className="text-xs px-2.5 py-1 rounded-full bg-apple-blue/20 text-apple-blue border border-apple-blue/30 font-bold hover:bg-apple-blue/30 transition-all"
-                >
-                  راهنمای سناریو
-                </button>
-              </div>
-            </div>
-
-            {/* Messages List */}
+          <div className="space-y-3 pb-4">
             {chats.map((chat) =>
               chat.sender === 'Model' ? (
                 <AiMessageItem
@@ -546,7 +500,7 @@ export const ChatPage: React.FC = () => {
         )}
       </main>
 
-      {/* 3. Floating Bottom Controls & Speech Dock */}
+      {/* 4. Compose-Matched Floating Glass Bottom Dock */}
       {!isLoadingStage && stage && (
         <ChatBottomBar
           onSendMessage={handleSendMessage}
@@ -563,14 +517,14 @@ export const ChatPage: React.FC = () => {
         />
       )}
 
-      {/* 4. Objective Modal */}
+      {/* 5. Objective Modal */}
       <ObjectiveModal
         isOpen={isObjectiveOpen}
         onClose={() => setIsObjectiveOpen(false)}
         stage={stage}
       />
 
-      {/* 5. Hint Suggestion Modal */}
+      {/* 6. Hint Suggestion Modal */}
       {hintData && (
         <HintModal
           isOpen={isHintOpen}
@@ -582,7 +536,7 @@ export const ChatPage: React.FC = () => {
         />
       )}
 
-      {/* 6. Evaluation Result Modal */}
+      {/* 7. Evaluation Result Modal */}
       <EvaluationModal
         isOpen={isEvaluationOpen}
         onClose={() => setIsEvaluationOpen(false)}
@@ -593,7 +547,7 @@ export const ChatPage: React.FC = () => {
         onBackToMap={() => navigate('/')}
       />
 
-      {/* 7. Exit Confirmation Modal */}
+      {/* 8. Exit Confirmation Modal */}
       <ExitConfirmModal
         isOpen={isExitConfirmOpen}
         onClose={() => setIsExitConfirmOpen(false)}
@@ -603,14 +557,14 @@ export const ChatPage: React.FC = () => {
         }}
       />
 
-      {/* 8. Toast Notification */}
+      {/* 9. Floating Apple Toast */}
       <AnimatePresence>
         {toastMessage && (
           <motion.div
             initial={{ opacity: 0, y: 24, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.95 }}
-            className="fixed top-20 inset-x-4 max-w-sm mx-auto z-50 pointer-events-none"
+            className="fixed top-24 inset-x-4 max-w-sm mx-auto z-50 pointer-events-none"
           >
             <div className="apple-glass bg-[#1b1e2c]/95 border border-white/20 text-white text-xs px-4 py-3 rounded-2xl shadow-apple-lg flex items-center gap-2 pointer-events-auto">
               <Sparkles className="w-4 h-4 text-apple-yellow shrink-0" />

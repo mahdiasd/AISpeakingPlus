@@ -3,67 +3,37 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import {
-  Layers,
-  Sparkles,
-  User,
-  LogOut,
+  Crown,
   Star,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle2,
+  Play,
+  Layers,
+  User,
+  Sparkles,
+  Lock,
+  RotateCcw,
 } from 'lucide-react';
 import {
-  CupertinoNavBar,
-  CupertinoCard,
-  CupertinoButton,
-  CupertinoSegmentedControl,
-  CupertinoSwitch,
+  CupertinoModal,
+  CupertinoStarRating,
   CupertinoSkeleton,
 } from '../components/cupertino';
-import { HomeHeaderStats } from '../components/home/HomeHeaderStats';
-import { ActiveStageHero } from '../components/home/ActiveStageHero';
-import { StagesTimeline } from '../components/home/StagesTimeline';
 import { StageBriefingModal } from '../components/home/StageBriefingModal';
+import { StagesTimeline } from '../components/home/StagesTimeline';
 import { LoginDialog } from '../components/auth/LoginDialog';
-import { SubscriptionModal } from '../components/home/SubscriptionModal';
 import { useStages } from '../hooks/useStages';
 import { useAuth } from '../hooks/useAuth';
 import { Stage } from '../types/stage';
 import { getAvatarUrl } from '../utils/avatar';
 
-type HomeTab = 'hero' | 'timeline';
-
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<HomeTab>('hero');
+  const { stages, currentStage, phaseGroups, stats, isLoading, refreshStages } = useStages();
+  const { isLoggedIn, profile } = useAuth();
+
+  const [selectedStage, setSelectedStage] = useState<Stage | null>(null);
+  const [isTimelineOpen, setIsTimelineOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Apple Design Setting Toggles
-  const [glassMode, setGlassMode] = useState(true);
-  const [soundFeedback, setSoundFeedback] = useState(true);
-
-  // Data Hooks
-  const {
-    stages,
-    currentStage,
-    stats,
-    phaseGroups,
-    seasonTitleFa,
-    isLoading,
-    error,
-    selectedStage,
-    setSelectedStage,
-    refreshStages,
-    recordGuestCompletion,
-  } = useStages();
-
-  const {
-    profile,
-    isLoggedIn,
-    logout,
-  } = useAuth();
 
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -86,7 +56,6 @@ export const HomePage: React.FC = () => {
       return;
     }
 
-    // Trigger celebration & navigate
     confetti({
       particleCount: 50,
       spread: 60,
@@ -96,238 +65,234 @@ export const HomePage: React.FC = () => {
     navigate(`/chat/${stage.id}`);
   };
 
+  const isSubscriber = stats.currentTier === 'SUBSCRIBER';
+  const totalStars = isLoggedIn && profile ? profile.totalStars : stats.totalStars;
+  const completedStagesCount = stats.completedStagesCount;
+
+  // Active hero stage fallback
+  const heroStage = currentStage || stages[0];
+
   return (
-    <div className="flex flex-col min-h-screen bg-[#0c0c0e] text-white selection:bg-apple-blue selection:text-white pb-24">
-      {/* 1. Cupertino Top App Bar */}
-      <CupertinoNavBar
-        title="AI Speaking Plus"
-        subtitle={seasonTitleFa}
-        endSlot={
-          <div className="flex items-center gap-2">
-            {/* Stars Count Badge in Header */}
-            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-apple-yellow/15 border border-apple-yellow/30 text-apple-yellow select-none">
-              <Star className="w-3.5 h-3.5 fill-apple-yellow text-apple-yellow drop-shadow-[0_0_6px_rgba(255,204,0,0.6)]" />
-              <span className="text-xs font-bold font-mono">{stats.totalStars}</span>
+    <div className="relative min-h-screen w-full bg-[#07080c] text-white selection:bg-apple-blue selection:text-white overflow-hidden flex flex-col justify-between">
+      {/* 1. Fullscreen Hero Artwork Background */}
+      {heroStage && heroStage.backgroundUrl ? (
+        <div className="fixed inset-0 z-0 select-none pointer-events-none overflow-hidden">
+          <img
+            src={heroStage.backgroundUrl}
+            alt={heroStage.title}
+            className="w-full h-full object-cover object-center filter brightness-[0.78] contrast-[1.05] transition-all duration-700"
+          />
+        </div>
+      ) : (
+        <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#141728] via-[#090b14] to-[#040508]" />
+      )}
+
+      {/* 2. Optical Top & Bottom Scrim Gradients */}
+      <div className="fixed top-0 inset-x-0 h-44 bg-gradient-to-b from-black/85 via-black/45 to-transparent pointer-events-none z-10" />
+      <div className="fixed bottom-0 inset-x-0 h-[62%] bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-none z-10" />
+
+      {/* 3. Top HUD (Floating Navbar) */}
+      <header className="relative z-20 w-full max-w-lg mx-auto pt-4 px-4 flex items-center justify-between gap-3">
+        {/* Profile Avatar Button */}
+        <button
+          type="button"
+          onClick={() => navigate('/profile')}
+          className="w-11 h-11 rounded-full apple-glass bg-[#181a26]/85 border border-white/20 flex items-center justify-center text-white shadow-apple-sm active:scale-95 transition-all overflow-hidden shrink-0"
+          title="پروفایل کاربری"
+        >
+          {profile?.avatar ? (
+            <img
+              src={getAvatarUrl(profile.avatar)}
+              alt="Avatar"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <User className="w-5 h-5 text-slate-200" />
+          )}
+        </button>
+
+        {/* Stars Metric Pill */}
+        <div className="h-10 px-3.5 rounded-full apple-glass bg-[#181a26]/85 border border-apple-yellow/30 flex items-center gap-1.5 text-apple-yellow shadow-apple-sm select-none">
+          <Star className="w-4 h-4 fill-apple-yellow text-apple-yellow drop-shadow-[0_0_6px_rgba(255,204,0,0.6)]" />
+          <span className="text-xs font-bold font-mono">{totalStars.toLocaleString('fa-IR')}</span>
+          <span className="text-[11px] font-sans font-medium text-apple-yellow/90">ستاره</span>
+        </div>
+
+        <div className="flex-1" />
+
+        {/* VIP Subscription CTA */}
+        {isSubscriber ? (
+          <button
+            type="button"
+            onClick={() => navigate('/subscription')}
+            className="h-10 px-3.5 rounded-full apple-glass bg-purple-900/40 border border-apple-purple/40 flex items-center gap-1.5 text-apple-purple text-xs font-bold active:scale-95 transition-all shadow-apple-sm"
+          >
+            <Crown className="w-4 h-4 fill-apple-purple text-apple-purple" />
+            <span>اشتراک طلایی</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => navigate('/subscription')}
+            className="h-10 px-4 rounded-full bg-gradient-to-r from-apple-yellow via-amber-400 to-apple-orange text-black font-extrabold text-xs flex items-center gap-1.5 shadow-[0_2px_12px_rgba(255,204,0,0.35)] active:scale-95 hover:brightness-105 transition-all"
+          >
+            <Crown className="w-4 h-4 fill-black text-black" />
+            <span>اشتراک ویژه</span>
+          </button>
+        )}
+      </header>
+
+      {/* 4. Middle Ambient Spacer */}
+      <div className="flex-1" />
+
+      {/* 5. Bottom Hero Stage Card */}
+      <section className="relative z-20 w-full max-w-lg mx-auto px-4 pb-6">
+        {isLoading && !heroStage ? (
+          <div className="apple-glass rounded-[28px] p-6 border border-white/20 space-y-4">
+            <CupertinoSkeleton className="h-6 w-1/3 rounded-xl" />
+            <CupertinoSkeleton className="h-8 w-3/4 rounded-xl" />
+            <CupertinoSkeleton className="h-14 rounded-2xl" />
+          </div>
+        ) : heroStage ? (
+          <div className="apple-glass bg-[#141724]/90 backdrop-blur-3xl rounded-[28px] p-5 border border-white/20 shadow-apple-lg space-y-4">
+            {/* Top Info Bar: Stage Number & Stars */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold text-apple-blue font-sans tracking-wide">
+                مرحله {heroStage.orderIndex.toLocaleString('fa-IR')} از {stages.length.toLocaleString('fa-IR')}
+              </span>
+              <CupertinoStarRating stars={heroStage.progress?.stars || 0} size="sm" />
             </div>
 
-            {/* Profile / Auth Avatar Button */}
-            {isLoggedIn ? (
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => navigate('/profile')}
-                  title="مشاهده پروفایل کاربری"
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-xs text-white active:scale-95 transition-all"
-                >
+            {/* Stage Title & Season */}
+            <div className="space-y-1">
+              <span className="text-[11px] text-apple-teal font-semibold block">
+                {heroStage.seasonTitleFa} • {heroStage.phaseTitleFa}
+              </span>
+              <h1 className="text-xl font-extrabold text-white leading-snug">
+                {heroStage.titleFa}
+              </h1>
+            </div>
+
+            {/* Character Squircle & Name */}
+            <div className="flex items-center gap-2.5 pt-0.5">
+              <div className="w-8 h-8 rounded-xl overflow-hidden bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
+                {heroStage.characterAvatarUrl ? (
                   <img
-                    src={getAvatarUrl(profile?.avatar)}
-                    alt="avatar"
-                    className="w-5 h-5 rounded-full object-cover border border-white/20"
+                    src={heroStage.characterAvatarUrl}
+                    alt={heroStage.characterName}
+                    className="w-full h-full object-cover"
                   />
-                  <span className="text-[11px] font-medium max-w-[80px] truncate hidden sm:inline">
-                    {profile?.nickName || 'پروفایل'}
-                  </span>
-                </button>
+                ) : (
+                  <User className="w-4 h-4 text-apple-blue" />
+                )}
+              </div>
+              <span className="text-xs text-apple-gray-300 font-medium" dir="ltr">
+                {heroStage.characterName}
+              </span>
+            </div>
+
+            {/* Primary Action Button (CTA) */}
+            <div className="space-y-2 pt-1">
+              {heroStage.lockStatus === 'UNLOCKED' && (
                 <button
                   type="button"
-                  onClick={logout}
-                  title="خروج از حساب"
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-red-500/20 border border-white/15 hover:border-red-500/30 flex items-center justify-center text-apple-gray-300 hover:text-red-400 active:scale-95 transition-all"
+                  onClick={() => handleStartStage(heroStage)}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-apple-blue to-[#5856D6] hover:brightness-110 active:scale-[0.98] text-white font-extrabold text-sm shadow-[0_4px_16px_rgba(0,122,255,0.35)] flex items-center justify-center gap-2 transition-all"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
+                  {heroStage.progress?.stars && heroStage.progress.stars > 0 ? (
+                    <>
+                      <RotateCcw className="w-4 h-4 ml-0.5" />
+                      <span>تکرار مرحله</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 fill-white ml-0.5" />
+                      <span>شروع مرحله</span>
+                    </>
+                  )}
                 </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5">
+              )}
+
+              {heroStage.lockStatus === 'LOCKED_REGISTRATION' && (
                 <button
                   type="button"
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-apple-blue hover:bg-blue-600 text-xs font-semibold text-white active:scale-95 transition-transform shadow-sm"
+                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#5856D6] to-purple-700 hover:brightness-110 active:scale-[0.98] text-white font-extrabold text-sm shadow-apple-md flex items-center justify-center gap-2 transition-all"
                 >
-                  <User className="w-3.5 h-3.5" />
-                  <span>ورود</span>
+                  <Lock className="w-4 h-4" />
+                  <span>ورود و باز کردن مرحله</span>
                 </button>
+              )}
+
+              {heroStage.lockStatus === 'LOCKED_SUBSCRIPTION' && (
                 <button
                   type="button"
-                  onClick={() => navigate('/profile')}
-                  title="پروفایل کاربری"
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 flex items-center justify-center text-apple-gray-300 active:scale-95 transition-transform"
+                  onClick={() => navigate('/subscription')}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-apple-yellow via-amber-400 to-apple-orange hover:brightness-110 active:scale-[0.98] text-black font-extrabold text-sm shadow-[0_4px_16px_rgba(255,204,0,0.35)] flex items-center justify-center gap-2 transition-all"
                 >
-                  <User className="w-4 h-4" />
+                  <Crown className="w-4 h-4 fill-black" />
+                  <span>باز کردن با اشتراک ویژه</span>
                 </button>
-              </div>
-            )}
-          </div>
-        }
-      />
+              )}
 
-      {/* 2. Main Scrollable Container */}
-      <main className="flex-1 w-full max-w-lg mx-auto p-4 space-y-4">
-        {/* Navigation Mode Segmented Control */}
-        <CupertinoSegmentedControl<HomeTab>
-          value={activeTab}
-          onChange={setActiveTab}
-          items={[
-            {
-              id: 'hero',
-              label: 'داستان و مرحله فعال',
-              icon: <Sparkles className="w-3.5 h-3.5" />,
-            },
-            {
-              id: 'timeline',
-              label: `نقشه مسیر (${stats.totalStages} مرحله)`,
-              icon: <Layers className="w-3.5 h-3.5" />,
-            },
-          ]}
-        />
+              {heroStage.lockStatus === 'LOCKED_PREVIOUS_STAGE' && (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full py-3.5 px-4 rounded-2xl bg-white/10 text-apple-gray-400 font-bold text-sm border border-white/10 flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
+                >
+                  <Lock className="w-4 h-4" />
+                  <span>ابتدا مرحله قبل را به پایان برسانید</span>
+                </button>
+              )}
 
-        {/* Loading Skeleton State */}
-        {isLoading && stages.length === 0 && (
-          <div className="space-y-4">
-            <CupertinoSkeleton className="h-44 w-full" />
-            <CupertinoSkeleton className="h-64 w-full" />
-            <div className="space-y-2">
-              <CupertinoSkeleton className="h-20 w-full" />
-              <CupertinoSkeleton className="h-20 w-full" />
+              {/* Secondary Button: Open Stages Timeline Curriculum */}
+              <button
+                type="button"
+                onClick={() => setIsTimelineOpen(true)}
+                className="w-full py-3 px-4 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-[0.98] text-slate-200 font-bold text-xs border border-white/10 flex items-center justify-center gap-2 transition-all"
+              >
+                <Layers className="w-4 h-4 text-apple-blue" />
+                <span>
+                  {completedStagesCount > 0
+                    ? `همه مرحله‌ها و پیشرفت (${completedStagesCount.toLocaleString('fa-IR')} انجام شده)`
+                    : 'همه مرحله‌ها و نقشه مسیر'}
+                </span>
+              </button>
             </div>
           </div>
-        )}
+        ) : null}
+      </section>
 
-        {/* Error State */}
-        {!isLoading && error && stages.length === 0 && (
-          <CupertinoCard variant="glass" className="text-center py-8 space-y-4">
-            <AlertTriangle className="w-12 h-12 text-apple-red mx-auto" />
-            <div className="space-y-1">
-              <h3 className="text-base font-bold text-white">خطا در بارگذاری اطلاعات</h3>
-              <p className="text-xs text-apple-gray-400">{error}</p>
-            </div>
-            <CupertinoButton
-              variant="filled"
-              size="md"
-              icon={<RefreshCw className="w-4 h-4" />}
-              onClick={refreshStages}
-            >
-              تلاش دوباره
-            </CupertinoButton>
-          </CupertinoCard>
-        )}
+      {/* 6. Full Stages Curriculum Timeline Modal */}
+      <CupertinoModal
+        isOpen={isTimelineOpen}
+        onClose={() => setIsTimelineOpen(false)}
+        title="نقشه جامع ۳۰ مرحله مکالمه"
+        subtitle="مسیر یادگیری سناریو محور در لندن"
+      >
+        <div className="space-y-4">
+          <StagesTimeline
+            phaseGroups={phaseGroups}
+            currentActiveStageId={currentStage?.id || null}
+            onSelectStage={(stg) => {
+              setSelectedStage(stg);
+            }}
+          />
+        </div>
+      </CupertinoModal>
 
-        {/* Content When Ready */}
-        {stages.length > 0 && (
-          <>
-            {/* Header Progress Stats */}
-            <HomeHeaderStats stats={stats} seasonTitleFa={seasonTitleFa} />
-
-            {/* Tab 1: Hero View */}
-            {activeTab === 'hero' && (
-              <div className="space-y-4">
-                <ActiveStageHero
-                  stage={currentStage}
-                  onStartStage={handleStartStage}
-                  onOpenDetails={setSelectedStage}
-                  onRequireAuth={() => setIsAuthModalOpen(true)}
-                  onRequireSubscription={() => setIsSubscriptionModalOpen(true)}
-                />
-
-                {/* Guest Demo Progress Action (Quick Testing) */}
-                {!isLoggedIn && currentStage?.id === 'stage-01-inflight-london' && (
-                  <CupertinoCard variant="solid" className="p-3.5 flex items-center justify-between gap-3">
-                    <div className="space-y-0.5">
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-apple-green" />
-                        <span>تست پیشرفت مرحله ۱ (کاربر مهمان)</span>
-                      </span>
-                      <p className="text-[11px] text-apple-gray-400">
-                        ثبت ۳ ستاره برای مرحله ۱ و آزمایش رفتار گیت مرحله ۲
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        recordGuestCompletion('stage-01-inflight-london', 3, 98);
-                        confetti({ particleCount: 40, spread: 50 });
-                        showToast('مرحله ۱ با ۳ ستاره با موفقیت ثبت شد!');
-                      }}
-                      className="px-3 py-1.5 rounded-xl bg-apple-green text-black font-bold text-xs shrink-0 active:scale-95 transition-transform"
-                    >
-                      ثبت امتیاز
-                    </button>
-                  </CupertinoCard>
-                )}
-
-                {/* Apple Settings Style Polish Section */}
-                <div className="space-y-2 pt-1">
-                  <h3 className="text-xs font-semibold text-apple-gray-400 px-2">
-                    تنظیمات رابط کاربری و عملکرد اپل (Apple HIG)
-                  </h3>
-
-                  <CupertinoCard variant="solid" className="p-0 overflow-hidden divide-y divide-white/10">
-                    <div className="flex items-center justify-between p-4">
-                      <div className="space-y-0.5">
-                        <span className="text-sm font-medium">افکت شیشه‌ای اپل (Liquid Glass)</span>
-                        <p className="text-xs text-apple-gray-400">
-                          بلور سخت‌افزاری بلادرنگ با رندرینگ ۶۰ تا ۱۲۰ فریم بر ثانیه
-                        </p>
-                      </div>
-                      <CupertinoSwitch checked={glassMode} onChange={setGlassMode} />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4">
-                      <div className="space-y-0.5">
-                        <span className="text-sm font-medium">بازخورد صوتی زنده (Tactile Audio)</span>
-                        <p className="text-xs text-apple-gray-400">
-                          افکت‌های صوتی فیزیکی WWDC حین لمس کلیدها
-                        </p>
-                      </div>
-                      <CupertinoSwitch checked={soundFeedback} onChange={setSoundFeedback} />
-                    </div>
-                  </CupertinoCard>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 2: Full Journey Curriculum Timeline */}
-            {activeTab === 'timeline' && (
-              <StagesTimeline
-                phaseGroups={phaseGroups}
-                currentActiveStageId={currentStage?.id || null}
-                onSelectStage={setSelectedStage}
-              />
-            )}
-          </>
-        )}
-      </main>
-
-      {/* Floating Bottom Toast Notification */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 450, damping: 28 }}
-            className="fixed bottom-6 inset-x-4 max-w-sm mx-auto z-50 pointer-events-none"
-          >
-            <div className="apple-glass bg-[#1a1c26]/95 border border-white/20 text-white text-xs px-4 py-3 rounded-2xl shadow-apple-lg flex items-center gap-2 pointer-events-auto">
-              <Sparkles className="w-4 h-4 text-apple-blue shrink-0" />
-              <span className="leading-relaxed">{toastMessage}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Stage Briefing Modal */}
+      {/* 7. Stage Briefing Details Modal */}
       <StageBriefingModal
         stage={selectedStage}
         isOpen={Boolean(selectedStage)}
         onClose={() => setSelectedStage(null)}
         onStartStage={handleStartStage}
         onRequireAuth={() => setIsAuthModalOpen(true)}
-        onRequireSubscription={() => setIsSubscriptionModalOpen(true)}
+        onRequireSubscription={() => navigate('/subscription')}
       />
 
-      {/* Cupertino Login & Registration Dialog */}
+      {/* 8. Cupertino Clean Login Dialog */}
       <LoginDialog
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
@@ -337,15 +302,23 @@ export const HomePage: React.FC = () => {
         }}
       />
 
-      {/* Subscription Paywall Modal */}
-      <SubscriptionModal
-        isOpen={isSubscriptionModalOpen}
-        onClose={() => setIsSubscriptionModalOpen(false)}
-        onSubscribe={() => {
-          setIsSubscriptionModalOpen(false);
-          navigate('/subscription');
-        }}
-      />
+      {/* 9. Floating Apple Toast */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -24, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 28 }}
+            className="fixed top-20 inset-x-4 max-w-sm mx-auto z-50 pointer-events-none"
+          >
+            <div className="apple-glass bg-[#1a1c26]/95 border border-white/20 text-white text-xs px-4 py-3 rounded-2xl shadow-apple-lg flex items-center gap-2 pointer-events-auto">
+              <Sparkles className="w-4 h-4 text-apple-yellow shrink-0" />
+              <span className="leading-relaxed">{toastMessage}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

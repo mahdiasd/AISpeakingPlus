@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import {
   Phone,
-  Sparkles,
   AlertCircle,
   ArrowRight,
   RotateCcw,
@@ -21,7 +20,6 @@ import {
   CupertinoPinInput,
 } from '../components/cupertino';
 import { useAuthFlow } from '../hooks/useAuthFlow';
-import { TEST_ACCOUNT } from '../api/client';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -52,7 +50,6 @@ export const LoginPage: React.FC = () => {
     verifyOtp,
     resendOtp,
     changePhone,
-    loginWithTestAccount,
   } = useAuthFlow({
     onSuccess: handleSuccess,
   });
@@ -101,33 +98,6 @@ export const LoginPage: React.FC = () => {
                 ? 'شماره موبایل خود را وارد کنید تا پیشرفت آموزشی شما در لندن ذخیره شود.'
                 : `کد تایید پیامک‌شده به شماره ${phone} را وارد کنید.`}
             </p>
-          </div>
-
-          {/* Quick Bypass Test Account Card */}
-          <div className="relative p-3.5 rounded-2xl bg-gradient-to-r from-apple-blue/15 to-apple-indigo/15 border border-apple-blue/30 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-apple-blue">
-                <Sparkles className="w-4 h-4" />
-                <span>حساب تستی آماده (Bypass Test Account)</span>
-              </div>
-              <span className="text-[10px] font-mono bg-white/10 px-2 py-0.5 rounded-full text-white/80">
-                بدون SMS
-              </span>
-            </div>
-
-            <p className="text-[11px] text-apple-gray-300 leading-relaxed">
-              شماره: <span className="font-mono font-bold text-white">{TEST_ACCOUNT.mobile}</span> · کد: <span className="font-mono font-bold text-white">{TEST_ACCOUNT.otp}</span>
-            </p>
-
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={loginWithTestAccount}
-              className="w-full py-2.5 px-3 rounded-xl bg-apple-blue text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-apple-sm active:scale-95 transition-transform hover:brightness-110"
-            >
-              {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-              <span>ورود آنی با حساب تستی (یک کلیک)</span>
-            </button>
           </div>
 
           {/* Error Banner */}
