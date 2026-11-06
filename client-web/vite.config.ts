@@ -2,10 +2,13 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+const BACKEND_TARGET = process.env.VITE_BACKEND_URL || 'https://staging.aispeaking.ir';
+
 export default defineConfig({
   plugins: [react()],
   base: './',
   resolve: {
+    dedupe: ['react', 'react-dom'],
     alias: [
       { find: '@', replacement: path.resolve(__dirname, './src') },
       { find: /^@react-cupertino-ui\/shared\/lib\/(.*)/, replacement: '@react-cupertino-ui/shared/dist/lib/$1' },
@@ -16,21 +19,31 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8080',
+        target: BACKEND_TARGET,
         changeOrigin: true,
+        secure: false,
         ws: true,
       },
       '/uploads': {
-        target: 'http://127.0.0.1:8080',
+        target: BACKEND_TARGET,
         changeOrigin: true,
-      },
-      '/resources': {
-        target: 'http://127.0.0.1:8080',
-        changeOrigin: true,
+        secure: false,
       },
       '/static': {
-        target: 'http://127.0.0.1:8080',
+        target: BACKEND_TARGET,
         changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-motion': ['motion'],
+          'vendor-icons': ['lucide-react'],
+        },
       },
     },
   },

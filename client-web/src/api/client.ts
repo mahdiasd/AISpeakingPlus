@@ -1,6 +1,6 @@
 /**
  * AI Speaking Plus - Web API Client
- * Compatible with Ktor Backend (8080) and Staging Environment
+ * Compatible with Ktor Backend & Staging Environment
  */
 
 export const BASE_API_URL = import.meta.env.VITE_API_BASE_URL || '/api';
@@ -8,7 +8,14 @@ export const BASE_API_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 export const TEST_ACCOUNT = {
   mobile: '09152413498',
   otp: '87799',
-};
+} as const;
+
+export interface NetworkResponse<T> {
+  data?: T;
+  message?: string;
+  errorMessage?: string | null;
+  errorCode?: number | null;
+}
 
 export class ApiError extends Error {
   status: number;
@@ -23,15 +30,33 @@ export class ApiError extends Error {
 }
 
 export function getAuthToken(): string | null {
-  return localStorage.getItem('token');
+  try {
+    return localStorage.getItem('token');
+  } catch {
+    return null;
+  }
 }
 
 export function setAuthToken(token: string): void {
-  localStorage.setItem('token', token);
+  try {
+    localStorage.setItem('token', token);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('auth-token-changed'));
+    }
+  } catch (err) {
+    console.error('Failed to save auth token in localStorage', err);
+  }
 }
 
 export function clearAuthToken(): void {
-  localStorage.removeItem('token');
+  try {
+    localStorage.removeItem('token');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('auth-token-changed'));
+    }
+  } catch (err) {
+    console.error('Failed to clear auth token from localStorage', err);
+  }
 }
 
 export async function request<T = unknown>(
@@ -66,19 +91,31 @@ export async function request<T = unknown>(
     throw new ApiError(response.status, `Request failed: ${response.statusText}`, errorData);
   }
 
-  // Handle empty bodies
+  // 204 No Content
   if (response.status === 204) {
     return {} as T;
   }
 
-  return response.json();
+  const json = await response.json();
+  // If response matches Ktor's NetworkResponse structure { data: T }, unpack data
+  if (json && typeof json === 'object' && 'data' in json && json.data !== undefined) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 export const api = {
   get: <T = unknown>(url: string) => request<T>(url, { method: 'GET' }),
   post: <T = unknown>(url: string, body?: unknown) =>
-    request<T>(url, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
+    request<T>(url, {
+      method: 'POST',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
   put: <T = unknown>(url: string, body?: unknown) =>
-    request<T>(url, { method: 'PUT', body: body ? JSON.stringify(body) : undefined }),
+    request<T>(url, {
+      method: 'PUT',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
   delete: <T = unknown>(url: string) => request<T>(url, { method: 'DELETE' }),
 };

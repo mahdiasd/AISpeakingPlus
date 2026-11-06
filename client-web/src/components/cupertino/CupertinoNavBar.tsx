@@ -29,7 +29,7 @@ export const CupertinoNavBar: React.FC<CupertinoNavBarProps> = ({
         )
       )}
     >
-      <div className="relative flex items-center justify-between h-13 px-4 max-w-lg mx-auto">
+      <div className="relative flex items-center justify-between h-14 px-4 max-w-lg mx-auto">
         {/* Start Anchor (Top Right in RTL): Back Button */}
         <div className="flex items-center min-w-[70px] justify-start z-10">
           {onBack && (
@@ -46,12 +46,12 @@ export const CupertinoNavBar: React.FC<CupertinoNavBarProps> = ({
         </div>
 
         {/* Center Anchor: Symmetrical Centered Title */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-18">
-          <h1 className="text-base font-bold text-white tracking-tight truncate max-w-full text-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-24">
+          <h1 className="text-sm sm:text-base font-bold text-white tracking-tight truncate max-w-full text-center leading-tight">
             {title}
           </h1>
           {subtitle && (
-            <span className="text-[11px] text-apple-gray-400 font-normal truncate max-w-full text-center">
+            <span className="text-[10px] sm:text-[11px] text-apple-gray-400 font-normal truncate max-w-full text-center leading-tight mt-0.5">
               {subtitle}
             </span>
           )}
