@@ -79,6 +79,10 @@ fun configureDatabases() {
             try {
                 exec("ALTER TABLE stages ADD COLUMN IF NOT EXISTS target_objective_fa TEXT NOT NULL DEFAULT '';")
                 exec("ALTER TABLE stages ADD COLUMN IF NOT EXISTS character_behavior TEXT;")
+                exec("ALTER TABLE stages ADD COLUMN IF NOT EXISTS season_number INT NOT NULL DEFAULT 1;")
+                exec("ALTER TABLE stages ADD COLUMN IF NOT EXISTS season_title_fa VARCHAR(255) NOT NULL DEFAULT 'فصل اول: روزهای آغازین در لندن';")
+                exec("ALTER TABLE stages ADD COLUMN IF NOT EXISTS phase_number INT NOT NULL DEFAULT 1;")
+                exec("ALTER TABLE stages ADD COLUMN IF NOT EXISTS phase_title_fa VARCHAR(255) NOT NULL DEFAULT 'ورود و استقرار اولیه';")
             } catch (e: Exception) {
                 PrintHelper.warning("Stage table migration notice: ${e.message}")
             }
@@ -122,6 +126,10 @@ fun seedOrSyncStages() {
             StageTable.insert {
                 it[id] = stage.id
                 it[orderIndex] = stage.orderIndex
+                it[seasonNumber] = stage.seasonNumber
+                it[seasonTitleFa] = stage.seasonTitleFa
+                it[phaseNumber] = stage.phaseNumber
+                it[phaseTitleFa] = stage.phaseTitleFa
                 it[title] = stage.title
                 it[titleFa] = stage.titleFa
                 it[briefing] = stage.briefing
@@ -139,25 +147,27 @@ fun seedOrSyncStages() {
                 it[status] = "PUBLISHED"
             }
         } else {
-            val currentVoiceId = existing[StageTable.voiceId]
-            val currentGender = existing[StageTable.characterGender]
-            val currentAvatar = existing[StageTable.characterAvatarUrl]
-            val currentBehavior = existing[StageTable.characterBehavior]
-            val currentBackground = existing[StageTable.backgroundUrl]
-            if (currentVoiceId != stage.voiceId ||
-                currentGender != stage.characterGender ||
-                currentAvatar != stage.characterAvatarUrl ||
-                currentBehavior != stage.characterBehavior ||
-                currentBackground != stage.backgroundUrl
-            ) {
-                val targetId = existing[StageTable.id]
-                StageTable.update({ StageTable.id eq targetId }) {
-                    it[voiceId] = stage.voiceId
-                    it[characterGender] = stage.characterGender
-                    it[characterAvatarUrl] = stage.characterAvatarUrl
-                    it[characterBehavior] = stage.characterBehavior
-                    it[backgroundUrl] = stage.backgroundUrl
-                }
+            val targetId = existing[StageTable.id]
+            StageTable.update({ StageTable.id eq targetId }) {
+                it[orderIndex] = stage.orderIndex
+                it[seasonNumber] = stage.seasonNumber
+                it[seasonTitleFa] = stage.seasonTitleFa
+                it[phaseNumber] = stage.phaseNumber
+                it[phaseTitleFa] = stage.phaseTitleFa
+                it[title] = stage.title
+                it[titleFa] = stage.titleFa
+                it[briefing] = stage.briefing
+                it[briefingFa] = stage.briefingFa
+                it[targetObjective] = stage.targetObjective
+                it[targetObjectiveFa] = stage.targetObjectiveFa
+                it[voiceId] = stage.voiceId
+                it[characterGender] = stage.characterGender
+                it[characterName] = stage.characterName
+                it[characterAvatarUrl] = stage.characterAvatarUrl
+                it[characterBehavior] = stage.characterBehavior
+                it[backgroundUrl] = stage.backgroundUrl
+                it[initialSpeaker] = stage.initialSpeaker
+                it[maxTurns] = stage.maxTurns
             }
         }
     }

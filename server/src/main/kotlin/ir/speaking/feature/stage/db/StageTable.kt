@@ -11,6 +11,10 @@ object StageTable : IdTable<String>("stages") {
     override val primaryKey = PrimaryKey(id)
 
     val orderIndex = integer("order_index").uniqueIndex()
+    val seasonNumber = integer("season_number").default(1)
+    val seasonTitleFa = varchar("season_title_fa", 255).default("فصل اول: روزهای آغازین در لندن")
+    val phaseNumber = integer("phase_number").default(1)
+    val phaseTitleFa = varchar("phase_title_fa", 255).default("فاز ۱: ورود و استقرار اولیه")
     val title = varchar("title", 255)
     val titleFa = varchar("title_fa", 255)
     val briefing = text("briefing")

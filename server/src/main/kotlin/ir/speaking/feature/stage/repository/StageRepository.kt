@@ -76,6 +76,10 @@ class StageRepository {
             StageSummaryResponse(
                 id = stageId,
                 orderIndex = orderIndex,
+                seasonNumber = row[StageTable.seasonNumber],
+                seasonTitleFa = row[StageTable.seasonTitleFa],
+                phaseNumber = row[StageTable.phaseNumber],
+                phaseTitleFa = row[StageTable.phaseTitleFa],
                 title = row[StageTable.title],
                 titleFa = row[StageTable.titleFa],
                 briefingFa = row[StageTable.briefingFa],
@@ -156,6 +160,10 @@ class StageRepository {
         StageDetailResponse(
             id = stageId,
             orderIndex = orderIndex,
+            seasonNumber = row[StageTable.seasonNumber],
+            seasonTitleFa = row[StageTable.seasonTitleFa],
+            phaseNumber = row[StageTable.phaseNumber],
+            phaseTitleFa = row[StageTable.phaseTitleFa],
             title = row[StageTable.title],
             titleFa = row[StageTable.titleFa],
             briefing = row[StageTable.briefing],
