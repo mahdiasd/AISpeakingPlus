@@ -26,8 +26,8 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
   const [showTranslation, setShowTranslation] = useState(false);
 
   return (
-    <div className="flex items-start gap-3 justify-start max-w-[88%] sm:max-w-[80%] my-3">
-      {/* 1. Character Avatar Squircle */}
+    <div className="flex items-start gap-3 justify-start max-w-[90%] sm:max-w-[82%] my-3 mr-auto" dir="ltr">
+      {/* 1. Character Avatar Squircle (Anchored to the left) */}
       <div className="relative shrink-0">
         <div className="w-10 h-10 rounded-2xl overflow-hidden apple-glass border border-white/20 shadow-apple-sm flex items-center justify-center bg-gradient-to-br from-[#2c2d3a] to-[#16171f]">
           {characterAvatarUrl ? (
@@ -52,20 +52,20 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
         )}
       </div>
 
-      {/* 2. Frosted Liquid Glass Message Card */}
+      {/* 2. Frosted Liquid Glass Message Card (Tails toward the left avatar) */}
       <div className="space-y-1.5 flex-1 min-w-0">
         {/* Character Title */}
-        <div className="flex items-center gap-1.5 px-1">
-          <span className="text-[11px] font-semibold text-apple-gray-400">{characterName}</span>
+        <div className="flex items-center gap-1.5 px-1" dir="ltr">
+          <span className="text-[11px] font-semibold text-apple-gray-300">{characterName}</span>
           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-apple-blue/20 text-apple-blue font-bold">
             AI Host
           </span>
         </div>
 
-        <div className="apple-glass rounded-3xl rounded-tr-md p-4 text-white space-y-3 border border-white/12 shadow-apple-md bg-[#1d1f2b]/75 backdrop-blur-2xl">
+        <div className="apple-glass rounded-3xl rounded-tl-md p-4 text-white space-y-3 border border-white/14 shadow-apple-md bg-[#1d1f2b]/80 backdrop-blur-2xl">
           {/* Main English Transcript */}
           {message ? (
-            <p className="text-[15px] leading-relaxed font-normal tracking-wide text-slate-100 select-text" dir="ltr">
+            <p className="text-[15px] leading-relaxed font-normal tracking-wide text-slate-100 select-text text-left" dir="ltr">
               {message}
               {isStreaming && (
                 <span className="inline-block w-2 h-4 ml-1 bg-apple-blue rounded-sm animate-pulse align-middle" />
@@ -73,7 +73,7 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
             </p>
           ) : (
             /* Siri Thinking State */
-            <div className="flex items-center gap-2 py-1 text-xs text-apple-gray-400">
+            <div className="flex items-center gap-2 py-1 text-xs text-apple-gray-400" dir="rtl">
               <Sparkles className="w-4 h-4 text-apple-blue animate-spin" />
               <span>هوش مصنوعی در حال پاسخ دادن...</span>
             </div>
@@ -90,7 +90,7 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
                 className="overflow-hidden"
               >
                 <div
-                  className="p-3 rounded-2xl bg-white/[0.06] border border-white/10 text-xs text-slate-300 leading-relaxed font-sans"
+                  className="p-3 rounded-2xl bg-white/[0.06] border border-white/10 text-xs text-slate-300 leading-relaxed font-sans text-right"
                   dir="rtl"
                 >
                   <span className="text-[10px] font-bold text-apple-yellow block mb-0.5">
@@ -104,7 +104,7 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
 
           {/* Action Footer (TTS Voice + Translation Button) */}
           {message && !isStreaming && (
-            <div className="flex items-center justify-between pt-1 border-t border-white/10">
+            <div className="flex items-center justify-between pt-1 border-t border-white/10" dir="rtl">
               {/* Audio Playback Pill */}
               <button
                 type="button"

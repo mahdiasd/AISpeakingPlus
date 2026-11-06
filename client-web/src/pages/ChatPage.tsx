@@ -7,6 +7,8 @@ import { ChatToolbar } from '../components/chat/ChatToolbar';
 import { AiMessageItem } from '../components/chat/AiMessageItem';
 import { UserMessageItem } from '../components/chat/UserMessageItem';
 import { ChatBottomBar } from '../components/chat/ChatBottomBar';
+import { StageInfoCompanion } from '../components/chat/StageInfoCompanion';
+import { LiveTelemetryCompanion } from '../components/chat/LiveTelemetryCompanion';
 import { ObjectiveModal } from '../components/chat/ObjectiveModal';
 import { HintModal } from '../components/chat/HintModal';
 import { EvaluationModal } from '../components/chat/EvaluationModal';
@@ -297,7 +299,7 @@ export const ChatPage: React.FC = () => {
     }
   };
 
-  // 4. Speech Recognition Integration
+  // 4. Robust Speech Recognition & Voice Recording Integration
   const speechRecognition = useSpeechRecognition((finalTranscript) => {
     if (finalTranscript.trim()) {
       handleSendMessage(finalTranscript.trim());
@@ -410,121 +412,187 @@ export const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-[#07080c] text-white selection:bg-apple-blue selection:text-white pb-32 overflow-hidden">
-      {/* 1. Fullscreen Ambient Stage Background with Frosted Glass Scrim */}
+    <div className="relative min-h-screen w-full bg-[#07080f] text-white selection:bg-apple-blue selection:text-white overflow-hidden flex flex-col justify-between">
+      {/* 1. Fullscreen Ambient Stage Wallpaper with Deep Gaussian Blur & Apple Vignette */}
       {stage && stage.backgroundUrl ? (
         <div className="fixed inset-0 z-0 select-none pointer-events-none overflow-hidden">
           <img
             src={stage.backgroundUrl}
             alt={stage.title}
-            className="w-full h-full object-cover object-center filter blur-lg brightness-[0.28] contrast-[1.1] scale-105"
+            className="w-full h-full object-cover object-center filter blur-3xl brightness-[0.25] contrast-[1.1] scale-110 transform-gpu"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#090a12]/92 via-[#0e111c]/88 to-[#080910]/95" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#07080f]/94 via-[#0b0e1b]/88 to-[#06070e]/96" />
         </div>
       ) : (
-        <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#090a12] via-[#0e111c] to-[#080910]" />
+        <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#07080f] via-[#0b0e1b] to-[#06070e]" />
       )}
 
-      {/* 2. Compose-Matched 2-Row Glass Toolbar */}
-      <header className="sticky top-0 z-30 bg-[#0c0d15]/85 backdrop-blur-2xl border-b border-white/10">
-        <ChatToolbar
-          stage={stage}
-          turnsCount={turnsCount}
-          maxTurns={stage?.maxTurns || 10}
-          userLevel={profile?.languageLevel || 'A1'}
-          isFinishing={isSubmittingEvaluation}
-          onBackClick={handleBackClick}
-          onObjectiveClick={() => setIsObjectiveOpen(true)}
-          onFinishClick={handleFinishConversation}
-        />
-      </header>
+      {/* 2. Responsive Multi-Column Stage Layout */}
+      <div className="relative z-10 w-full flex-1 flex items-center justify-center lg:py-6 lg:px-6">
+        <div className="w-full max-w-7xl flex items-center justify-center lg:gap-8 h-full">
+          {/* A. Right Companion (in RTL: Stage Briefing & Character Info) */}
+          <aside className="hidden lg:block shrink-0">
+            <StageInfoCompanion
+              stage={stage}
+              userLevel={profile?.languageLevel || 'A1'}
+              isObjectiveCompleted={isObjectiveCompleted}
+              onOpenObjectiveModal={() => setIsObjectiveOpen(true)}
+              onPlayBriefingAudio={() => {
+                if (stage?.briefing) {
+                  audioPlayer.play('stage_briefing', stage.briefing);
+                }
+              }}
+            />
+          </aside>
 
-      {/* 3. Main Chat Conversation Feed */}
-      <main className="relative z-10 flex-1 max-w-lg w-full mx-auto px-3.5 pt-3">
-        {/* Loading State */}
-        {isLoadingStage && (
-          <div className="space-y-4 pt-6">
-            <CupertinoSkeleton className="h-24 rounded-3xl" />
-            <CupertinoSkeleton className="h-20 rounded-3xl w-4/5" />
-            <CupertinoSkeleton className="h-20 rounded-3xl w-3/4 mr-auto" />
-          </div>
-        )}
+          {/* B. Center Mobile Canvas (Authentic Apple Device Mockup on Desktop, Full Bleed on Mobile) */}
+          <section className="relative w-full lg:max-w-[430px] h-screen lg:h-[88vh] lg:max-h-[900px] flex flex-col bg-[#0b0d17]/80 lg:rounded-[44px] overflow-hidden lg:border-[3px] lg:border-white/20 lg:shadow-[0_25px_70px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+            {/* Specular Rim Light on Desktop Canvas */}
+            <div
+              aria-hidden="true"
+              className="hidden lg:block absolute inset-x-0 top-0 h-[2px] apple-specular-edge pointer-events-none z-40 rounded-t-[44px]"
+            />
 
-        {/* Error State */}
-        {stageLoadError && (
-          <div className="pt-12 text-center space-y-4">
-            <div className="p-4 rounded-3xl bg-apple-red/10 border border-apple-red/20 text-slate-200 text-sm">
-              {stageLoadError}
+            {/* Desktop Dynamic Island Notch */}
+            <div className="hidden lg:flex absolute top-2 inset-x-0 justify-center z-40 pointer-events-none">
+              <div className="w-28 h-5 rounded-full bg-black border border-white/10 shadow-inner flex items-center justify-end px-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#111] border border-white/15" />
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-sm font-bold text-white active:scale-95 transition-all"
-            >
-              تلاش مجدد
-            </button>
-          </div>
-        )}
 
-        {/* Conversation Bubbles */}
-        {!isLoadingStage && stage && (
-          <div className="space-y-3 pb-4">
-            {chats.map((chat) =>
-              chat.sender === 'Model' ? (
-                <AiMessageItem
-                  key={chat.id}
-                  id={chat.id}
-                  message={chat.text}
-                  translatedMessage={chat.translatedMessage}
-                  audioUrl={chat.audioUrl}
-                  characterName={stage.characterName}
-                  characterAvatarUrl={stage.characterAvatarUrl}
-                  isStreaming={chat.isStreaming}
-                  isPlaying={audioPlayer.isPlaying(chat.id)}
-                  onPlayAudio={() => audioPlayer.play(chat.id, chat.text, chat.audioUrl)}
+            {/* Native Mobile Stage Wallpaper inside Canvas */}
+            {stage && stage.backgroundUrl && (
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+                <img
+                  src={stage.backgroundUrl}
+                  alt={stage.title}
+                  className="w-full h-full object-cover object-top filter brightness-[0.34] contrast-[1.08]"
                 />
-              ) : (
-                <UserMessageItem
-                  key={chat.id}
-                  id={chat.id}
-                  message={chat.text}
-                  hasGrammarError={chat.hasGrammarError}
-                  correctedSentence={chat.correctedSentence}
-                  grammarFeedbackFa={chat.grammarFeedbackFa}
-                />
-              )
+                <div className="absolute inset-0 bg-gradient-to-b from-[#090b16]/90 via-[#0e1122]/82 to-[#080912]/92" />
+              </div>
             )}
 
-            <div ref={messagesEndRef} />
-          </div>
-        )}
-      </main>
+            {/* Header: Apple Chat Toolbar */}
+            <header className="sticky top-0 lg:pt-4 z-30 bg-[#0c0e1a]/85 backdrop-blur-2xl border-b border-white/10">
+              <ChatToolbar
+                stage={stage}
+                turnsCount={turnsCount}
+                maxTurns={stage?.maxTurns || 10}
+                userLevel={profile?.languageLevel || 'A1'}
+                isFinishing={isSubmittingEvaluation}
+                onBackClick={handleBackClick}
+                onObjectiveClick={() => setIsObjectiveOpen(true)}
+                onFinishClick={handleFinishConversation}
+              />
+            </header>
 
-      {/* 4. Compose-Matched Floating Glass Bottom Dock */}
-      {!isLoadingStage && stage && (
-        <ChatBottomBar
-          onSendMessage={handleSendMessage}
-          onRequestHint={handleRequestHint}
-          isModelSpeaking={isModelSpeaking}
-          isSending={isSending}
-          isLoadingHint={isLoadingHint}
-          isRecording={speechRecognition.isListening}
-          recordingTranscript={speechRecognition.transcript}
-          onStartRecording={speechRecognition.startListening}
-          onStopRecording={speechRecognition.stopListening}
-          onCancelRecording={speechRecognition.resetTranscript}
-          recordingError={speechRecognition.error}
-        />
-      )}
+            {/* Main Chat Conversation Feed */}
+            <main className="relative z-10 flex-1 overflow-y-auto px-3.5 pt-3 pb-32 space-y-4">
+              {/* Loading Skeleton */}
+              {isLoadingStage && (
+                <div className="space-y-4 pt-6">
+                  <CupertinoSkeleton className="h-24 rounded-3xl" />
+                  <CupertinoSkeleton className="h-20 rounded-3xl w-4/5" />
+                  <CupertinoSkeleton className="h-20 rounded-3xl w-3/4 mr-auto" />
+                </div>
+              )}
 
-      {/* 5. Objective Modal */}
+              {/* Error State */}
+              {stageLoadError && (
+                <div className="pt-12 text-center space-y-4">
+                  <div className="p-4 rounded-3xl bg-apple-red/10 border border-apple-red/20 text-slate-200 text-sm">
+                    {stageLoadError}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => window.location.reload()}
+                    className="px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-sm font-bold text-white active:scale-95 transition-all"
+                  >
+                    تلاش مجدد
+                  </button>
+                </div>
+              )}
+
+              {/* Conversation Messages */}
+              {!isLoadingStage && stage && (
+                <div className="space-y-3 pb-2" dir="ltr">
+                  {chats.map((chat) =>
+                    chat.sender === 'Model' ? (
+                      <div key={chat.id} className="w-full flex justify-start">
+                        <AiMessageItem
+                          id={chat.id}
+                          message={chat.text}
+                          translatedMessage={chat.translatedMessage}
+                          audioUrl={chat.audioUrl}
+                          characterName={stage.characterName}
+                          characterAvatarUrl={stage.characterAvatarUrl}
+                          isStreaming={chat.isStreaming}
+                          isPlaying={audioPlayer.isPlaying(chat.id)}
+                          onPlayAudio={() => audioPlayer.play(chat.id, chat.text, chat.audioUrl)}
+                        />
+                      </div>
+                    ) : (
+                      <div key={chat.id} className="w-full flex justify-end">
+                        <UserMessageItem
+                          id={chat.id}
+                          message={chat.text}
+                          hasGrammarError={chat.hasGrammarError}
+                          correctedSentence={chat.correctedSentence}
+                          grammarFeedbackFa={chat.grammarFeedbackFa}
+                        />
+                      </div>
+                    )
+                  )}
+
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </main>
+
+            {/* Floating Apple Liquid Glass Bottom Dock */}
+            {!isLoadingStage && stage && (
+              <div className="absolute bottom-4 inset-x-3.5 z-30">
+                <ChatBottomBar
+                  onSendMessage={handleSendMessage}
+                  onRequestHint={handleRequestHint}
+                  isModelSpeaking={isModelSpeaking}
+                  isSending={isSending}
+                  isLoadingHint={isLoadingHint}
+                  isRecording={speechRecognition.isListening}
+                  isProcessingRecording={speechRecognition.isProcessing}
+                  recordingAudioLevel={speechRecognition.audioLevel}
+                  recordingDuration={speechRecognition.recordingDuration}
+                  recordingTranscript={speechRecognition.transcript}
+                  onStartRecording={speechRecognition.startListening}
+                  onStopRecording={speechRecognition.stopListening}
+                  onCancelRecording={speechRecognition.cancelListening}
+                  recordingError={speechRecognition.error}
+                />
+              </div>
+            )}
+          </section>
+
+          {/* C. Left Companion (in RTL: Interaction Telemetry & Live Grammar Feed) */}
+          <aside className="hidden lg:block shrink-0">
+            <LiveTelemetryCompanion
+              turnsCount={turnsCount}
+              maxTurns={stage?.maxTurns || 10}
+              hintsUsedCount={hintsUsedCount}
+              grammarErrors={grammarErrorsCollected}
+              onRequestHint={handleRequestHint}
+            />
+          </aside>
+        </div>
+      </div>
+
+      {/* 3. Objective Modal */}
       <ObjectiveModal
         isOpen={isObjectiveOpen}
         onClose={() => setIsObjectiveOpen(false)}
         stage={stage}
       />
 
-      {/* 6. Hint Suggestion Modal */}
+      {/* 4. Hint Suggestion Modal */}
       {hintData && (
         <HintModal
           isOpen={isHintOpen}
@@ -536,7 +604,7 @@ export const ChatPage: React.FC = () => {
         />
       )}
 
-      {/* 7. Evaluation Result Modal */}
+      {/* 5. Evaluation Result Modal */}
       <EvaluationModal
         isOpen={isEvaluationOpen}
         onClose={() => setIsEvaluationOpen(false)}
@@ -547,7 +615,7 @@ export const ChatPage: React.FC = () => {
         onBackToMap={() => navigate('/')}
       />
 
-      {/* 8. Exit Confirmation Modal */}
+      {/* 6. Exit Confirmation Modal */}
       <ExitConfirmModal
         isOpen={isExitConfirmOpen}
         onClose={() => setIsExitConfirmOpen(false)}
@@ -557,14 +625,14 @@ export const ChatPage: React.FC = () => {
         }}
       />
 
-      {/* 9. Floating Apple Toast */}
+      {/* 7. Floating Apple Toast */}
       <AnimatePresence>
         {toastMessage && (
           <motion.div
             initial={{ opacity: 0, y: 24, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.95 }}
-            className="fixed top-24 inset-x-4 max-w-sm mx-auto z-50 pointer-events-none"
+            className="fixed top-20 inset-x-4 max-w-sm mx-auto z-50 pointer-events-none"
           >
             <div className="apple-glass bg-[#1b1e2c]/95 border border-white/20 text-white text-xs px-4 py-3 rounded-2xl shadow-apple-lg flex items-center gap-2 pointer-events-auto">
               <Sparkles className="w-4 h-4 text-apple-yellow shrink-0" />
