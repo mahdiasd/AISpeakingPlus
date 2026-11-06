@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Pause, RotateCcw, ArrowRight, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import { CupertinoNavBar, CupertinoButton } from '../components/cupertino';
+import { getAssetUrl } from '../utils/avatar';
 
 export const IntroVideoPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ export const IntroVideoPage: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [isEnded, setIsEnded] = useState(false);
 
-  const videoUrl = '/resources/video/intro.mp4?v=2';
+  const videoUrl = getAssetUrl('resources/video/intro.mp4?v=2');
 
   const togglePlay = () => {
     if (!videoRef.current) return;
