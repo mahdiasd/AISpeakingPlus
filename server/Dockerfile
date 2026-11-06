@@ -13,13 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy the fat jar produced by `./gradlew buildFatJar`
 COPY build/libs/*-all.jar app.jar
 
-# Default directories
+# Default directories (models and audio are mounted via volumes in docker-compose)
 RUN mkdir -p /app/native /app/models /app/audio_cache /app/logs
-
-# Pre-download Kokoro-82M model during build for instant container availability
-RUN curl -SL "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2" -o /tmp/kokoro.tar.bz2 && \
-    tar -xjf /tmp/kokoro.tar.bz2 -C /app/models && \
-    rm -f /tmp/kokoro.tar.bz2
 
 # Speech-to-Text settings
 ENV STT_MODEL_DIR=/app/models/sherpa-onnx-streaming-zipformer-en-2023-06-21
