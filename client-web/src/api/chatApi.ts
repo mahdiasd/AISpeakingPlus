@@ -87,6 +87,32 @@ export const chatApi = {
   },
 
   /**
+   * Transcribes a recorded WAV audio blob via server-side Sherpa-ONNX STT.
+   */
+  async transcribeAudio(wavBlob: Blob): Promise<{ text: string; durationMs: number }> {
+    const token = getAuthToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'audio/wav',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${BASE_API_URL}/v2/stt/transcribe`, {
+      method: 'POST',
+      headers,
+      body: wavBlob,
+    });
+
+    if (!response.ok) {
+      throw new Error(`STT transcribe failed with status ${response.status}`);
+    }
+
+    const json = await response.json();
+    return json.data || { text: '', durationMs: 0 };
+  },
+
+  /**
    * Evaluates final conversation, awards stars, and saves progress.
    */
   async submitEvaluation(

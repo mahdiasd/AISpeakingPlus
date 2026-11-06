@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Send, Keyboard, Lightbulb, Sparkles, X } from 'lucide-react';
+import { Mic, Square, Send, Keyboard, Lightbulb, Sparkles, MicOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { SiriVoiceVisualizer } from './SiriVoiceVisualizer';
 
 export interface ChatBottomBarProps {
   onSendMessage: (text: string) => void;
@@ -9,6 +10,9 @@ export interface ChatBottomBarProps {
   isSending: boolean;
   isLoadingHint: boolean;
   isRecording: boolean;
+  isProcessingRecording?: boolean;
+  recordingAudioLevel?: number;
+  recordingDuration?: number;
   recordingTranscript?: string;
   onStartRecording: () => void;
   onStopRecording: () => void;
@@ -23,6 +27,9 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
   isSending,
   isLoadingHint,
   isRecording,
+  isProcessingRecording = false,
+  recordingAudioLevel = 0,
+  recordingDuration = 0,
   recordingTranscript = '',
   onStartRecording,
   onStopRecording,
@@ -42,154 +49,174 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
   const handleSendText = (e?: React.FormEvent) => {
     e?.preventDefault();
     const clean = textInput.trim();
-    if (!clean || isSending || isModelSpeaking) return;
+    if (!clean || isSending || isModelSpeaking || isProcessingRecording) return;
     onSendMessage(clean);
     setTextInput('');
   };
 
-  return (
-    <div className="fixed bottom-4 inset-x-3 max-w-lg mx-auto z-40">
-      {/* Live Speech Recognition Transcript Floater */}
-      <AnimatePresence>
-        {isRecording && (
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 450, damping: 28 }}
-            className="mb-2 p-3.5 rounded-2xl apple-glass bg-[#1b1d28]/95 border border-apple-blue/40 shadow-apple-lg text-white space-y-2"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-bold text-apple-blue">
-                <span className="w-2.5 h-2.5 rounded-full bg-apple-blue animate-ping" />
-                <span>گوش دادن هوشمند (به انگلیسی صحبت کنید)...</span>
-              </div>
-              {onCancelRecording && (
-                <button
-                  type="button"
-                  onClick={onCancelRecording}
-                  className="p-1 rounded-full text-apple-gray-400 hover:text-white"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+  const isBusy = isSending || isModelSpeaking || isProcessingRecording;
 
-            <p className="text-sm font-mono text-slate-100 min-h-[22px] px-2 py-1 rounded-xl bg-white/5 border border-white/5 select-text" dir="ltr">
-              {recordingTranscript || 'Listening to your English sentence...'}
-            </p>
+  return (
+    <div className="w-full select-none">
+      {/* 1. Live Siri Waveform / Processing Card Floating Above Dock */}
+      <AnimatePresence>
+        {(isRecording || isProcessingRecording) && (
+          <motion.div
+            initial={{ opacity: 0, y: 14, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 28 }}
+            className="mb-2.5"
+          >
+            <SiriVoiceVisualizer
+              isRecording={isRecording}
+              isProcessing={isProcessingRecording}
+              audioLevel={recordingAudioLevel}
+              recordingDuration={recordingDuration}
+              transcript={recordingTranscript}
+              onCancel={onCancelRecording}
+            />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Recording Error Alert */}
+      {/* 2. Recording Error Alert Toast */}
       <AnimatePresence>
-        {recordingError && (
+        {recordingError && !isRecording && (
           <motion.div
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 6 }}
-            className="mb-2 px-3 py-2 rounded-2xl bg-apple-red/20 border border-apple-red/30 text-white text-xs flex items-center justify-between"
+            exit={{ opacity: 0, y: 8 }}
+            className="mb-2.5 px-4 py-2.5 rounded-2xl apple-glass bg-apple-red/20 border border-apple-red/30 text-white text-xs flex items-center justify-between shadow-apple-sm"
           >
-            <span>{recordingError}</span>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-apple-red shrink-0" />
+              <span>{recordingError}</span>
+            </div>
             <button
               type="button"
               onClick={() => setInputMode('text')}
-              className="text-apple-yellow underline text-[11px] font-bold mr-2"
+              className="text-apple-yellow underline text-[11px] font-bold mr-2 shrink-0 active:opacity-70"
             >
-              استفاده از کیبورد
+              کیبورد
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main Glass Floating Dock */}
-      <div className="apple-glass rounded-3xl p-2 border border-white/15 bg-[#141620]/90 backdrop-blur-2xl shadow-apple-lg flex items-center gap-2">
-        {/* 1. Hint Button */}
-        <button
+      {/* 3. Main Apple Liquid Glass Floating Dock */}
+      <div className="relative rounded-[28px] p-2 apple-glass-card bg-[#141624]/90 backdrop-blur-2xl border border-white/18 shadow-apple-lg flex items-center gap-2">
+        {/* Specular Top Edge Light Bar */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-[1.5px] apple-specular-edge pointer-events-none rounded-t-[28px]"
+        />
+
+        {/* Hint Trigger Button (Amber Warm Apple Style) */}
+        <motion.button
           type="button"
+          whileTap={{ scale: 0.92 }}
+          transition={{ type: 'spring', stiffness: 450, damping: 25 }}
           onClick={onRequestHint}
-          disabled={isLoadingHint || isSending || isModelSpeaking}
-          className="p-3 rounded-2xl bg-white/10 hover:bg-white/15 text-apple-yellow active:scale-95 disabled:opacity-40 transition-all shrink-0 flex items-center justify-center relative"
+          disabled={isLoadingHint || isBusy}
+          className="w-12 h-12 rounded-2xl apple-glass-pill bg-white/10 hover:bg-white/15 text-apple-yellow active:bg-white/20 disabled:opacity-35 transition-all shrink-0 flex items-center justify-center relative border border-white/15"
           title="دریافت راهنمایی هوش مصنوعی"
         >
           {isLoadingHint ? (
-            <Sparkles className="w-5 h-5 animate-spin" />
+            <Sparkles className="w-5 h-5 animate-spin text-apple-yellow" />
           ) : (
-            <Lightbulb className="w-5 h-5 fill-apple-yellow/20" />
+            <Lightbulb className="w-5 h-5 fill-apple-yellow/25 text-apple-yellow" />
           )}
-        </button>
+        </motion.button>
 
-        {/* 2. Mode Input Center Container */}
+        {/* Mode Input Center Pill Container */}
         <div className="flex-1 min-w-0">
           {inputMode === 'voice' ? (
             /* Voice Recording Big Pill */
             <div className="flex items-center justify-center">
-              <button
+              <motion.button
                 type="button"
+                whileTap={{ scale: isBusy ? 1 : 0.97 }}
+                transition={{ type: 'spring', stiffness: 450, damping: 25 }}
                 onClick={isRecording ? onStopRecording : onStartRecording}
-                disabled={isSending || isModelSpeaking}
-                className={`relative flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-2xl font-bold text-sm transition-all shadow-apple-md ${
+                disabled={isBusy}
+                className={`relative flex items-center justify-center gap-2.5 w-full h-12 px-4 rounded-2xl font-bold text-sm transition-all overflow-hidden border ${
                   isRecording
-                    ? 'bg-gradient-to-r from-apple-red to-apple-orange text-white ring-4 ring-apple-red/30 animate-pulse'
-                    : 'bg-gradient-to-r from-apple-blue to-[#5856D6] hover:brightness-110 text-white active:scale-[0.98]'
-                } disabled:opacity-50`}
+                    ? 'bg-gradient-to-r from-apple-red via-rose-600 to-apple-orange text-white border-apple-red/50 shadow-[0_0_20px_rgba(255,59,48,0.5)] ring-2 ring-apple-red/40'
+                    : 'bg-gradient-to-r from-apple-blue to-[#5856D6] hover:brightness-105 text-white border-white/25 shadow-apple-md'
+                } disabled:opacity-40 disabled:cursor-not-allowed`}
               >
+                {/* Specular Edge Highlight */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none"
+                />
+
                 {isRecording ? (
                   <>
-                    <MicOff className="w-5 h-5 animate-bounce" />
+                    <Square className="w-4 h-4 fill-white animate-pulse" />
                     <span>توقف و ارسال پیام</span>
                   </>
                 ) : (
                   <>
-                    <Mic className="w-5 h-5" />
-                    <span>{isModelSpeaking ? 'لطفاً صبر کنید...' : 'لمس کنید و انگلیسی بگویید'}</span>
+                    <Mic className="w-4 h-4" />
+                    <span className="truncate">
+                      {isModelSpeaking ? 'لطفاً به صحبت‌ها گوش دهید...' : 'لمس کنید و انگلیسی بگویید'}
+                    </span>
                   </>
                 )}
-              </button>
+              </motion.button>
             </div>
           ) : (
-            /* Keyboard Text Input Capsule */
-            <form onSubmit={handleSendText} className="flex items-center gap-2 w-full">
+            /* Text Input Form */
+            <form onSubmit={handleSendText} className="flex items-center gap-1.5 w-full">
               <input
                 ref={inputRef}
                 type="text"
+                dir="ltr"
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Type in English..."
-                dir="ltr"
-                disabled={isSending || isModelSpeaking}
-                className="w-full bg-white/10 border border-white/15 focus:border-apple-blue rounded-2xl px-3.5 py-2.5 text-sm text-white placeholder-apple-gray-400 focus:outline-none focus:ring-1 focus:ring-apple-blue transition-all"
+                placeholder="Type your response in English..."
+                disabled={isBusy}
+                className="w-full h-12 bg-white/10 border border-white/15 focus:border-apple-blue focus:bg-white/15 rounded-2xl px-4 text-sm text-white placeholder-apple-gray-400 focus:outline-none transition-all"
               />
-              <button
+              <motion.button
                 type="submit"
-                disabled={!textInput.trim() || isSending || isModelSpeaking}
-                className="p-2.5 rounded-2xl bg-apple-blue hover:bg-apple-blue/90 text-white disabled:opacity-30 active:scale-95 transition-all shrink-0"
+                whileTap={{ scale: 0.92 }}
+                disabled={!textInput.trim() || isBusy}
+                className="w-12 h-12 rounded-2xl bg-apple-blue hover:bg-blue-600 text-white flex items-center justify-center shrink-0 disabled:opacity-40 transition-all border border-apple-blue/50 shadow-apple-sm"
               >
-                <Send className="w-4 h-4 rotate-180" />
-              </button>
+                {isSending ? (
+                  <Sparkles className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </motion.button>
             </form>
           )}
         </div>
 
-        {/* 3. Input Mode Switcher (Voice vs Keyboard) */}
-        <button
+        {/* Input Mode Toggle (Voice vs Keyboard) */}
+        <motion.button
           type="button"
+          whileTap={{ scale: 0.92 }}
+          transition={{ type: 'spring', stiffness: 450, damping: 25 }}
           onClick={() => {
             if (isRecording) {
-              onStopRecording();
+              onCancelRecording?.();
             }
             setInputMode((prev) => (prev === 'voice' ? 'text' : 'voice'));
           }}
-          className="p-3 rounded-2xl bg-white/10 hover:bg-white/15 text-slate-200 active:scale-95 transition-all shrink-0"
-          title={inputMode === 'voice' ? 'تغییر به کیبورد متنی' : 'تغییر به ورودی صوتی'}
+          disabled={isBusy}
+          className="w-12 h-12 rounded-2xl apple-glass-pill bg-white/10 hover:bg-white/15 text-apple-gray-300 hover:text-white active:bg-white/20 disabled:opacity-35 transition-all shrink-0 flex items-center justify-center border border-white/15"
+          title={inputMode === 'voice' ? 'استفاده از کیبورد متنی' : 'استفاده از ورودی صوتی'}
         >
           {inputMode === 'voice' ? (
-            <Keyboard className="w-5 h-5 text-apple-gray-300" />
+            <Keyboard className="w-5 h-5" />
           ) : (
-            <Mic className="w-5 h-5 text-apple-blue" />
+            <MicOff className="w-5 h-5 text-apple-blue" />
           )}
-        </button>
+        </motion.button>
       </div>
     </div>
   );
