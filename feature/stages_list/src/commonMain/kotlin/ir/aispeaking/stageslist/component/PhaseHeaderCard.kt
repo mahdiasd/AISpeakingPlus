@@ -1,29 +1,40 @@
 package ir.aispeaking.stageslist.component
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ir.aispeaking.sharedui.Res
+import ir.aispeaking.sharedui.ic_done
 import ir.aispeaking.sharedui.ui.game.Game
-import ir.aispeaking.sharedui.ui.game.GameProgressBar
 import ir.aispeaking.sharedui.ui.game.GameText
-import ir.aispeaking.sharedui.ui.game.GlassPanel
 import ir.aispeaking.sharedui.ui.game.fa
+import ir.aispeaking.sharedui.ui.them.AppTheme
+import org.jetbrains.compose.resources.painterResource
 
 /**
- * Visual header separating story phases/units on the journey timeline.
+ * Apple-grade frosted glass section header separating phases on the journey map.
  */
 @Composable
 fun PhaseHeaderCard(
@@ -33,64 +44,133 @@ fun PhaseHeaderCard(
     totalStages: Int,
     modifier: Modifier = Modifier
 ) {
-    val progress = if (totalStages > 0) completedStages.toFloat() / totalStages else 0f
     val isPhaseCompleted = completedStages == totalStages && totalStages > 0
+    val progress = if (totalStages > 0) completedStages.toFloat() / totalStages else 0f
+    val isDark = AppTheme.isDark
+    val shape = RoundedCornerShape(20.dp)
 
-    GlassPanel(
+    val surfaceBg = if (isDark) Color(0xBF161924) else Color(0xE0FFFFFF)
+    val specularStroke = Brush.verticalGradient(
+        if (isDark) {
+            listOf(Color(0x4DFFFFFF), Color(0x12FFFFFF))
+        } else {
+            listOf(Color(0x99FFFFFF), Color(0x1C000000))
+        }
+    )
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress.coerceIn(0f, 1f),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = 300f),
+        label = "phaseProgress"
+    )
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 6.dp)
+            .clip(shape)
+            .background(surfaceBg)
+            .border(1.dp, specularStroke, shape)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                // 3D Phase Orb Badge
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isPhaseCompleted) {
+                                Brush.linearGradient(listOf(Color(0xFFFFD60A), Color(0xFFD4A000)))
+                            } else {
+                                Brush.linearGradient(listOf(Color(0xFF0A84FF), Color(0xFF0056B3)))
+                            }
+                        )
+                        .border(1.5.dp, Color.White.copy(alpha = 0.5f), CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(if (isPhaseCompleted) Game.Gold else Game.Blue),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    if (isPhaseCompleted) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_done),
+                            contentDescription = null,
+                            tint = Color(0xFF1F1600),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    } else {
                         GameText(
                             text = phaseNumber.fa(),
-                            size = 15.sp,
+                            size = 16.sp,
                             bold = true,
-                            color = if (isPhaseCompleted) Color(0xFF1F1600) else Color.White
+                            color = Color.White
                         )
                     }
+                }
 
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                // Phase Title & Micro-status
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    GameText(
+                        text = phaseTitleFa,
+                        size = 15.sp,
+                        bold = true,
+                        color = Game.TextPrimary
+                    )
+                    GameText(
+                        text = if (isPhaseCompleted) "تمام مراحل این فاز تکمیل شده ✨" else "${completedStages.fa()} از ${totalStages.fa()} مرحله تکمیل شده",
+                        size = 12.sp,
+                        color = if (isPhaseCompleted) Game.Gold else Game.TextSecondary
+                    )
+                }
+
+                if (isPhaseCompleted) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Game.Gold.copy(alpha = 0.16f))
+                            .border(1.dp, Game.Gold.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
                         GameText(
-                            text = phaseTitleFa,
-                            size = 15.sp,
+                            text = "تکمیل",
+                            size = 11.sp,
                             bold = true,
-                            color = Game.TextPrimary
-                        )
-                        GameText(
-                            text = if (isPhaseCompleted) "تمام مراحل این فاز تکمیل شده ✨" else "${completedStages.fa()} از ${totalStages.fa()} مرحله تکمیل شده",
-                            size = 12.sp,
-                            color = if (isPhaseCompleted) Game.Gold else Game.TextSecondary
+                            color = Game.Gold
                         )
                     }
                 }
             }
 
-            GameProgressBar(
-                progress = progress,
-                modifier = Modifier.fillMaxWidth(),
-                height = 6.dp,
-                color = if (isPhaseCompleted) Game.Gold else Game.Blue
-            )
+            // Slim Apple progress indicator
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(5.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(if (isDark) Color(0x2EFFFFFF) else Color(0x1F000000))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(animatedProgress)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(50))
+                        .background(
+                            if (isPhaseCompleted) {
+                                Brush.horizontalGradient(listOf(Game.Gold, Game.GoldDeep))
+                            } else {
+                                Brush.horizontalGradient(listOf(Game.Blue, Game.Sky))
+                            }
+                        )
+                )
+            }
         }
     }
 }
