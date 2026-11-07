@@ -58,6 +58,36 @@ export const SubscriptionPage: React.FC = () => {
   };
 
   useEffect(() => {
+    // Check payment return status from URL query/hash parameters
+    const queryStr = window.location.search || (window.location.hash.includes('?') ? window.location.hash.substring(window.location.hash.indexOf('?')) : '');
+    const searchParams = new URLSearchParams(queryStr);
+    const paymentStatus = searchParams.get('payment_status');
+    const refId = searchParams.get('ref_id');
+    const error = searchParams.get('error');
+
+    if (paymentStatus === 'success') {
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.6 }
+      });
+      showToast(`پرداخت شما با موفقیت انجام شد. شماره پیگیری: ${refId || 'ثبت شده'}`);
+      // Clean query params from URL
+      if (window.history.replaceState) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.hash.split('?')[0]);
+      }
+    } else if (paymentStatus === 'cancelled') {
+      showToast('عملیات پرداخت توسط کاربر لغو گردید.');
+      if (window.history.replaceState) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.hash.split('?')[0]);
+      }
+    } else if (paymentStatus === 'failed') {
+      showToast(`پرداخت ناموفق بود: ${error || 'خطا در تایید تراکنش بانکی'}`);
+      if (window.history.replaceState) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.hash.split('?')[0]);
+      }
+    }
+
     let isMounted = true;
     setIsLoading(true);
 

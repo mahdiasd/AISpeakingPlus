@@ -221,4 +221,21 @@ class SubscriptionRoutingTest {
         val cumulativeDays = finalData["remainingDays"]?.jsonPrimitive?.content?.toInt() ?: 0
         assertTrue(cumulativeDays >= firstRemainingDays + 29)
     }
+
+    @Test
+    fun `test zarinpal response parsing for real success and error payloads`() {
+        val successJson = """{"data":{"authority":"A000000000000000000000000000mmyjwdvq","fee":5500,"fee_type":"Merchant","code":100,"message":"Success"},"errors":[]}"""
+        val errorJson = """{"data":[],"errors":{"message":"Terminal ip not valid. Request ip: 2.180.148.213","code":-10,"validations":[]}}"""
+        
+        val (parsedSuccessData, successError) = ir.speaking.feature.subscription.service.ZarinPalResponseParser.parse(successJson)
+        assertNotNull(parsedSuccessData)
+        assertEquals(100, parsedSuccessData.code)
+        assertEquals("A000000000000000000000000000mmyjwdvq", parsedSuccessData.authority)
+        assertEquals(null, successError)
+
+        val (parsedErrorData, errorMsg) = ir.speaking.feature.subscription.service.ZarinPalResponseParser.parse(errorJson)
+        assertEquals(null, parsedErrorData)
+        assertNotNull(errorMsg)
+        assertTrue(errorMsg.contains("Terminal ip not valid"))
+    }
 }
