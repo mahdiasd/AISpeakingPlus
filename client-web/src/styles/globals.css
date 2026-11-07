@@ -42,16 +42,68 @@
   /* Deep Frosted Liquid Glass Container / Panel */
   .apple-glass-card {
     position: relative;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(14, 18, 34, 0.52);
-    backdrop-filter: blur(34px) saturate(220%) brightness(106%);
-    -webkit-backdrop-filter: blur(34px) saturate(220%) brightness(106%);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 100%), rgba(16, 20, 36, 0.35);
+    backdrop-filter: blur(30px) saturate(210%) brightness(105%);
+    -webkit-backdrop-filter: blur(30px) saturate(210%) brightness(105%);
+    border: 1px solid rgba(255, 255, 255, 0.28);
     box-shadow:
       0 24px 60px -12px rgba(0, 0, 0, 0.58),
       inset 0 2px 1px 0 rgba(255, 255, 255, 0.7),
       inset 0 -1px 1px 0 rgba(255, 255, 255, 0.12),
       inset 0 0 24px 0 rgba(255, 255, 255, 0.05);
     transform: translateZ(0);
+  }
+
+  /* Real liquid-glass-react integration layer for responsive full-width Apple cards */
+  .liquid-glass-host {
+    position: relative;
+    width: 100%;
+  }
+
+  .liquid-glass-host > div:not(.relative),
+  .liquid-glass-host > span {
+    position: absolute !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    pointer-events: none !important;
+  }
+
+  .liquid-glass-host > div.relative {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    width: 100% !important;
+  }
+
+  .liquid-glass-host .glass {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 100%), rgba(16, 20, 36, 0.22) !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 
+      0 20px 50px -10px rgba(0, 0, 0, 0.45),
+      inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.8),
+      inset 0 -1px 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 0 20px 0 rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .liquid-glass-host .glass__warp {
+    -webkit-backdrop-filter: blur(28px) saturate(210%) brightness(105%) !important;
+    backdrop-filter: blur(28px) saturate(210%) brightness(105%) !important;
+  }
+
+  .liquid-glass-host .glass > div {
+    width: 100% !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    text-shadow: none !important;
   }
 
   /* Vertical Showcase Frame with Precision Rim Light */

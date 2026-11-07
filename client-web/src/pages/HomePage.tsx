@@ -27,6 +27,7 @@ import { useStages } from '../hooks/useStages';
 import { useAuth } from '../hooks/useAuth';
 import { Stage } from '../types/stage';
 import { getAvatarUrl } from '../utils/avatar';
+import LiquidGlass from 'liquid-glass-react';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -102,11 +103,11 @@ export const HomePage: React.FC = () => {
       )}
 
       {/* Optical Vignette & Scrim Gradients (Balanced so glass never turns solid black) */}
-      <div className="fixed top-0 inset-x-0 h-28 bg-gradient-to-b from-black/60 via-black/25 to-transparent pointer-events-none z-10 lg:from-[#07080f]/85 lg:via-[#07080f]/40" />
-      <div className="fixed bottom-0 inset-x-0 h-44 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none z-10 lg:from-[#07080f]/90 lg:via-[#07080f]/35" />
+      <div className="fixed top-0 inset-x-0 h-28 bg-gradient-to-b from-black/50 via-black/15 to-transparent pointer-events-none z-10 lg:from-[#07080f]/85 lg:via-[#07080f]/40" />
+      <div className="hidden lg:block fixed bottom-0 inset-x-0 h-44 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none z-10 lg:from-[#07080f]/90 lg:via-[#07080f]/35" />
 
-      {/* 2. TOP HUD (Mobile View) */}
-      <header className="relative z-20 w-full max-w-lg mx-auto pt-[max(env(safe-area-inset-top),12px)] px-4 flex lg:hidden items-center justify-between gap-2.5 shrink-0">
+      {/* 2. TOP HUD (Mobile View - Fixed at Top with Safe Area) */}
+      <header className="fixed top-0 inset-x-0 z-30 w-full max-w-lg mx-auto pt-[max(env(safe-area-inset-top),14px)] px-4 flex lg:hidden items-center justify-between gap-2.5 pointer-events-auto">
         {/* Profile Avatar Button */}
         <button
           type="button"
@@ -251,148 +252,153 @@ export const HomePage: React.FC = () => {
         </div>
       </header>
 
-      {/* 3. MOBILE VIEW: Center Showcase & Sleek Bottom Glass Deck (Guaranteed NO-SCROLL) */}
-      <div className="flex-1 min-h-0 relative flex flex-col justify-between lg:hidden">
-        {/* Floating Center Stage Indicator Pill */}
-        <div className="flex-1 flex items-center justify-center p-3">
-          {heroStage && (
-            <div className="apple-glass-pill px-3.5 py-1.5 rounded-full flex items-center gap-2 border border-white/25 shadow-apple-md">
-              <span className="w-2 h-2 rounded-full bg-apple-teal animate-pulse" />
-              <span className="text-[11px] font-semibold text-white/90">
-                {heroStage.seasonTitleFa} • {heroStage.phaseTitleFa}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Bottom Liquid Glass Card */}
-        <section className="relative z-20 w-full max-w-lg mx-auto px-4 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0">
-          {isLoading && !heroStage ? (
-            <div className="apple-glass rounded-[28px] p-4 border border-white/20 space-y-3">
-              <CupertinoSkeleton className="h-5 w-1/3 rounded-xl" />
-              <CupertinoSkeleton className="h-7 w-3/4 rounded-xl" />
-              <CupertinoSkeleton className="h-12 rounded-2xl" />
-            </div>
-          ) : heroStage ? (
-            <div className="apple-glass-card rounded-[28px] p-4 border border-white/25 shadow-apple-lg space-y-2.5 relative overflow-hidden">
-              {/* Specular Rim Light */}
-              <div
-                aria-hidden="true"
-                className="absolute inset-x-0 top-0 h-[1.5px] apple-specular-edge pointer-events-none rounded-t-[28px]"
-              />
-
-              {/* Top Info Bar: Stage Number & Stars */}
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-apple-teal font-sans tracking-wide">
-                  مرحله {heroStage.orderIndex.toLocaleString('fa-IR')} از {stages.length.toLocaleString('fa-IR')}
-                </span>
-                <CupertinoStarRating stars={heroStage.progress?.stars || 0} size="sm" />
-              </div>
-
-              {/* Stage Title */}
-              <div className="space-y-0.5">
-                <h1 className="text-base sm:text-lg font-extrabold text-white leading-tight truncate">
-                  {heroStage.titleFa}
-                </h1>
-                <p className="text-[11px] text-apple-gray-300 font-mono italic truncate" dir="ltr">
-                  {heroStage.title}
-                </p>
-              </div>
-
-              {/* Character Squircle & Name */}
-              <div className="flex items-center gap-2 pt-0.5">
-                <div className="w-7 h-7 rounded-xl overflow-hidden bg-white/10 border border-white/25 flex items-center justify-center shrink-0">
-                  {heroStage.characterAvatarUrl ? (
-                    <img
-                      src={heroStage.characterAvatarUrl}
-                      alt={heroStage.characterName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-3.5 h-3.5 text-apple-blue" />
-                  )}
-                </div>
-                <span className="text-xs text-apple-gray-300 font-medium truncate" dir="ltr">
-                  {heroStage.characterName}
-                </span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-apple-blue/20 text-apple-blue font-semibold mr-auto shrink-0">
-                  میزبان AI
-                </span>
-              </div>
-
-              {/* Primary Action Button (CTA) */}
-              <div className="space-y-2 pt-1">
-                {heroStage.lockStatus === 'UNLOCKED' && (
-                  <button
-                    type="button"
-                    onClick={() => handleStartStage(heroStage)}
-                    className="w-full h-11 px-4 rounded-2xl bg-gradient-to-r from-apple-blue via-indigo-600 to-[#5856D6] hover:brightness-110 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm shadow-[0_4px_18px_rgba(0,122,255,0.4)] flex items-center justify-center gap-2 transition-all border border-white/25"
-                  >
-                    {heroStage.progress?.stars && heroStage.progress.stars > 0 ? (
-                      <>
-                        <RotateCcw className="w-4 h-4 ml-0.5" />
-                        <span>تکرار مرحله</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4 fill-white ml-0.5" />
-                        <span>شروع مرحله</span>
-                      </>
-                    )}
-                  </button>
-                )}
-
-                {heroStage.lockStatus === 'LOCKED_REGISTRATION' && (
-                  <button
-                    type="button"
-                    onClick={() => setIsAuthModalOpen(true)}
-                    className="w-full h-11 px-4 rounded-2xl bg-gradient-to-r from-[#5856D6] to-purple-700 hover:brightness-110 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm shadow-apple-md flex items-center justify-center gap-2 transition-all border border-white/20"
-                  >
-                    <Lock className="w-4 h-4" />
-                    <span>ورود و باز کردن مرحله</span>
-                  </button>
-                )}
-
-                {heroStage.lockStatus === 'LOCKED_SUBSCRIPTION' && (
-                  <button
-                    type="button"
-                    onClick={() => navigate('/subscription')}
-                    className="w-full h-11 px-4 rounded-2xl bg-gradient-to-r from-apple-yellow via-amber-400 to-apple-orange hover:brightness-110 active:scale-[0.98] text-black font-extrabold text-xs sm:text-sm shadow-[0_4px_16px_rgba(255,204,0,0.35)] flex items-center justify-center gap-2 transition-all border border-yellow-300/40"
-                  >
-                    <Crown className="w-4 h-4 fill-black" />
-                    <span>باز کردن با اشتراک ویژه</span>
-                  </button>
-                )}
-
-                {heroStage.lockStatus === 'LOCKED_PREVIOUS_STAGE' && (
-                  <button
-                    type="button"
-                    disabled
-                    className="w-full h-11 px-4 rounded-2xl bg-white/10 text-apple-gray-400 font-bold text-xs sm:text-sm border border-white/10 flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
-                  >
-                    <Lock className="w-4 h-4" />
-                    <span>ابتدا مرحله قبل را به پایان برسانید</span>
-                  </button>
-                )}
-
-                {/* Secondary Button: Open Stages Timeline Curriculum */}
-                <button
-                  type="button"
-                  onClick={() => setIsTimelineOpen(true)}
-                  className="w-full h-9 px-4 rounded-2xl apple-glass-pill hover:bg-white/15 active:scale-[0.98] text-slate-200 font-bold text-[11px] border border-white/20 flex items-center justify-center gap-2 transition-all"
-                >
-                  <Layers className="w-3.5 h-3.5 text-apple-blue" />
-                  <span>
-                    {completedStagesCount > 0
-                      ? `همه مرحله‌ها و پیشرفت (${completedStagesCount.toLocaleString('fa-IR')} انجام شده)`
-                      : 'همه مرحله‌ها و نقشه مسیر'}
-                  </span>
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </section>
+      {/* 3. MOBILE VIEW: Center Showcase & Sleek Bottom Glass Deck (Fixed Top & Bottom - No Scroll) */}
+      {/* Floating Center Stage Indicator Pill */}
+      <div className="absolute inset-0 z-10 flex items-center justify-center p-3 pointer-events-none lg:hidden">
+        {heroStage && (
+          <div className="apple-glass-pill px-4 py-1.5 rounded-full flex items-center gap-2 border border-white/25 shadow-apple-md pointer-events-auto">
+            <span className="w-2 h-2 rounded-full bg-apple-teal animate-pulse" />
+            <span className="text-[11px] font-semibold text-white/95">
+              {heroStage.seasonTitleFa} • {heroStage.phaseTitleFa}
+            </span>
+          </div>
+        )}
       </div>
+
+      {/* Bottom Liquid Glass Card (Fixed at Bottom with Safe Area) */}
+      <section className="fixed bottom-0 inset-x-0 z-30 w-full max-w-lg mx-auto px-4 pb-[max(env(safe-area-inset-bottom),16px)] pointer-events-auto lg:hidden">
+        {isLoading && !heroStage ? (
+          <div className="apple-glass rounded-[28px] p-4 border border-white/20 space-y-3">
+            <CupertinoSkeleton className="h-5 w-1/3 rounded-xl" />
+            <CupertinoSkeleton className="h-7 w-3/4 rounded-xl" />
+            <CupertinoSkeleton className="h-12 rounded-2xl" />
+          </div>
+        ) : heroStage ? (
+          <div className="liquid-glass-host">
+            <LiquidGlass
+              cornerRadius={28}
+              blurAmount={0.12}
+              saturation={180}
+              aberrationIntensity={1.8}
+              displacementScale={32}
+              elasticity={0.05}
+              padding="0px"
+              className="w-full"
+            >
+              <div className="p-4 space-y-2.5 w-full">
+                {/* Top Info Bar: Stage Number & Stars */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-apple-teal font-sans tracking-wide">
+                    مرحله {heroStage.orderIndex.toLocaleString('fa-IR')} از {stages.length.toLocaleString('fa-IR')}
+                  </span>
+                  <CupertinoStarRating stars={heroStage.progress?.stars || 0} size="sm" />
+                </div>
+
+                {/* Stage Title */}
+                <div className="space-y-0.5">
+                  <h1 className="text-base sm:text-lg font-extrabold text-white leading-tight truncate">
+                    {heroStage.titleFa}
+                  </h1>
+                  <p className="text-[11px] text-apple-gray-300 font-mono italic truncate" dir="ltr">
+                    {heroStage.title}
+                  </p>
+                </div>
+
+                {/* Character Squircle & Name */}
+                <div className="flex items-center gap-2 pt-0.5">
+                  <div className="w-7 h-7 rounded-xl overflow-hidden bg-white/10 border border-white/25 flex items-center justify-center shrink-0">
+                    {heroStage.characterAvatarUrl ? (
+                      <img
+                        src={heroStage.characterAvatarUrl}
+                        alt={heroStage.characterName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-3.5 h-3.5 text-apple-blue" />
+                    )}
+                  </div>
+                  <span className="text-xs text-apple-gray-300 font-medium truncate" dir="ltr">
+                    {heroStage.characterName}
+                  </span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-apple-blue/20 text-apple-blue font-semibold mr-auto shrink-0">
+                    میزبان AI
+                  </span>
+                </div>
+
+                {/* Primary Action Button (CTA) */}
+                <div className="space-y-2 pt-1">
+                  {heroStage.lockStatus === 'UNLOCKED' && (
+                    <button
+                      type="button"
+                      onClick={() => handleStartStage(heroStage)}
+                      className="w-full h-11 px-4 rounded-2xl bg-gradient-to-r from-apple-blue via-indigo-600 to-[#5856D6] hover:brightness-110 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm shadow-[0_4px_18px_rgba(0,122,255,0.4)] flex items-center justify-center gap-2 transition-all border border-white/25"
+                    >
+                      {heroStage.progress?.stars && heroStage.progress.stars > 0 ? (
+                        <>
+                          <RotateCcw className="w-4 h-4 ml-0.5" />
+                          <span>تکرار مرحله</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 fill-white ml-0.5" />
+                          <span>شروع مرحله</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  {heroStage.lockStatus === 'LOCKED_REGISTRATION' && (
+                    <button
+                      type="button"
+                      onClick={() => setIsAuthModalOpen(true)}
+                      className="w-full h-11 px-4 rounded-2xl bg-gradient-to-r from-[#5856D6] to-purple-700 hover:brightness-110 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm shadow-apple-md flex items-center justify-center gap-2 transition-all border border-white/20"
+                    >
+                      <Lock className="w-4 h-4" />
+                      <span>ورود و باز کردن مرحله</span>
+                    </button>
+                  )}
+
+                  {heroStage.lockStatus === 'LOCKED_SUBSCRIPTION' && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/subscription')}
+                      className="w-full h-11 px-4 rounded-2xl bg-gradient-to-r from-apple-yellow via-amber-400 to-apple-orange hover:brightness-110 active:scale-[0.98] text-black font-extrabold text-xs sm:text-sm shadow-[0_4px_16px_rgba(255,204,0,0.35)] flex items-center justify-center gap-2 transition-all border border-yellow-300/40"
+                    >
+                      <Crown className="w-4 h-4 fill-black" />
+                      <span>باز کردن با اشتراک ویژه</span>
+                    </button>
+                  )}
+
+                  {heroStage.lockStatus === 'LOCKED_PREVIOUS_STAGE' && (
+                    <button
+                      type="button"
+                      disabled
+                      className="w-full h-11 px-4 rounded-2xl bg-white/10 text-apple-gray-400 font-bold text-xs sm:text-sm border border-white/10 flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
+                    >
+                      <Lock className="w-4 h-4" />
+                      <span>ابتدا مرحله قبل را به پایان برسانید</span>
+                    </button>
+                  )}
+
+                  {/* Secondary Button: Open Stages Timeline Curriculum */}
+                  <button
+                    type="button"
+                    onClick={() => setIsTimelineOpen(true)}
+                    className="w-full h-9 px-4 rounded-2xl apple-glass-pill hover:bg-white/15 active:scale-[0.98] text-slate-200 font-bold text-[11px] border border-white/20 flex items-center justify-center gap-2 transition-all"
+                  >
+                    <Layers className="w-3.5 h-3.5 text-apple-blue" />
+                    <span>
+                      {completedStagesCount > 0
+                        ? `همه مرحله‌ها و پیشرفت (${completedStagesCount.toLocaleString('fa-IR')} انجام شده)`
+                        : 'همه مرحله‌ها و نقشه مسیر'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </LiquidGlass>
+          </div>
+        ) : null}
+      </section>
 
       {/* 4. WIDESCREEN / DESKTOP RESPONSIVE WORKSPACE */}
       {/* Maintains exact vertical ratio of the artwork without stretching, paired with a lush Apple Glass stage hub */}
