@@ -36,6 +36,7 @@ interface ChatBubble {
   correctedSentence?: string | null;
   grammarFeedbackFa?: string | null;
   isStreaming?: boolean;
+  isEvaluatingGrammar?: boolean;
 }
 
 export const ChatPage: React.FC = () => {
@@ -185,6 +186,7 @@ export const ChatPage: React.FC = () => {
         id: userMessageId,
         sender: 'User',
         text: userText,
+        isEvaluatingGrammar: true,
       },
     ];
 
@@ -224,20 +226,21 @@ export const ChatPage: React.FC = () => {
             );
           },
           onDone: (turnResult: StageChatTurnResult) => {
-            if (turnResult.hasGrammarError) {
-              setChats((prev) =>
-                prev.map((c) =>
-                  c.id === userMessageId
-                    ? {
-                        ...c,
-                        hasGrammarError: true,
-                        correctedSentence: turnResult.correctedSentence,
-                        grammarFeedbackFa: turnResult.grammarFeedbackFa,
-                      }
-                    : c
-                )
-              );
+            setChats((prev) =>
+              prev.map((c) =>
+                c.id === userMessageId
+                  ? {
+                      ...c,
+                      isEvaluatingGrammar: false,
+                      hasGrammarError: Boolean(turnResult.hasGrammarError),
+                      correctedSentence: turnResult.correctedSentence,
+                      grammarFeedbackFa: turnResult.grammarFeedbackFa,
+                    }
+                  : c
+              )
+            );
 
+            if (turnResult.hasGrammarError) {
               setGrammarErrorsCollected((prev) => [
                 ...prev,
                 {
@@ -535,6 +538,7 @@ export const ChatPage: React.FC = () => {
                           isStreaming={chat.isStreaming}
                           isPlaying={audioPlayer.isPlaying(chat.id)}
                           onPlayAudio={() => audioPlayer.play(chat.id, chat.text, chat.audioUrl)}
+                          onStopAudio={() => audioPlayer.stop()}
                         />
                       </div>
                     ) : (
@@ -545,6 +549,8 @@ export const ChatPage: React.FC = () => {
                           hasGrammarError={chat.hasGrammarError}
                           correctedSentence={chat.correctedSentence}
                           grammarFeedbackFa={chat.grammarFeedbackFa}
+                          isEvaluatingGrammar={chat.isEvaluatingGrammar}
+                          isSending={isSending && chat.id === chats[chats.length - 2]?.id}
                         />
                       </div>
                     )
