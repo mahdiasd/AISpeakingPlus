@@ -35,6 +35,7 @@ application {
     tasks.withType<Test> {
         useJUnitPlatform()
         maxParallelForks = 1  // Ensure sequential execution
+        environment("APP_ENV", "test")
         testLogging {
             showStandardStreams = true
         }
