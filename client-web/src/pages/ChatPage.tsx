@@ -412,23 +412,29 @@ export const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#07080f] text-white selection:bg-apple-blue selection:text-white overflow-hidden flex flex-col justify-between">
-      {/* 1. Fullscreen Ambient Stage Wallpaper with Deep Gaussian Blur & Apple Vignette */}
+    <div className="relative h-[100dvh] max-h-[100dvh] w-full bg-[#07080f] text-white selection:bg-apple-blue selection:text-white overflow-hidden flex flex-col justify-between">
+      {/* 1. Fullscreen Ambient Stage Wallpaper with Liquid Glass Refraction & Light Orbs */}
       {stage && stage.backgroundUrl ? (
         <div className="fixed inset-0 z-0 select-none pointer-events-none overflow-hidden">
           <img
             src={stage.backgroundUrl}
             alt={stage.title}
-            className="w-full h-full object-cover object-center filter blur-3xl brightness-[0.25] contrast-[1.1] scale-110 transform-gpu"
+            className="w-full h-full object-cover object-center filter blur-3xl brightness-[0.55] contrast-[1.1] scale-110 transform-gpu"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#07080f]/94 via-[#0b0e1b]/88 to-[#06070e]/96" />
+          {/* Dynamic Optical Light Orbs for Liquid Glass */}
+          <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-apple-blue/25 blur-[100px] pointer-events-none" />
+          <div className="absolute top-1/2 -left-20 w-80 h-80 rounded-full bg-apple-purple/20 blur-[110px] pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#07080f]/85 via-[#0b0e1b]/70 to-[#06070e]/88" />
         </div>
       ) : (
-        <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#07080f] via-[#0b0e1b] to-[#06070e]" />
+        <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#07080f] via-[#0b0e1b] to-[#06070e]">
+          <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-apple-blue/25 blur-[100px]" />
+          <div className="absolute bottom-10 -left-10 w-80 h-80 rounded-full bg-apple-purple/25 blur-[110px]" />
+        </div>
       )}
 
       {/* 2. Responsive Multi-Column Stage Layout */}
-      <div className="relative z-10 w-full flex-1 flex items-center justify-center lg:py-6 lg:px-6">
+      <div className="relative z-10 w-full flex-1 min-h-0 flex items-center justify-center lg:py-6 lg:px-6">
         <div className="w-full max-w-7xl flex items-center justify-center lg:gap-8 h-full">
           {/* A. Right Companion (in RTL: Stage Briefing & Character Info) */}
           <aside className="hidden lg:block shrink-0">
@@ -446,7 +452,7 @@ export const ChatPage: React.FC = () => {
           </aside>
 
           {/* B. Center Mobile Canvas (Authentic Apple Device Mockup on Desktop, Full Bleed on Mobile) */}
-          <section className="relative w-full lg:max-w-[430px] h-screen lg:h-[88vh] lg:max-h-[900px] flex flex-col bg-[#0b0d17]/80 lg:rounded-[44px] overflow-hidden lg:border-[3px] lg:border-white/20 lg:shadow-[0_25px_70px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+          <section className="relative w-full lg:max-w-[430px] h-[100dvh] lg:h-[88vh] lg:max-h-[900px] flex flex-col bg-[#0b0d17]/55 lg:rounded-[44px] overflow-hidden lg:border-[2px] lg:border-white/20 lg:shadow-[0_25px_70px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
             {/* Specular Rim Light on Desktop Canvas */}
             <div
               aria-hidden="true"
@@ -466,14 +472,14 @@ export const ChatPage: React.FC = () => {
                 <img
                   src={stage.backgroundUrl}
                   alt={stage.title}
-                  className="w-full h-full object-cover object-top filter brightness-[0.34] contrast-[1.08]"
+                  className="w-full h-full object-cover object-top filter brightness-[0.45] contrast-[1.08]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-[#090b16]/90 via-[#0e1122]/82 to-[#080912]/92" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#090b16]/85 via-[#0e1122]/75 to-[#080912]/88" />
               </div>
             )}
 
             {/* Header: Apple Chat Toolbar */}
-            <header className="sticky top-0 lg:pt-4 z-30 bg-[#0c0e1a]/85 backdrop-blur-2xl border-b border-white/10">
+            <header className="shrink-0 pt-[max(env(safe-area-inset-top),6px)] lg:pt-4 z-30 apple-glass-pill bg-[#0c0e1a]/65 backdrop-blur-2xl border-b border-white/15">
               <ChatToolbar
                 stage={stage}
                 turnsCount={turnsCount}
@@ -486,8 +492,8 @@ export const ChatPage: React.FC = () => {
               />
             </header>
 
-            {/* Main Chat Conversation Feed */}
-            <main className="relative z-10 flex-1 overflow-y-auto px-3.5 pt-3 pb-32 space-y-4">
+            {/* Main Chat Conversation Feed (ONLY this element scrolls on mobile) */}
+            <main className="relative z-10 flex-1 min-h-0 overflow-y-auto overscroll-contain px-3.5 pt-3 pb-3 space-y-4">
               {/* Loading Skeleton */}
               {isLoadingStage && (
                 <div className="space-y-4 pt-6">
@@ -549,9 +555,9 @@ export const ChatPage: React.FC = () => {
               )}
             </main>
 
-            {/* Floating Apple Liquid Glass Bottom Dock */}
+            {/* Floating Apple Liquid Glass Bottom Dock (Anchored, guaranteed visible) */}
             {!isLoadingStage && stage && (
-              <div className="absolute bottom-4 inset-x-3.5 z-30">
+              <footer className="shrink-0 z-30 px-3.5 pb-[max(env(safe-area-inset-bottom),12px)] pt-1.5">
                 <ChatBottomBar
                   onSendMessage={handleSendMessage}
                   onRequestHint={handleRequestHint}
@@ -568,7 +574,7 @@ export const ChatPage: React.FC = () => {
                   onCancelRecording={speechRecognition.cancelListening}
                   recordingError={speechRecognition.error}
                 />
-              </div>
+              </footer>
             )}
           </section>
 

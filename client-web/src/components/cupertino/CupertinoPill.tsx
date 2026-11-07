@@ -20,12 +20,12 @@ export const CupertinoPill: React.FC<CupertinoPillProps> = ({
   onClick,
 }) => {
   const variantStyles = {
-    blue: 'bg-apple-blue/15 text-apple-blue border-apple-blue/30',
-    gold: 'bg-apple-yellow/15 text-apple-yellow border-apple-yellow/30',
-    green: 'bg-apple-green/15 text-apple-green border-apple-green/30',
-    red: 'bg-apple-red/15 text-apple-red border-apple-red/30',
-    purple: 'bg-apple-purple/15 text-apple-purple border-apple-purple/30',
-    gray: 'bg-white/10 text-apple-gray-300 border-white/15',
+    blue: 'apple-glass-blue text-apple-teal border-apple-blue/40 shadow-apple-sm',
+    gold: 'apple-glass-gold text-apple-yellow border-apple-yellow/40 shadow-apple-sm',
+    green: 'bg-apple-green/20 text-emerald-300 border-apple-green/40 backdrop-blur-md',
+    red: 'bg-apple-red/20 text-rose-300 border-apple-red/40 backdrop-blur-md',
+    purple: 'bg-apple-purple/20 text-purple-200 border-apple-purple/40 backdrop-blur-md',
+    gray: 'apple-glass-pill text-apple-gray-200 border-white/25 shadow-apple-sm',
   };
 
   const sizeStyles = {

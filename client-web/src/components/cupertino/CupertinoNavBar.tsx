@@ -24,7 +24,7 @@ export const CupertinoNavBar: React.FC<CupertinoNavBarProps> = ({
     <header
       className={twMerge(
         clsx(
-          'sticky top-0 z-50 w-full pt-[var(--safe-top)] bg-[#121215]/80 backdrop-blur-xl border-b border-white/10 select-none',
+          'sticky top-0 z-50 w-full pt-[var(--safe-top)] apple-glass-pill bg-[#0e1122]/65 backdrop-blur-2xl border-b border-white/20 shadow-apple-sm select-none',
           className
         )
       )}
