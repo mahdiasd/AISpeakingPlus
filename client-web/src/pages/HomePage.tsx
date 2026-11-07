@@ -252,61 +252,45 @@ export const HomePage: React.FC = () => {
         </div>
       </header>
 
-      {/* 3. MOBILE VIEW: Center Showcase & Sleek Bottom Glass Deck (Fixed Top & Bottom - No Scroll) */}
-      {/* Floating Center Stage Indicator Pill */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center p-3 pointer-events-none lg:hidden">
-        {heroStage && (
-          <div className="apple-glass-pill px-4 py-1.5 rounded-full flex items-center gap-2 border border-white/25 shadow-apple-md pointer-events-auto">
-            <span className="w-2 h-2 rounded-full bg-apple-teal animate-pulse" />
-            <span className="text-[11px] font-semibold text-white/95">
-              {heroStage.seasonTitleFa} • {heroStage.phaseTitleFa}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Bottom Liquid Glass Card (Fixed at Bottom with Safe Area) */}
+      {/* 3. MOBILE VIEW: Sleek Bottom Glass Deck (Fixed Top & Bottom - No Scroll) */}
       <section className="fixed bottom-0 inset-x-0 z-30 w-full max-w-lg mx-auto px-4 pb-[max(env(safe-area-inset-bottom),16px)] pointer-events-auto lg:hidden">
         {isLoading && !heroStage ? (
-          <div className="apple-glass rounded-[28px] p-4 border border-white/20 space-y-3">
+          <div className="apple-glass rounded-[26px] p-4 border border-white/20 space-y-3">
             <CupertinoSkeleton className="h-5 w-1/3 rounded-xl" />
             <CupertinoSkeleton className="h-7 w-3/4 rounded-xl" />
-            <CupertinoSkeleton className="h-12 rounded-2xl" />
+            <CupertinoSkeleton className="h-11 rounded-2xl" />
           </div>
         ) : heroStage ? (
           <div className="liquid-glass-host">
             <LiquidGlass
-              cornerRadius={28}
-              blurAmount={0.12}
+              cornerRadius={26}
+              blurAmount={0.25}
               saturation={180}
               aberrationIntensity={1.8}
-              displacementScale={32}
+              displacementScale={28}
               elasticity={0.05}
               padding="0px"
               className="w-full"
             >
-              <div className="p-4 space-y-2.5 w-full">
+              <div className="p-3.5 sm:p-4 space-y-2 w-full">
                 {/* Top Info Bar: Stage Number & Stars */}
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-apple-teal font-sans tracking-wide">
+                  <span className="text-xs sm:text-[13px] font-extrabold text-apple-teal font-sans tracking-wide">
                     مرحله {heroStage.orderIndex.toLocaleString('fa-IR')} از {stages.length.toLocaleString('fa-IR')}
                   </span>
                   <CupertinoStarRating stars={heroStage.progress?.stars || 0} size="sm" />
                 </div>
 
                 {/* Stage Title */}
-                <div className="space-y-0.5">
-                  <h1 className="text-base sm:text-lg font-extrabold text-white leading-tight truncate">
+                <div>
+                  <h1 className="text-lg sm:text-xl font-extrabold text-white leading-tight">
                     {heroStage.titleFa}
                   </h1>
-                  <p className="text-[11px] text-apple-gray-300 font-mono italic truncate" dir="ltr">
-                    {heroStage.title}
-                  </p>
                 </div>
 
-                {/* Character Squircle & Name */}
+                {/* Character Avatar & Name */}
                 <div className="flex items-center gap-2 pt-0.5">
-                  <div className="w-7 h-7 rounded-xl overflow-hidden bg-white/10 border border-white/25 flex items-center justify-center shrink-0">
+                  <div className="w-6 h-6 rounded-full overflow-hidden bg-white/10 border border-white/30 flex items-center justify-center shrink-0">
                     {heroStage.characterAvatarUrl ? (
                       <img
                         src={heroStage.characterAvatarUrl}
@@ -317,32 +301,23 @@ export const HomePage: React.FC = () => {
                       <User className="w-3.5 h-3.5 text-apple-blue" />
                     )}
                   </div>
-                  <span className="text-xs text-apple-gray-300 font-medium truncate" dir="ltr">
+                  <span className="text-xs text-white/70 font-medium tracking-tight" dir="ltr">
                     {heroStage.characterName}
-                  </span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-apple-blue/20 text-apple-blue font-semibold mr-auto shrink-0">
-                    میزبان AI
                   </span>
                 </div>
 
                 {/* Primary Action Button (CTA) */}
-                <div className="space-y-2 pt-1">
+                <div className="space-y-2 pt-0.5">
                   {heroStage.lockStatus === 'UNLOCKED' && (
                     <button
                       type="button"
                       onClick={() => handleStartStage(heroStage)}
-                      className="w-full h-11 px-4 rounded-2xl bg-gradient-to-r from-apple-blue via-indigo-600 to-[#5856D6] hover:brightness-110 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm shadow-[0_4px_18px_rgba(0,122,255,0.4)] flex items-center justify-center gap-2 transition-all border border-white/25"
+                      className="w-full h-11 px-4 rounded-2xl bg-gradient-to-r from-apple-blue to-[#0062D2] hover:brightness-110 active:scale-[0.98] text-white font-extrabold text-sm shadow-[0_4px_18px_rgba(0,122,255,0.4)] flex items-center justify-center transition-all border border-white/20"
                     >
                       {heroStage.progress?.stars && heroStage.progress.stars > 0 ? (
-                        <>
-                          <RotateCcw className="w-4 h-4 ml-0.5" />
-                          <span>تکرار مرحله</span>
-                        </>
+                        <span>تکرار مرحله</span>
                       ) : (
-                        <>
-                          <Play className="w-4 h-4 fill-white ml-0.5" />
-                          <span>شروع مرحله</span>
-                        </>
+                        <span>شروع مرحله</span>
                       )}
                     </button>
                   )}
@@ -384,14 +359,9 @@ export const HomePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsTimelineOpen(true)}
-                    className="w-full h-9 px-4 rounded-2xl apple-glass-pill hover:bg-white/15 active:scale-[0.98] text-slate-200 font-bold text-[11px] border border-white/20 flex items-center justify-center gap-2 transition-all"
+                    className="w-full h-10 px-4 rounded-2xl apple-glass-pill hover:bg-white/15 active:scale-[0.98] text-slate-200 font-bold text-xs flex items-center justify-center transition-all"
                   >
-                    <Layers className="w-3.5 h-3.5 text-apple-blue" />
-                    <span>
-                      {completedStagesCount > 0
-                        ? `همه مرحله‌ها و پیشرفت (${completedStagesCount.toLocaleString('fa-IR')} انجام شده)`
-                        : 'همه مرحله‌ها و نقشه مسیر'}
-                    </span>
+                    <span>همه مرحله‌ها و پیشرفت</span>
                   </button>
                 </div>
               </div>
