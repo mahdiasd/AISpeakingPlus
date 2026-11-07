@@ -140,12 +140,12 @@ export const StagesTimeline: React.FC<StagesTimelineProps> = ({
                       className={clsx(
                         'flex-1 relative rounded-2xl p-3.5 transition-all duration-200 cursor-pointer select-none touch-manipulation',
                         isActive
-                          ? 'apple-glass bg-[#1c2235]/90 border-2 border-apple-blue/70 shadow-[0_0_20px_rgba(0,122,255,0.25)]'
+                          ? 'apple-glass-blue border border-apple-blue/60 shadow-[0_0_24px_rgba(0,122,255,0.35)]'
                           : isCompleted
-                          ? 'apple-glass bg-white/[0.06] border border-apple-yellow/25 hover:border-apple-yellow/40'
+                          ? 'apple-glass border border-apple-yellow/30 shadow-apple-sm hover:border-apple-yellow/50'
                           : isLocked
-                          ? 'bg-white/[0.03] border border-white/5 opacity-75 hover:opacity-90'
-                          : 'apple-glass bg-white/5 border border-white/10 hover:border-white/20'
+                          ? 'apple-glass-pill opacity-60 border border-white/10 hover:opacity-80'
+                          : 'apple-glass-pill border border-white/20 hover:border-white/30 shadow-apple-sm'
                       )}
                     >
                       {/* Top Row: Character name + status badges */}

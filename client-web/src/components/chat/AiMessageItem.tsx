@@ -62,7 +62,12 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
           </span>
         </div>
 
-        <div className="apple-glass rounded-3xl rounded-tl-md p-4 text-white space-y-3 border border-white/14 shadow-apple-md bg-[#1d1f2b]/80 backdrop-blur-2xl">
+        <div className="relative apple-glass rounded-3xl rounded-tl-md p-4 text-white space-y-3 border border-white/25 shadow-apple-md overflow-hidden">
+          {/* Specular Rim Light */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 top-0 h-[1.5px] apple-specular-edge pointer-events-none"
+          />
           {/* Main English Transcript */}
           {message ? (
             <p className="text-[15px] leading-relaxed font-normal tracking-wide text-slate-100 select-text text-left" dir="ltr">

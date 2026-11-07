@@ -32,7 +32,12 @@ export const UserMessageItem: React.FC<UserMessageItemProps> = ({
         </div>
 
         {/* User Message Bubble with Top-Right Squircle Tail */}
-        <div className="rounded-3xl rounded-tr-md p-4 text-white space-y-2.5 bg-gradient-to-r from-apple-blue to-[#5856D6] shadow-apple-md border border-white/20">
+        <div className="relative rounded-3xl rounded-tr-md p-4 text-white space-y-2.5 bg-gradient-to-r from-apple-blue via-blue-600 to-[#5856D6] shadow-[0_8px_24px_rgba(0,122,255,0.35)] border border-white/25 overflow-hidden">
+          {/* Specular Rim Light */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-white/60 via-white/30 to-transparent pointer-events-none"
+          />
           <p className="text-[15px] leading-relaxed font-normal tracking-wide text-white select-text text-left" dir="ltr">
             {message}
           </p>

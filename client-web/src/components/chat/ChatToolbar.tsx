@@ -45,7 +45,7 @@ export const ChatToolbar: React.FC<ChatToolbarProps> = ({
         </motion.button>
 
         {/* Center Liquid Glass Capsule */}
-        <div className="flex-1 min-w-0 apple-glass rounded-2xl py-1 px-3 text-center space-y-0.5 border border-white/15 bg-[#181a26]/85 backdrop-blur-2xl shadow-apple-sm">
+        <div className="flex-1 min-w-0 apple-glass-pill rounded-2xl py-1 px-3 text-center space-y-0.5 border border-white/25 shadow-apple-sm">
           <h2 className="text-xs sm:text-sm font-bold text-white truncate leading-tight">
             {stage?.titleFa || 'مکالمه هوشمند'}
           </h2>

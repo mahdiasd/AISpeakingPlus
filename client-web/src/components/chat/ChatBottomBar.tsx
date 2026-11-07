@@ -105,7 +105,7 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
       </AnimatePresence>
 
       {/* 3. Main Apple Liquid Glass Floating Dock */}
-      <div className="relative rounded-[28px] p-2 apple-glass-card bg-[#141624]/90 backdrop-blur-2xl border border-white/18 shadow-apple-lg flex items-center gap-2">
+      <div className="relative rounded-[28px] p-2 apple-glass-card border border-white/25 shadow-apple-lg flex items-center gap-2">
         {/* Specular Top Edge Light Bar */}
         <div
           aria-hidden="true"
@@ -119,13 +119,13 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
           transition={{ type: 'spring', stiffness: 450, damping: 25 }}
           onClick={onRequestHint}
           disabled={isLoadingHint || isBusy}
-          className="w-12 h-12 rounded-2xl apple-glass-pill bg-white/10 hover:bg-white/15 text-apple-yellow active:bg-white/20 disabled:opacity-35 transition-all shrink-0 flex items-center justify-center relative border border-white/15"
+          className="w-12 h-12 rounded-2xl apple-glass-gold text-apple-yellow active:opacity-80 disabled:opacity-35 transition-all shrink-0 flex items-center justify-center relative border border-apple-yellow/30 shadow-apple-sm"
           title="دریافت راهنمایی هوش مصنوعی"
         >
           {isLoadingHint ? (
             <Sparkles className="w-5 h-5 animate-spin text-apple-yellow" />
           ) : (
-            <Lightbulb className="w-5 h-5 fill-apple-yellow/25 text-apple-yellow" />
+            <Lightbulb className="w-5 h-5 fill-apple-yellow/30 text-apple-yellow" />
           )}
         </motion.button>
 

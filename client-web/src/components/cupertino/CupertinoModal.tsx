@@ -58,7 +58,7 @@ export const CupertinoModal: React.FC<CupertinoModalProps> = ({
             transition={{ type: 'spring', damping: 28, stiffness: 350 }}
             className={twMerge(
               clsx(
-                'relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-t-[32px] sm:rounded-[32px] overflow-hidden apple-glass bg-[#16161b]/95 border border-white/15 shadow-apple-lg text-white select-none z-10',
+                'relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-t-[32px] sm:rounded-[32px] overflow-hidden apple-glass-card border border-white/25 shadow-apple-lg text-white select-none z-10 backdrop-blur-3xl',
                 className
               )
             )}

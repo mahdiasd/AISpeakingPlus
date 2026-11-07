@@ -22,66 +22,97 @@
   }
 }
 
-/* Apple Liquid Glass Utility Classes (Hardware Compositor Accelerated) */
+/* Apple Liquid Glass Utility Classes (Hardware Compositor Accelerated - 60 to 120 FPS) */
 @layer components {
-  /* High-fidelity Frosted Glass Card */
+  /* High-fidelity Frosted Liquid Glass Card */
   .apple-glass {
     position: relative;
-    background: rgba(24, 26, 38, 0.72);
-    backdrop-filter: blur(24px) saturate(190%);
-    -webkit-backdrop-filter: blur(24px) saturate(190%);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%), rgba(18, 22, 38, 0.45);
+    backdrop-filter: blur(28px) saturate(210%) brightness(104%);
+    -webkit-backdrop-filter: blur(28px) saturate(210%) brightness(104%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     box-shadow: 
-      0 12px 32px 0 rgba(0, 0, 0, 0.28),
-      inset 0 1.5px 0 0 rgba(255, 255, 255, 0.35);
+      0 16px 40px -8px rgba(0, 0, 0, 0.45),
+      inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.65),
+      inset 0 -1px 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 0 20px 0 rgba(255, 255, 255, 0.04);
     transform: translateZ(0); /* Promote to GPU composite layer */
   }
 
-  /* Deep Frosted Glass Container / Panel */
+  /* Deep Frosted Liquid Glass Container / Panel */
   .apple-glass-card {
     position: relative;
-    background: rgba(18, 20, 32, 0.82);
-    backdrop-filter: blur(32px) saturate(200%);
-    -webkit-backdrop-filter: blur(32px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(14, 18, 34, 0.52);
+    backdrop-filter: blur(34px) saturate(220%) brightness(106%);
+    -webkit-backdrop-filter: blur(34px) saturate(220%) brightness(106%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     box-shadow:
-      0 18px 48px -8px rgba(0, 0, 0, 0.45),
-      inset 0 1.5px 0 0 rgba(255, 255, 255, 0.45);
+      0 24px 60px -12px rgba(0, 0, 0, 0.58),
+      inset 0 2px 1px 0 rgba(255, 255, 255, 0.7),
+      inset 0 -1px 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 0 24px 0 rgba(255, 255, 255, 0.05);
     transform: translateZ(0);
   }
 
   /* Vertical Showcase Frame with Precision Rim Light */
   .apple-glass-showcase {
     position: relative;
-    background: rgba(14, 16, 26, 0.65);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(12, 15, 28, 0.48);
+    backdrop-filter: blur(28px) saturate(200%);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.24);
     box-shadow:
-      0 24px 64px -12px rgba(0, 0, 0, 0.65),
-      inset 0 1.5px 0 0 rgba(255, 255, 255, 0.5);
+      0 28px 68px -12px rgba(0, 0, 0, 0.65),
+      inset 0 2px 1px 0 rgba(255, 255, 255, 0.65),
+      inset 0 -1px 1px 0 rgba(255, 255, 255, 0.1);
     transform: translateZ(0);
   }
 
-  /* Ultra-smooth Glass Pill / Button */
+  /* Ultra-smooth Liquid Glass Pill / Button / HUD */
   .apple-glass-pill {
     position: relative;
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 100%), rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px) saturate(190%) brightness(105%);
+    -webkit-backdrop-filter: blur(20px) saturate(190%) brightness(105%);
+    border: 1px solid rgba(255, 255, 255, 0.28);
     box-shadow: 
-      0 4px 16px 0 rgba(0, 0, 0, 0.18),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+      0 4px 18px 0 rgba(0, 0, 0, 0.22),
+      inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.65),
+      inset 0 -1px 1px 0 rgba(255, 255, 255, 0.1);
+    transform: translateZ(0);
+  }
+
+  /* High-Refraction Ambient Colored Tints */
+  .apple-glass-blue {
+    position: relative;
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.28) 0%, rgba(88, 86, 214, 0.18) 100%), rgba(10, 20, 45, 0.45);
+    backdrop-filter: blur(24px) saturate(210%);
+    -webkit-backdrop-filter: blur(24px) saturate(210%);
+    border: 1px solid rgba(130, 180, 255, 0.35);
+    box-shadow:
+      0 8px 24px -4px rgba(0, 122, 255, 0.3),
+      inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.7);
+    transform: translateZ(0);
+  }
+
+  .apple-glass-gold {
+    position: relative;
+    background: linear-gradient(135deg, rgba(255, 204, 0, 0.22) 0%, rgba(255, 149, 0, 0.15) 100%), rgba(35, 28, 12, 0.45);
+    backdrop-filter: blur(24px) saturate(210%);
+    -webkit-backdrop-filter: blur(24px) saturate(210%);
+    border: 1px solid rgba(255, 214, 10, 0.38);
+    box-shadow:
+      0 8px 24px -4px rgba(255, 204, 0, 0.25),
+      inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.75);
     transform: translateZ(0);
   }
 
   /* Specular Top Edge Light Reflection */
   .apple-specular-edge {
     background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.55) 0%,
-      rgba(255, 255, 255, 0.08) 40%,
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.8) 50%,
       transparent 100%
     );
   }

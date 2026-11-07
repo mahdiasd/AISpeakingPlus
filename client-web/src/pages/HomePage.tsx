@@ -80,32 +80,38 @@ export const HomePage: React.FC = () => {
     phaseGroups.find((g) => g.phaseNumber === heroStage?.phaseNumber) || phaseGroups[0];
 
   return (
-    <div className="relative min-h-screen w-full bg-[#07080c] text-white selection:bg-apple-blue selection:text-white overflow-x-hidden flex flex-col justify-between">
-      {/* 1. Ambient Background Layer */}
-      {/* Mobile: Fullscreen portrait cover. Desktop: Soft, deeply blurred ambient wash so vertical art is never distorted */}
+    <div className="relative h-[100dvh] max-h-[100dvh] w-full bg-[#07080f] text-white selection:bg-apple-blue selection:text-white overflow-hidden flex flex-col justify-between">
+      {/* 1. Ambient Background Layer with Apple Optical Refraction */}
       {heroStage && heroStage.backgroundUrl ? (
         <div className="fixed inset-0 z-0 select-none pointer-events-none overflow-hidden">
           <img
             src={heroStage.backgroundUrl}
             alt={heroStage.title}
-            className="w-full h-full object-cover object-center filter brightness-[0.78] contrast-[1.05] lg:blur-3xl lg:opacity-20 lg:scale-125 lg:brightness-50 transition-all duration-700"
+            className="w-full h-full object-cover object-center filter brightness-[0.88] contrast-[1.05] lg:blur-3xl lg:opacity-25 lg:scale-125 transition-all duration-700"
           />
+          {/* Dynamic Ambient Optical Light Orbs for Liquid Glass Refraction */}
+          <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-apple-blue/20 blur-[100px] pointer-events-none" />
+          <div className="absolute top-1/2 -left-20 w-80 h-80 rounded-full bg-apple-purple/20 blur-[110px] pointer-events-none" />
+          <div className="absolute -bottom-10 right-1/4 w-72 h-72 rounded-full bg-apple-teal/15 blur-[90px] pointer-events-none" />
         </div>
       ) : (
-        <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#141728] via-[#090b14] to-[#040508]" />
+        <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#141728] via-[#090b14] to-[#040508]">
+          <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-apple-blue/25 blur-[100px]" />
+          <div className="absolute bottom-10 -left-10 w-80 h-80 rounded-full bg-apple-purple/25 blur-[110px]" />
+        </div>
       )}
 
-      {/* Optical Vignette & Scrim Gradients */}
-      <div className="fixed top-0 inset-x-0 h-44 bg-gradient-to-b from-black/85 via-black/45 to-transparent pointer-events-none z-10 lg:from-[#07080c]/90 lg:via-[#07080c]/50" />
-      <div className="fixed bottom-0 inset-x-0 h-[62%] bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-none z-10 lg:from-[#07080c]/95 lg:via-[#07080c]/40" />
+      {/* Optical Vignette & Scrim Gradients (Balanced so glass never turns solid black) */}
+      <div className="fixed top-0 inset-x-0 h-28 bg-gradient-to-b from-black/60 via-black/25 to-transparent pointer-events-none z-10 lg:from-[#07080f]/85 lg:via-[#07080f]/40" />
+      <div className="fixed bottom-0 inset-x-0 h-44 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none z-10 lg:from-[#07080f]/90 lg:via-[#07080f]/35" />
 
       {/* 2. TOP HUD (Mobile View) */}
-      <header className="relative z-20 w-full max-w-lg mx-auto pt-4 px-4 flex lg:hidden items-center justify-between gap-3">
+      <header className="relative z-20 w-full max-w-lg mx-auto pt-[max(env(safe-area-inset-top),12px)] px-4 flex lg:hidden items-center justify-between gap-2.5 shrink-0">
         {/* Profile Avatar Button */}
         <button
           type="button"
           onClick={() => navigate('/profile')}
-          className="w-11 h-11 rounded-full apple-glass bg-[#181a26]/85 border border-white/20 flex items-center justify-center text-white shadow-apple-sm active:scale-95 transition-all overflow-hidden shrink-0"
+          className="w-10 h-10 rounded-2xl apple-glass-pill flex items-center justify-center text-white shadow-apple-sm active:scale-95 transition-all overflow-hidden shrink-0 border border-white/25"
           title="پروفایل کاربری"
         >
           {profile?.avatar ? (
@@ -120,8 +126,8 @@ export const HomePage: React.FC = () => {
         </button>
 
         {/* Stars Metric Pill */}
-        <div className="h-10 px-3.5 rounded-full apple-glass bg-[#181a26]/85 border border-apple-yellow/30 flex items-center gap-1.5 text-apple-yellow shadow-apple-sm select-none">
-          <Star className="w-4 h-4 fill-apple-yellow text-apple-yellow drop-shadow-[0_0_6px_rgba(255,204,0,0.6)]" />
+        <div className="h-9 px-3 rounded-full apple-glass-gold flex items-center gap-1.5 text-apple-yellow shadow-apple-sm select-none">
+          <Star className="w-3.5 h-3.5 fill-apple-yellow text-apple-yellow drop-shadow-[0_0_6px_rgba(255,204,0,0.6)]" />
           <span className="text-xs font-bold font-mono">{totalStars.toLocaleString('fa-IR')}</span>
           <span className="text-[11px] font-sans font-medium text-apple-yellow/90">ستاره</span>
         </div>
@@ -133,26 +139,26 @@ export const HomePage: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate('/subscription')}
-            className="h-10 px-3.5 rounded-full apple-glass bg-purple-900/40 border border-apple-purple/40 flex items-center gap-1.5 text-apple-purple text-xs font-bold active:scale-95 transition-all shadow-apple-sm"
+            className="h-9 px-3.5 rounded-full apple-glass bg-purple-900/35 border border-apple-purple/50 flex items-center gap-1.5 text-purple-200 text-xs font-bold active:scale-95 transition-all shadow-apple-sm"
           >
-            <Crown className="w-4 h-4 fill-apple-purple text-apple-purple" />
+            <Crown className="w-3.5 h-3.5 fill-apple-purple text-apple-purple" />
             <span>اشتراک طلایی</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={() => navigate('/subscription')}
-            className="h-10 px-4 rounded-full bg-gradient-to-r from-apple-yellow via-amber-400 to-apple-orange text-black font-extrabold text-xs flex items-center gap-1.5 shadow-[0_2px_12px_rgba(255,204,0,0.35)] active:scale-95 hover:brightness-105 transition-all"
+            className="h-9 px-3.5 rounded-full bg-gradient-to-r from-apple-yellow via-amber-400 to-apple-orange text-black font-extrabold text-xs flex items-center gap-1.5 shadow-[0_2px_12px_rgba(255,204,0,0.35)] active:scale-95 hover:brightness-105 transition-all"
           >
-            <Crown className="w-4 h-4 fill-black text-black" />
+            <Crown className="w-3.5 h-3.5 fill-black text-black" />
             <span>اشتراک ویژه</span>
           </button>
         )}
       </header>
 
       {/* 2. TOP DESKTOP DOCK (Widescreen View) */}
-      <header className="hidden lg:flex relative z-20 w-full max-w-6xl mx-auto pt-6 px-6 items-center justify-between">
-        <div className="w-full apple-glass-card rounded-[24px] px-6 py-3.5 flex items-center justify-between gap-4 border border-white/15 shadow-apple-lg">
+      <header className="hidden lg:flex relative z-20 w-full max-w-6xl mx-auto pt-6 px-6 items-center justify-between shrink-0">
+        <div className="w-full apple-glass-card rounded-[24px] px-6 py-3.5 flex items-center justify-between gap-4 border border-white/20 shadow-apple-lg">
           {/* Brand & Tagline */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-apple-blue to-apple-indigo p-0.5 flex items-center justify-center shadow-apple-sm">
@@ -176,14 +182,14 @@ export const HomePage: React.FC = () => {
           {/* Central Stats Group */}
           <div className="flex items-center gap-3 select-none">
             {/* Stars Pill */}
-            <div className="h-9 px-3.5 rounded-full apple-glass-pill bg-white/[0.05] border border-apple-yellow/30 flex items-center gap-1.5 text-apple-yellow">
+            <div className="h-9 px-3.5 rounded-full apple-glass-gold flex items-center gap-1.5 text-apple-yellow">
               <Star className="w-4 h-4 fill-apple-yellow text-apple-yellow drop-shadow-[0_0_6px_rgba(255,204,0,0.6)]" />
               <span className="text-xs font-bold font-mono">{totalStars.toLocaleString('fa-IR')}</span>
               <span className="text-[11px] font-sans font-medium text-apple-yellow/90">ستاره</span>
             </div>
 
             {/* Stages Progress Pill */}
-            <div className="h-9 px-3.5 rounded-full apple-glass-pill bg-white/[0.05] border border-white/10 flex items-center gap-1.5 text-slate-200">
+            <div className="h-9 px-3.5 rounded-full apple-glass-pill flex items-center gap-1.5 text-slate-200">
               <CheckCircle2 className="w-4 h-4 text-apple-green" />
               <span className="text-xs font-bold font-mono">
                 {completedStagesCount.toLocaleString('fa-IR')} از {stages.length.toLocaleString('fa-IR')}
@@ -192,7 +198,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Level Pill */}
-            <div className="h-9 px-3 rounded-full apple-glass-pill bg-apple-blue/10 border border-apple-blue/25 flex items-center gap-1 text-apple-teal">
+            <div className="h-9 px-3 rounded-full apple-glass-blue flex items-center gap-1 text-apple-teal">
               <span className="text-xs font-bold font-mono">
                 سطح {profile?.languageLevel || 'A1'}
               </span>
@@ -224,7 +230,7 @@ export const HomePage: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/profile')}
-              className="h-10 px-3 rounded-full apple-glass bg-white/[0.08] hover:bg-white/[0.12] border border-white/20 flex items-center gap-2.5 text-white active:scale-95 transition-all"
+              className="h-10 px-3 rounded-full apple-glass-pill flex items-center gap-2.5 text-white active:scale-95 transition-all border border-white/20"
             >
               <div className="w-7 h-7 rounded-full overflow-hidden bg-white/10 shrink-0">
                 {profile?.avatar ? (
@@ -245,126 +251,148 @@ export const HomePage: React.FC = () => {
         </div>
       </header>
 
-      {/* 3. MOBILE VIEW: Ambient Spacer & Bottom Card */}
-      <div className="flex-1 lg:hidden" />
-
-      <section className="relative z-20 w-full max-w-lg mx-auto px-4 pb-6 lg:hidden">
-        {isLoading && !heroStage ? (
-          <div className="apple-glass rounded-[28px] p-6 border border-white/20 space-y-4">
-            <CupertinoSkeleton className="h-6 w-1/3 rounded-xl" />
-            <CupertinoSkeleton className="h-8 w-3/4 rounded-xl" />
-            <CupertinoSkeleton className="h-14 rounded-2xl" />
-          </div>
-        ) : heroStage ? (
-          <div className="apple-glass-card rounded-[28px] p-5 border border-white/20 shadow-apple-lg space-y-4">
-            {/* Top Info Bar: Stage Number & Stars */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold text-apple-blue font-sans tracking-wide">
-                مرحله {heroStage.orderIndex.toLocaleString('fa-IR')} از {stages.length.toLocaleString('fa-IR')}
-              </span>
-              <CupertinoStarRating stars={heroStage.progress?.stars || 0} size="sm" />
-            </div>
-
-            {/* Stage Title & Season */}
-            <div className="space-y-1">
-              <span className="text-[11px] text-apple-teal font-semibold block">
+      {/* 3. MOBILE VIEW: Center Showcase & Sleek Bottom Glass Deck (Guaranteed NO-SCROLL) */}
+      <div className="flex-1 min-h-0 relative flex flex-col justify-between lg:hidden">
+        {/* Floating Center Stage Indicator Pill */}
+        <div className="flex-1 flex items-center justify-center p-3">
+          {heroStage && (
+            <div className="apple-glass-pill px-3.5 py-1.5 rounded-full flex items-center gap-2 border border-white/25 shadow-apple-md">
+              <span className="w-2 h-2 rounded-full bg-apple-teal animate-pulse" />
+              <span className="text-[11px] font-semibold text-white/90">
                 {heroStage.seasonTitleFa} • {heroStage.phaseTitleFa}
               </span>
-              <h1 className="text-xl font-extrabold text-white leading-snug">
-                {heroStage.titleFa}
-              </h1>
             </div>
+          )}
+        </div>
 
-            {/* Character Squircle & Name */}
-            <div className="flex items-center gap-2.5 pt-0.5">
-              <div className="w-8 h-8 rounded-xl overflow-hidden bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
-                {heroStage.characterAvatarUrl ? (
-                  <img
-                    src={heroStage.characterAvatarUrl}
-                    alt={heroStage.characterName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-4 h-4 text-apple-blue" />
-                )}
-              </div>
-              <span className="text-xs text-apple-gray-300 font-medium" dir="ltr">
-                {heroStage.characterName}
-              </span>
+        {/* Bottom Liquid Glass Card */}
+        <section className="relative z-20 w-full max-w-lg mx-auto px-4 pb-[max(env(safe-area-inset-bottom),14px)] shrink-0">
+          {isLoading && !heroStage ? (
+            <div className="apple-glass rounded-[28px] p-4 border border-white/20 space-y-3">
+              <CupertinoSkeleton className="h-5 w-1/3 rounded-xl" />
+              <CupertinoSkeleton className="h-7 w-3/4 rounded-xl" />
+              <CupertinoSkeleton className="h-12 rounded-2xl" />
             </div>
+          ) : heroStage ? (
+            <div className="apple-glass-card rounded-[28px] p-4 border border-white/25 shadow-apple-lg space-y-2.5 relative overflow-hidden">
+              {/* Specular Rim Light */}
+              <div
+                aria-hidden="true"
+                className="absolute inset-x-0 top-0 h-[1.5px] apple-specular-edge pointer-events-none rounded-t-[28px]"
+              />
 
-            {/* Primary Action Button (CTA) */}
-            <div className="space-y-2 pt-1">
-              {heroStage.lockStatus === 'UNLOCKED' && (
-                <button
-                  type="button"
-                  onClick={() => handleStartStage(heroStage)}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-apple-blue to-[#5856D6] hover:brightness-110 active:scale-[0.98] text-white font-extrabold text-sm shadow-[0_4px_16px_rgba(0,122,255,0.35)] flex items-center justify-center gap-2 transition-all"
-                >
-                  {heroStage.progress?.stars && heroStage.progress.stars > 0 ? (
-                    <>
-                      <RotateCcw className="w-4 h-4 ml-0.5" />
-                      <span>تکرار مرحله</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4 fill-white ml-0.5" />
-                      <span>شروع مرحله</span>
-                    </>
-                  )}
-                </button>
-              )}
-
-              {heroStage.lockStatus === 'LOCKED_REGISTRATION' && (
-                <button
-                  type="button"
-                  onClick={() => setIsAuthModalOpen(true)}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#5856D6] to-purple-700 hover:brightness-110 active:scale-[0.98] text-white font-extrabold text-sm shadow-apple-md flex items-center justify-center gap-2 transition-all"
-                >
-                  <Lock className="w-4 h-4" />
-                  <span>ورود و باز کردن مرحله</span>
-                </button>
-              )}
-
-              {heroStage.lockStatus === 'LOCKED_SUBSCRIPTION' && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/subscription')}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-apple-yellow via-amber-400 to-apple-orange hover:brightness-110 active:scale-[0.98] text-black font-extrabold text-sm shadow-[0_4px_16px_rgba(255,204,0,0.35)] flex items-center justify-center gap-2 transition-all"
-                >
-                  <Crown className="w-4 h-4 fill-black" />
-                  <span>باز کردن با اشتراک ویژه</span>
-                </button>
-              )}
-
-              {heroStage.lockStatus === 'LOCKED_PREVIOUS_STAGE' && (
-                <button
-                  type="button"
-                  disabled
-                  className="w-full py-3.5 px-4 rounded-2xl bg-white/10 text-apple-gray-400 font-bold text-sm border border-white/10 flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
-                >
-                  <Lock className="w-4 h-4" />
-                  <span>ابتدا مرحله قبل را به پایان برسانید</span>
-                </button>
-              )}
-
-              {/* Secondary Button: Open Stages Timeline Curriculum */}
-              <button
-                type="button"
-                onClick={() => setIsTimelineOpen(true)}
-                className="w-full py-3 px-4 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-[0.98] text-slate-200 font-bold text-xs border border-white/10 flex items-center justify-center gap-2 transition-all"
-              >
-                <Layers className="w-4 h-4 text-apple-blue" />
-                <span>
-                  {completedStagesCount > 0
-                    ? `همه مرحله‌ها و پیشرفت (${completedStagesCount.toLocaleString('fa-IR')} انجام شده)`
-                    : 'همه مرحله‌ها و نقشه مسیر'}
+              {/* Top Info Bar: Stage Number & Stars */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold text-apple-teal font-sans tracking-wide">
+                  مرحله {heroStage.orderIndex.toLocaleString('fa-IR')} از {stages.length.toLocaleString('fa-IR')}
                 </span>
-              </button>
+                <CupertinoStarRating stars={heroStage.progress?.stars || 0} size="sm" />
+              </div>
+
+              {/* Stage Title */}
+              <div className="space-y-0.5">
+                <h1 className="text-base sm:text-lg font-extrabold text-white leading-tight truncate">
+                  {heroStage.titleFa}
+                </h1>
+                <p className="text-[11px] text-apple-gray-300 font-mono italic truncate" dir="ltr">
+                  {heroStage.title}
+                </p>
+              </div>
+
+              {/* Character Squircle & Name */}
+              <div className="flex items-center gap-2 pt-0.5">
+                <div className="w-7 h-7 rounded-xl overflow-hidden bg-white/10 border border-white/25 flex items-center justify-center shrink-0">
+                  {heroStage.characterAvatarUrl ? (
+                    <img
+                      src={heroStage.characterAvatarUrl}
+                      alt={heroStage.characterName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-3.5 h-3.5 text-apple-blue" />
+                  )}
+                </div>
+                <span className="text-xs text-apple-gray-300 font-medium truncate" dir="ltr">
+                  {heroStage.characterName}
+                </span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-apple-blue/20 text-apple-blue font-semibold mr-auto shrink-0">
+                  میزبان AI
+                </span>
+              </div>
+
+              {/* Primary Action Button (CTA) */}
+              <div className="space-y-2 pt-1">
+                {heroStage.lockStatus === 'UNLOCKED' && (
+                  <button
+                    type="button"
+                    onClick={() => handleStartStage(heroStage)}
+                    className="w-full h-11 px-4 rounded-2xl bg-gradient-to-r from-apple-blue via-indigo-600 to-[#5856D6] hover:brightness-110 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm shadow-[0_4px_18px_rgba(0,122,255,0.4)] flex items-center justify-center gap-2 transition-all border border-white/25"
+                  >
+                    {heroStage.progress?.stars && heroStage.progress.stars > 0 ? (
+                      <>
+                        <RotateCcw className="w-4 h-4 ml-0.5" />
+                        <span>تکرار مرحله</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 fill-white ml-0.5" />
+                        <span>شروع مرحله</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {heroStage.lockStatus === 'LOCKED_REGISTRATION' && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAuthModalOpen(true)}
+                    className="w-full h-11 px-4 rounded-2xl bg-gradient-to-r from-[#5856D6] to-purple-700 hover:brightness-110 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm shadow-apple-md flex items-center justify-center gap-2 transition-all border border-white/20"
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span>ورود و باز کردن مرحله</span>
+                  </button>
+                )}
+
+                {heroStage.lockStatus === 'LOCKED_SUBSCRIPTION' && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/subscription')}
+                    className="w-full h-11 px-4 rounded-2xl bg-gradient-to-r from-apple-yellow via-amber-400 to-apple-orange hover:brightness-110 active:scale-[0.98] text-black font-extrabold text-xs sm:text-sm shadow-[0_4px_16px_rgba(255,204,0,0.35)] flex items-center justify-center gap-2 transition-all border border-yellow-300/40"
+                  >
+                    <Crown className="w-4 h-4 fill-black" />
+                    <span>باز کردن با اشتراک ویژه</span>
+                  </button>
+                )}
+
+                {heroStage.lockStatus === 'LOCKED_PREVIOUS_STAGE' && (
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full h-11 px-4 rounded-2xl bg-white/10 text-apple-gray-400 font-bold text-xs sm:text-sm border border-white/10 flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span>ابتدا مرحله قبل را به پایان برسانید</span>
+                  </button>
+                )}
+
+                {/* Secondary Button: Open Stages Timeline Curriculum */}
+                <button
+                  type="button"
+                  onClick={() => setIsTimelineOpen(true)}
+                  className="w-full h-9 px-4 rounded-2xl apple-glass-pill hover:bg-white/15 active:scale-[0.98] text-slate-200 font-bold text-[11px] border border-white/20 flex items-center justify-center gap-2 transition-all"
+                >
+                  <Layers className="w-3.5 h-3.5 text-apple-blue" />
+                  <span>
+                    {completedStagesCount > 0
+                      ? `همه مرحله‌ها و پیشرفت (${completedStagesCount.toLocaleString('fa-IR')} انجام شده)`
+                      : 'همه مرحله‌ها و نقشه مسیر'}
+                  </span>
+                </button>
+              </div>
             </div>
-          </div>
-        ) : null}
-      </section>
+          ) : null}
+        </section>
+      </div>
 
       {/* 4. WIDESCREEN / DESKTOP RESPONSIVE WORKSPACE */}
       {/* Maintains exact vertical ratio of the artwork without stretching, paired with a lush Apple Glass stage hub */}
@@ -399,16 +427,16 @@ export const HomePage: React.FC = () => {
 
                 {/* Top Badge Overlay */}
                 <div className="relative z-10 flex items-center justify-between">
-                  <span className="apple-glass-pill px-3 py-1 rounded-full text-xs font-bold text-white bg-black/50 border border-white/20 backdrop-blur-md">
+                  <span className="apple-glass-pill px-3 py-1 rounded-full text-xs font-bold text-white border border-white/25">
                     مرحله {heroStage.orderIndex.toLocaleString('fa-IR')} از {stages.length.toLocaleString('fa-IR')}
                   </span>
-                  <div className="apple-glass-pill px-2.5 py-1 rounded-full bg-black/50 border border-white/20 backdrop-blur-md">
+                  <div className="apple-glass-pill px-2.5 py-1 rounded-full border border-white/25">
                     <CupertinoStarRating stars={heroStage.progress?.stars || 0} size="sm" />
                   </div>
                 </div>
 
                 {/* Bottom Overlay: Character info & voice preview */}
-                <div className="relative z-10 apple-glass-pill bg-black/65 backdrop-blur-2xl rounded-2xl p-3 border border-white/20 space-y-2">
+                <div className="relative z-10 apple-glass-pill rounded-2xl p-3 border border-white/25 space-y-2">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/10 border border-white/20 shrink-0">
                       {heroStage.characterAvatarUrl ? (

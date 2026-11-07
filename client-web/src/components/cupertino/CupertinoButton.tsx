@@ -31,9 +31,9 @@ export const CupertinoButton: React.FC<CupertinoButtonProps> = ({
   };
 
   const variantClasses = {
-    glass: 'apple-glass-pill text-white active:bg-white/15',
-    filled: 'bg-apple-blue text-white shadow-apple-sm active:bg-blue-600',
-    tinted: 'bg-apple-blue/15 text-apple-blue border border-apple-blue/20 active:bg-apple-blue/25',
+    glass: 'apple-glass-pill text-white active:bg-white/20 border border-white/30 shadow-apple-sm',
+    filled: 'bg-gradient-to-r from-apple-blue via-blue-600 to-[#5856D6] text-white shadow-[0_4px_16px_rgba(0,122,255,0.35)] active:brightness-95 border border-white/20',
+    tinted: 'apple-glass-blue text-apple-teal border border-apple-blue/35 active:bg-apple-blue/30',
     plain: 'bg-transparent text-apple-blue active:opacity-60',
   };
 
