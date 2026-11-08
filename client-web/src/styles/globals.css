@@ -63,6 +63,32 @@
       inset 0 1.5px 0.5px rgba(255, 255, 255, 0.50);
   }
 
+  /* 2026 Apple Liquid Glass AI Message Bubble (True Translucent Frosted Scenery) */
+  .apple-glass-ai-bubble {
+    position: relative;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(20, 24, 40, 0.52);
+    backdrop-filter: blur(14px) saturate(190%);
+    -webkit-backdrop-filter: blur(14px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 
+      0 8px 24px -2px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.45);
+    transform: translateZ(0);
+  }
+
+  /* 2026 Apple Liquid Glass User Message Bubble (Royal Azure & Electric Indigo Translucent) */
+  .apple-glass-user-bubble {
+    position: relative;
+    background: linear-gradient(135deg, rgba(10, 132, 255, 0.82) 0%, rgba(94, 92, 230, 0.78) 100%);
+    backdrop-filter: blur(14px) saturate(190%);
+    -webkit-backdrop-filter: blur(14px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    box-shadow: 
+      0 8px 24px 0 rgba(10, 132, 255, 0.35),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.60);
+    transform: translateZ(0);
+  }
+
   /* Real liquid-glass-react integration layer for responsive full-width Apple cards */
   .liquid-glass-host {
     position: relative;

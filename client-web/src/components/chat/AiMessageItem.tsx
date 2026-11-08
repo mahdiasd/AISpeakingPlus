@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Square, Languages, Copy, Check, Volume2 } from 'lucide-react';
+import { Play, Square, Languages, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export interface AiMessageItemProps {
@@ -17,14 +17,12 @@ export interface AiMessageItemProps {
 
 /**
  * 2026 Apple Liquid Glass AI Message Item.
- *
- * Characteristics:
- * - Left-aligned in RTL layout (chatted by AI Host, placed on the left with start-anchor avatar).
- * - 3D Character Avatar (36px squircle) with initial letter badge ("E" for Emily).
- * - Liquid Glass bubble with specular light rim and subtle translucent dark slate background (blur 14px).
- * - Hero English copy with Apple typography and sound wave animation when TTS is playing.
- * - Siri iridescent glowing typing dots when generating.
- * - Action chips beneath bubble: Voice playback ("پخش صدا" with equalizer), Translation toggle ("ترجمه"), and Copy ("کپی").
+ * 100% matching Compose Multiplatform `AiChatItem.kt`:
+ * - Compact layout: small circular character avatar on top-left of bubble.
+ * - NO "AI Host" or character name headers.
+ * - High-clarity frosted glass bubble (.apple-glass-ai-bubble) allowing stage scenery to shine through.
+ * - Compact horizontal action chips row: [پخش صدا], [ترجمه], [کپی].
+ * - NO loading animation inside bubble when empty.
  */
 export const AiMessageItem: React.FC<AiMessageItemProps> = ({
   message,
@@ -39,8 +37,12 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
   const [showTranslation, setShowTranslation] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // If no message text exists yet, do not render an empty bubble
+  if (!message || message.trim().length === 0) {
+    return null;
+  }
+
   const handleCopy = () => {
-    if (!message) return;
     navigator.clipboard?.writeText(message);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -50,89 +52,42 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
   const initialChar = (characterName ? characterName.trim().charAt(0) : 'E').toUpperCase();
 
   return (
-    <div className="flex items-start gap-2.5 justify-start max-w-[92%] sm:max-w-[82%] my-3 mr-auto self-start" dir="ltr">
-      {/* 1. Character Avatar (36px Squircle with Specular Ring & Initial Badge) */}
-      <div className="relative shrink-0 mt-0.5 select-none">
-        <div className="w-9 h-9 rounded-[12px] overflow-hidden apple-glass border border-white/25 shadow-apple-sm flex items-center justify-center bg-gradient-to-br from-[#252836] to-[#12131c]">
-          {characterAvatarUrl ? (
-            <img
-              src={characterAvatarUrl}
-              alt={characterName}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLElement).style.display = 'none';
-              }}
-            />
-          ) : (
-            <span className="text-sm font-bold text-cyan-300 drop-shadow-[0_1px_4px_rgba(6,182,212,0.4)]">
-              {initialChar}
-            </span>
-          )}
-        </div>
-
-        {/* Small 3D initial badge in bottom-right of avatar if image is present */}
-        {characterAvatarUrl && (
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#0f172a] border border-cyan-400/50 flex items-center justify-center shadow-sm">
-            <span className="text-[9px] font-bold text-cyan-300 leading-none">
-              {initialChar}
-            </span>
-          </div>
+    <div className="flex items-start gap-2 justify-start max-w-[94%] sm:max-w-[85%] my-1.5 mr-auto self-start select-none" dir="ltr">
+      {/* 1. Character Avatar (34px Circle matching Compose GameAvatar) */}
+      <div className="w-[34px] h-[34px] rounded-full overflow-hidden shrink-0 mt-0.5 border border-white/30 shadow-sm bg-[#161826] flex items-center justify-center">
+        {characterAvatarUrl ? (
+          <img
+            src={characterAvatarUrl}
+            alt={characterName}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLElement).style.display = 'none';
+            }}
+          />
+        ) : (
+          <span className="text-xs font-bold text-cyan-300">
+            {initialChar}
+          </span>
         )}
       </div>
 
-      {/* 2. Message Content Column */}
-      <div className="space-y-1.5 flex-1 min-w-0">
-        {/* Character Name & AI Badge Row */}
-        <div className="flex items-center gap-1.5 px-1 select-none" dir="ltr">
-          <span className="text-[12px] font-semibold text-slate-200">{characterName}</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-400/25 font-semibold">
-            AI Host
-          </span>
-          {isPlaying && (
-            <span className="flex items-center gap-1 text-[10px] text-cyan-400 font-medium ml-1">
-              <Volume2 className="w-3 h-3 animate-pulse" />
-              <span>در حال صحبت...</span>
-            </span>
-          )}
-        </div>
-
-        {/* Liquid Glass Bubble with Specular Top Highlight */}
-        <div className="relative apple-glass rounded-[20px] rounded-tl-[6px] p-4 text-white border border-white/18 shadow-[0_8px_32px_0_rgba(0,0,0,0.35)] backdrop-blur-[14px] bg-[rgba(15,23,42,0.60)] overflow-hidden">
+      {/* 2. Message Content Column (NO "AI Host" or name label) */}
+      <div className="flex-1 min-w-0 space-y-1">
+        {/* Apple Translucent Glass Bubble with Specular Top Highlight */}
+        <div className="apple-glass-ai-bubble relative rounded-[20px] rounded-tl-[6px] px-3.5 py-2.5 text-white overflow-hidden">
           {/* Specular Rim Light */}
           <div
             aria-hidden="true"
-            className="absolute inset-x-0 top-0 h-[1.5px] apple-specular-edge pointer-events-none"
+            className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-white/70 via-white/20 to-transparent pointer-events-none"
           />
 
-          {/* Active Audio Waveform Overlay while playing TTS */}
-          {isPlaying && (
-            <div className="absolute top-2 right-3 flex items-center gap-0.5 px-2 py-1 rounded-full bg-cyan-950/40 border border-cyan-400/30">
-              <span className="w-0.5 h-2.5 bg-cyan-400 rounded-full animate-bounce [animation-duration:450ms]" />
-              <span className="w-0.5 h-4 bg-cyan-300 rounded-full animate-bounce [animation-duration:320ms] [animation-delay:100ms]" />
-              <span className="w-0.5 h-2 bg-cyan-400 rounded-full animate-bounce [animation-duration:480ms] [animation-delay:200ms]" />
-              <span className="w-0.5 h-3.5 bg-cyan-300 rounded-full animate-bounce [animation-duration:380ms] [animation-delay:150ms]" />
-            </div>
-          )}
-
           {/* Main English Transcript */}
-          {message ? (
-            <p className="text-[15px] sm:text-[16px] leading-[1.65] font-normal tracking-wide text-white select-text text-left">
-              {message}
-              {isStreaming && (
-                <span className="inline-block w-2 h-4 ml-1.5 bg-cyan-400 rounded-sm animate-pulse align-middle" />
-              )}
-            </p>
-          ) : (
-            /* Siri Iridescent Pulsing Dots */
-            <div className="flex items-center gap-1.5 py-1 text-xs text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-[#af52de] animate-bounce" />
-              <span className="w-2 h-2 rounded-full bg-[#06b6d4] animate-bounce [animation-delay:0.15s]" />
-              <span className="w-2 h-2 rounded-full bg-[#007aff] animate-bounce [animation-delay:0.3s]" />
-              <span className="mr-2 text-xs font-medium text-slate-400" dir="rtl">
-                در حال پاسخ...
-              </span>
-            </div>
-          )}
+          <p className="text-[14.5px] sm:text-[15px] leading-[1.55] font-normal tracking-wide text-white select-text text-left">
+            {message}
+            {isStreaming && (
+              <span className="inline-block w-1.5 h-3.5 ml-1 bg-cyan-400 rounded-sm animate-pulse align-middle" />
+            )}
+          </p>
 
           {/* Expandable Persian Translation inside bubble */}
           <AnimatePresence>
@@ -141,12 +96,12 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.22, ease: 'easeOut' }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
                 className="overflow-hidden"
               >
-                <div className="w-full h-[1px] bg-white/10 my-3" />
+                <div className="w-full h-[1px] bg-white/10 my-2" />
                 <p
-                  className="text-[13.5px] text-slate-200 leading-[1.7] font-sans text-right select-text text-justify"
+                  className="text-[12.5px] text-slate-200 leading-[1.65] font-sans text-right select-text text-justify"
                   dir="rtl"
                 >
                   {translatedMessage}
@@ -156,26 +111,25 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
           </AnimatePresence>
         </div>
 
-        {/* 3. Apple Labelled Action Chips Row beneath bubble */}
-        {message && !isStreaming && (
-          <div className="flex items-center gap-2 pt-1 select-none" dir="rtl">
+        {/* 3. Compact Action Chips Row beneath bubble (Matching Compose GameChip) */}
+        {!isStreaming && (
+          <div className="flex items-center gap-1.5 pt-0.5 select-none" dir="rtl">
             {/* Audio Voice Chip */}
             <motion.button
               type="button"
               whileTap={{ scale: 0.94 }}
               onClick={isPlaying ? onStopAudio : onPlayAudio}
-              className={`h-7 px-3 rounded-full text-[11.5px] font-medium flex items-center gap-1.5 transition-all touch-manipulation border ${
+              className={`h-[26px] px-2.5 rounded-full text-[11px] font-medium flex items-center gap-1 transition-all touch-manipulation border ${
                 isPlaying
-                  ? 'apple-glass-blue text-cyan-300 border-cyan-400/50 shadow-apple-sm'
-                  : 'apple-glass-pill text-slate-200 border-white/20 hover:bg-white/15'
+                  ? 'bg-cyan-500/25 text-cyan-300 border-cyan-400/50 shadow-sm'
+                  : 'bg-white/10 hover:bg-white/15 text-slate-200 border-white/15'
               }`}
               title="پخش صوت مکالمه"
             >
               {isPlaying ? (
                 <>
-                  <Square className="w-3 h-3 fill-cyan-300 text-cyan-300" />
+                  <Square className="w-2.5 h-2.5 fill-cyan-300 text-cyan-300" />
                   <span>توقف</span>
-                  {/* Dynamic Equalizer Waveform */}
                   <div className="flex items-center gap-0.5 mr-0.5">
                     <span className="w-0.5 h-2 bg-cyan-300 rounded-full animate-bounce [animation-duration:400ms]" />
                     <span className="w-0.5 h-3 bg-cyan-300 rounded-full animate-bounce [animation-duration:320ms] [animation-delay:120ms]" />
@@ -184,7 +138,7 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
                 </>
               ) : (
                 <>
-                  <Play className="w-3 h-3 fill-cyan-400 text-cyan-400" />
+                  <Play className="w-2.5 h-2.5 fill-cyan-400 text-cyan-400 ml-0.5" />
                   <span>پخش صدا</span>
                 </>
               )}
@@ -196,14 +150,14 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
                 type="button"
                 whileTap={{ scale: 0.94 }}
                 onClick={() => setShowTranslation((prev) => !prev)}
-                className={`h-7 px-3 rounded-full text-[11.5px] font-medium flex items-center gap-1.5 transition-all touch-manipulation border ${
+                className={`h-[26px] px-2.5 rounded-full text-[11px] font-medium flex items-center gap-1 transition-all touch-manipulation border ${
                   showTranslation
-                    ? 'apple-glass-gold text-amber-300 border-amber-400/50'
-                    : 'apple-glass-pill text-slate-200 border-white/20 hover:bg-white/15'
+                    ? 'bg-amber-400/20 text-amber-300 border-amber-400/40'
+                    : 'bg-white/10 hover:bg-white/15 text-slate-200 border-white/15'
                 }`}
               >
-                <Languages className="w-3.5 h-3.5 text-amber-300" />
-                <span>{showTranslation ? 'بستن ترجمه' : 'ترجمه'}</span>
+                <Languages className="w-3 h-3 text-amber-300" />
+                <span>{showTranslation ? 'بستن' : 'ترجمه'}</span>
               </motion.button>
             )}
 
@@ -212,20 +166,20 @@ export const AiMessageItem: React.FC<AiMessageItemProps> = ({
               type="button"
               whileTap={{ scale: 0.94 }}
               onClick={handleCopy}
-              className={`h-7 px-2.5 rounded-full text-[11.5px] font-medium flex items-center gap-1.5 transition-all touch-manipulation border ${
+              className={`h-[26px] px-2 rounded-full text-[11px] font-medium flex items-center gap-1 transition-all touch-manipulation border ${
                 copied
-                  ? 'apple-glass-pill bg-cyan-950/40 text-cyan-300 border-cyan-400/50'
-                  : 'apple-glass-pill text-slate-200 border-white/20 hover:bg-white/15'
+                  ? 'bg-cyan-950/40 text-cyan-300 border-cyan-400/50'
+                  : 'bg-white/10 hover:bg-white/15 text-slate-300 border-white/15'
               }`}
             >
               {copied ? (
                 <>
-                  <Check className="w-3 h-3 text-cyan-300 stroke-[2.5]" />
+                  <Check className="w-2.5 h-2.5 text-cyan-300 stroke-[2.5]" />
                   <span>کپی شد</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3 h-3 text-slate-400" />
+                  <Copy className="w-2.5 h-2.5 text-slate-400" />
                   <span>کپی</span>
                 </>
               )}

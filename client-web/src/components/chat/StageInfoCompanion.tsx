@@ -77,11 +77,11 @@ export const StageInfoCompanion: React.FC<StageInfoCompanionProps> = ({
         <div className="absolute inset-x-0 top-0 h-[1.5px] apple-specular-edge pointer-events-none rounded-t-[32px]" />
 
         <div className="text-[11px] font-bold text-apple-gray-400 uppercase tracking-wider">
-          هم‌صحبت هوش مصنوعی
+          شخصیت داستان و هم‌صحبت شما
         </div>
 
         <div className="flex items-center gap-3.5">
-          {/* Avatar with Apple Intelligence Rim Light */}
+          {/* Avatar with Apple Specular Rim */}
           <div className="relative w-14 h-14 rounded-2xl overflow-hidden border border-white/20 shadow-apple-md bg-gradient-to-br from-[#2c2d3e] to-[#141624] shrink-0">
             {stage.characterAvatarUrl ? (
               <img
@@ -102,9 +102,6 @@ export const StageInfoCompanion: React.FC<StageInfoCompanionProps> = ({
               <h3 className="text-sm font-bold text-white truncate" dir="ltr">
                 {stage.characterName}
               </h3>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-apple-green/20 text-apple-green border border-apple-green/30">
-                AI Partner
-              </span>
             </div>
             <p className="text-xs text-apple-gray-300 truncate">
               مکالمه طبیعی و ارزیابی زنده لهجه

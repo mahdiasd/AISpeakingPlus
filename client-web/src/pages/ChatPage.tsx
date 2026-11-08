@@ -195,15 +195,6 @@ export const ChatPage: React.FC = () => {
     setIsModelSpeaking(true);
 
     const aiMessageId = `ai_${Date.now()}`;
-    setChats((prev) => [
-      ...prev,
-      {
-        id: aiMessageId,
-        sender: 'Model',
-        text: '',
-        isStreaming: true,
-      },
-    ]);
 
     const historyPayload = updatedChats.map((c) => ({
       sender: (c.sender === 'User' ? 'User' : 'Model') as 'User' | 'Model',
@@ -221,13 +212,27 @@ export const ChatPage: React.FC = () => {
         {
           onChunk: (delta) => {
             accumulatedDelta += delta;
-            setChats((prev) =>
-              prev.map((c) => (c.id === aiMessageId ? { ...c, text: accumulatedDelta } : c))
-            );
+            setChats((prev) => {
+              const exists = prev.some((c) => c.id === aiMessageId);
+              if (exists) {
+                return prev.map((c) => (c.id === aiMessageId ? { ...c, text: accumulatedDelta } : c));
+              } else {
+                return [
+                  ...prev,
+                  {
+                    id: aiMessageId,
+                    sender: 'Model',
+                    text: accumulatedDelta,
+                    isStreaming: true,
+                  },
+                ];
+              }
+            });
           },
           onDone: (turnResult: StageChatTurnResult) => {
-            setChats((prev) =>
-              prev.map((c) =>
+            const finalAiText = turnResult.message || accumulatedDelta;
+            setChats((prev) => {
+              const updated = prev.map((c) =>
                 c.id === userMessageId
                   ? {
                       ...c,
@@ -237,8 +242,35 @@ export const ChatPage: React.FC = () => {
                       grammarFeedbackFa: turnResult.grammarFeedbackFa,
                     }
                   : c
-              )
-            );
+              );
+
+              const exists = updated.some((c) => c.id === aiMessageId);
+              if (exists) {
+                return updated.map((c) =>
+                  c.id === aiMessageId
+                    ? {
+                        ...c,
+                        text: finalAiText,
+                        translatedMessage: turnResult.translatedMessage,
+                        audioUrl: turnResult.audioUrl,
+                        isStreaming: false,
+                      }
+                    : c
+                );
+              } else {
+                return [
+                  ...updated,
+                  {
+                    id: aiMessageId,
+                    sender: 'Model',
+                    text: finalAiText,
+                    translatedMessage: turnResult.translatedMessage,
+                    audioUrl: turnResult.audioUrl,
+                    isStreaming: false,
+                  },
+                ];
+              }
+            });
 
             if (turnResult.hasGrammarError) {
               setGrammarErrorsCollected((prev) => [
@@ -251,27 +283,13 @@ export const ChatPage: React.FC = () => {
               ]);
             }
 
-            setChats((prev) =>
-              prev.map((c) =>
-                c.id === aiMessageId
-                  ? {
-                      ...c,
-                      text: turnResult.message,
-                      translatedMessage: turnResult.translatedMessage,
-                      audioUrl: turnResult.audioUrl,
-                      isStreaming: false,
-                    }
-                  : c
-              )
-            );
-
             if (turnResult.objectiveCompleted) {
               setIsObjectiveCompleted(true);
               showToast('هدف ماموریت مرحله با موفقیت تکمیل شد!');
             }
 
-            if (turnResult.message) {
-              audioPlayer.play(aiMessageId, turnResult.message, turnResult.audioUrl);
+            if (finalAiText) {
+              audioPlayer.play(aiMessageId, finalAiText, turnResult.audioUrl);
             }
 
             setIsSending(false);
@@ -302,12 +320,8 @@ export const ChatPage: React.FC = () => {
     }
   };
 
-  // 4. Robust Speech Recognition & Voice Recording Integration
-  const speechRecognition = useSpeechRecognition((finalTranscript) => {
-    if (finalTranscript.trim()) {
-      handleSendMessage(finalTranscript.trim());
-    }
-  });
+  // 4. Robust Speech Recognition & Voice Recording Integration (matching Compose live transcript)
+  const speechRecognition = useSpeechRecognition();
 
   // 5. Request Stage Hint
   const handleRequestHint = async () => {
@@ -416,18 +430,16 @@ export const ChatPage: React.FC = () => {
 
   return (
     <div className="relative h-[100dvh] max-h-[100dvh] w-full bg-[#07080f] text-white selection:bg-apple-blue selection:text-white overflow-hidden flex flex-col justify-between">
-      {/* 1. Fullscreen Ambient Stage Wallpaper with Liquid Glass Refraction & Light Orbs */}
+      {/* 1. Fullscreen Stage Background (Clear & Crisp, matching Compose AsyncStageBackground) */}
       {stage && stage.backgroundUrl ? (
         <div className="fixed inset-0 z-0 select-none pointer-events-none overflow-hidden">
           <img
             src={stage.backgroundUrl}
             alt={stage.title}
-            className="w-full h-full object-cover object-center filter blur-3xl brightness-[0.55] contrast-[1.1] scale-110 transform-gpu"
+            className="w-full h-full object-cover object-center filter brightness-[0.75] contrast-[1.05]"
           />
-          {/* Dynamic Optical Light Orbs for Liquid Glass */}
-          <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-apple-blue/25 blur-[100px] pointer-events-none" />
-          <div className="absolute top-1/2 -left-20 w-80 h-80 rounded-full bg-apple-purple/20 blur-[110px] pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#07080f]/85 via-[#0b0e1b]/70 to-[#06070e]/88" />
+          {/* Subtle Apple vertical vignette matching Compose ChatScreen.kt (enableFrostedGlass = false) */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#070810]/80 via-[#090c18]/25 to-[#070810]/88" />
         </div>
       ) : (
         <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#07080f] via-[#0b0e1b] to-[#06070e]">
@@ -436,8 +448,8 @@ export const ChatPage: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Responsive Multi-Column Stage Layout */}
-      <div className="relative z-10 w-full flex-1 min-h-0 flex items-center justify-center lg:py-6 lg:px-6">
+      {/* 2. Responsive Stage Layout */}
+      <div className="relative z-10 w-full flex-1 min-h-0 flex items-center justify-center lg:py-4 lg:px-6">
         <div className="w-full max-w-7xl flex items-center justify-center lg:gap-8 h-full">
           {/* A. Right Companion (in RTL: Stage Briefing & Character Info) */}
           <aside className="hidden lg:block shrink-0">
@@ -455,34 +467,15 @@ export const ChatPage: React.FC = () => {
           </aside>
 
           {/* B. Center Mobile Canvas (Authentic Apple Device Mockup on Desktop, Full Bleed on Mobile) */}
-          <section className="relative w-full lg:max-w-[430px] h-[100dvh] lg:h-[88vh] lg:max-h-[900px] flex flex-col bg-[#0b0d17]/55 lg:rounded-[44px] overflow-hidden lg:border-[2px] lg:border-white/20 lg:shadow-[0_25px_70px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+          <section className="relative w-full max-w-lg lg:max-w-[430px] h-[100dvh] lg:h-[88vh] lg:max-h-[900px] flex flex-col lg:rounded-[40px] overflow-hidden lg:border-[1.5px] lg:border-white/20 lg:shadow-[0_25px_70px_rgba(0,0,0,0.7)]">
             {/* Specular Rim Light on Desktop Canvas */}
             <div
               aria-hidden="true"
-              className="hidden lg:block absolute inset-x-0 top-0 h-[2px] apple-specular-edge pointer-events-none z-40 rounded-t-[44px]"
+              className="hidden lg:block absolute inset-x-0 top-0 h-[2px] apple-specular-edge pointer-events-none z-40 rounded-t-[40px]"
             />
 
-            {/* Desktop Dynamic Island Notch */}
-            <div className="hidden lg:flex absolute top-2 inset-x-0 justify-center z-40 pointer-events-none">
-              <div className="w-28 h-5 rounded-full bg-black border border-white/10 shadow-inner flex items-center justify-end px-3">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#111] border border-white/15" />
-              </div>
-            </div>
-
-            {/* Native Mobile Stage Wallpaper inside Canvas */}
-            {stage && stage.backgroundUrl && (
-              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
-                <img
-                  src={stage.backgroundUrl}
-                  alt={stage.title}
-                  className="w-full h-full object-cover object-top filter brightness-[0.45] contrast-[1.08]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-[#090b16]/80 via-[#0e1122]/70 to-[#080912]/85" />
-              </div>
-            )}
-
             {/* Header: Apple Chat Toolbar */}
-            <header className="shrink-0 pt-[max(env(safe-area-inset-top),6px)] lg:pt-3 z-30 bg-[#0c0e1a]/40 backdrop-blur-[14px] border-b border-white/10">
+            <header className="shrink-0 pt-[max(env(safe-area-inset-top),4px)] lg:pt-2 z-30 bg-[#0c0e1a]/35 backdrop-blur-[12px] border-b border-white/10">
               <ChatToolbar
                 stage={stage}
                 turnsCount={turnsCount}
@@ -524,7 +517,7 @@ export const ChatPage: React.FC = () => {
 
               {/* Conversation Messages */}
               {!isLoadingStage && stage && (
-                <div className="space-y-3 pb-4" dir="ltr">
+                <div className="space-y-1.5 pb-2" dir="ltr">
                   {chats.map((chat) =>
                     chat.sender === 'Model' ? (
                       <div key={chat.id} className="w-full flex justify-start">
@@ -563,7 +556,7 @@ export const ChatPage: React.FC = () => {
 
             {/* Floating Apple Liquid Glass Bottom Dock (Anchored, guaranteed visible) */}
             {!isLoadingStage && stage && (
-              <footer className="shrink-0 z-30 px-3.5 pb-[max(env(safe-area-inset-bottom),14px)] pt-2">
+              <footer className="shrink-0 z-30 px-2.5 pb-[max(env(safe-area-inset-bottom),10px)] pt-1">
                 <ChatBottomBar
                   onSendMessage={handleSendMessage}
                   onRequestHint={handleRequestHint}
