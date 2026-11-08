@@ -172,7 +172,7 @@ fun ChatScreen(
                     GuideStep(
                         key = "chat_mic",
                         title = "ضبط و ارسال صدا",
-                        description = "برای صحبت کردن به زبان انگلیسی، این دکمه را لمس کنید. هوش مصنوعی صدای شما را می‌شنود و تحلیل می‌کند.",
+                        description = "برای صحبت کردن به زبان انگلیسی، این دکمه را لمس کنید. صدای شما شنیده و تحلیل می‌شود.",
                         icon = Res.drawable.ic_microphone,
                         alignment = GuideAlignment.Top
                     ),
@@ -233,7 +233,13 @@ fun ChatScreen(
                     isFinishing = uiState.isSubmittingEvaluation,
                     onBackClick = onNavigateBack,
                     onObjectiveClick = { showObjectiveSheet = true },
-                    onFinishConversationClick = { viewModel.submitEvaluation() },
+                    onFinishConversationClick = {
+                        if (uiState.turnsCount > 0) {
+                            viewModel.submitEvaluation()
+                        } else {
+                            onNavigateBack()
+                        }
+                    },
                     objectiveModifier = Modifier.guideTarget("chat_objective", guideState)
                 )
 

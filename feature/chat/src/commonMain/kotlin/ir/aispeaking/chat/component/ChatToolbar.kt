@@ -45,8 +45,8 @@ import org.jetbrains.compose.resources.painterResource
  * 2026 Apple Liquid Glass HUD Toolbar for conversation.
  *
  * Structure:
- * - Row 1: Back Navigation Button | Floating Glass Stage & Character Capsule | Action CTA (Finish)
- * - Row 2: Objective Glass Chip (Serene Cyan glow) | Luminous Progress Bar & Counter
+ * - Single Compact Row: Objective Glass Chip (top-start) | Liquid Glass Stage & Character Capsule | Compact Finish CTA
+ * - Conversation progress is hidden per product direction.
  */
 @Composable
 fun ChatToolbar(
@@ -55,7 +55,8 @@ fun ChatToolbar(
     userLevel: String? = null,
     turnsCount: Int = 0,
     isFinishing: Boolean = false,
-    onBackClick: () -> Unit,
+    showProgress: Boolean = false,
+    onBackClick: () -> Unit = {},
     onObjectiveClick: () -> Unit = {},
     onFinishConversationClick: () -> Unit,
     objectiveModifier: Modifier = Modifier
@@ -69,31 +70,28 @@ fun ChatToolbar(
             .padding(horizontal = 14.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Row 1: Controls & Stage Identifier
+        // Single Compact Row: Objective Action, Stage Details, and Compact Finish CTA
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            GameIconButton(
-                icon = Res.drawable.ic_back,
-                onClick = onBackClick,
-                contentDescription = "بازگشت",
-                size = 42.dp,
-                iconSize = 20.dp,
-                container = if (isDark) Color(0x22FFFFFF) else Color(0xB8FFFFFF),
-                border = AppleChatTheme.SpecularBorderColor
+            // Objective Glass Chip (Serene Cyan glow) - at Start anchor (replaces back button)
+            AppleObjectiveChip(
+                text = "هدف مرحله",
+                onClick = onObjectiveClick,
+                modifier = objectiveModifier
             )
 
             // Liquid Glass Stage Info Capsule
-            val headerShape = RoundedCornerShape(22.dp)
+            val headerShape = RoundedCornerShape(20.dp)
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .clip(headerShape)
                     .background(AppleChatTheme.GlassPanel)
                     .border(1.dp, AppleChatTheme.SpecularStrokeBrush, headerShape)
-                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                    .padding(horizontal = 12.dp, vertical = 5.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -143,69 +141,62 @@ fun ChatToolbar(
                 }
             }
 
-            // Finish Conversation Button (Tactile Apple Pill)
+            // Compact Finish Conversation Button (Tactile Apple Pill)
             GameButton(
                 text = if (isFinishing) "در حال بررسی" else "پایان",
                 onClick = onFinishConversationClick,
-                modifier = Modifier.width(if (isFinishing) 124.dp else 84.dp),
+                modifier = Modifier.width(if (isFinishing) 104.dp else 68.dp),
                 style = GameButtonStyle.Gold,
-                enabled = !isFinishing && stage != null && turnsCount > 0,
-                height = 42.dp,
-                textSize = 13.sp,
+                enabled = !isFinishing && stage != null,
+                height = 36.dp,
+                textSize = 12.sp,
                 loading = isFinishing
             )
         }
 
-        // Row 2: Objective Trigger & Dynamic Progress Meter
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            // Objective Chip (Serene Cyan glow, strictly NO green)
-            AppleObjectiveChip(
-                text = "هدف مرحله",
-                onClick = onObjectiveClick,
-                modifier = objectiveModifier
-            )
-
-            // Progress Tracker HUD
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+        // Hidden by default: Progress Tracker HUD (retained for future toggle)
+        if (showProgress) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    GameText(
-                        text = "پیشرفت گفتگو: ${turnsCount.coerceAtMost(maxTurns).fa()} از ${maxTurns.fa()} پیام",
-                        size = 11.sp,
-                        color = Game.TextSecondary,
-                        maxLines = 1
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        GameText(
+                            text = "پیشرفت گفتگو: ${turnsCount.coerceAtMost(maxTurns).fa()} از ${maxTurns.fa()} پیام",
+                            size = 11.sp,
+                            color = Game.TextSecondary,
+                            maxLines = 1
+                        )
+                    }
+
+                    // Apple Luminous Liquid Progress Bar
+                    val progress = (turnsCount.toFloat() / maxTurns).coerceIn(0f, 1f)
+                    val animatedProgress by animateFloatAsState(
+                        targetValue = progress,
+                        animationSpec = tween(350),
+                        label = "chat_turns_progress"
                     )
-                }
 
-                // Apple Luminous Liquid Progress Bar
-                val progress = (turnsCount.toFloat() / maxTurns).coerceIn(0f, 1f)
-                val animatedProgress by animateFloatAsState(
-                    targetValue = progress,
-                    animationSpec = tween(350),
-                    label = "chat_turns_progress"
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(CircleShape)
-                        .background(if (isDark) Color(0x28FFFFFF) else Color(0x1F000000))
-                ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxHeight()
-                            .fillMaxWidth(animatedProgress)
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(CircleShape)
+                            .background(if (isDark) Color(0x28FFFFFF) else Color(0x1F000000))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(animatedProgress)
                             .clip(CircleShape)
                             .background(
                                 Brush.horizontalGradient(
@@ -215,10 +206,11 @@ fun ChatToolbar(
                                     )
                                 )
                             )
-                    )
+                        )
+                    }
                 }
+                Spacer(modifier = Modifier.width(2.dp))
             }
-            Spacer(modifier = Modifier.width(2.dp))
         }
     }
 }
@@ -233,10 +225,11 @@ private fun AppleObjectiveChip(
     modifier: Modifier = Modifier
 ) {
     val isDark = AppTheme.isDark
-    val shape = RoundedCornerShape(50)
+    val shape = RoundedCornerShape(14.dp)
     val accent = if (isDark) AppleChatTheme.SuccessCyan else AppleChatTheme.PrimaryAzure
     Row(
         modifier = modifier
+            .height(36.dp)
             .applePressEffect(targetScale = 0.94f, onClick = onClick)
             .clip(shape)
             .background(if (isDark) Color(0xD9181A28) else Color(0xD9EBF5FF))
@@ -245,7 +238,7 @@ private fun AppleObjectiveChip(
                 accent.copy(alpha = if (isDark) 0.45f else 0.5f),
                 shape
             )
-            .padding(horizontal = 12.dp, vertical = 7.dp),
+            .padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {

@@ -298,7 +298,7 @@ class ChatViewModel(
                     it.copy(
                         chats = kotlinx.collections.immutable.persistentListOf(),
                         isModelSpeaking = false,
-                        stageLoadError = starterError ?: "خطا در شروع مکالمه با هوش مصنوعی. لطفاً دوباره تلاش کنید."
+                        stageLoadError = starterError ?: "خطا در شروع مکالمه. لطفاً دوباره تلاش کنید."
                     )
                 }
             }

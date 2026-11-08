@@ -363,7 +363,7 @@ private fun CompactTextRow(
                     ) {
                         if (text.isEmpty()) {
                             GameText(
-                                text = if (isModelSpeaking) "Waiting for AI response…" else "Type in English…",
+                                text = if (isModelSpeaking) "Waiting for response…" else "Type in English…",
                                 size = 14.sp,
                                 latin = true,
                                 color = Game.TextMuted
@@ -656,7 +656,7 @@ private fun AppleRecordPill(
     }
 
     val pillText = when {
-        isModelSpeaking -> "هوش مصنوعی در حال پاسخ…"
+        isModelSpeaking -> "در حال پاسخ…"
         !enabled -> "لطفاً صبر کنید…"
         hasText -> "ضبط مجدد صدا"
         else -> "برای صحبت لمس کنید"
