@@ -190,7 +190,7 @@ fun FinishConversationDialog(
                             color = AppleChatTheme.Coral
                         )
                         GameText(
-                            text = "تنها زمانی ستاره دریافت می‌کنید و مرحله کامل می‌شود که هوش مصنوعی تحقق هدف را تایید کند. پیشنهاد می‌کنیم مکالمه را ادامه دهید.",
+                            text = "تنها زمانی ستاره دریافت می‌کنید و مرحله کامل می‌شود که تحقق هدف تایید شود. پیشنهاد می‌کنیم مکالمه را ادامه دهید.",
                             size = 12.sp,
                             lineHeight = 19.sp,
                             color = Game.TextPrimary

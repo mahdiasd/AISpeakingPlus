@@ -84,7 +84,7 @@ fun MicPermissionDialog(
 
             // Why section (چرا باید دسترسی داده بشه)
             GameText(
-                text = "برای اینکه بتونی با هوش مصنوعی انگلیسی صحبت کنی و تلفظت سنجیده بشه، لازمه صدات رو بشنویم.",
+                text = "برای اینکه بتونی انگلیسی صحبت کنی و تلفظت سنجیده بشه، لازمه صدات رو بشنویم.",
                 size = 14.sp,
                 lineHeight = 22.sp,
                 color = Game.TextSecondary,
