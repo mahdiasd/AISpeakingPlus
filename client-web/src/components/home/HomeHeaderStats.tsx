@@ -1,101 +1,129 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Sparkles, Star, Award, Layers } from 'lucide-react';
-import { CupertinoCard, CupertinoPill } from '../cupertino';
-import { JourneyStats } from '../../types/stage';
+import { Star, Crown, User } from 'lucide-react';
+import { getAvatarUrl } from '../../utils/avatar';
 
 export interface HomeHeaderStatsProps {
-  stats: JourneyStats;
-  seasonTitleFa: string;
+  totalStars?: number;
+  isSubscriber?: boolean;
+  avatarUrl?: string | null;
+  userName?: string | null;
+  onProfileClick: () => void;
+  onSubscribeClick: () => void;
+  onLeaderboardClick?: () => void;
   className?: string;
+
+  // Optional legacy props for backwards-compatibility:
+  stats?: {
+    totalStars: number;
+    maxStars?: number;
+    completedStagesCount?: number;
+    totalStages?: number;
+    progressPercentage?: number;
+    currentTier?: string;
+  };
+  seasonTitleFa?: string;
 }
 
+/**
+ * Top HUD Bar for AI Speaking Plus Home Screen.
+ * Fully aligned with Compose Multiplatform's `JourneyMapScreen` TopHud:
+ * - Right (Start in RTL): Circular user profile button with avatar
+ * - Center: Floating glass capsule star counter pill («۰ ستاره») with shining gold star icon
+ * - Left (End in RTL): VIP glass button with gold gradient («اشتراک ویژه») with crown icon
+ */
 export const HomeHeaderStats: React.FC<HomeHeaderStatsProps> = ({
+  totalStars,
+  isSubscriber,
+  avatarUrl,
+  userName,
+  onProfileClick,
+  onSubscribeClick,
+  onLeaderboardClick,
+  className = '',
   stats,
-  seasonTitleFa,
-  className,
 }) => {
-  const percentFormatted = Math.round(stats.progressPercentage * 100);
+  const starsCount = totalStars ?? stats?.totalStars ?? 0;
+  const subscriberStatus = isSubscriber ?? (stats?.currentTier === 'SUBSCRIBER');
+  const resolvedAvatar = avatarUrl ? getAvatarUrl(avatarUrl) : null;
 
   return (
-    <CupertinoCard variant="glass" withSpecularHighlight className={className}>
-      {/* Background ambient lighting */}
-      <div className="absolute -top-10 -right-10 w-36 h-36 bg-apple-blue/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-8 -left-8 w-36 h-36 bg-apple-yellow/15 rounded-full blur-3xl pointer-events-none" />
+    <header
+      dir="rtl"
+      className={`w-full flex items-center justify-between gap-3 pointer-events-auto select-none ${className}`}
+    >
+      {/* 1. RIGHT (Start in RTL): Circular User Profile Button with Avatar */}
+      <motion.button
+        whileTap={{ scale: 0.94 }}
+        whileHover={{ scale: 1.04 }}
+        transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+        type="button"
+        onClick={onProfileClick}
+        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full apple-glass-pill flex items-center justify-center text-white shadow-apple-sm overflow-hidden shrink-0 border border-white/25 active:scale-95 transition-all group cursor-pointer"
+        title={userName || 'پروفایل کاربری'}
+        aria-label="پروفایل کاربری"
+      >
+        {resolvedAvatar ? (
+          <img
+            src={resolvedAvatar}
+            alt={userName || 'User Avatar'}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              (e.target as HTMLElement).style.display = 'none';
+            }}
+          />
+        ) : (
+          <User className="w-5 h-5 text-slate-200 group-hover:text-white transition-colors" />
+        )}
+      </motion.button>
 
-      <div className="relative space-y-3.5">
-        {/* Top Header: Season Title & Stars HUD */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <CupertinoPill variant="blue" icon={<Sparkles className="w-3.5 h-3.5" />}>
-              داستان اصلی
-            </CupertinoPill>
-            <h2 className="text-sm font-bold text-white tracking-tight">{seasonTitleFa}</h2>
-          </div>
+      {/* 2. CENTER: Floating Glass Capsule Star Counter Pill («۰ ستاره») */}
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.03 }}
+        transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+        type="button"
+        onClick={onLeaderboardClick || onProfileClick}
+        className="h-10 px-4 rounded-full apple-glass-pill border border-amber-400/40 bg-gradient-to-b from-amber-400/15 via-white/[0.08] to-transparent shadow-[0_4px_18px_rgba(255,204,0,0.22)] flex items-center justify-center gap-2 text-apple-yellow cursor-pointer hover:border-amber-400/60 hover:bg-amber-400/25 active:scale-95 transition-all backdrop-blur-md"
+        title="مجموع ستاره‌های کسب شده در ماجراجویی"
+      >
+        <Star className="w-4 h-4 fill-apple-yellow text-apple-yellow drop-shadow-[0_0_8px_rgba(255,204,0,0.75)] animate-pulse" />
+        <span className="text-sm font-black font-mono tracking-tight text-white drop-shadow-sm">
+          {starsCount.toLocaleString('fa-IR')}
+        </span>
+        <span className="text-xs font-bold text-apple-yellow">
+          ستاره
+        </span>
+      </motion.button>
 
-          {/* Stars Pill */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-apple-yellow/15 border border-apple-yellow/30 text-apple-yellow select-none">
-            <Star className="w-4 h-4 fill-apple-yellow text-apple-yellow drop-shadow-[0_0_6px_rgba(255,204,0,0.6)]" />
-            <span className="text-xs font-bold font-mono">
-              {stats.totalStars} / {stats.maxStars}
-            </span>
-          </div>
-        </div>
-
-        {/* Progress Bar with Apple Spring */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-xs text-apple-gray-400">
-            <span>پیشرفت ماجراجویی</span>
-            <span className="font-semibold text-white font-mono">{percentFormatted}٪</span>
-          </div>
-
-          <div className="relative h-2 w-full rounded-full bg-white/10 overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${stats.progressPercentage * 100}%` }}
-              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-              className="h-full rounded-full bg-gradient-to-l from-apple-blue to-apple-teal shadow-[0_0_12px_rgba(0,122,255,0.7)]"
-            />
-          </div>
-        </div>
-
-        {/* Quick Stats Grid */}
-        <div className="grid grid-cols-3 gap-2 pt-1 text-center">
-          <div className="bg-white/5 border border-white/10 p-2.5 rounded-2xl">
-            <div className="flex items-center justify-center gap-1 text-xs text-apple-gray-400 pb-0.5">
-              <Layers className="w-3.5 h-3.5 text-apple-blue" />
-              <span>مراحل</span>
-            </div>
-            <span className="text-sm font-bold text-white font-mono">
-              {stats.completedStagesCount} از {stats.totalStages}
-            </span>
-          </div>
-
-          <div className="bg-white/5 border border-white/10 p-2.5 rounded-2xl">
-            <div className="flex items-center justify-center gap-1 text-xs text-apple-gray-400 pb-0.5">
-              <Star className="w-3.5 h-3.5 text-apple-yellow" />
-              <span>امتیاز ستاره</span>
-            </div>
-            <span className="text-sm font-bold text-apple-yellow font-mono">
-              {stats.totalStars}
-            </span>
-          </div>
-
-          <div className="bg-white/5 border border-white/10 p-2.5 rounded-2xl">
-            <div className="flex items-center justify-center gap-1 text-xs text-apple-gray-400 pb-0.5">
-              <Award className="w-3.5 h-3.5 text-apple-green" />
-              <span>سطح دسترسی</span>
-            </div>
-            <span className="text-xs font-bold text-apple-green">
-              {stats.currentTier === 'SUBSCRIBER'
-                ? 'ویژه (VIP)'
-                : stats.currentTier === 'REGISTERED'
-                ? 'کاربر رسمی'
-                : 'مهمان'}
-            </span>
-          </div>
-        </div>
-      </div>
-    </CupertinoCard>
+      {/* 3. LEFT (End in RTL): VIP Glass Button with Gold Gradient («اشتراک ویژه») & Crown */}
+      {subscriberStatus ? (
+        <motion.button
+          whileTap={{ scale: 0.94 }}
+          whileHover={{ scale: 1.03 }}
+          transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+          type="button"
+          onClick={onSubscribeClick}
+          className="h-10 px-3.5 sm:px-4 rounded-full apple-glass bg-gradient-to-r from-purple-900/50 via-purple-800/40 to-indigo-900/50 border border-purple-400/50 flex items-center justify-center gap-1.5 sm:gap-2 text-purple-200 text-xs font-bold shadow-[0_4px_16px_rgba(168,85,247,0.3)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+          title="عضویت ویژه فعال است"
+        >
+          <Crown className="w-4 h-4 fill-purple-300 text-purple-200 drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]" />
+          <span className="font-bold">اشتراک طلایی</span>
+        </motion.button>
+      ) : (
+        <motion.button
+          whileTap={{ scale: 0.94 }}
+          whileHover={{ scale: 1.03 }}
+          transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+          type="button"
+          onClick={onSubscribeClick}
+          className="h-10 px-3.5 sm:px-4 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-black text-xs flex items-center justify-center gap-1.5 sm:gap-2 shadow-[0_4px_16px_rgba(255,204,0,0.45)] border border-yellow-200/60 active:scale-95 transition-all cursor-pointer"
+          title="خرید یا ارتقا به اشتراک ویژه"
+        >
+          <Crown className="w-4 h-4 fill-black text-black" />
+          <span>اشتراک ویژه</span>
+        </motion.button>
+      )}
+    </header>
   );
 };

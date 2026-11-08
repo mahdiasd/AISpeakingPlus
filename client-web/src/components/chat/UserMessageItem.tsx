@@ -16,10 +16,10 @@ export interface UserMessageItemProps {
 
 /**
  * Playful Curved Dash Line connecting the status badge to the GrammarTipCard below.
- * Exactly matches Compose CurvedDashLine cubic bezier.
+ * Exactly matches Compose CurvedDashLine cubic bezier curve.
  */
 const CurvedDashLine: React.FC<{ color?: string; className?: string }> = ({
-  color = '#eab308',
+  color = '#f59e0b',
   className,
 }) => {
   return (
@@ -55,7 +55,7 @@ const GrammarTipCard: React.FC<{
       initial={{ opacity: 0, y: 6, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: 'spring', stiffness: 420, damping: 26 }}
-      className="apple-glass rounded-2xl p-3.5 space-y-2 border border-amber-400/40 bg-[#1e1c1a]/80 backdrop-blur-xl shadow-apple-md max-w-[290px] text-right relative overflow-hidden"
+      className="apple-glass rounded-2xl p-3.5 space-y-2 border border-amber-400/40 bg-[#1e1c1a]/85 backdrop-blur-xl shadow-apple-md max-w-[290px] text-right relative overflow-hidden"
       dir="rtl"
     >
       {/* Specular Rim Light */}
@@ -81,10 +81,16 @@ const GrammarTipCard: React.FC<{
       )}
 
       {/* Persian Feedback in RTL */}
-      {feedback && (
+      {feedback ? (
         <p className="text-[12px] text-slate-200 leading-relaxed text-justify font-sans">
           {feedback}
         </p>
+      ) : (
+        !correctedSentence && (
+          <p className="text-[12px] text-slate-200 leading-relaxed font-sans">
+            جمله شما از نظر گرامری نیاز به اصلاح دارد.
+          </p>
+        )
       )}
     </motion.div>
   );
@@ -92,14 +98,16 @@ const GrammarTipCard: React.FC<{
 
 /**
  * 2026 Apple Liquid Glass User Chat Message Item.
- * Exact layout match of Compose UserChatItem.kt:
- * - Bubble shape: rounded-[20px] rounded-tr-[6px]
- * - Royal Azure & Electric Indigo glass gradient with specular rim
+ *
+ * Characteristics:
+ * - Right-aligned in RTL layout.
+ * - Bubble shape: rounded-[20px] rounded-tr-[6px].
+ * - Translucent Royal Azure & Electric Indigo glass gradient with specular light rim.
  * - Protruding bottom-right status badge (50% in, 50% out):
  *   - Evaluating: micro spinner + "بررسی گرامر..."
  *   - Correct: Serene Cyan pill + checkmark + "گرامر درست بود" (strictly NO green)
  *   - Error: Champagne Gold pill + "نکته گرامری"
- * - CurvedDashLine connecting to GrammarTipCard below
+ * - Playful CurvedDashLine connecting badge to GrammarTipCard.
  */
 export const UserMessageItem: React.FC<UserMessageItemProps> = ({
   message,
@@ -113,28 +121,28 @@ export const UserMessageItem: React.FC<UserMessageItemProps> = ({
   const isEvaluating = isSending || isEvaluatingGrammar;
 
   return (
-    <div className="flex flex-col items-end my-3 ml-auto max-w-[85%] sm:max-w-[78%]" dir="ltr">
+    <div className="flex flex-col items-end my-3 ml-auto self-end max-w-[88%] sm:max-w-[80%]" dir="ltr">
       {/* 1. User Message Bubble Container with clearance for the bottom-right badge */}
-      <div className="relative pb-3">
+      <div className="relative pb-3.5">
         {/* Royal Azure & Indigo Liquid Glass Bubble */}
-        <div className="relative rounded-[20px] rounded-tr-[6px] px-4 py-3 bg-gradient-to-r from-apple-blue via-blue-600 to-[#5856D6] shadow-[0_8px_24px_rgba(0,122,255,0.35)] border border-white/25 overflow-hidden">
+        <div className="relative rounded-[20px] rounded-tr-[6px] px-4 py-3 bg-gradient-to-br from-[#007aff]/60 via-[#1450b4]/60 to-[#5856d6]/55 backdrop-blur-[14px] saturate-[180%] shadow-[0_8px_28px_-4px_rgba(0,122,255,0.35)] border border-white/25 overflow-hidden">
           {/* Specular Top Rim Light */}
           <div
             aria-hidden="true"
             className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-white/70 via-white/30 to-transparent pointer-events-none"
           />
 
-          <p className="text-[15px] sm:text-[16px] leading-relaxed font-normal tracking-wide text-white select-text text-left">
+          <p className="text-[15px] sm:text-[16px] leading-[1.65] font-normal tracking-wide text-white select-text text-left">
             {message}
           </p>
         </div>
 
         {/* 2. Apple Liquid Glass Grammar Status Badge (anchored to bottom-right 50% in, 50% out) */}
-        <div className="absolute -bottom-1.5 right-2.5 z-10 select-none" dir="rtl">
+        <div className="absolute -bottom-2 right-2.5 z-10 select-none" dir="rtl">
           {isEvaluating ? (
             /* Evaluating: Micro-spinner arc + "بررسی گرامر..." */
-            <div className="h-6 px-2.5 rounded-full apple-glass-pill bg-[#151928]/95 border border-apple-blue/50 flex items-center gap-1.5 text-[10.5px] text-white shadow-apple-sm">
-              <span className="w-2.5 h-2.5 rounded-full border-[1.5px] border-apple-blue border-t-transparent animate-spin" />
+            <div className="h-6 px-2.5 rounded-full apple-glass-pill bg-[#151928]/95 border border-cyan-400/40 flex items-center gap-1.5 text-[10.5px] text-white shadow-apple-sm">
+              <span className="w-2.5 h-2.5 rounded-full border-[1.5px] border-cyan-400 border-t-transparent animate-spin" />
               <span>بررسی گرامر...</span>
             </div>
           ) : hasGrammarError ? (
@@ -164,7 +172,7 @@ export const UserMessageItem: React.FC<UserMessageItemProps> = ({
         </div>
       )}
 
-      {/* 4. Retry HUD for failed messages (Matches Compose) */}
+      {/* 4. Retry HUD for failed messages */}
       {onRetry && (
         <button
           type="button"

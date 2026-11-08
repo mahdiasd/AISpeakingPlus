@@ -7,6 +7,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { ChatPage } from './pages/ChatPage';
 import { SubscriptionPage } from './pages/SubscriptionPage';
 import { IntroVideoPage } from './pages/IntroVideoPage';
+import { StagesPage } from './pages/StagesPage';
 
 export const App: React.FC = () => {
   return (
@@ -14,6 +15,7 @@ export const App: React.FC = () => {
       <HashRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/stages" element={<StagesPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/chat/:stageId" element={<ChatPage />} />

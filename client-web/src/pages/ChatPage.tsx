@@ -477,12 +477,12 @@ export const ChatPage: React.FC = () => {
                   alt={stage.title}
                   className="w-full h-full object-cover object-top filter brightness-[0.45] contrast-[1.08]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-[#090b16]/85 via-[#0e1122]/75 to-[#080912]/88" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#090b16]/80 via-[#0e1122]/70 to-[#080912]/85" />
               </div>
             )}
 
             {/* Header: Apple Chat Toolbar */}
-            <header className="shrink-0 pt-[max(env(safe-area-inset-top),6px)] lg:pt-4 z-30 apple-glass-pill bg-[#0c0e1a]/65 backdrop-blur-2xl border-b border-white/15">
+            <header className="shrink-0 pt-[max(env(safe-area-inset-top),6px)] lg:pt-3 z-30 bg-[#0c0e1a]/40 backdrop-blur-[14px] border-b border-white/10">
               <ChatToolbar
                 stage={stage}
                 turnsCount={turnsCount}
@@ -496,7 +496,7 @@ export const ChatPage: React.FC = () => {
             </header>
 
             {/* Main Chat Conversation Feed (ONLY this element scrolls on mobile) */}
-            <main className="relative z-10 flex-1 min-h-0 overflow-y-auto overscroll-contain px-3.5 pt-3 pb-3 space-y-4">
+            <main className="relative z-10 flex-1 min-h-0 overflow-y-auto overscroll-contain px-3.5 pt-3 pb-4 space-y-4">
               {/* Loading Skeleton */}
               {isLoadingStage && (
                 <div className="space-y-4 pt-6">
@@ -524,7 +524,7 @@ export const ChatPage: React.FC = () => {
 
               {/* Conversation Messages */}
               {!isLoadingStage && stage && (
-                <div className="space-y-3 pb-2" dir="ltr">
+                <div className="space-y-3 pb-4" dir="ltr">
                   {chats.map((chat) =>
                     chat.sender === 'Model' ? (
                       <div key={chat.id} className="w-full flex justify-start">
@@ -563,7 +563,7 @@ export const ChatPage: React.FC = () => {
 
             {/* Floating Apple Liquid Glass Bottom Dock (Anchored, guaranteed visible) */}
             {!isLoadingStage && stage && (
-              <footer className="shrink-0 z-30 px-3.5 pb-[max(env(safe-area-inset-bottom),12px)] pt-1.5">
+              <footer className="shrink-0 z-30 px-3.5 pb-[max(env(safe-area-inset-bottom),14px)] pt-2">
                 <ChatBottomBar
                   onSendMessage={handleSendMessage}
                   onRequestHint={handleRequestHint}
@@ -575,9 +575,11 @@ export const ChatPage: React.FC = () => {
                   recordingAudioLevel={speechRecognition.audioLevel}
                   recordingDuration={speechRecognition.recordingDuration}
                   recordingTranscript={speechRecognition.transcript}
+                  hintsUsedCount={hintsUsedCount}
                   onStartRecording={speechRecognition.startListening}
                   onStopRecording={speechRecognition.stopListening}
                   onCancelRecording={speechRecognition.cancelListening}
+                  onClearTranscript={speechRecognition.resetTranscript}
                   recordingError={speechRecognition.error}
                 />
               </footer>
@@ -609,6 +611,7 @@ export const ChatPage: React.FC = () => {
         <HintModal
           isOpen={isHintOpen}
           onClose={() => setIsHintOpen(false)}
+          hintsUsedCount={hintsUsedCount}
           suggestion={hintData.suggestion}
           explanationFa={hintData.explanationFa}
           onUseSuggestion={(text) => handleSendMessage(text)}
