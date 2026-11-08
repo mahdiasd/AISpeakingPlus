@@ -287,12 +287,9 @@ export function useSpeechRecognition(onResultFinal?: (text: string) => void): Sp
 
       setIsListening(true);
 
-      // 4. Concurrently start Web Speech API (if supported) for instant live transcript
+      // 4. Concurrently start Web Speech API for instant live transcript
       const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition;
-      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-
-      // On iOS Safari, Web Speech API often hangs/locks, so we rely on backend STT directly
-      if (SpeechRec && !isIOS) {
+      if (SpeechRec) {
         try {
           const rec = new SpeechRec();
           rec.continuous = true;
@@ -300,23 +297,30 @@ export function useSpeechRecognition(onResultFinal?: (text: string) => void): Sp
           rec.lang = 'en-US';
 
           rec.onresult = (event: any) => {
-            let fullText = '';
+            let interimTranscript = '';
+            let finalTranscript = '';
             for (let i = 0; i < event.results.length; i++) {
-              fullText += event.results[i][0].transcript + ' ';
+              if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript + ' ';
+              } else {
+                interimTranscript += event.results[i][0].transcript + ' ';
+              }
             }
-            const clean = fullText.trim();
-            setTranscript(clean);
-            recognitionTranscriptRef.current = clean;
+            const clean = (finalTranscript + interimTranscript).trim();
+            if (clean) {
+              setTranscript(clean);
+              recognitionTranscriptRef.current = clean;
+            }
           };
 
           rec.onerror = (event: any) => {
-            console.warn('[SpeechRecognition] Interim error, falling back to server STT:', event.error);
+            console.warn('[SpeechRecognition] WebSpeech error/fallback:', event.error);
           };
 
           rec.start();
           recognitionRef.current = rec;
         } catch (recErr) {
-          console.warn('[SpeechRecognition] Init failed, will use server STT:', recErr);
+          console.warn('[SpeechRecognition] Init failed, using server STT:', recErr);
         }
       }
     } catch (err: any) {
