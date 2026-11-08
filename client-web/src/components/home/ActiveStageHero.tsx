@@ -1,54 +1,61 @@
 import React from 'react';
-import confetti from 'canvas-confetti';
+import { motion } from 'motion/react';
 import {
   Play,
   RotateCcw,
-  Sparkles,
-  Target,
-  Volume2,
   Lock,
   Crown,
-  UserCheck,
-  Flame,
+  Layers,
+  Sparkles,
+  User,
 } from 'lucide-react';
-import {
-  CupertinoCard,
-  CupertinoButton,
-  CupertinoPill,
-  CupertinoStarRating,
-} from '../cupertino';
+import { CupertinoStarRating } from '../cupertino';
 import { Stage } from '../../types/stage';
+import { getAssetUrl } from '../../utils/avatar';
 
 export interface ActiveStageHeroProps {
   stage: Stage | null;
+  totalStages?: number;
+  completedStagesCount?: number;
   onStartStage: (stage: Stage) => void;
-  onOpenDetails: (stage: Stage) => void;
+  onOpenTimeline: () => void;
+  onOpenDetails?: (stage: Stage) => void;
   onRequireAuth?: () => void;
   onRequireSubscription?: () => void;
   className?: string;
+  isReplay?: boolean;
 }
 
+/**
+ * ActiveStageHero Component
+ * Fully aligned with Compose Multiplatform's `JourneyMapScreen.kt` StageCard:
+ * - Floating centered card with `.apple-glass-card` (blur 14-16px) allowing London flight wallpaper to shine through.
+ * - Top Badge: «مرحله ۱ از ۳۰» with stage star ratings.
+ * - Stage Title: «پرواز به لندن» (stage.titleFa).
+ * - 3D Character Portrait: "Flight Attendant Emily" with Apple halo ring and status indicator.
+ * - Primary Tactile Spring CTA Button: «شروع مرحله» with rich vibrant gradient.
+ * - Secondary Glass Button: «همه مرحله‌ها و پیشرفت» which opens the stages roadmap timeline modal.
+ */
 export const ActiveStageHero: React.FC<ActiveStageHeroProps> = ({
   stage,
+  totalStages = 30,
+  completedStagesCount = 0,
   onStartStage,
-  onOpenDetails,
+  onOpenTimeline,
   onRequireAuth,
   onRequireSubscription,
-  className,
+  className = '',
+  isReplay = false,
 }) => {
   if (!stage) return null;
 
-  const isCompleted = (stage.progress?.stars || 0) > 0;
-  const isLocked = stage.lockStatus !== 'UNLOCKED';
+  const stars = stage.progress?.stars || 0;
+  const isCompleted = stars > 0;
 
-  const handleCelebrate = () => {
-    confetti({
-      particleCount: 50,
-      spread: 60,
-      origin: { y: 0.7 },
-      colors: ['#007aff', '#34c759', '#ffcc00', '#5856d6'],
-    });
-  };
+  // Resolve 3D Character portrait with fallback
+  const characterAvatar = stage.characterAvatarUrl
+    ? getAssetUrl(stage.characterAvatarUrl)
+    : getAssetUrl('resources/avatars/emily.webp');
 
   const handlePrimaryClick = () => {
     if (stage.lockStatus === 'LOCKED_REGISTRATION') {
@@ -59,175 +66,180 @@ export const ActiveStageHero: React.FC<ActiveStageHeroProps> = ({
       onRequireSubscription?.();
       return;
     }
+    if (stage.lockStatus === 'LOCKED_PREVIOUS_STAGE') {
+      return;
+    }
     onStartStage(stage);
   };
 
   return (
-    <CupertinoCard
-      variant="glass"
-      withSpecularHighlight
-      className={`relative overflow-hidden group ${className || ''}`}
+    <div
+      dir="rtl"
+      className={`apple-glass-card rounded-[28px] sm:rounded-[32px] p-5 sm:p-6 w-full max-w-lg mx-auto select-none overflow-hidden relative shadow-[0_24px_60px_-8px_rgba(0,0,0,0.65)] border border-white/20 transition-all ${className}`}
     >
-      {/* Background artwork with gentle ambient blend */}
-      {stage.backgroundUrl && (
-        <div className="absolute inset-0 z-0 overflow-hidden opacity-30 group-hover:opacity-40 transition-opacity duration-500">
-          <img
-            src={stage.backgroundUrl}
-            alt={stage.titleFa}
-            className="w-full h-full object-cover filter blur-[2px] scale-105"
-            loading="eager"
-            onError={(e) => {
-              // Hide broken image quietly
-              (e.target as HTMLElement).style.display = 'none';
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0e] via-[#0c0c0e]/85 to-transparent" />
-        </div>
-      )}
+      {/* Specular Apple Rim Light Bar */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-[1.5px] apple-specular-edge pointer-events-none z-20"
+      />
 
-      {/* Ambient Lighting Orbs */}
-      <div className="absolute -top-12 -right-12 w-48 h-48 bg-apple-blue/25 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-apple-indigo/20 rounded-full blur-3xl pointer-events-none" />
+      {/* Ambient Lighting Orbs for Liquid Glass Depth */}
+      <div className="absolute -top-10 -right-10 w-44 h-44 bg-apple-blue/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-8 -left-8 w-44 h-44 bg-apple-teal/15 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 space-y-4">
-        {/* Top Badges Row */}
+        {/* 1. TOP ROW: Stage Badge («مرحله ۱ از ۳۰») & Stars */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <CupertinoPill variant="blue" icon={<Sparkles className="w-3.5 h-3.5" />}>
-              مرحله فعال {stage.orderIndex}
-            </CupertinoPill>
-            <span className="text-xs text-apple-gray-400 font-medium">{stage.phaseTitleFa}</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full apple-glass-pill border border-apple-teal/30 text-apple-teal text-xs font-extrabold tracking-wide">
+            <Sparkles className="w-3.5 h-3.5 text-apple-teal" />
+            <span>
+              مرحله {stage.orderIndex.toLocaleString('fa-IR')} از {totalStages.toLocaleString('fa-IR')}
+            </span>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full text-xs text-apple-yellow font-semibold select-none">
-            <Flame className="w-3.5 h-3.5 fill-apple-yellow" />
-            <span>تمرین امروز</span>
+          <div className="apple-glass-pill px-2.5 py-1 rounded-full border border-white/20">
+            <CupertinoStarRating stars={stars} size="sm" />
           </div>
         </div>
 
-        {/* Character Avatar & Identity */}
-        <div className="flex items-start gap-3.5 pt-1">
-          {/* Avatar Disc with Apple Halo */}
+        {/* 2. TITLE: Stage Title («پرواز به لندن») & English Subtitle */}
+        <div className="space-y-1">
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight">
+            {stage.titleFa}
+          </h2>
+          <p className="text-xs text-slate-300 font-mono italic tracking-wide" dir="ltr">
+            {stage.title}
+          </p>
+        </div>
+
+        {/* 3. 3D CHARACTER PORTRAIT: "Flight Attendant Emily" */}
+        <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-sm">
+          {/* Avatar Disc with Specular Halo Ring */}
           <div className="relative shrink-0">
-            <div className="w-14 h-14 rounded-full p-0.5 bg-gradient-to-br from-apple-blue via-apple-teal to-transparent shadow-apple-md">
-              <div className="w-full h-full rounded-full overflow-hidden bg-apple-gray-800 flex items-center justify-center">
-                {stage.characterAvatarUrl ? (
+            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full p-0.5 bg-gradient-to-tr from-apple-blue via-teal-400 to-amber-300 shadow-apple-md">
+              <div className="w-full h-full rounded-full overflow-hidden bg-[#0c0d16] flex items-center justify-center">
+                {characterAvatar ? (
                   <img
-                    src={stage.characterAvatarUrl}
+                    src={characterAvatar}
                     alt={stage.characterName}
                     className="w-full h-full object-cover"
                     onError={(e) => {
+                      // Fallback gracefully
                       (e.target as HTMLElement).style.display = 'none';
                     }}
                   />
                 ) : (
-                  <span className="text-lg font-bold text-white uppercase">
-                    {stage.characterName.charAt(0)}
-                  </span>
+                  <User className="w-6 h-6 text-apple-blue" />
                 )}
               </div>
             </div>
 
-            {/* Active pulsing dot */}
-            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-apple-green border-2 border-[#121215]" />
+            {/* Online AI Host Active Pulse Dot */}
+            <span
+              className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-apple-green border-2 border-[#121218] shadow-[0_0_8px_rgba(52,199,89,0.8)]"
+              title="هم‌صحبت آماده گفتگو"
+            />
           </div>
 
-          {/* Titles & Character Info */}
+          {/* Character Identity & British Accent Details */}
           <div className="flex-1 min-w-0 space-y-0.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-apple-gray-400 font-mono tracking-wide">
+              <span className="text-sm font-bold text-white tracking-tight" dir="ltr">
                 {stage.characterName}
               </span>
-
-              {isCompleted && (
-                <CupertinoStarRating stars={stage.progress?.stars || 0} size="sm" />
-              )}
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-apple-blue/20 text-apple-teal font-extrabold border border-apple-blue/30">
+                میزبان AI
+              </span>
             </div>
-
-            <h3 className="text-xl font-bold text-white tracking-tight truncate">
-              {stage.titleFa}
-            </h3>
-
-            <p className="text-xs text-apple-gray-400 font-mono italic truncate">
-              {stage.title}
+            <p className="text-xs text-slate-300 truncate">
+              {stage.briefingFa ? stage.briefingFa.slice(0, 52) + '...' : 'لهجه بومی بریتیش • سناریو مکالمه واقعی'}
             </p>
           </div>
         </div>
 
-        {/* Briefing Text */}
-        <p className="text-xs text-apple-gray-300 leading-relaxed line-clamp-3">
-          {stage.briefingFa}
-        </p>
-
-        {/* Target Objective Capsule */}
-        {stage.targetObjectiveFa && (
-          <div className="flex items-start gap-2 p-2.5 rounded-2xl bg-white/5 border border-white/10 text-xs text-apple-gray-200">
-            <Target className="w-4 h-4 text-apple-blue shrink-0 mt-0.5" />
-            <div className="space-y-0.5">
-              <span className="text-[11px] font-bold text-apple-blue block">هدف مکالمه:</span>
-              <p className="text-[11px] text-apple-gray-300 leading-normal">
-                {stage.targetObjectiveFa}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons Row */}
-        <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-          <CupertinoButton
-            variant="filled"
-            size="md"
-            fullWidth
-            icon={
-              isLocked ? (
-                stage.lockStatus === 'LOCKED_SUBSCRIPTION' ? (
-                  <Crown className="w-4 h-4 text-apple-yellow" />
-                ) : stage.lockStatus === 'LOCKED_REGISTRATION' ? (
-                  <UserCheck className="w-4 h-4" />
-                ) : (
-                  <Lock className="w-4 h-4" />
-                )
-              ) : isCompleted ? (
-                <RotateCcw className="w-4 h-4" />
+        {/* 4. ACTIONS: Tactile Spring Primary CTA & Glass Secondary Button */}
+        <div className="space-y-2.5 pt-1">
+          {/* Primary Button: Apple Spring Tactile CTA */}
+          {stage.lockStatus === 'UNLOCKED' && (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.01 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+              type="button"
+              onClick={handlePrimaryClick}
+              className="w-full h-12 px-5 rounded-2xl bg-gradient-to-r from-apple-blue via-[#0066e0] to-indigo-600 hover:brightness-110 active:scale-[0.98] text-white font-black text-sm sm:text-base shadow-[0_6px_22px_rgba(0,122,255,0.45)] flex items-center justify-center gap-2.5 transition-all border border-white/20 cursor-pointer"
+            >
+              {isReplay || isCompleted ? (
+                <>
+                  <RotateCcw className="w-4 h-4 ml-0.5" />
+                  <span>تکرار مرحله</span>
+                </>
               ) : (
-                <Play className="w-4 h-4 fill-white" />
-              )
-            }
-            onClick={handlePrimaryClick}
+                <>
+                  <Play className="w-4 h-4 fill-white ml-0.5" />
+                  <span>شروع مرحله</span>
+                </>
+              )}
+            </motion.button>
+          )}
+
+          {stage.lockStatus === 'LOCKED_REGISTRATION' && (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.01 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+              type="button"
+              onClick={handlePrimaryClick}
+              className="w-full h-12 px-5 rounded-2xl bg-gradient-to-r from-[#5856D6] to-purple-700 hover:brightness-110 active:scale-[0.98] text-white font-black text-xs sm:text-sm shadow-apple-md flex items-center justify-center gap-2 transition-all border border-white/20 cursor-pointer"
+            >
+              <Lock className="w-4 h-4" />
+              <span>ورود و باز کردن مرحله</span>
+            </motion.button>
+          )}
+
+          {stage.lockStatus === 'LOCKED_SUBSCRIPTION' && (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.01 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+              type="button"
+              onClick={handlePrimaryClick}
+              className="w-full h-12 px-5 rounded-2xl bg-gradient-to-r from-apple-yellow via-amber-400 to-apple-orange hover:brightness-110 active:scale-[0.98] text-black font-black text-xs sm:text-sm shadow-[0_6px_20px_rgba(255,204,0,0.4)] flex items-center justify-center gap-2 transition-all border border-yellow-200/50 cursor-pointer"
+            >
+              <Crown className="w-4 h-4 fill-black" />
+              <span>باز کردن با اشتراک ویژه</span>
+            </motion.button>
+          )}
+
+          {stage.lockStatus === 'LOCKED_PREVIOUS_STAGE' && (
+            <button
+              type="button"
+              disabled
+              className="w-full h-12 px-5 rounded-2xl bg-white/10 text-slate-400 font-bold text-xs sm:text-sm border border-white/10 flex items-center justify-center gap-2 cursor-not-allowed opacity-80"
+            >
+              <Lock className="w-4 h-4" />
+              <span>ابتدا مرحله قبل را به پایان برسانید</span>
+            </button>
+          )}
+
+          {/* Secondary Button: Apple Glass «همه مرحله‌ها و پیشرفت» */}
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.01 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+            type="button"
+            onClick={onOpenTimeline}
+            className="w-full h-11 px-4 rounded-2xl apple-glass-pill hover:bg-white/15 active:scale-[0.98] text-slate-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all border border-white/15 cursor-pointer"
           >
-            {isLocked
-              ? stage.lockStatus === 'LOCKED_SUBSCRIPTION'
-                ? 'ارتقا به ویژه برای ورود'
-                : stage.lockStatus === 'LOCKED_REGISTRATION'
-                ? 'ثبت‌نام و ورود برای شروع'
-                : 'قفل مرحله قبل'
-              : isCompleted
-              ? 'تکرار مکالمه هوشمند'
-              : 'شروع مکالمه هوشمند'}
-          </CupertinoButton>
-
-          <div className="flex items-center gap-2">
-            <CupertinoButton
-              variant="glass"
-              size="md"
-              className="flex-1 sm:flex-none"
-              icon={<Volume2 className="w-4 h-4 text-apple-blue" />}
-              onClick={handleCelebrate}
-            >
-              نمونه صدا
-            </CupertinoButton>
-
-            <CupertinoButton
-              variant="tinted"
-              size="md"
-              className="flex-1 sm:flex-none"
-              onClick={() => onOpenDetails(stage)}
-            >
-              جزئیات سناریو
-            </CupertinoButton>
-          </div>
+            <Layers className="w-4 h-4 text-apple-blue" />
+            <span>
+              {completedStagesCount > 0
+                ? `همه مرحله‌ها و پیشرفت (${completedStagesCount.toLocaleString('fa-IR')} انجام شده)`
+                : 'همه مرحله‌ها و پیشرفت'}
+            </span>
+          </motion.button>
         </div>
       </div>
-    </CupertinoCard>
+    </div>
   );
 };

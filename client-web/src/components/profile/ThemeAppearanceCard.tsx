@@ -29,7 +29,7 @@ export const ThemeAppearanceCard: React.FC<ThemeAppearanceCardProps> = ({
         <h3 className="text-sm font-bold text-white">تنظیمات و ظاهر برنامه</h3>
       </div>
 
-      <div className="rounded-3xl bg-apple-surface border border-apple-border p-4 shadow-sm backdrop-blur-xl space-y-4">
+      <div className="rounded-[24px] apple-glass-card p-4 shadow-apple-card space-y-4">
         {/* Apple 3-Way Segmented Control */}
         <div className="space-y-2">
           <label className="text-xs font-semibold text-apple-gray-300">
@@ -58,7 +58,7 @@ export const ThemeAppearanceCard: React.FC<ThemeAppearanceCardProps> = ({
           />
         </div>
 
-        <div className="border-t border-white/5 pt-3 space-y-3">
+        <div className="border-t border-white/10 pt-3 space-y-3">
           {/* Liquid Glass Toggle */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">

@@ -4,20 +4,18 @@ import {
   Crown,
   CheckCircle2,
   Sparkles,
-  ShieldCheck,
   CreditCard,
   MessageSquare,
   Headphones,
-  Award,
-  ArrowRight,
+  Zap,
+  Check,
+  Clock,
   Tag,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   CupertinoNavBar,
-  CupertinoCard,
-  CupertinoButton,
   CupertinoSkeleton,
 } from '../components/cupertino';
 import {
@@ -72,7 +70,6 @@ export const SubscriptionPage: React.FC = () => {
         origin: { y: 0.6 }
       });
       showToast(`پرداخت شما با موفقیت انجام شد. شماره پیگیری: ${refId || 'ثبت شده'}`);
-      // Clean query params from URL
       if (window.history.replaceState) {
         window.history.replaceState(null, '', window.location.pathname + window.location.hash.split('?')[0]);
       }
@@ -94,18 +91,20 @@ export const SubscriptionPage: React.FC = () => {
     Promise.all([subscriptionApi.getPlans(), subscriptionApi.getStatus()])
       .then(([plansData, statusData]) => {
         if (!isMounted) return;
-        setPlans(plansData);
+        // Merge or fallback to prompt plans if server plans are missing or empty
+        const effectivePlans = plansData && plansData.length > 0 ? plansData : defaultFallbackPlans;
+        setPlans(effectivePlans);
         setStatus(statusData);
-        if (plansData.length > 0) {
-          // Default to middle or popular plan
-          const popular = plansData.find((p) => p.badge?.includes('محبوب')) || plansData[1] || plansData[0];
+        if (effectivePlans.length > 0) {
+          const popular = effectivePlans.find((p) => p.badge?.includes('محبوب')) || effectivePlans[1] || effectivePlans[0];
           setSelectedPlanId(popular.id);
         }
         setIsLoading(false);
       })
       .catch((err) => {
         if (!isMounted) return;
-        console.warn('Failed to load live subscription data', err);
+        console.warn('Failed to load live subscription data, using fallbacks', err);
+        setPlans(defaultFallbackPlans);
         setIsLoading(false);
       });
 
@@ -140,7 +139,7 @@ export const SubscriptionPage: React.FC = () => {
 
       if (res.discountPercent > 0) {
         setAppliedDiscountPercent(res.discountPercent);
-        setPromoSuccessMsg(res.userMessage || `${res.discountPercent}٪ تخفیف با موفقیت اعمال شد!`);
+        setPromoSuccessMsg(res.userMessage || `${res.discountPercent.toLocaleString('fa-IR')}٪ تخفیف با موفقیت اعمال شد!`);
         confetti({
           particleCount: 40,
           spread: 60,
@@ -191,33 +190,34 @@ export const SubscriptionPage: React.FC = () => {
   const perks = [
     {
       icon: <Sparkles className="w-5 h-5 text-apple-yellow" />,
-      title: 'دسترسی کامل به تمامی ۳۰ مرحله سناریو محور',
+      title: 'دسترسی نامحدود به تمامی مراحل سفر داستانی',
       desc: 'آزادسازی سناریوهای حرفه‌ای در فرودگاه لندن، رزرو هتل، خرید، کافه و مصاحبه کاری',
     },
     {
-      icon: <MessageSquare className="w-5 h-5 text-apple-blue" />,
-      title: 'مکالمه زنده و بدون محدودیت با هوش مصنوعی',
+      icon: <MessageSquare className="w-5 h-5 text-apple-purple" />,
+      title: 'مکالمه بدون وقفه و نامحدود با هوش مصنوعی',
       desc: 'پاسخ‌دهی هوشمند به جملات شما بدون محدودیت دور مکالمه به همراه اصلاح گرامری بلادرنگ',
     },
     {
-      icon: <Headphones className="w-5 h-5 text-apple-teal" />,
-      title: 'تلفظ فوق‌طبیعی با لهجه بومی (Native British Audio)',
-      desc: 'شنیدن صدای مکالمه با لهجه استاندارد بریتانیایی جهت تقویت مهارت شنیداری (Listening)',
+      icon: <Headphones className="w-5 h-5 text-apple-blue" />,
+      title: 'تحلیل هوشمند جملات و فیدبک اصلاح تلفظ',
+      desc: 'شنیدن صدای مکالمه با لهجه بومی استاندارد جهت تقویت مهارت شنیداری و بهبود لهجه',
     },
     {
-      icon: <Award className="w-5 h-5 text-apple-purple" />,
-      title: 'کارنامه دقیق و ارزیابی نمره CEFR',
-      desc: 'تحلیل خطاهای گرامری، تنوع واژگان و اکسنت پس از پایان هر گفتگو با نمودار پیشرفت',
+      icon: <Zap className="w-5 h-5 text-pink-400" />,
+      title: 'سرعت فوق‌العاده بالا روی سرورهای اختصاصی VIP',
+      desc: 'پردازش با کمترین تأخیر و بالاترین کیفیت صدا روی زیرساخت پردازشی اختصاصی',
     },
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0c0c0e] text-white selection:bg-apple-blue selection:text-white pb-36">
-      {/* 1. Cupertino Top App Bar */}
+    <div className="flex flex-col min-h-screen bg-[#0F1015] text-white selection:bg-apple-blue selection:text-white pb-36 select-none" dir="rtl">
+      {/* 1. Cupertino Top App Bar with RTL Back Button (Chevron pointing right >) */}
       <CupertinoNavBar
-        title="ارتقا به نسخه VIP"
+        title="اشتراک ویژه"
         subtitle="دسترسی نامحدود به تمامی امکانات"
         onBack={() => navigate(-1)}
+        backLabel="بازگشت"
       />
 
       <main className="flex-1 max-w-lg w-full mx-auto px-4 pt-4 space-y-5">
@@ -226,37 +226,40 @@ export const SubscriptionPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="p-4 rounded-3xl bg-gradient-to-r from-apple-green/20 via-emerald-600/15 to-transparent border border-apple-green/30 space-y-1"
+            className="p-4 rounded-[22px] apple-glass bg-gradient-to-r from-apple-green/20 via-emerald-600/15 to-transparent border border-apple-green/35 space-y-1"
           >
             <div className="flex items-center gap-2 text-apple-green text-sm font-bold">
               <CheckCircle2 className="w-5 h-5 shrink-0" />
-              <span>اشتراک شما فعال است!</span>
+              <span>اشتراک ویژه شما فعال است!</span>
             </div>
             <p className="text-xs text-slate-200">
               {status.remainingDays > 0
-                ? `${status.remainingDays} روز از اعتبار طرح شما باقی مانده است.`
+                ? `${status.remainingDays.toLocaleString('fa-IR')} روز از اعتبار طرح شما باقی مانده است.`
                 : 'اشتراک نامحدود شما فعال می‌باشد.'}
             </p>
           </motion.div>
         )}
 
         {/* 2. Golden Hero Crown Banner */}
-        <div className="relative p-6 rounded-3xl apple-glass bg-gradient-to-br from-apple-yellow/20 via-apple-orange/10 to-[#14151f] border border-apple-yellow/30 overflow-hidden text-center space-y-3 shadow-apple-lg">
+        <div className="relative p-6 rounded-[26px] apple-glass-card overflow-hidden text-center space-y-3.5 shadow-apple-card">
           <div className="absolute top-0 right-1/2 translate-x-1/2 w-48 h-32 bg-apple-yellow/20 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-full bg-apple-yellow/20 border border-apple-yellow/40 shadow-[0_0_24px_rgba(255,204,0,0.4)]">
-            <Crown className="w-9 h-9 fill-apple-yellow text-apple-yellow drop-shadow-[0_0_10px_rgba(255,204,0,0.8)]" />
+          {/* Glowing Crown Badge */}
+          <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-[22px] bg-gradient-to-br from-[#FFC83D] via-[#FFB300] to-[#D97706] border-2 border-white/40 shadow-[0_0_24px_rgba(255,200,61,0.5)]">
+            <Crown className="w-9 h-9 fill-white text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]" />
           </div>
 
-          <div className="space-y-1">
-            <h1 className="text-lg font-extrabold text-white">عضویت ویژه طلایی (VIP)</h1>
-            <p className="text-xs text-apple-yellow font-semibold">
-              کلید تسلط روان بر مکالمه انگلیسی با جدیدترین مدل‌های هوش مصنوعی
+          <div className="space-y-1.5">
+            <h1 className="text-xl font-extrabold text-white tracking-tight">
+              دسترسی نامحدود به سفر داستانی
+            </h1>
+            <p className="text-xs text-apple-gray-300 font-sans max-w-sm mx-auto leading-relaxed">
+              تمامی مراحل، سناریوهای پیشرفته و هوش مصنوعی بدون وقفه را آنلاک کنید
             </p>
           </div>
         </div>
 
-        {/* 3. Subscription Plans List */}
+        {/* 3. Subscription Plans (3 Distinct Apple Glass Cards) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-xs font-bold text-apple-gray-300">انتخاب دوره اشتراک:</h2>
@@ -265,78 +268,92 @@ export const SubscriptionPage: React.FC = () => {
 
           {isLoading ? (
             <div className="space-y-2.5">
-              <CupertinoSkeleton className="h-24 rounded-3xl" />
-              <CupertinoSkeleton className="h-24 rounded-3xl" />
-              <CupertinoSkeleton className="h-24 rounded-3xl" />
+              <CupertinoSkeleton className="h-24 rounded-[22px]" />
+              <CupertinoSkeleton className="h-24 rounded-[22px]" />
+              <CupertinoSkeleton className="h-24 rounded-[22px]" />
             </div>
           ) : (
             <div className="space-y-2.5">
               {plans.map((plan) => {
                 const isSelected = plan.id === selectedPlanId;
-                const monthlyEquiv = Math.round(plan.priceTomans / (plan.durationDays / 30));
+                const dailyPrice = Math.round(plan.priceTomans / (plan.durationDays || 30));
 
                 return (
-                  <div
+                  <motion.div
                     key={plan.id}
                     onClick={() => setSelectedPlanId(plan.id)}
-                    className={`relative p-4 rounded-3xl apple-glass cursor-pointer transition-all duration-200 border ${
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`relative p-4 rounded-[22px] cursor-pointer transition-all duration-200 border ${
                       isSelected
-                        ? 'border-apple-yellow/80 bg-apple-yellow/10 ring-2 ring-apple-yellow/30 shadow-apple-md'
-                        : 'border-white/10 bg-white/5 hover:bg-white/10'
+                        ? 'apple-glass-card border-apple-yellow bg-apple-yellow/10 ring-2 ring-apple-yellow/30 shadow-[0_8px_32px_rgba(255,204,0,0.18)]'
+                        : 'apple-glass border-white/10 hover:border-white/20'
                     }`}
                   >
                     {/* Badge */}
                     {plan.badge && (
-                      <span className="absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-apple-yellow to-apple-orange text-black font-extrabold text-[10px] shadow-sm">
+                      <span className={`absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full font-extrabold text-[10px] shadow-sm ${
+                        plan.badge.includes('محبوب')
+                          ? 'bg-gradient-to-r from-apple-yellow to-apple-orange text-black'
+                          : 'bg-gradient-to-r from-apple-blue to-purple-600 text-white'
+                      }`}>
                         {plan.badge}
                       </span>
                     )}
 
                     <div className="flex items-center justify-between">
-                      {/* Radio & Title */}
-                      <div className="flex items-center gap-3">
+                      {/* Radio & Title Info (Right in RTL) */}
+                      <div className="flex items-center gap-3.5">
+                        {/* Radio Check Circle */}
                         <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                             isSelected
-                              ? 'border-apple-yellow bg-apple-yellow'
-                              : 'border-apple-gray-400 bg-transparent'
+                              ? 'border-apple-yellow bg-gradient-to-br from-apple-yellow to-amber-500 shadow-sm'
+                              : 'border-white/30 bg-white/5'
                           }`}
                         >
-                          {isSelected && <div className="w-2 h-2 rounded-full bg-black" />}
+                          {isSelected && <Check className="w-3.5 h-3.5 text-black stroke-[3]" />}
                         </div>
 
-                        <div>
-                          <h3 className="text-sm font-bold text-white">{plan.titleFa}</h3>
-                          <span className="text-[11px] text-apple-gray-400">
-                            معادل ماهانه {monthlyEquiv.toLocaleString('fa-IR')} تومان
-                          </span>
+                        <div className="space-y-0.5">
+                          <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                            <span>{plan.titleFa}</span>
+                          </h3>
+                          <p className="text-[11px] text-apple-gray-300">
+                            {plan.durationDays.toLocaleString('fa-IR')} روز دسترسی نامحدود
+                          </p>
+                          <p className="text-[10px] text-apple-gray-400">
+                            روزی {dailyPrice.toLocaleString('fa-IR')} تومان
+                          </p>
                         </div>
                       </div>
 
-                      {/* Pricing */}
-                      <div className="text-left font-mono">
-                        <div className="text-base font-extrabold text-apple-yellow">
-                          {plan.priceTomans.toLocaleString('fa-IR')}
-                          <span className="text-[11px] font-sans font-normal mr-1 text-apple-gray-300">
+                      {/* Pricing Info (Left in RTL) */}
+                      <div className="text-left font-mono space-y-0.5">
+                        <div className="flex items-baseline gap-1 justify-end">
+                          <span className={`text-base font-extrabold ${isSelected ? 'text-apple-yellow' : 'text-white'}`}>
+                            {plan.priceTomans.toLocaleString('fa-IR')}
+                          </span>
+                          <span className="text-[11px] font-sans font-normal text-apple-gray-300">
                             تومان
                           </span>
                         </div>
                         {plan.discountPercent && plan.discountPercent > 0 && (
-                          <span className="text-[10px] text-apple-green font-bold block">
-                            {plan.discountPercent}٪ تخفیف
+                          <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-apple-green/20 text-apple-green">
+                            {plan.discountPercent.toLocaleString('fa-IR')}٪ تخفیف
                           </span>
                         )}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
           )}
         </div>
 
-        {/* 4. Promo Code Box */}
-        <CupertinoCard variant="glass" className="space-y-3">
+        {/* 4. Promo Code Field */}
+        <div className="rounded-[22px] apple-glass p-4 space-y-3 shadow-sm">
           <div className="flex items-center gap-2 text-xs font-bold text-apple-gray-300">
             <Tag className="w-4 h-4 text-apple-yellow" />
             <span>کد تخفیف دارید؟</span>
@@ -347,51 +364,50 @@ export const SubscriptionPage: React.FC = () => {
               type="text"
               value={promoCodeInput}
               onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
-              placeholder="مثلاً: NOWRUZ یا VIP50"
+              placeholder="مثلاً: VIP10 یا NOWRUZ"
               dir="ltr"
-              className="flex-1 bg-white/10 border border-white/15 focus:border-apple-yellow rounded-2xl px-3.5 py-2.5 text-xs text-white placeholder-apple-gray-400 font-mono tracking-wider focus:outline-none transition-all"
+              className="flex-1 bg-white/10 border border-white/20 focus:border-apple-yellow rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-apple-gray-400 font-mono tracking-wider focus:outline-none transition-all"
             />
-            <CupertinoButton
-              variant="tinted"
-              size="md"
+            <button
               type="submit"
               disabled={!promoCodeInput.trim() || isValidatingPromo}
+              className="px-4 py-2.5 rounded-xl bg-apple-blue hover:bg-blue-600 disabled:opacity-40 text-white font-bold text-xs shadow-md transition-all shrink-0 active:scale-95"
             >
-              {isValidatingPromo ? 'بررسی...' : 'اعمال کد'}
-            </CupertinoButton>
+              {isValidatingPromo ? 'بررسی...' : 'اعمال'}
+            </button>
           </form>
 
           {promoSuccessMsg && (
             <p className="text-xs text-apple-green font-semibold flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
               <span>{promoSuccessMsg}</span>
             </p>
           )}
 
           {promoErrorMsg && (
-            <p className="text-xs text-apple-red font-semibold">{promoErrorMsg}</p>
+            <p className="text-xs text-red-400 font-semibold">{promoErrorMsg}</p>
           )}
-        </CupertinoCard>
+        </div>
 
-        {/* 5. Perks Grid */}
-        <div className="space-y-2.5 pt-1">
-          <h2 className="text-xs font-bold text-apple-gray-300 px-1">
-            امکانات همراه با اشتراک ویژه:
+        {/* 5. Benefits List (Matches Compose SubscriptionBenefitsList) */}
+        <div className="rounded-[22px] apple-glass-card p-4 space-y-3.5 shadow-apple-card">
+          <h2 className="text-sm font-bold text-white">
+            مزایای اختصاصی اشتراک ویژه
           </h2>
 
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {perks.map((perk, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 p-3.5 rounded-3xl bg-white/5 border border-white/10 apple-glass"
+                className="flex items-start gap-3 p-3 rounded-2xl bg-white/5 border border-white/10"
               >
-                <div className="p-2.5 rounded-2xl bg-white/10 shrink-0">{perk.icon}</div>
+                <div className="p-2.5 rounded-xl bg-white/10 shrink-0">{perk.icon}</div>
                 <div className="space-y-0.5">
                   <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-apple-green shrink-0" />
                     <span>{perk.title}</span>
                   </h4>
-                  <p className="text-[11px] text-apple-gray-400 leading-relaxed font-sans">
+                  <p className="text-[11px] text-apple-gray-300 leading-relaxed font-sans">
                     {perk.desc}
                   </p>
                 </div>
@@ -400,28 +416,31 @@ export const SubscriptionPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 6. Trust Badges */}
-        <div className="grid grid-cols-2 gap-2.5 pt-1 text-center">
-          <div className="p-3.5 rounded-3xl bg-white/5 border border-white/10 flex flex-col items-center gap-1">
-            <ShieldCheck className="w-6 h-6 text-apple-green" />
-            <span className="text-xs font-bold text-white">ضمانت بازگشت وجه</span>
-            <span className="text-[10px] text-apple-gray-400">تا ۷ روز در صورت عدم رضایت</span>
+        {/* 6. Trust Badges Row (Matches Compose TrustBadgesRow) */}
+        <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+          <div className="p-3 rounded-2xl apple-glass flex flex-col items-center gap-1">
+            <Zap className="w-5 h-5 text-apple-yellow" />
+            <span className="text-[11px] font-bold text-white">فعال‌سازی آنی</span>
           </div>
 
-          <div className="p-3.5 rounded-3xl bg-white/5 border border-white/10 flex flex-col items-center gap-1">
-            <CreditCard className="w-6 h-6 text-apple-blue" />
-            <span className="text-xs font-bold text-white">درگاه بانکی امن</span>
-            <span className="text-[10px] text-apple-gray-400">پرداخت مستقیم شاپرک / زرین‌پال</span>
+          <div className="p-3 rounded-2xl apple-glass flex flex-col items-center gap-1">
+            <CreditCard className="w-5 h-5 text-apple-blue" />
+            <span className="text-[11px] font-bold text-white">تراکنش امن شاپرک</span>
+          </div>
+
+          <div className="p-3 rounded-2xl apple-glass flex flex-col items-center gap-1">
+            <Clock className="w-5 h-5 text-apple-green" />
+            <span className="text-[11px] font-bold text-white">پشتیبانی ۲۴ ساعته</span>
           </div>
         </div>
       </main>
 
-      {/* 7. Sticky Bottom Checkout Dock */}
-      <div className="fixed bottom-0 inset-x-0 bg-[#0e1017]/95 backdrop-blur-2xl border-t border-white/15 p-4 z-40">
+      {/* 7. Fixed Bottom Checkout Dock (visionOS / Apple Glass Style) */}
+      <div className="fixed bottom-0 inset-x-0 apple-glass-dock p-4 z-40">
         <div className="max-w-lg mx-auto flex items-center justify-between gap-4">
           {/* Price Preview */}
           <div className="space-y-0.5">
-            <span className="text-[11px] text-apple-gray-400 block">مبلغ قابل پرداخت:</span>
+            <span className="text-[11px] text-apple-gray-300 block">مبلغ قابل پرداخت:</span>
             <div className="flex items-baseline gap-1 font-mono">
               <span className="text-lg font-extrabold text-apple-yellow">
                 {discountedPrice.toLocaleString('fa-IR')}
@@ -435,17 +454,20 @@ export const SubscriptionPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Action Button */}
-          <CupertinoButton
-            variant="filled"
-            size="lg"
+          {/* Action CTA Button */}
+          <motion.button
+            type="button"
             disabled={isCheckingOut || isLoading}
             onClick={handleCheckout}
-            className="flex-1 bg-gradient-to-r from-apple-yellow via-apple-orange to-amber-600 text-black font-extrabold shadow-[0_4px_16px_rgba(255,204,0,0.3)] hover:brightness-105 active:scale-[0.98]"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-gradient-to-r from-apple-yellow via-amber-400 to-amber-500 hover:brightness-105 active:scale-[0.98] text-black font-extrabold text-sm shadow-[0_4px_20px_rgba(255,204,0,0.35)] disabled:opacity-50 transition-all"
           >
-            <span>{isCheckingOut ? 'در حال اتصال به بانک...' : 'پرداخت و ارتقا آنی'}</span>
-            <ArrowRight className="w-4 h-4 rotate-180 mr-1.5 text-black" />
-          </CupertinoButton>
+            <Crown className="w-5 h-5 fill-black text-black shrink-0" />
+            <span>
+              {isCheckingOut ? 'در حال انتقال به درگاه...' : 'خرید اشتراک و شروع یادگیری'}
+            </span>
+          </motion.button>
         </div>
       </div>
 
