@@ -9,6 +9,7 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import ir.aispeaking.navigation.AppRoute
 import ir.aispeaking.navigation.IntroVideoRoute
+import ir.aispeaking.navigation.LeaderboardRoute
 import ir.aispeaking.navigation.LoginRoute
 import ir.aispeaking.navigation.MainRoute
 import ir.aispeaking.navigation.ProfileRoute
@@ -145,6 +146,7 @@ private fun routeToUrl(route: NavKey): String {
         is MainRoute -> "/app/main"
         is StageChatRoute -> "/app/chat?stageId=${route.stageId}"
         is StagesListRoute -> "/app/stages"
+        is LeaderboardRoute -> "/app/leaderboard"
         is ProfileRoute -> "/app/profile"
         is SubscriptionRoute -> "/app/subscription"
         is LoginRoute -> "/app/login"
@@ -160,6 +162,7 @@ private fun urlToRoute(path: String, search: String): AppRoute? {
         cleanPath == "intro" || cleanPath == "video" || cleanPath == "prologue" -> IntroVideoRoute
         cleanPath == "main" || cleanPath == "roadmap" -> MainRoute
         cleanPath == "profile" -> ProfileRoute
+        cleanPath == "leaderboard" || cleanPath == "ranking" || cleanPath == "podium" -> LeaderboardRoute
         cleanPath == "subscription" || cleanPath == "sub" -> SubscriptionRoute
         cleanPath == "stages" || cleanPath == "stages_list" -> StagesListRoute
         cleanPath == "login" || cleanPath == "auth" -> LoginRoute
@@ -185,6 +188,7 @@ private fun parseLegacyHash(hash: String): AppRoute? {
         name == "intro" || name == "video" || name == "prologue" -> IntroVideoRoute
         name == "main" || name == "roadmap" -> MainRoute
         name == "profile" -> ProfileRoute
+        name == "leaderboard" || name == "ranking" -> LeaderboardRoute
         name == "subscription" || name == "sub" -> SubscriptionRoute
         name == "stages" || name == "stages_list" -> StagesListRoute
         name == "login" || name == "auth" -> LoginRoute

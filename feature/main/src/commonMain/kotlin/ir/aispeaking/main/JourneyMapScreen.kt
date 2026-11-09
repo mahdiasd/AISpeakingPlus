@@ -78,6 +78,7 @@ fun JourneyMapScreen(
     onNavigateToProfile: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
     onNavigateToStagesList: () -> Unit = {},
+    onNavigateToLeaderboard: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     OnResume {
@@ -193,7 +194,7 @@ fun JourneyMapScreen(
                             isSubscriber = uiState.currentTier == AccessTier.SUBSCRIBER,
                             onProfile = onNavigateToProfile,
                             onSubscribe = onNavigateToSubscription,
-                            onLeaderboard = { viewModel.openLeaderboard() },
+                            onLeaderboard = onNavigateToLeaderboard,
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
                                 .statusBarsPadding()

@@ -79,6 +79,7 @@ object AppDeepLinkManager {
             screen == "profile" -> ProfileRoute
             screen == "subscription" || screen == "sub" || screen == "vip" -> SubscriptionRoute
             screen == "stages" || screen == "stages_list" || screen == "stageslist" -> StagesListRoute
+            screen == "leaderboard" || screen == "ranking" || screen == "podium" -> LeaderboardRoute
             screen == "main" || screen == "roadmap" || screen == "map" -> MainRoute
             screen == "login" || screen == "auth" -> LoginRoute
             screen == "intro" || screen == "video" || screen == "prologue" -> IntroVideoRoute
@@ -128,6 +129,7 @@ object AppDeepLinkManager {
                 if (stageId.isNotBlank()) StageChatRoute(stageId) else StagesListRoute
             }
             normalizedRoute == "stages" || normalizedRoute == "stages_list" || normalizedRoute == "stageslist" -> StagesListRoute
+            normalizedRoute == "leaderboard" || normalizedRoute == "ranking" || normalizedRoute == "podium" -> LeaderboardRoute
             normalizedRoute == "profile" -> ProfileRoute
             normalizedRoute == "subscription" || normalizedRoute == "sub" || normalizedRoute == "vip" -> SubscriptionRoute
             normalizedRoute == "main" || normalizedRoute == "roadmap" || normalizedRoute == "map" -> MainRoute
