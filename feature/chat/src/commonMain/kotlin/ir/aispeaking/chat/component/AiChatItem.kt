@@ -155,7 +155,7 @@ fun AiChatItem(
                         .clip(bubbleShape)
                         .background(AppleChatTheme.BubbleAi)
                         .border(1.dp, AppleChatTheme.SpecularStrokeBrush, bubbleShape)
-                        .padding(horizontal = 15.dp, vertical = 11.dp),
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (visibleText.isEmpty()) {
@@ -163,8 +163,8 @@ fun AiChatItem(
                     } else {
                         GameText(
                             text = visibleText,
-                            size = 16.sp,
-                            lineHeight = 24.sp,
+                            size = 14.sp,
+                            lineHeight = 21.sp,
                             latin = true,
                             color = Game.TextPrimary
                         )
@@ -180,8 +180,8 @@ fun AiChatItem(
                                     )
                                     GameText(
                                         text = chat.translatedMessage ?: "",
-                                        size = 14.sp,
-                                        lineHeight = 23.sp,
+                                        size = 13.sp,
+                                        lineHeight = 20.sp,
                                         color = Game.TextSecondary,
                                         align = TextAlign.Justify,
                                         modifier = Modifier.fillMaxWidth()

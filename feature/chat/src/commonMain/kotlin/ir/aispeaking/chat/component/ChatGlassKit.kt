@@ -136,10 +136,32 @@ object AppleChatTheme {
         @ReadOnlyComposable
         get() = if (AppTheme.isDark) Color(0x1FFFFFFF) else Color(0x14000000)
 
-    // User Bubble
-    val UserBubbleBrush = Brush.linearGradient(
-        listOf(Color(0xFF0A84FF), Color(0xFF5E5CE6))
-    )
+    // Translucent Liquid Glass for User Bubble (Apple Tinted Frosted Glass)
+    val UserBubbleBrush: Brush
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) {
+            Brush.linearGradient(
+                listOf(Color(0xCC0D6EFD), Color(0xCC4F46E5))
+            )
+        } else {
+            Brush.linearGradient(
+                listOf(Color(0xD90A84FF), Color(0xD95E5CE6))
+            )
+        }
+
+    val UserSpecularStrokeBrush: Brush
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) {
+            Brush.verticalGradient(
+                listOf(Color(0x8093C5FD), Color(0x2638BDF8))
+            )
+        } else {
+            Brush.verticalGradient(
+                listOf(Color(0x99FFFFFF), Color(0x330A84FF))
+            )
+        }
 }
 
 /**
