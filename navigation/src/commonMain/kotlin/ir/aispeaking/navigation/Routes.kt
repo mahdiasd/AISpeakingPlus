@@ -48,3 +48,8 @@ data object StagesListRoute : AppRoute {
     override val screenName: String = "StagesList"
 }
 
+@Serializable
+data object LeaderboardRoute : AppRoute {
+    override val screenName: String = "Leaderboard"
+}
+
