@@ -177,7 +177,7 @@ fun LeaderboardScreen(
                                 GameText(
                                     text = "در حال بارگذاری رده‌بندی مسافران…",
                                     size = 13.sp,
-                                    color = Game.TextSecondary
+                                    color = Color(0xFF94A3B8)
                                 )
                             }
                         }
@@ -261,14 +261,14 @@ fun LeaderboardScreen(
                                                 text = "جایگاه‌های بعدی در انتظار شماست!",
                                                 size = 14.sp,
                                                 bold = true,
-                                                color = Game.TextPrimary,
+                                                color = Color.White,
                                                 align = TextAlign.Center
                                             )
                                             GameText(
                                                 text = "با پیشروی در مراحل داستانی، اولین نفری باش که این رتبه‌ها را تصاحب می‌کند.",
                                                 size = 12.sp,
                                                 lineHeight = 20.sp,
-                                                color = Game.TextSecondary,
+                                                color = Color(0xFF94A3B8),
                                                 align = TextAlign.Center
                                             )
                                         }
@@ -434,7 +434,7 @@ private fun PodiumColumn(
                         text = "—",
                         size = 18.sp,
                         bold = true,
-                        color = Game.TextSecondary
+                        color = Color(0xFF94A3B8)
                     )
                 }
             }
@@ -465,7 +465,7 @@ private fun PodiumColumn(
             bold = true,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            color = if (entry != null) Color.White else Game.TextMuted,
+            color = if (entry != null) Color.White else Color(0xFF94A3B8),
             align = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 4.dp)
         )
@@ -582,7 +582,7 @@ private fun LeaderboardRowItem(
                 text = entry.rank.fa(),
                 size = 14.sp,
                 bold = true,
-                color = if (isCurrentUser) Color(0xFF38BDF8) else Game.TextSecondary,
+                color = if (isCurrentUser) Color(0xFF38BDF8) else Color(0xFF94A3B8),
                 modifier = Modifier.width(28.dp),
                 align = TextAlign.Center
             )
@@ -628,7 +628,7 @@ private fun LeaderboardRowItem(
                 GameText(
                     text = "${entry.completedStages.fa()} مرحله تکمیل‌شده",
                     size = 11.sp,
-                    color = Game.TextSecondary
+                    color = Color(0xFF94A3B8)
                 )
             }
         }
@@ -736,7 +736,7 @@ private fun CurrentUserStickyBar(
                         GameText(
                             text = "(${userRank.displayName})",
                             size = 11.sp,
-                            color = Game.TextSecondary,
+                            color = Color(0xFF94A3B8),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -812,7 +812,7 @@ private fun GuestLoginPromptBar(
                 GameText(
                     text = "برای حضور در جدول رقابت و ثبت ستاره‌ها، وارد شوید.",
                     size = 11.sp,
-                    color = Game.TextSecondary
+                    color = Color(0xFF94A3B8)
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
