@@ -3,6 +3,7 @@ package ir.aispeaking.chat.component
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -84,17 +85,19 @@ fun ChatToolbar(
             )
 
             // Liquid Glass Stage Info Capsule
-            val headerShape = RoundedCornerShape(20.dp)
+            val headerShape = RoundedCornerShape(18.dp)
             Box(
                 modifier = Modifier
                     .weight(1f)
+                    .height(42.dp)
                     .clip(headerShape)
                     .background(AppleChatTheme.GlassPanel)
                     .border(1.dp, AppleChatTheme.SpecularStrokeBrush, headerShape)
-                    .padding(horizontal = 12.dp, vertical = 5.dp),
+                    .padding(horizontal = 10.dp, vertical = 3.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -104,22 +107,13 @@ fun ChatToolbar(
                         lineHeight = 18.sp,
                         bold = true,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        modifier = Modifier.basicMarquee()
                     )
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        if (!stage?.characterName.isNullOrBlank()) {
-                            GameText(
-                                text = stage.characterName,
-                                size = 11.sp,
-                                color = Game.TextSecondary,
-                                latin = true,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
                         if (!userLevel.isNullOrBlank()) {
                             val levelShape = RoundedCornerShape(6.dp)
                             Box(
@@ -133,9 +127,23 @@ fun ChatToolbar(
                                     text = "سطح $userLevel",
                                     size = 10.sp,
                                     color = if (isDark) Color(0xFFA5A3F6) else AppleChatTheme.PrimaryIndigo,
-                                    bold = true
+                                    bold = true,
+                                    maxLines = 1
                                 )
                             }
+                            Spacer(modifier = Modifier.width(6.dp))
+                        }
+                        if (!stage?.characterName.isNullOrBlank()) {
+                            GameText(
+                                text = stage.characterName,
+                                size = 11.sp,
+                                color = Game.TextSecondary,
+                                latin = true,
+                                maxLines = 1,
+                                modifier = Modifier
+                                    .weight(1f, fill = false)
+                                    .basicMarquee()
+                            )
                         }
                     }
                 }

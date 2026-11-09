@@ -117,13 +117,13 @@ fun UserChatItem(
                         .widthIn(min = 96.dp, max = 310.dp)
                         .clip(shape)
                         .background(AppleChatTheme.UserBubbleBrush)
-                        .border(1.dp, AppleChatTheme.SpecularStrokeBrush, shape)
-                        .padding(horizontal = 15.dp, vertical = 11.dp)
+                        .border(1.dp, AppleChatTheme.UserSpecularStrokeBrush, shape)
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
                 ) {
                     GameText(
                         text = chat.message,
-                        size = 16.sp,
-                        lineHeight = 24.sp,
+                        size = 14.sp,
+                        lineHeight = 21.sp,
                         latin = true,
                         color = Color.White
                     )
