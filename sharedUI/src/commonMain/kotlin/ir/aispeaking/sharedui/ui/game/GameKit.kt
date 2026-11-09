@@ -154,6 +154,7 @@ enum class GameButtonStyle(
     Primary(Color(0xFF0A84FF), Color(0xFF0071E3), Color.Transparent, Color.White),
     Gold(Color(0xFFFFD60A), Color(0xFFFFB800), Color.Transparent, Color(0xFF1E1700)),
     Violet(Color(0xFF6366F1), Color(0xFF4F46E5), Color.Transparent, Color.White),
+    Ruby(Color(0xFFE11D48), Color(0xFFBE123C), Color.Transparent, Color.White),
     Danger(Color(0xFFFF453A), Color(0xFFD70015), Color.Transparent, Color.White),
     Glass(Color(0x28FFFFFF), Color(0x18FFFFFF), Color.Transparent, Color.White),
 }
