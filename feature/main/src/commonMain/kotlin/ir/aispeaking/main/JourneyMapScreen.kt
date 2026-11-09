@@ -44,7 +44,7 @@ import ir.aispeaking.domain.model.stage.AccessTier
 import ir.aispeaking.domain.model.stage.Stage
 import ir.aispeaking.domain.model.stage.StageLockStatus
 import ir.aispeaking.sharedui.Res
-import ir.aispeaking.sharedui.ic_crown
+import ir.aispeaking.sharedui.ic_gem
 import ir.aispeaking.sharedui.ic_history
 import ir.aispeaking.sharedui.ic_play
 import ir.aispeaking.sharedui.ic_profile
@@ -61,6 +61,7 @@ import ir.aispeaking.sharedui.ui.game.GameStars
 import ir.aispeaking.sharedui.ui.game.GameStatPill
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.GlassPanel
+import ir.aispeaking.sharedui.ui.game.RubySubscriptionButton
 import ir.aispeaking.sharedui.ui.game.fa
 import ir.aispeaking.sharedui.ui.guide.AppGuideHost
 import ir.aispeaking.sharedui.ui.guide.GuideAlignment
@@ -329,19 +330,15 @@ private fun TopHud(
         if (isSubscriber) {
             GameStatPill(
                 text = "اشتراک ویژه",
-                icon = Res.drawable.ic_crown,
-                accent = Game.Violet,
+                icon = Res.drawable.ic_gem,
+                accent = Game.Ruby,
                 onClick = onSubscribe
             )
         } else {
-            GameButton(
+            RubySubscriptionButton(
                 text = "اشتراک ویژه",
                 onClick = onSubscribe,
-                modifier = Modifier.width(140.dp),
-                style = GameButtonStyle.Gold,
-                icon = Res.drawable.ic_crown,
-                height = 44.dp,
-                textSize = 13.sp
+                modifier = Modifier.width(140.dp)
             )
         }
     }
@@ -364,7 +361,7 @@ private fun StageCard(
     val (ctaText, ctaStyle) = when (stage.lockStatus) {
         StageLockStatus.UNLOCKED -> (if (isReplay || stars > 0) "تکرار مرحله" else "شروع مرحله") to GameButtonStyle.Primary
         StageLockStatus.LOCKED_REGISTRATION -> "ورود و باز کردن مرحله" to GameButtonStyle.Violet
-        StageLockStatus.LOCKED_SUBSCRIPTION -> "باز کردن با اشتراک" to GameButtonStyle.Gold
+        StageLockStatus.LOCKED_SUBSCRIPTION -> "باز کردن با اشتراک" to GameButtonStyle.Ruby
         StageLockStatus.LOCKED_PREVIOUS_STAGE -> "ابتدا مرحله قبل را تمام کن" to GameButtonStyle.Glass
     }
 
@@ -427,7 +424,11 @@ private fun StageCard(
                 onClick = onStart,
                 modifier = Modifier.fillMaxWidth().then(startModifier),
                 style = ctaStyle,
-                icon = if (stage.lockStatus == StageLockStatus.UNLOCKED) Res.drawable.ic_play else null
+                icon = when (stage.lockStatus) {
+                    StageLockStatus.UNLOCKED -> Res.drawable.ic_play
+                    StageLockStatus.LOCKED_SUBSCRIPTION -> Res.drawable.ic_gem
+                    else -> null
+                }
             )
 
             GameButton(

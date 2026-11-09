@@ -109,6 +109,16 @@ object Game {
 
     val VioletDeep = Color(0xFF4745B8)
 
+    val Ruby: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xFFFB7185) else Color(0xFFE11D48)
+
+    val RubyDeep: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xFFE11D48) else Color(0xFFBE123C)
+
     val Coral: Color
         @Composable
         @ReadOnlyComposable
