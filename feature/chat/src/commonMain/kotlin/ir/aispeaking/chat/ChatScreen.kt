@@ -37,7 +37,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -86,6 +88,8 @@ import org.jetbrains.compose.resources.painterResource
  * - Floating Liquid Glass bottom dock with breathing voice record pill and Apple input capsule.
  * - Ambient visionOS frosted glass cards for empty state, hint suggestions, and objective modals.
  */
+@Suppress("DEPRECATION")
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ChatScreen(
     stageId: String,
@@ -97,7 +101,14 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     var showHintConfirmDialog by remember { mutableStateOf(false) }
     var showObjectiveSheet by remember { mutableStateOf(false) }
+    var showExitConfirmDialog by remember { mutableStateOf(false) }
+    var isFinishTriggeredByFinishButton by remember { mutableStateOf(false) }
     var toastMessage by remember { mutableStateOf<String?>(null) }
+
+    BackHandler(enabled = !uiState.isSubmittingEvaluation) {
+        isFinishTriggeredByFinishButton = false
+        showExitConfirmDialog = true
+    }
 
     LaunchedEffect(toastMessage) {
         if (toastMessage != null) {
@@ -231,14 +242,14 @@ fun ChatScreen(
                     userLevel = uiState.userLevel,
                     turnsCount = uiState.turnsCount,
                     isFinishing = uiState.isSubmittingEvaluation,
-                    onBackClick = onNavigateBack,
+                    onBackClick = {
+                        isFinishTriggeredByFinishButton = false
+                        showExitConfirmDialog = true
+                    },
                     onObjectiveClick = { showObjectiveSheet = true },
                     onFinishConversationClick = {
-                        if (uiState.turnsCount > 0) {
-                            viewModel.submitEvaluation()
-                        } else {
-                            onNavigateBack()
-                        }
+                        isFinishTriggeredByFinishButton = true
+                        showExitConfirmDialog = true
                     },
                     objectiveModifier = Modifier.guideTarget("chat_objective", guideState)
                 )
@@ -364,6 +375,28 @@ fun ChatScreen(
                 visible = showObjectiveSheet,
                 stage = stage,
                 onDismiss = { showObjectiveSheet = false }
+            )
+
+            // Exit / Finish Confirmation Modal
+            ChatExitConfirmDialog(
+                visible = showExitConfirmDialog,
+                isFinishAction = isFinishTriggeredByFinishButton,
+                turnsCount = uiState.turnsCount,
+                onConfirmFinish = {
+                    showExitConfirmDialog = false
+                    if (uiState.turnsCount > 0) {
+                        viewModel.submitEvaluation()
+                    } else {
+                        onNavigateBack()
+                    }
+                },
+                onConfirmExit = {
+                    showExitConfirmDialog = false
+                    onNavigateBack()
+                },
+                onDismiss = {
+                    showExitConfirmDialog = false
+                }
             )
 
             // Hint Confirmation Modal

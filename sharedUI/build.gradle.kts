@@ -45,6 +45,7 @@ kotlin {
             // --- Compose Multiplatform ---
             api(libs.compose.runtime)
             api(libs.compose.ui)
+            api(libs.compose.ui.backhandler)
             api(libs.compose.foundation)
             api(libs.compose.resources)
             api(libs.compose.ui.tooling.preview)

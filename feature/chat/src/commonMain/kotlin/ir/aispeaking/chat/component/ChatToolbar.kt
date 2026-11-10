@@ -93,7 +93,7 @@ fun ChatToolbar(
                     .clip(headerShape)
                     .background(AppleChatTheme.GlassPanel)
                     .border(1.dp, AppleChatTheme.SpecularStrokeBrush, headerShape)
-                    .padding(horizontal = 10.dp, vertical = 3.dp),
+                    .padding(horizontal = 10.dp, vertical = 2.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -104,47 +104,19 @@ fun ChatToolbar(
                     GameText(
                         text = stage?.titleFa ?: "مکالمه انگلیسی",
                         size = 13.sp,
-                        lineHeight = 18.sp,
+                        lineHeight = 17.sp,
                         bold = true,
                         maxLines = 1,
                         modifier = Modifier.basicMarquee()
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        if (!userLevel.isNullOrBlank()) {
-                            val levelShape = RoundedCornerShape(6.dp)
-                            Box(
-                                modifier = Modifier
-                                    .clip(levelShape)
-                                    .background(AppleChatTheme.PrimaryIndigo.copy(alpha = 0.18f))
-                                    .border(0.75.dp, AppleChatTheme.PrimaryIndigo.copy(alpha = 0.45f), levelShape)
-                                    .padding(horizontal = 6.dp, vertical = 1.dp)
-                            ) {
-                                GameText(
-                                    text = "سطح $userLevel",
-                                    size = 10.sp,
-                                    color = if (isDark) Color(0xFFA5A3F6) else AppleChatTheme.PrimaryIndigo,
-                                    bold = true,
-                                    maxLines = 1
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(6.dp))
-                        }
-                        if (!stage?.characterName.isNullOrBlank()) {
-                            GameText(
-                                text = stage.characterName,
-                                size = 11.sp,
-                                color = Game.TextSecondary,
-                                latin = true,
-                                maxLines = 1,
-                                modifier = Modifier
-                                    .weight(1f, fill = false)
-                                    .basicMarquee()
-                            )
-                        }
+                    if (!userLevel.isNullOrBlank()) {
+                        GameText(
+                            text = "سطح $userLevel",
+                            size = 11.sp,
+                            lineHeight = 15.sp,
+                            color = Game.TextSecondary,
+                            maxLines = 1
+                        )
                     }
                 }
             }
@@ -274,6 +246,7 @@ private fun ChatToolbarPreview() {
     AppTheme {
         ChatToolbar(
             stage = null,
+            userLevel = "B1",
             turnsCount = 3,
             isFinishing = false,
             onBackClick = {},
