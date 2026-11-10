@@ -24,28 +24,28 @@ export const LandingHowItWorks: React.FC = () => {
   ];
 
   return (
-    <section id="how-it-works" className="scroll-mt-24 py-20 bg-[#0E1422]/30 border-t border-slate-800/80">
+    <section id="how-it-works" className="scroll-mt-24 py-20 sm:py-24 bg-[#0E1422]/30 border-t border-slate-800/80">
       <div className="max-w-7xl mx-auto px-5 sm:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3">
+        <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-16">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-white mb-3">
             چگونه در ۳ گام ساده مکالمه را آغاز کنیم؟
           </h2>
           <p className="text-slate-400 text-sm sm:text-base">
-            شروع تمرین در AISpeakingPlus سریع و بدون کوچک‌ترین پیچیدگی است.
+            شروع تمرین در AISpeaking سریع و بدون کوچک‌ترین پیچیدگی است.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 relative">
           {steps.map((s, idx) => {
             const Icon = s.icon;
             return (
               <div
                 key={idx}
-                className="relative p-6 sm:p-7 rounded-2xl bg-[#111726]/80 border border-slate-800 hover:border-indigo-500/30 transition-all flex flex-col justify-between"
+                className="relative p-6 sm:p-7 rounded-3xl apple-glass hover:border-indigo-500/30 transition-all flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-5">
-                    <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-300 flex items-center justify-center">
                       <Icon className="w-6 h-6" />
                     </div>
                     <span className="text-3xl font-black text-slate-700/60 font-inter">

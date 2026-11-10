@@ -12,16 +12,16 @@ export const LandingVoiceLab: React.FC = () => {
   ];
 
   return (
-    <section id="voice" className="scroll-mt-24 py-24 max-w-7xl mx-auto px-5 sm:px-8">
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+    <section id="voice" className="scroll-mt-24 py-20 sm:py-24 max-w-7xl mx-auto px-5 sm:px-8">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-10 sm:gap-12">
         {/* Left Information */}
         <div className="lg:w-1/2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold mb-4">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full apple-pill text-cyan-300 text-xs font-semibold mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
             <span>تنوع صداهای طبیعی و انسانی</span>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl font-bold text-white mb-5 leading-tight">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-white mb-5 leading-tight">
             با صداهایی گفتگو کنید که <span className="text-cyan-300">کاملاً زنده و طبیعی</span> هستند
           </h2>
 
@@ -32,7 +32,7 @@ export const LandingVoiceLab: React.FC = () => {
           <div className="space-y-3.5">
             <div className="flex items-center gap-3 text-sm text-slate-300">
               <div className="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs font-bold">✓</div>
-              <span>۱۱ شخصیت صوتی متنوع با دو لهجه معتبر آمریکایی و بریتانیایی</span>
+              <span>شخصیت‌های صوتی متنوع با دو لهجه اصیل آمریکایی و بریتانیایی</span>
             </div>
             <div className="flex items-center gap-3 text-sm text-slate-300">
               <div className="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs font-bold">✓</div>
@@ -50,22 +50,22 @@ export const LandingVoiceLab: React.FC = () => {
           {voices.map((v, i) => (
             <div
               key={i}
-              className="p-4 rounded-xl bg-[#111726]/80 border border-slate-800 hover:border-cyan-500/40 hover:bg-[#151D30] transition-all group"
+              className="p-4 sm:p-5 rounded-2xl apple-glass hover:border-cyan-500/40 transition-all group"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center border border-cyan-500/20">
                     <Mic2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm group-hover:text-cyan-300 transition-colors flex items-center gap-1.5">
+                    <h4 className="font-bold text-white text-sm group-hover:text-cyan-300 transition-colors flex items-center gap-1.5">
                       <span>{v.name}</span>
-                      <Volume2 className="w-3 h-3 text-slate-500 group-hover:text-cyan-400" />
+                      <Volume2 className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400" />
                     </h4>
-                    <span className="text-[10px] text-slate-400">{v.lang}</span>
+                    <span className="text-[11px] text-slate-400">{v.lang}</span>
                   </div>
                 </div>
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/5 text-slate-300 border border-white/10">
                   {v.badge}
                 </span>
               </div>

@@ -3,7 +3,6 @@ import { LandingNavbar } from '../components/landing/LandingNavbar';
 import { LandingHero } from '../components/landing/LandingHero';
 import { LandingStats } from '../components/landing/LandingStats';
 import { LandingFeatures } from '../components/landing/LandingFeatures';
-import { LandingScenarios } from '../components/landing/LandingScenarios';
 import { LandingVoiceLab } from '../components/landing/LandingVoiceLab';
 import { LandingHowItWorks } from '../components/landing/LandingHowItWorks';
 import { LandingPricing } from '../components/landing/LandingPricing';
@@ -21,7 +20,6 @@ export const AppHomePage: React.FC = () => {
       <LandingHero onLaunchApp={handleLaunchApp} />
       <LandingStats />
       <LandingFeatures />
-      <LandingScenarios onLaunchApp={handleLaunchApp} />
       <LandingVoiceLab />
       <LandingHowItWorks />
       <LandingPricing onLaunchApp={handleLaunchApp} />

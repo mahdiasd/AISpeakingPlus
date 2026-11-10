@@ -5,7 +5,6 @@ import {
   Layers,
   Users,
   History,
-  ShieldCheck,
   AudioWaveform,
   TicketPercent,
   Bell,
@@ -81,16 +80,11 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Brand Header */}
         <div className="flex items-center justify-between h-16 px-5 border-b border-slate-200 dark:border-[#2b2d33]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-[#282a30] border border-slate-200 dark:border-[#383b44] flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-2xs">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
+            <img src="/logo.png" alt="AISpeaking" className="w-9 h-9 rounded-xl object-contain shadow-2xs" />
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-bold text-slate-900 dark:text-slate-100 tracking-tight text-base">
                   AISpeaking
-                </span>
-                <span className="text-[11px] font-semibold bg-slate-100 text-slate-700 dark:bg-[#282a30] dark:text-[#f1f3f5] px-1.5 py-0.5 rounded border border-slate-200 dark:border-[#383b44]">
-                  Plus
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-[#9ca3af]">پنل مدیریت مرکزی</p>
@@ -144,7 +138,7 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Sidebar Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-[#2b2d33]">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-[#858a94] px-1">
-            <span>AISpeaking Plus</span>
+            <span>AISpeaking</span>
             <span className="font-mono text-[11px] bg-slate-100 dark:bg-[#24262b] px-2 py-0.5 rounded border border-slate-200 dark:border-[#32353e]">v1.0.0</span>
           </div>
         </div>

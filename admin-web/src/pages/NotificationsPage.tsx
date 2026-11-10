@@ -747,7 +747,7 @@ export const NotificationsPage: React.FC = () => {
                   <div className="w-5 h-5 rounded-md bg-indigo-600 flex items-center justify-center text-white font-bold text-[10px]">
                     AI
                   </div>
-                  <span className="font-semibold text-slate-200 text-xs">AI Speaking Plus</span>
+                  <span className="font-semibold text-slate-200 text-xs">AI Speaking</span>
                   <span>•</span>
                   <span>الان</span>
                 </div>

@@ -52,7 +52,7 @@ export const VoiceLabPage: React.FC = () => {
   const [voices, setVoices] = useState<TtsVoiceInfo[]>([]);
   const [selectedVoiceId, setSelectedVoiceId] = useState<number>(0);
   const [ttsText, setTtsText] = useState<string>(
-    "Hello! Welcome to AI Speaking Plus. You can test my voice and pitch right here to ensure the speech model sounds natural."
+    "Hello! Welcome to AI Speaking. You can test my voice and pitch right here to ensure the speech model sounds natural."
   );
   const [ttsSpeed, setTtsSpeed] = useState<number>(1.0);
   const [isSynthesizing, setIsSynthesizing] = useState<boolean>(false);

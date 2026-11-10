@@ -106,7 +106,7 @@ export async function setupBrowserNotifications(onMessageReceived?: (payload: an
       }
       // Display local Notification if page is focused
       try {
-        const title = payload.notification?.title || payload.data?.title || 'AI Speaking Plus';
+        const title = payload.notification?.title || payload.data?.title || 'AI Speaking';
         const body = payload.notification?.body || payload.data?.body || '';
         new Notification(title, {
           body,

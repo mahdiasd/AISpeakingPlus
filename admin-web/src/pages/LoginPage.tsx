@@ -81,7 +81,7 @@ export const LoginPage: React.FC = () => {
             <ShieldCheck className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            پنل مدیریت AISpeakingPlus
+            پنل مدیریت AISpeaking
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5">
             برای دسترسی به پنل مدیریت وارد حساب کاربری خود شوید
