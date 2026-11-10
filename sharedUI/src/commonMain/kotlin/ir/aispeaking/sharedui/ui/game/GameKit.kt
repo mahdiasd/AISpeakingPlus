@@ -413,29 +413,71 @@ fun GameStatPill(
     modifier: Modifier = Modifier,
     icon: DrawableResource? = null,
     accent: Color = Game.Gold,
+    container: Color = Color.Unspecified,
+    border: Color = Color.Unspecified,
     onClick: (() -> Unit)? = null,
 ) {
+    val isDark = AppTheme.isDark
+    val resolvedContainer = if (container != Color.Unspecified) container else if (isDark) Color(0x28FFFFFF) else Color(0xCCFFFFFF)
+    val resolvedBorder = if (border != Color.Unspecified) border else accent.copy(alpha = if (isDark) 0.55f else 0.40f)
+
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && onClick != null) 0.94f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f),
+        label = "stat_pill_press",
+    )
+
     val shape = RoundedCornerShape(50)
-    Row(
+    Box(
         modifier = modifier
             .defaultMinSize(minHeight = 44.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clip(shape)
-            .background(Game.Panel)
-            .border(1.dp, accent.copy(alpha = 0.55f), shape)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+            .background(resolvedContainer)
+            .border(1.dp, resolvedBorder, shape)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interaction,
+                        indication = null,
+                        onClick = onClick
+                    )
+                } else Modifier
+            ),
+        contentAlignment = Alignment.Center
     ) {
-        if (icon != null) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null,
-                tint = accent,
-                modifier = Modifier.size(16.dp),
-            )
+        // Specular glass shine
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        0.0f to (if (isDark) Color(0x22FFFFFF) else Color(0x33FFFFFF)),
+                        0.60f to Color.Transparent
+                    )
+                )
+        )
+
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            if (icon != null) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+            GameText(text = text, size = 13.sp, bold = true, color = accent, maxLines = 1)
         }
-        GameText(text = text, size = 13.sp, bold = true, color = accent, maxLines = 1)
     }
 }
 

@@ -1,23 +1,16 @@
 package ir.aispeaking.sharedui.ui.game
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -44,18 +36,19 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * Animated glowing border button for VIP / Premium subscription.
+ * Frosted Liquid Glass Button for VIP / Plus Subscription and Remaining Days HUD.
  *
- * Implements a rotating gemstone beam (Amethyst -> Ruby -> Rose -> Diamond)
- * circulating along the rounded rectangular perimeter.
- * Adheres strictly to the no-yellow constraint, using a rich Ruby aesthetic.
+ * Designed with a translucent glass aesthetic that subtly reveals the stage scenery artwork underneath.
+ * Uses no rotating canvas sweep-gradients to avoid cross-browser rendering discrepancies on Web/Wasm.
+ * Provides Apple-style tactile spring scale on press.
  */
 @Composable
 fun RubySubscriptionButton(
-    text: String = "اشتراک ویژه",
+    text: String = "پلاس شو ✨",
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: DrawableResource = Res.drawable.ic_gem,
+    isSubscriber: Boolean = false,
     height: Dp = 44.dp,
     enabled: Boolean = true,
 ) {
@@ -70,58 +63,57 @@ fun RubySubscriptionButton(
         label = "ruby_btn_press"
     )
 
-    // Continuous orbiting beam animation
-    val infiniteTransition = rememberInfiniteTransition(label = "ruby_beam_loop")
-    val angle by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 3400, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "beam_orbit_angle"
-    )
+    val shape = RoundedCornerShape(22.dp)
 
-    // Gentle breathing pulse on the gem icon
-    val gemScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.10f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "ruby_gem_breathe"
-    )
+    // Glass translucent backgrounds allowing the stage art underneath to be subtly visible
+    val containerColor = if (isSubscriber) {
+        // Subscribed: Elegant amethyst / violet translucent glass
+        if (isDark) Color(0x3D6366F1) else Color(0x286366F1)
+    } else {
+        // Non-subscribed: Vibrant Ruby jewel translucent glass
+        if (isDark) Color(0x3DE11D48) else Color(0x24E11D48)
+    }
 
-    val outerShape = RoundedCornerShape(16.dp)
-    val innerShape = RoundedCornerShape(14.5.dp)
-
-    val innerBg = if (isDark) {
+    // Specular border gradient (hairline reflection on top, subtle tone at bottom)
+    val borderBrush = if (isSubscriber) {
         Brush.verticalGradient(
             listOf(
-                Color(0xFF22111E), // Deep jewel obsidian top
-                Color(0xFF130912), // Dark slate bottom
+                Color(0x99A5B4FC), // Indigo / lavender top light
+                Color(0x336366F1), // Translucent violet bottom
             )
         )
     } else {
         Brush.verticalGradient(
             listOf(
-                Color(0xFFFFF2F5), // Soft pearl rose top
-                Color(0xFFFFDFE7), // Pearl blush bottom
+                Color(0xB3FB7185), // Rose ruby top specular highlight
+                Color(0x3BE11D48), // Translucent ruby bottom
             )
         )
     }
 
-    val contentColor = if (isDark) Color.White else Color(0xFF881337)
-    val gemTint = if (isDark) Color(0xFFFB7185) else Color(0xFFE11D48)
+    val contentColor = if (isSubscriber) {
+        if (isDark) Color(0xFFE0E7FF) else Color(0xFF3730A3)
+    } else {
+        if (isDark) Color(0xFFFFF1F2) else Color(0xFF881337)
+    }
+
+    val iconTint = if (isSubscriber) {
+        if (isDark) Color(0xFFA5B4FC) else Color(0xFF6366F1)
+    } else {
+        if (isDark) Color(0xFFFB7185) else Color(0xFFE11D48)
+    }
 
     Box(
         modifier = modifier
             .height(height)
+            .defaultMinSize(minWidth = 110.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
+            .clip(shape)
+            .background(containerColor)
+            .border(1.2.dp, borderBrush, shape)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
@@ -130,109 +122,37 @@ fun RubySubscriptionButton(
             ),
         contentAlignment = Alignment.Center
     ) {
-        // 1. Soft atmospheric aura glowing outside the border
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    scaleX = 1.08f
-                    scaleY = 1.20f
-                    alpha = if (isDark) 0.32f else 0.18f
-                }
-        ) {
-            rotate(degrees = angle, pivot = center) {
-                drawCircle(
-                    brush = Brush.sweepGradient(
-                        0.00f to Color.Transparent,
-                        0.60f to Color.Transparent,
-                        0.74f to Color(0xFF6366F1), // Amethyst Violet
-                        0.84f to Color(0xFFE11D48), // Ruby Red
-                        0.93f to Color(0xFFFB7185), // Radiant Rose
-                        0.97f to Color(0xFFFFFFFF), // Diamond Peak
-                        1.00f to Color.Transparent,
-                    ),
-                    radius = size.maxDimension,
-                    center = center
-                )
-            }
-        }
-
-        // 2. Button frame containing the masked circulating beam
+        // Subtle top specular shine inside the glass capsule
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .clip(outerShape)
-                .background(if (isDark) Color(0x38E11D48) else Color(0x1FE11D48)),
-            contentAlignment = Alignment.Center
-        ) {
-            // High-intensity circulating beam
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                rotate(degrees = angle, pivot = center) {
-                    drawCircle(
-                        brush = Brush.sweepGradient(
-                            0.00f to Color.Transparent,
-                            0.56f to Color.Transparent,
-                            0.68f to Color(0xFF6366F1), // Electric Indigo / Amethyst
-                            0.79f to Color(0xFFC026D3), // Magenta Orchid
-                            0.87f to Color(0xFFE11D48), // Rich Jewel Ruby
-                            0.94f to Color(0xFFFB7185), // Bright Rose
-                            0.98f to Color(0xFFFFFFFF), // Brilliant Diamond Sparkle
-                            1.00f to Color.Transparent,
-                        ),
-                        radius = size.maxDimension,
-                        center = center
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        0.0f to (if (isDark) Color(0x2BFFFFFF) else Color(0x40FFFFFF)),
+                        0.55f to Color.Transparent
                     )
-                }
-            }
-
-            // 3. Inner Card (masks the center, exposing exactly the 1.5dp uniform border)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(1.5.dp)
-                    .clip(innerShape)
-                    .background(innerBg),
-                contentAlignment = Alignment.Center
-            ) {
-                // Subtle top hairline specular shine
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(
-                            Brush.verticalGradient(
-                                0.0f to (if (isDark) Color(0x28FFFFFF) else Color(0x40FFFFFF)),
-                                0.45f to Color.Transparent
-                            )
-                        )
                 )
+        )
 
-                // Label and animated Gem icon
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
-                    modifier = Modifier.padding(horizontal = 14.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(icon),
-                        contentDescription = null,
-                        tint = gemTint,
-                        modifier = Modifier
-                            .size(18.dp)
-                            .graphicsLayer {
-                                scaleX = gemScale
-                                scaleY = gemScale
-                            }
-                    )
-                    GameText(
-                        text = text,
-                        size = 13.sp,
-                        bold = true,
-                        color = contentColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+            modifier = Modifier.padding(horizontal = 14.dp)
+        ) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(17.dp)
+            )
+            GameText(
+                text = text,
+                size = 13.sp,
+                bold = true,
+                color = contentColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
