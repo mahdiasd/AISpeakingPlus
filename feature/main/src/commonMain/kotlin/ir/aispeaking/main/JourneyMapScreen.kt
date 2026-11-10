@@ -192,6 +192,7 @@ fun JourneyMapScreen(
                         TopHud(
                             totalStars = uiState.totalStarsEarned,
                             isSubscriber = uiState.currentTier == AccessTier.SUBSCRIBER,
+                            remainingDays = uiState.remainingDays,
                             onProfile = onNavigateToProfile,
                             onSubscribe = onNavigateToSubscription,
                             onLeaderboard = onNavigateToLeaderboard,
@@ -304,42 +305,54 @@ fun JourneyMapScreen(
 private fun TopHud(
     totalStars: Int,
     isSubscriber: Boolean,
+    remainingDays: Int,
     onProfile: () -> Unit,
     onSubscribe: () -> Unit,
     onLeaderboard: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 14.dp, vertical = 10.dp)
     ) {
-        GameIconButton(
-            icon = Res.drawable.ic_profile,
-            onClick = onProfile,
-            contentDescription = "پروفایل من"
-        )
-        GameStatPill(
-            text = "${totalStars.fa()} ستاره",
-            icon = Res.drawable.ic_star,
-            accent = Game.Gold,
-            onClick = onLeaderboard
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        if (isSubscriber) {
-            GameStatPill(
-                text = "اشتراک ویژه",
-                icon = Res.drawable.ic_gem,
-                accent = Game.Ruby,
-                onClick = onSubscribe
+        // 1. Start anchor (Right in RTL): Profile Icon Button
+        Box(
+            modifier = Modifier.align(Alignment.CenterStart)
+        ) {
+            GameIconButton(
+                icon = Res.drawable.ic_profile,
+                onClick = onProfile,
+                contentDescription = "پروفایل من"
             )
-        } else {
+        }
+
+        // 2. Exact Center: Subscription Button (Not subscribed) / Remaining Days (Subscribed)
+        Box(
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            val centerText = if (isSubscriber) {
+                if (remainingDays > 0) "${remainingDays.fa()} روز اشتراک" else "اشتراک فعال"
+            } else {
+                "پلاس شو ✨"
+            }
+
             RubySubscriptionButton(
-                text = "اشتراک ویژه",
+                text = centerText,
                 onClick = onSubscribe,
-                modifier = Modifier.width(140.dp)
+                isSubscriber = isSubscriber
+            )
+        }
+
+        // 3. End anchor (Left in RTL): Stars Pill with spring tactile touch
+        Box(
+            modifier = Modifier.align(Alignment.CenterEnd)
+        ) {
+            GameStatPill(
+                text = "${totalStars.fa()} ستاره",
+                icon = Res.drawable.ic_star,
+                accent = Game.Gold,
+                onClick = onLeaderboard
             )
         }
     }

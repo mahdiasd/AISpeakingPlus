@@ -1,11 +1,12 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Star, Crown, User } from 'lucide-react';
+import { Star, Sparkles, Gem, User } from 'lucide-react';
 import { getAvatarUrl } from '../../utils/avatar';
 
 export interface HomeHeaderStatsProps {
   totalStars?: number;
   isSubscriber?: boolean;
+  remainingDays?: number;
   avatarUrl?: string | null;
   userName?: string | null;
   onProfileClick: () => void;
@@ -21,6 +22,7 @@ export interface HomeHeaderStatsProps {
     totalStages?: number;
     progressPercentage?: number;
     currentTier?: string;
+    remainingDays?: number;
   };
   seasonTitleFa?: string;
 }
@@ -28,13 +30,14 @@ export interface HomeHeaderStatsProps {
 /**
  * Top HUD Bar for AI Speaking Plus Home Screen.
  * Fully aligned with Compose Multiplatform's `JourneyMapScreen` TopHud:
- * - Right (Start in RTL): Circular user profile button with avatar
- * - Center: Floating glass capsule star counter pill («۰ ستاره») with shining gold star icon
- * - Left (End in RTL): VIP glass button with gold gradient («اشتراک ویژه») with crown icon
+ * - Right (Start in RTL): Circular glass user profile button with avatar
+ * - Center: Frosted liquid glass VIP Subscription button («پلاس شو ✨») or remaining days pill
+ * - Left (End in RTL): Floating glass capsule star counter pill («۰ ستاره») with shining gold star icon
  */
 export const HomeHeaderStats: React.FC<HomeHeaderStatsProps> = ({
   totalStars,
   isSubscriber,
+  remainingDays,
   avatarUrl,
   userName,
   onProfileClick,
@@ -45,85 +48,96 @@ export const HomeHeaderStats: React.FC<HomeHeaderStatsProps> = ({
 }) => {
   const starsCount = totalStars ?? stats?.totalStars ?? 0;
   const subscriberStatus = isSubscriber ?? (stats?.currentTier === 'SUBSCRIBER');
+  const daysLeft = remainingDays ?? stats?.remainingDays ?? 0;
   const resolvedAvatar = avatarUrl ? getAvatarUrl(avatarUrl) : null;
 
   return (
     <header
       dir="rtl"
-      className={`w-full flex items-center justify-between gap-3 pointer-events-auto select-none ${className}`}
+      className={`w-full relative flex items-center justify-between gap-2 pointer-events-auto select-none ${className}`}
     >
-      {/* 1. RIGHT (Start in RTL): Circular User Profile Button with Avatar */}
-      <motion.button
-        whileTap={{ scale: 0.94 }}
-        whileHover={{ scale: 1.04 }}
-        transition={{ type: 'spring', stiffness: 450, damping: 26 }}
-        type="button"
-        onClick={onProfileClick}
-        className="w-10 h-10 sm:w-11 sm:h-11 rounded-full apple-glass-pill flex items-center justify-center text-white shadow-apple-sm overflow-hidden shrink-0 border border-white/25 active:scale-95 transition-all group cursor-pointer"
-        title={userName || 'پروفایل کاربری'}
-        aria-label="پروفایل کاربری"
-      >
-        {resolvedAvatar ? (
-          <img
-            src={resolvedAvatar}
-            alt={userName || 'User Avatar'}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              (e.target as HTMLElement).style.display = 'none';
-            }}
-          />
-        ) : (
-          <User className="w-5 h-5 text-slate-200 group-hover:text-white transition-colors" />
-        )}
-      </motion.button>
-
-      {/* 2. CENTER: Floating Glass Capsule Star Counter Pill («۰ ستاره») */}
-      <motion.button
-        whileTap={{ scale: 0.95 }}
-        whileHover={{ scale: 1.03 }}
-        transition={{ type: 'spring', stiffness: 450, damping: 26 }}
-        type="button"
-        onClick={onLeaderboardClick || onProfileClick}
-        className="h-10 px-4 rounded-full apple-glass-pill border border-amber-400/40 bg-gradient-to-b from-amber-400/15 via-white/[0.08] to-transparent shadow-[0_4px_18px_rgba(255,204,0,0.22)] flex items-center justify-center gap-2 text-apple-yellow cursor-pointer hover:border-amber-400/60 hover:bg-amber-400/25 active:scale-95 transition-all backdrop-blur-md"
-        title="مجموع ستاره‌های کسب شده در ماجراجویی"
-      >
-        <Star className="w-4 h-4 fill-apple-yellow text-apple-yellow drop-shadow-[0_0_8px_rgba(255,204,0,0.75)] animate-pulse" />
-        <span className="text-sm font-black font-mono tracking-tight text-white drop-shadow-sm">
-          {starsCount.toLocaleString('fa-IR')}
-        </span>
-        <span className="text-xs font-bold text-apple-yellow">
-          ستاره
-        </span>
-      </motion.button>
-
-      {/* 3. LEFT (End in RTL): VIP Glass Button with Gold Gradient («اشتراک ویژه») & Crown */}
-      {subscriberStatus ? (
+      {/* 1. RIGHT (Start in RTL): Circular Frosted Glass Profile Button */}
+      <div className="flex items-center justify-start z-10">
         <motion.button
           whileTap={{ scale: 0.94 }}
+          whileHover={{ scale: 1.04 }}
+          transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+          type="button"
+          onClick={onProfileClick}
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/[0.12] hover:bg-white/[0.18] backdrop-blur-md flex items-center justify-center text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)] overflow-hidden shrink-0 border border-white/30 active:scale-95 transition-all group cursor-pointer"
+          title={userName || 'پروفایل کاربری'}
+          aria-label="پروفایل کاربری"
+        >
+          {resolvedAvatar ? (
+            <img
+              src={resolvedAvatar}
+              alt={userName || 'User Avatar'}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = 'none';
+              }}
+            />
+          ) : (
+            <User className="w-5 h-5 text-slate-200 group-hover:text-white transition-colors" />
+          )}
+        </motion.button>
+      </div>
+
+      {/* 2. CENTER: Frosted Liquid Glass Subscription Button («پلاس شو ✨») / Remaining Days Pill */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="pointer-events-auto">
+          {subscriberStatus ? (
+            <motion.button
+              whileTap={{ scale: 0.94 }}
+              whileHover={{ scale: 1.03 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+              type="button"
+              onClick={onSubscribeClick}
+              className="h-10 px-3.5 sm:px-4 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 backdrop-blur-md border border-indigo-300/40 flex items-center justify-center gap-1.5 sm:gap-2 text-indigo-100 text-xs font-bold shadow-[0_4px_18px_rgba(99,102,241,0.25)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              title="مدیریت اشتراک پلاس"
+            >
+              <Gem className="w-4 h-4 text-indigo-300 drop-shadow-[0_0_8px_rgba(165,180,252,0.6)]" />
+              <span className="font-bold">
+                {daysLeft > 0 ? `${daysLeft.toLocaleString('fa-IR')} روز اشتراک` : 'اشتراک فعال'}
+              </span>
+            </motion.button>
+          ) : (
+            <motion.button
+              whileTap={{ scale: 0.94 }}
+              whileHover={{ scale: 1.03 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+              type="button"
+              onClick={onSubscribeClick}
+              className="h-10 px-3.5 sm:px-4 rounded-full bg-rose-600/25 hover:bg-rose-600/35 backdrop-blur-md border border-rose-400/50 text-white font-black text-xs flex items-center justify-center gap-1.5 sm:gap-2 shadow-[0_4px_18px_rgba(225,29,72,0.3)] hover:border-rose-300/70 active:scale-95 transition-all cursor-pointer"
+              title="ارتقا به نسخه پلاس و باز کردن تمام مراحل"
+            >
+              <Sparkles className="w-4 h-4 text-rose-300 animate-pulse" />
+              <span>پلاس شو ✨</span>
+            </motion.button>
+          )}
+        </div>
+      </div>
+
+      {/* 3. LEFT (End in RTL): Floating Glass Capsule Star Counter Pill («۰ ستاره») */}
+      <div className="flex items-center justify-end z-10">
+        <motion.button
+          whileTap={{ scale: 0.95 }}
           whileHover={{ scale: 1.03 }}
           transition={{ type: 'spring', stiffness: 450, damping: 26 }}
           type="button"
-          onClick={onSubscribeClick}
-          className="h-10 px-3.5 sm:px-4 rounded-full apple-glass bg-gradient-to-r from-purple-900/50 via-purple-800/40 to-indigo-900/50 border border-purple-400/50 flex items-center justify-center gap-1.5 sm:gap-2 text-purple-200 text-xs font-bold shadow-[0_4px_16px_rgba(168,85,247,0.3)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
-          title="عضویت ویژه فعال است"
+          onClick={onLeaderboardClick || onProfileClick}
+          className="h-10 px-3.5 sm:px-4 rounded-full bg-amber-400/15 hover:bg-amber-400/25 backdrop-blur-md border border-amber-400/40 shadow-[0_4px_16px_rgba(255,204,0,0.2)] flex items-center justify-center gap-1.5 text-apple-yellow cursor-pointer hover:border-amber-400/60 active:scale-95 transition-all"
+          title="مجموع ستاره‌های کسب شده در ماجراجویی"
         >
-          <Crown className="w-4 h-4 fill-purple-300 text-purple-200 drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]" />
-          <span className="font-bold">اشتراک طلایی</span>
+          <Star className="w-4 h-4 fill-apple-yellow text-apple-yellow drop-shadow-[0_0_8px_rgba(255,204,0,0.7)]" />
+          <span className="text-sm font-black font-mono tracking-tight text-white drop-shadow-sm">
+            {starsCount.toLocaleString('fa-IR')}
+          </span>
+          <span className="text-xs font-bold text-apple-yellow">
+            ستاره
+          </span>
         </motion.button>
-      ) : (
-        <motion.button
-          whileTap={{ scale: 0.94 }}
-          whileHover={{ scale: 1.03 }}
-          transition={{ type: 'spring', stiffness: 450, damping: 26 }}
-          type="button"
-          onClick={onSubscribeClick}
-          className="h-10 px-3.5 sm:px-4 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-black text-xs flex items-center justify-center gap-1.5 sm:gap-2 shadow-[0_4px_16px_rgba(255,204,0,0.45)] border border-yellow-200/60 active:scale-95 transition-all cursor-pointer"
-          title="خرید یا ارتقا به اشتراک ویژه"
-        >
-          <Crown className="w-4 h-4 fill-black text-black" />
-          <span>اشتراک ویژه</span>
-        </motion.button>
-      )}
+      </div>
     </header>
   );
 };

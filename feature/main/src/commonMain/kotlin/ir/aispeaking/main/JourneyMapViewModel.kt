@@ -13,6 +13,7 @@ import ir.aispeaking.domain.usecase.auth.SendOtpUseCase
 import ir.aispeaking.domain.usecase.auth.VerifyOtpUseCase
 import ir.aispeaking.domain.usecase.guide.IsGuideCompletedUseCase
 import ir.aispeaking.domain.usecase.guide.MarkGuideCompletedUseCase
+import ir.aispeaking.domain.usecase.stage.CheckSubscriptionStatusUseCase
 import ir.aispeaking.domain.usecase.stage.GetJourneyLeaderboardUseCase
 import ir.aispeaking.domain.usecase.stage.GetStagesUseCase
 import ir.aispeaking.domain.usecase.stage.SyncGuestProgressUseCase
@@ -32,6 +33,7 @@ import org.koin.core.annotation.Factory
 data class JourneyMapUiState(
     val isLoading: Boolean = true,
     val currentTier: AccessTier = AccessTier.GUEST,
+    val remainingDays: Int = 0,
     val stages: List<Stage> = emptyList(),
     val viewingStage: Stage? = null,
     val showPastStagesSheet: Boolean = false,
@@ -84,7 +86,8 @@ class JourneyMapViewModel(
     private val getJourneyLeaderboardUseCase: GetJourneyLeaderboardUseCase,
     private val analyticsTracker: AnalyticsTracker,
     private val isGuideCompletedUseCase: IsGuideCompletedUseCase? = null,
-    private val markGuideCompletedUseCase: MarkGuideCompletedUseCase? = null
+    private val markGuideCompletedUseCase: MarkGuideCompletedUseCase? = null,
+    private val checkSubscriptionStatusUseCase: CheckSubscriptionStatusUseCase? = null
 ) : ViewModel() {
 
     fun isGuideCompleted(key: String): Boolean = isGuideCompletedUseCase?.invoke(key) ?: true
@@ -233,7 +236,7 @@ class JourneyMapViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, selectedStageForPaywall = null) }
             val tier = getCurrentAccessTierUseCase()
-            loadStages(tier)
+            loadStagesInternal(tier)
             _uiState.update { it.copy(snackbarMessage = "اشتراک شما فعال شد! تمام مراحل باز شدند.") }
         }
     }
@@ -248,7 +251,15 @@ class JourneyMapViewModel(
     }
 
     private suspend fun loadStagesInternal(tier: AccessTier) {
-        _uiState.update { it.copy(isLoading = true, currentTier = tier) }
+        val days = if (tier == AccessTier.SUBSCRIBER && checkSubscriptionStatusUseCase != null) {
+            when (val subResult = checkSubscriptionStatusUseCase.invoke()) {
+                is DataResult.Success -> subResult.data.remainingDays
+                else -> 0
+            }
+        } else {
+            0
+        }
+        _uiState.update { it.copy(isLoading = true, currentTier = tier, remainingDays = days) }
         when (val result = getStagesUseCase(tier)) {
             is DataResult.Success -> {
                 _uiState.update {
