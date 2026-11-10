@@ -92,9 +92,12 @@ fun LeaderboardScreen(
     val top1 = items.firstOrNull { it.rank == 1 } ?: items.getOrNull(0)
     val top2 = items.firstOrNull { it.rank == 2 } ?: items.getOrNull(1)
     val top3 = items.firstOrNull { it.rank == 3 } ?: items.getOrNull(2)
-    val remainingItems = items.filter { it.rank > 3 }
+    val topUserIds = setOfNotNull(top1?.userId, top2?.userId, top3?.userId)
+    val remainingItems = items.filter { it.rank > 3 && it.userId !in topUserIds }
 
     val currentUserRank = leaderboard?.currentUserRank
+    val isCurrentUserInTop3 = currentUserRank != null && currentUserRank.rank in 1..3
+    val showCurrentUserBar = currentUserRank != null && !isCurrentUserInTop3
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Box(
@@ -246,57 +249,28 @@ fun LeaderboardScreen(
                                         RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
                                     )
                             ) {
-                                if (remainingItems.isEmpty()) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(32.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            GameText(
-                                                text = "جایگاه‌های بعدی در انتظار شماست!",
-                                                size = 14.sp,
-                                                bold = true,
-                                                color = Color.White,
-                                                align = TextAlign.Center
-                                            )
-                                            GameText(
-                                                text = "با پیشروی در مراحل داستانی، اولین نفری باش که این رتبه‌ها را تصاحب می‌کند.",
-                                                size = 12.sp,
-                                                lineHeight = 20.sp,
-                                                color = Color(0xFF94A3B8),
-                                                align = TextAlign.Center
-                                            )
-                                        }
-                                    }
-                                } else {
-                                    LazyColumn(
-                                        state = listState,
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentPadding = PaddingValues(
-                                            top = 12.dp,
-                                            bottom = if (currentUserRank != null || onNavigateToLogin != null) 90.dp else 24.dp
+                                LazyColumn(
+                                    state = listState,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(
+                                        top = 12.dp,
+                                        bottom = if (showCurrentUserBar || (currentUserRank == null && onNavigateToLogin != null)) 90.dp else 24.dp
+                                    )
+                                ) {
+                                    items(
+                                        items = remainingItems,
+                                        key = { it.userId }
+                                    ) { entry ->
+                                        val isCurrentUser = entry.userId == currentUserRank?.userId
+                                        LeaderboardRowItem(
+                                            entry = entry,
+                                            isCurrentUser = isCurrentUser
                                         )
-                                    ) {
-                                        items(
-                                            items = remainingItems,
-                                            key = { it.userId }
-                                        ) { entry ->
-                                            val isCurrentUser = entry.userId == currentUserRank?.userId
-                                            LeaderboardRowItem(
-                                                entry = entry,
-                                                isCurrentUser = isCurrentUser
-                                            )
-                                            HorizontalDivider(
-                                                modifier = Modifier.padding(horizontal = 20.dp),
-                                                color = Color(0x14FFFFFF),
-                                                thickness = 0.75.dp
-                                            )
-                                        }
+                                        HorizontalDivider(
+                                            modifier = Modifier.padding(horizontal = 20.dp),
+                                            color = Color(0x14FFFFFF),
+                                            thickness = 0.75.dp
+                                        )
                                     }
                                 }
                             }
@@ -306,7 +280,8 @@ fun LeaderboardScreen(
             }
 
             // Pinned Floating Current User Standing Bar (anchored at bottom)
-            if (currentUserRank != null) {
+            // Only shown if the user is not already displayed in the top 3 podium
+            if (showCurrentUserBar) {
                 CurrentUserStickyBar(
                     userRank = currentUserRank,
                     modifier = Modifier
@@ -314,7 +289,7 @@ fun LeaderboardScreen(
                         .navigationBarsPadding()
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 )
-            } else if (onNavigateToLogin != null && leaderboard != null) {
+            } else if (onNavigateToLogin != null && leaderboard != null && currentUserRank == null) {
                 GuestLoginPromptBar(
                     onLoginClick = onNavigateToLogin,
                     modifier = Modifier
