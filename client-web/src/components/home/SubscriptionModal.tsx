@@ -90,16 +90,19 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         <div className="p-3.5 rounded-2xl apple-glass-card border border-apple-yellow/50 flex items-center justify-between">
           <div className="space-y-0.5">
             <span className="text-xs text-apple-gray-300 block">طرح پیشنهادی ۳ ماهه:</span>
-            <div className="flex items-baseline gap-1 font-mono">
+            <div className="flex items-baseline gap-1.5 font-mono">
+              <span className="text-xs text-apple-gray-400 line-through font-sans">
+                {(299000).toLocaleString('fa-IR')}
+              </span>
               <span className="text-base font-extrabold text-apple-yellow">
-                {(499000).toLocaleString('fa-IR')}
+                {(115000).toLocaleString('fa-IR')}
               </span>
               <span className="text-xs text-apple-gray-300 font-sans">تومان</span>
             </div>
           </div>
 
           <span className="px-2.5 py-1 rounded-full bg-apple-yellow/20 border border-apple-yellow/40 text-apple-yellow text-[11px] font-bold">
-            محبوب‌ترین (۱۵٪ تخفیف)
+            محبوب‌ترین (۶۲٪ تخفیف)
           </span>
         </div>
 

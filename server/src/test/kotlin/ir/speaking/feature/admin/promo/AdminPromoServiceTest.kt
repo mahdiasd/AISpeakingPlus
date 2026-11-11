@@ -98,7 +98,7 @@ class AdminPromoServiceTest {
             title = "Fifty Thousand Off",
             discountType = "FIXED_AMOUNT",
             discountValue = 50_000L,
-            minOrderAmount = 100_000L,
+            minOrderAmount = 50_000L,
             applicablePlans = emptyList(), // ALL
             maxUses = 2,
             isOncePerUser = true,

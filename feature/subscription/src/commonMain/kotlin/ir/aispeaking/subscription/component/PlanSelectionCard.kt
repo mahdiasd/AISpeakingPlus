@@ -43,7 +43,12 @@ fun PlanSelectionCard(
 ) {
     val isDark = AppTheme.isDark
     val dailyPrice = (finalPriceTomans / plan.durationDays.coerceAtLeast(1))
-    val isDiscounted = finalPriceTomans < plan.priceTomans || plan.discountPercent > 0
+    val monthlyPrice = if (plan.durationDays >= 60) {
+        finalPriceTomans / (plan.durationDays / 30).coerceAtLeast(1)
+    } else null
+    val baseOriginalPrice = plan.originalPriceTomans
+    val hasBaseDiscount = baseOriginalPrice != null && baseOriginalPrice > plan.priceTomans
+    val isDiscounted = finalPriceTomans < plan.priceTomans || plan.discountPercent > 0 || hasBaseDiscount
 
     val animatedBorderWidth by animateDpAsState(
         targetValue = if (isSelected) 2.dp else 1.dp,
@@ -179,12 +184,21 @@ fun PlanSelectionCard(
                         size = 12.sp
                     )
 
-                    // Daily breakdown
-                    GameText(
-                        text = "روزی ${formatToPersian(dailyPrice)} تومان",
-                        color = Game.TextMuted,
-                        size = 11.sp
-                    )
+                    // Monthly / Daily breakdown
+                    if (monthlyPrice != null) {
+                        GameText(
+                            text = "ماهی فقط ${formatToPersian(monthlyPrice)} تومان",
+                            color = if (isSelected) (if (isDark) Color(0xFFFFD60A) else Color(0xFF007AFF)) else Game.TextSecondary,
+                            size = 11.sp,
+                            bold = true
+                        )
+                    } else {
+                        GameText(
+                            text = "روزی ${formatToPersian(dailyPrice)} تومان",
+                            color = Game.TextMuted,
+                            size = 11.sp
+                        )
+                    }
                 }
             }
 
@@ -212,9 +226,14 @@ fun PlanSelectionCard(
                 }
 
                 // Original crossed-out price if discounted
-                if (isDiscounted && finalPriceTomans != plan.priceTomans) {
+                val crossedOutPrice = when {
+                    finalPriceTomans != plan.priceTomans -> plan.priceTomans
+                    hasBaseDiscount -> baseOriginalPrice
+                    else -> null
+                }
+                if (crossedOutPrice != null) {
                     Text(
-                        text = "${formatToPersian(plan.priceTomans)} تومان",
+                        text = "${formatToPersian(crossedOutPrice)} تومان",
                         color = Game.TextMuted,
                         fontSize = 11.sp,
                         fontFamily = AppTheme.typography.persianRegular,

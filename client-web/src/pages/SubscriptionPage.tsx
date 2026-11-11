@@ -32,7 +32,7 @@ export const SubscriptionPage: React.FC = () => {
   const { isLoggedIn } = useAuth();
 
   const [plans, setPlans] = useState<SubscriptionPlan[]>(defaultFallbackPlans);
-  const [selectedPlanId, setSelectedPlanId] = useState<string>('quarterly_plan');
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('plan-3m');
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -322,9 +322,15 @@ export const SubscriptionPage: React.FC = () => {
                           <p className="text-[11px] text-apple-gray-300">
                             {plan.durationDays.toLocaleString('fa-IR')} روز دسترسی نامحدود
                           </p>
-                          <p className="text-[10px] text-apple-gray-400">
-                            روزی {dailyPrice.toLocaleString('fa-IR')} تومان
-                          </p>
+                          {plan.durationDays >= 60 ? (
+                            <p className={`text-[10px] font-semibold ${isSelected ? 'text-apple-yellow' : 'text-apple-gray-300'}`}>
+                              ماهی فقط {Math.round(plan.priceTomans / (plan.durationDays / 30)).toLocaleString('fa-IR')} تومان
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-apple-gray-400">
+                              روزی {dailyPrice.toLocaleString('fa-IR')} تومان
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -338,6 +344,11 @@ export const SubscriptionPage: React.FC = () => {
                             تومان
                           </span>
                         </div>
+                        {plan.originalPriceTomans && plan.originalPriceTomans > plan.priceTomans && (
+                          <div className="text-[11px] text-apple-gray-400 line-through text-left font-sans">
+                            {plan.originalPriceTomans.toLocaleString('fa-IR')} تومان
+                          </div>
+                        )}
                         {plan.discountPercent && plan.discountPercent > 0 && (
                           <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-apple-green/20 text-apple-green">
                             {plan.discountPercent.toLocaleString('fa-IR')}٪ تخفیف

@@ -38,6 +38,7 @@ data class SubscriptionPlanItem(
     val durationDays: Int,
     val priceTomans: Long,
     val discountPercent: Int = 0,
+    val originalPriceTomans: Long? = null,
     val badge: String? = null
 )
 
@@ -134,26 +135,29 @@ fun Application.subscriptionRouting() {
                         type = "1_MONTH",
                         titleFa = "اشتراک ۱ ماهه",
                         durationDays = 30,
-                        priceTomans = 199_000L,
-                        discountPercent = 0,
+                        priceTomans = 65_000L,
+                        originalPriceTomans = 119_000L,
+                        discountPercent = 45,
                         badge = null
                     ),
                     SubscriptionPlanItem(
                         id = "plan-3m",
                         type = "3_MONTHS",
-                        titleFa = "اشتراک ۳ ماهه",
+                        titleFa = "اشتراک ۳ ماهه ویژه",
                         durationDays = 90,
-                        priceTomans = 499_000L,
-                        discountPercent = 15,
+                        priceTomans = 115_000L,
+                        originalPriceTomans = 299_000L,
+                        discountPercent = 62,
                         badge = "محبوب‌ترین"
                     ),
                     SubscriptionPlanItem(
                         id = "plan-6m",
                         type = "6_MONTHS",
-                        titleFa = "اشتراک ۶ ماهه",
+                        titleFa = "اشتراک ۶ ماهه طلایی",
                         durationDays = 180,
-                        priceTomans = 899_000L,
-                        discountPercent = 25,
+                        priceTomans = 200_000L,
+                        originalPriceTomans = 499_000L,
+                        discountPercent = 60,
                         badge = "بهترین ارزش"
                     )
                 )
@@ -492,7 +496,7 @@ fun Application.subscriptionRouting() {
 
                     // SECURITY: Direct activation via /subscribe is strictly restricted to 100% discount promo codes (finalPrice == 0L).
                     // Paid subscriptions MUST go through /direct-checkout (ZarinPal) or /verify-market-purchase (Cafe Bazaar / Myket).
-                    val basePrice = adminPromoService.getPlanPrice(request.planId) ?: 199_000L
+                    val basePrice = adminPromoService.getPlanPrice(request.planId) ?: 65_000L
                     val finalPrice = promoValidation?.finalPriceTomans ?: basePrice
 
                     if (finalPrice > 0L) {
@@ -623,10 +627,10 @@ fun Application.subscriptionRouting() {
                             promoCode = normalizedPromo,
                             bonusDays = bonusDays,
                             amountPaidTomans = when (request.planId) {
-                                "plan-1m" -> 199_000L
-                                "plan-3m" -> 499_000L
-                                "plan-6m" -> 899_000L
-                                else -> 499_000L
+                                "plan-1m" -> 65_000L
+                                "plan-3m" -> 115_000L
+                                "plan-6m" -> 200_000L
+                                else -> 115_000L
                             }
                         )
                     )
@@ -717,7 +721,7 @@ fun Application.subscriptionRouting() {
                         }
                     }
 
-                    val basePrice = adminPromoService.getPlanPrice(request.planId) ?: 199_000L
+                    val basePrice = adminPromoService.getPlanPrice(request.planId) ?: 65_000L
                     var finalPrice = basePrice
                     var bonusDays = 0
                     var promoValidation: AdminPromoService.PromoValidationResult? = null
