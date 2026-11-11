@@ -150,6 +150,7 @@ data class SubscriptionPlanDto(
     val durationDays: Int,
     val priceTomans: Long,
     val discountPercent: Int = 0,
+    val originalPriceTomans: Long? = null,
     val badge: String? = null
 )
 

@@ -118,7 +118,7 @@ export const HomePage: React.FC = () => {
         <HomeHeaderStats
           totalStars={totalStars}
           isSubscriber={isSubscriber}
-          remainingDays={profile?.remainingDays ?? stats.remainingDays ?? 0}
+          remainingDays={profile?.subscription?.remainingDays ?? 0}
           avatarUrl={profile?.avatar}
           userName={profile?.nickName}
           onProfileClick={() => navigate('/profile')}

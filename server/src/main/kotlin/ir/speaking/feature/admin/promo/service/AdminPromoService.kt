@@ -23,12 +23,12 @@ import kotlin.math.min
 class AdminPromoService {
 
     private val planPrices = mapOf(
-        "plan-1m" to 199_000L,
-        "plan-3m" to 499_000L,
-        "plan-6m" to 899_000L,
-        "1_MONTH" to 199_000L,
-        "3_MONTHS" to 499_000L,
-        "6_MONTHS" to 899_000L
+        "plan-1m" to 65_000L,
+        "plan-3m" to 115_000L,
+        "plan-6m" to 200_000L,
+        "1_MONTH" to 65_000L,
+        "3_MONTHS" to 115_000L,
+        "6_MONTHS" to 200_000L
     )
 
     fun normalizePlanId(id: String): String = when (id.uppercase().trim()) {

@@ -7,6 +7,7 @@ interface SubscriptionPlan {
   titleFa: string;
   durationDays: number;
   priceTomans: number;
+  originalPriceTomans?: number | null;
   discountPercent?: number;
   badge?: string | null;
 }
@@ -21,26 +22,29 @@ const DEFAULT_PLANS: SubscriptionPlan[] = [
     type: '1_MONTH',
     titleFa: 'اشتراک ۱ ماهه',
     durationDays: 30,
-    priceTomans: 199000,
-    discountPercent: 0,
+    priceTomans: 65000,
+    originalPriceTomans: 119000,
+    discountPercent: 45,
     badge: null,
   },
   {
     id: 'plan-3m',
     type: '3_MONTHS',
-    titleFa: 'اشتراک ۳ ماهه',
+    titleFa: 'اشتراک ۳ ماهه ویژه',
     durationDays: 90,
-    priceTomans: 499000,
-    discountPercent: 15,
+    priceTomans: 115000,
+    originalPriceTomans: 299000,
+    discountPercent: 62,
     badge: 'محبوب‌ترین',
   },
   {
     id: 'plan-6m',
     type: '6_MONTHS',
-    titleFa: 'اشتراک ۶ ماهه',
+    titleFa: 'اشتراک ۶ ماهه طلایی',
     durationDays: 180,
-    priceTomans: 899000,
-    discountPercent: 25,
+    priceTomans: 200000,
+    originalPriceTomans: 499000,
+    discountPercent: 60,
     badge: 'بهترین ارزش',
   },
 ];
@@ -152,9 +156,14 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
       <div className={`relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto transition-opacity duration-300 ${isLoading ? 'opacity-70' : 'opacity-100'}`}>
         {plans.map((plan) => {
           const isFeatured = plan.discountPercent && plan.discountPercent > 0 && plan.durationDays === 90;
-          const isBestValue = plan.discountPercent && plan.discountPercent >= 20;
-          const originalPrice = plan.discountPercent && plan.discountPercent > 0
-            ? Math.round(plan.priceTomans / (1 - plan.discountPercent / 100))
+          const isBestValue = plan.durationDays === 180;
+          const originalPrice = plan.originalPriceTomans || (
+            plan.discountPercent && plan.discountPercent > 0
+              ? Math.round(plan.priceTomans / (1 - plan.discountPercent / 100))
+              : null
+          );
+          const monthlyPrice = plan.durationDays >= 60
+            ? Math.round(plan.priceTomans / (plan.durationDays / 30))
             : null;
 
           return (
@@ -208,6 +217,12 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
                     </span>
                     <span className="text-xs text-slate-400 font-medium">تومان</span>
                   </div>
+
+                  {monthlyPrice && (
+                    <div className={`mt-1.5 text-xs font-semibold ${isFeatured ? 'text-amber-300' : 'text-slate-300'}`}>
+                      معادل ماهی فقط {formatPrice(monthlyPrice)} تومان
+                    </div>
+                  )}
 
                   {plan.discountPercent && plan.discountPercent > 0 ? (
                     <div className="mt-2.5 inline-block">

@@ -6,6 +6,7 @@ export interface SubscriptionPlan {
   titleFa: string;
   durationDays: number;
   priceTomans: number;
+  originalPriceTomans?: number;
   discountPercent?: number;
   badge?: string | null;
 }
@@ -94,30 +95,33 @@ export const subscriptionApi = {
 
 export const defaultFallbackPlans: SubscriptionPlan[] = [
   {
-    id: 'monthly_plan',
-    type: 'monthly',
+    id: 'plan-1m',
+    type: '1_MONTH',
     titleFa: 'اشتراک ۱ ماهه',
     durationDays: 30,
-    priceTomans: 199000,
-    discountPercent: 0,
+    priceTomans: 65000,
+    originalPriceTomans: 119000,
+    discountPercent: 45,
     badge: undefined,
   },
   {
-    id: 'quarterly_plan',
-    type: 'quarterly',
+    id: 'plan-3m',
+    type: '3_MONTHS',
     titleFa: 'اشتراک ۳ ماهه ویژه',
     durationDays: 90,
-    priceTomans: 499000,
-    discountPercent: 15,
+    priceTomans: 115000,
+    originalPriceTomans: 299000,
+    discountPercent: 62,
     badge: 'محبوب‌ترین',
   },
   {
-    id: 'semi_annual_plan',
-    type: 'semi_annual',
+    id: 'plan-6m',
+    type: '6_MONTHS',
     titleFa: 'اشتراک ۶ ماهه طلایی',
     durationDays: 180,
-    priceTomans: 899000,
-    discountPercent: 25,
+    priceTomans: 200000,
+    originalPriceTomans: 499000,
+    discountPercent: 60,
     badge: 'بهترین ارزش',
   },
 ];

@@ -30,6 +30,7 @@ class SubscriptionRepositoryImpl(
                 durationDays = it.durationDays,
                 priceTomans = it.priceTomans,
                 discountPercent = it.discountPercent,
+                originalPriceTomans = it.originalPriceTomans,
                 badge = it.badge
             )
         }
