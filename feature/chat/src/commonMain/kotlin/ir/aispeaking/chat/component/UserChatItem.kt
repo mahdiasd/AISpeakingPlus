@@ -362,12 +362,12 @@ private fun GrammarLoadingBadge(isDark: Boolean) {
 }
 
 /**
- * Grammar OK status badge in Serene Cyan (strictly NO green) with specular glass rim.
+ * Grammar OK status badge in Apple Mint Green with specular glass rim.
  */
 @Composable
 private fun GrammarSuccessBadge(isDark: Boolean) {
     val shape = RoundedCornerShape(percent = 50)
-    val backgroundColor = if (isDark) Color(0xF20F1826) else Color(0xF8FFFFFF)
+    val backgroundColor = if (isDark) Color(0xF20F2418) else Color(0xF8F0FDF4)
     val borderBrush = Brush.verticalGradient(
         listOf(
             AppleChatTheme.SuccessCyan.copy(alpha = if (isDark) 0.85f else 0.65f),

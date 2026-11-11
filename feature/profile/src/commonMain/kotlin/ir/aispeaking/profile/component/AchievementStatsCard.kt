@@ -84,8 +84,8 @@ fun AchievementStatsCard(
                 value = user.totalStars.fa(),
                 icon = Res.drawable.ic_star,
                 iconTint = Game.Gold,
-                iconBg = Color(0x26FFD60A),
-                iconStroke = Color(0x4DFFD60A),
+                iconBg = Game.Gold.copy(alpha = if (AppTheme.isDark) 0.18f else 0.12f),
+                iconStroke = Game.Gold.copy(alpha = if (AppTheme.isDark) 0.38f else 0.25f),
                 modifier = Modifier.weight(1f)
             )
 
@@ -93,9 +93,9 @@ fun AchievementStatsCard(
                 title = "امتیاز کل",
                 value = user.score.fa(),
                 icon = Res.drawable.ic_gem,
-                iconTint = Game.Sky,
-                iconBg = Color(0x2664D2FF),
-                iconStroke = Color(0x4D64D2FF),
+                iconTint = Game.Blue,
+                iconBg = Game.Blue.copy(alpha = if (AppTheme.isDark) 0.18f else 0.12f),
+                iconStroke = Game.Blue.copy(alpha = if (AppTheme.isDark) 0.38f else 0.25f),
                 modifier = Modifier.weight(1f)
             )
         }
@@ -110,8 +110,8 @@ fun AchievementStatsCard(
                 level = user.languageLevel.ifBlank { "A1" },
                 icon = Res.drawable.ic_sound_wave,
                 iconTint = Game.Violet,
-                iconBg = Color(0x265E5CE6),
-                iconStroke = Color(0x4D5E5CE6),
+                iconBg = Game.Violet.copy(alpha = if (AppTheme.isDark) 0.18f else 0.12f),
+                iconStroke = Game.Violet.copy(alpha = if (AppTheme.isDark) 0.38f else 0.25f),
                 onLevelClick = onLevelClick,
                 modifier = Modifier.weight(1f)
             )
@@ -120,9 +120,9 @@ fun AchievementStatsCard(
                 title = "مراحل تمام‌شده",
                 value = user.completedStagesCount.fa(),
                 icon = Res.drawable.ic_gamepad,
-                iconTint = if (AppTheme.isDark) Color(0xFF38BDF8) else Color(0xFF0284C7),
-                iconBg = if (AppTheme.isDark) Color(0x2638BDF8) else Color(0x140284C7),
-                iconStroke = if (AppTheme.isDark) Color(0x4D38BDF8) else Color(0x260284C7),
+                iconTint = Game.Green,
+                iconBg = Game.Green.copy(alpha = if (AppTheme.isDark) 0.18f else 0.12f),
+                iconStroke = Game.Green.copy(alpha = if (AppTheme.isDark) 0.38f else 0.25f),
                 modifier = Modifier.weight(1f)
             )
         }

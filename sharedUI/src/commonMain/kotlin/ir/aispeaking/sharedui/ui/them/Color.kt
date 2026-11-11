@@ -35,7 +35,7 @@ val OutlineVariantLight = Color(0xFFE5E7EB)
 val ErrorLight = Color(0xFFFF3B30)
 val OnErrorLight = Color(0xFFFFFFFF)
 
-val SuccessLight = Color(0xFF0284C7) // Serene Cyan (Apple palette)
+val SuccessLight = Color(0xFF34C759) // Apple System Green
 val OnSuccessLight = Color(0xFFFFFFFF)
 
 val ShadowLight = Color(0x14000000)
@@ -76,8 +76,8 @@ val OutlineVariantDark = Color(0x24FFFFFF)
 val ErrorDark = Color(0xFFFF453A)
 val OnErrorDark = Color(0xFFFFFFFF)
 
-val SuccessDark = Color(0xFF38BDF8) // Serene Sky Cyan (Apple palette)
-val OnSuccessDark = Color(0xFF002238)
+val SuccessDark = Color(0xFF30D158) // Apple System Green Dark
+val OnSuccessDark = Color(0xFF00390E)
 
 val ShadowDark = Color(0xFF000000)
 
@@ -95,7 +95,7 @@ val GoldGradientEnd = Color(0xFFF59E0B)
 val VipPurpleStart = Color(0xFF7C3AED)
 val VipPurpleEnd = Color(0xFF4F46E5)
 val DiscountCyan = Color(0xFF0284C7)
-val DiscountGreen = Color(0xFF0284C7)
+val DiscountGreen = Color(0xFF34C759)
 val SubDarkBg = Color(0xFF0A0F1D)
 val SubCardBg = Color(0xFF1E293B)
 val SubCardSelectedBg = Color(0xFF1E1B4B)

@@ -55,10 +55,12 @@ object AppleChatTheme {
         listOf(SiriViolet, SiriCyan, SiriAzure)
     )
 
-    // Success / Grammar OK (Serene Cyan / Crisp Azure - strictly NO green)
-    val SuccessCyan = Color(0xFF38BDF8)
-    val SuccessCyanDeep = Color(0xFF0284C7)
-    val SuccessGlow = Color(0x3338BDF8)
+    // Success / Grammar OK (Apple System Mint Green - semantic distinction from Primary Azure)
+    val SuccessGreen = Color(0xFF30D158)
+    val SuccessGreenLight = Color(0xFF34C759)
+    val SuccessCyan = Color(0xFF30D158)
+    val SuccessCyanDeep = Color(0xFF248A3D)
+    val SuccessGlow = Color(0x3330D158)
 
     // Hints / Mission Badges (Warm Champagne Gold)
     val Gold: Color

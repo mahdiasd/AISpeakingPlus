@@ -70,8 +70,8 @@ fun RubySubscriptionButton(
         // Subscribed: Elegant amethyst / violet translucent glass
         if (isDark) Color(0x3D6366F1) else Color(0x286366F1)
     } else {
-        // Non-subscribed: Vibrant Ruby jewel translucent glass
-        if (isDark) Color(0x3DE11D48) else Color(0x24E11D48)
+        // Non-subscribed: Warm Crown Gold translucent glass (harmonized with VIP Crown)
+        if (isDark) Color(0x38FFD60A) else Color(0x24F59E0B)
     }
 
     // Specular border gradient (hairline reflection on top, subtle tone at bottom)
@@ -85,8 +85,8 @@ fun RubySubscriptionButton(
     } else {
         Brush.verticalGradient(
             listOf(
-                Color(0xB3FB7185), // Rose ruby top specular highlight
-                Color(0x3BE11D48), // Translucent ruby bottom
+                if (isDark) Color(0xCCFFE885) else Color(0xE6F59E0B), // Warm gold specular top highlight
+                if (isDark) Color(0x4DFFD60A) else Color(0x40D97706), // Translucent amber bottom
             )
         )
     }
@@ -94,13 +94,13 @@ fun RubySubscriptionButton(
     val contentColor = if (isSubscriber) {
         if (isDark) Color(0xFFE0E7FF) else Color(0xFF3730A3)
     } else {
-        if (isDark) Color(0xFFFFF1F2) else Color(0xFF881337)
+        if (isDark) Color(0xFFFFFBEB) else Color(0xFF92400E)
     }
 
     val iconTint = if (isSubscriber) {
         if (isDark) Color(0xFFA5B4FC) else Color(0xFF6366F1)
     } else {
-        if (isDark) Color(0xFFFB7185) else Color(0xFFE11D48)
+        if (isDark) Color(0xFFFFD60A) else Color(0xFFD97706)
     }
 
     Box(

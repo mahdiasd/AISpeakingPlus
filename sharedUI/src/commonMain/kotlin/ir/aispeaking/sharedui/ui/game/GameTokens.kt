@@ -81,16 +81,27 @@ object Game {
         @ReadOnlyComposable
         get() = if (AppTheme.isDark) Color(0xFF0A84FF) else Color(0xFF007AFF)
 
-    // Green is prohibited as primary accent; Mint alias safely routes to Apple System Blue
+    // Semantic Green for success, completion, and positive feedback
+    val Green: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xFF30D158) else Color(0xFF34C759)
+
+    val GreenDeep: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = if (AppTheme.isDark) Color(0xFF248A3D) else Color(0xFF28A745)
+
+    // Mint alias routes to semantic Green
     val Mint: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0xFF0A84FF) else Color(0xFF007AFF)
+        get() = Green
 
     val MintDeep: Color
         @Composable
         @ReadOnlyComposable
-        get() = if (AppTheme.isDark) Color(0xFF0066CC) else Color(0xFF0056B3)
+        get() = GreenDeep
 
     val Gold: Color
         @Composable
@@ -130,6 +141,11 @@ object Game {
         @Composable
         @ReadOnlyComposable
         get() = if (AppTheme.isDark) Color(0xFF38BDF8) else Color(0xFF0284C7)
+
+    // Branded Gradients for luxury and gamification
+    val GoldGradient = Brush.linearGradient(listOf(Color(0xFFFFD60A), Color(0xFFF59E0B)))
+    val VipGradient = Brush.linearGradient(listOf(Color(0xFF7C3AED), Color(0xFF4F46E5)))
+    val BlueGradient = Brush.linearGradient(listOf(Color(0xFF0A84FF), Color(0xFF0071E3)))
 
     // Chat Bubbles (Apple iMessage style)
     val BubbleAi: Color

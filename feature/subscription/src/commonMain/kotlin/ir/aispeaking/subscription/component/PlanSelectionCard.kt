@@ -241,17 +241,17 @@ fun PlanSelectionCard(
                     )
                 }
 
-                // Discount percentage badge
+                // Discount percentage badge (Emerald savings incentive)
                 if (plan.discountPercent > 0) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xFF007AFF).copy(alpha = if (isDark) 0.22f else 0.12f))
+                            .background(Color(0xFF34C759).copy(alpha = if (isDark) 0.22f else 0.14f))
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         GameText(
                             text = "${formatToPersian(plan.discountPercent)}٪ تخفیف",
-                            color = Color(0xFF007AFF),
+                            color = if (isDark) Color(0xFF30D158) else Color(0xFF248A3D),
                             size = 11.sp,
                             bold = true
                         )
