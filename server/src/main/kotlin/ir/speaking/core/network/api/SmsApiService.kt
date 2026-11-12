@@ -12,6 +12,9 @@ class SmsApiService(
     private val httpClient: HttpClient,
 ) {
 
+    private val apiKey: String = System.getenv("SMS_API_KEY")
+        ?.takeIf { it.isNotBlank() } ?: "InIBEeagvNpmc1gpp53HqtZUpdEf9FCnCOH6G91O4ev31gsR"
+
     suspend fun sendMessage(
         mobile: String,
         otpCode: String,
@@ -19,8 +22,8 @@ class SmsApiService(
         hashCode: String = "sEkR5IGvUNM", // release
     ) = httpClient.post {
         url("https://api.sms.ir/v1/send/verify")
-        header("x-api-key" , "InIBEeagvNpmc1gpp53HqtZUpdEf9FCnCOH6G91O4ev31gsR")
-        header("ACCEPT" , "application/json")
+        header("x-api-key", apiKey)
+        header("ACCEPT", "application/json")
         setBody(
             SmsRequest(
                 mobile = mobile,
@@ -43,7 +46,7 @@ class SmsApiService(
     fun generateOTP(length: Int = 5): String {
 //        return "1234"
         return (0 until length)
-            .map { kotlin.random.Random.nextInt(0, 9) }
+            .map { kotlin.random.Random.nextInt(0, 10) }
             .joinToString("")
     }
 }

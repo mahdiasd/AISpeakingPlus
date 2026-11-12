@@ -59,8 +59,8 @@ market:
     clientId: "bazaar_client_id"
     clientSecret: "bazaar_client_secret"
     refreshToken: "bazaar_refresh_token"
-    packageName: "ir.aispeaking.androidApp"
+    packageName: "ir.aispeaking"
     discountPrivateKey: ""
   myket:
     accessToken: "myket_access_token"
-    packageName: "ir.aispeaking.androidApp"
+    packageName: "ir.aispeaking"

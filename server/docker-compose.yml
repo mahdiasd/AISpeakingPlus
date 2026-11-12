@@ -8,7 +8,9 @@ services:
     environment:  # Environment variables passed to the app container
       - DATABASE_URL=jdbc:postgresql://db:5432/ai_speaking
       - DATABASE_USER=postgres
-      - DATABASE_PASSWORD=asdfasWERASDCASDF89845@af
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-asdfasWERASDCASDF89845@af}
+      - JWT_SECRET=${JWT_SECRET:-d8a7c29e4f501b8a36e927f80456c12e8b9a0f4d3c2b1a5e7f8a9b0c1d2e3f4a}
+      - SMS_API_KEY=${SMS_API_KEY:-InIBEeagvNpmc1gpp53HqtZUpdEf9FCnCOH6G91O4ev31gsR}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - AI_BASE_URL=${AI_BASE_URL:-http://host.docker.internal:20128/v1/}
@@ -17,6 +19,12 @@ services:
       - AI_FALLBACK_MODEL=${AI_FALLBACK_MODEL:-MyCombo}
       - ZARINPAL_MERCHANT_ID=${ZARINPAL_MERCHANT_ID:-3d524f3a-435a-4670-b921-2438ac0367da}
       - ZARINPAL_SANDBOX=${ZARINPAL_SANDBOX:-false}
+      - BAZAAR_PACKAGE_NAME=${BAZAAR_PACKAGE_NAME:-ir.aispeaking}
+      - MYKET_PACKAGE_NAME=${MYKET_PACKAGE_NAME:-ir.aispeaking}
+      - BAZAAR_CLIENT_ID=${BAZAAR_CLIENT_ID:-bazaar_client_id}
+      - BAZAAR_CLIENT_SECRET=${BAZAAR_CLIENT_SECRET:-bazaar_client_secret}
+      - BAZAAR_REFRESH_TOKEN=${BAZAAR_REFRESH_TOKEN:-bazaar_refresh_token}
+      - MYKET_ACCESS_TOKEN=${MYKET_ACCESS_TOKEN:-myket_access_token}
       - SERVER_PUBLIC_URL=${SERVER_PUBLIC_URL:-https://staging.aispeaking.ir}
       - WEBAPP_BASE_URL=${WEBAPP_BASE_URL:-https://staging.aispeaking.ir/app}
       # Speech-to-Text (sherpa-onnx) settings
@@ -54,7 +62,7 @@ services:
     environment:  # Environment variables for Postgres setup
       POSTGRES_DB: ai_speaking
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: asdfasWERASDCASDF89845@af
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-asdfasWERASDCASDF89845@af}
     ports:
       - "127.0.0.1:5432:5432"  # Postgres only on localhost; the app connects via the Docker network
     volumes:

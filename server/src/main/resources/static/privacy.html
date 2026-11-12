@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیاست حفظ حریم خصوصی و شرایط استفاده | AI Speaking Plus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --bg-dark: #090d16;
+            --card-bg: rgba(19, 25, 41, 0.85);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.8;
+            padding: 0;
+            margin: 0;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(2, 132, 199, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(56, 189, 248, 0.1) 0%, transparent 40%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(9, 13, 22, 0.8);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .logo-area img {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+        }
+
+        .logo-text {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .back-link {
+            font-size: 0.9rem;
+            color: var(--accent);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #bae6fd;
+        }
+
+        main {
+            flex: 1;
+            max-width: 900px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .policy-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(16px);
+        }
+
+        .title-badge {
+            display: inline-block;
+            background: rgba(2, 132, 199, 0.2);
+            color: var(--accent);
+            padding: 0.3rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        h1 {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 0.75rem;
+        }
+
+        .last-update {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        section {
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        p {
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+
+        ul {
+            list-style: none;
+            padding-right: 0;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            position: relative;
+            padding-right: 1.5rem;
+            margin-bottom: 0.6rem;
+            color: #cbd5e1;
+        }
+
+        li::before {
+            content: "•";
+            position: absolute;
+            right: 0.25rem;
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .highlight-box {
+            background: rgba(2, 132, 199, 0.1);
+            border-right: 4px solid var(--primary);
+            padding: 1rem 1.25rem;
+            border-radius: 0 12px 12px 0;
+            margin: 1.25rem 0;
+            font-size: 0.95rem;
+            color: #e0f2fe;
+        }
+
+        footer {
+            border-top: 1px solid var(--border-color);
+            background: rgba(9, 13, 22, 0.9);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 640px) {
+            .policy-card {
+                padding: 1.5rem;
+                border-radius: 16px;
+            }
+            h1 {
+                font-size: 1.45rem;
+            }
+            h2 {
+                font-size: 1.15rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="/" class="logo-area">
+                <img src="/resources/landing/logo.png" alt="AI Speaking Plus" onerror="this.style.display='none'">
+                <span class="logo-text">AI Speaking Plus</span>
+            </a>
+            <a href="/" class="back-link">
+                <span>بازگشت به صفحه اصلی</span>
+                <span>←</span>
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <div class="policy-card">
+            <span class="title-badge">حریم خصوصی و قوانین</span>
+            <h1>سیاست حفظ حریم خصوصی و شرایط استفاده</h1>
+            <div class="last-update">آخرین به‌روزرسانی: آبان ۱۴۰۵ (نسخه ۲.۰)</div>
+
+            <section>
+                <h2>۱. مقدمه و تعهد ما</h2>
+                <p>
+                    تیم توسعه‌دهنده <strong>AI Speaking Plus</strong> خود را عمیقاً متعهد به حفظ امنیت و احترام به حریم خصوصی کلیه کاربران می‌داند. این سند به شفاف‌سازی نوع اطلاعات جمع‌آوری‌شده، نحوه استفاده از آن‌ها و تدابیر امنیتی اتخاذ شده برای حفاظت از داده‌های شما می‌پردازد. با ثبت‌نام و استفاده از اپلیکیشن و وب‌سایت ما، شما با مفاد این سیاست‌نامه موافقت می‌نمایید.
+                </p>
+            </section>
+
+            <section>
+                <h2>۲. مجوز دسترسی به میکروفون (Audio Recording)</h2>
+                <div class="highlight-box">
+                    <strong>توضیح صریح پیرامون دسترسی به ضبط صدا:</strong>
+                    دسترسی به میکروفون منحصراً برای تبدیل گفتار انگلیسی کاربر به متن (Speech-to-Text) و ارزیابی تلفظ و لهجه در طول تمرین و مکالمات هوش مصنوعی استفاده می‌شود.
+                </div>
+                <ul>
+                    <li>صدای کاربر تنها زمانی ضبط و پردازش می‌شود که دکمه مکالمه یا میکروفون توسط شخص کاربر فعال شده باشد.</li>
+                    <li>هیچ‌گونه شنود در پس‌زمینه (Background Listening)، ضبط مخفیانه یا استراق سمع در اپلیکیشن وجود ندارد.</li>
+                    <li>داده‌های صوتی منحصراً برای ارزیابی آموزشی پردازش شده و برای اهداف تبلیغاتی، بازاریابی یا در اختیار قرار دادن به اشخاص ثالث استفاده نمی‌شوند.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>۳. اطلاعات هویتی و شماره موبایل</h2>
+                <p>
+                    تنها اطلاعات هویتی که برای ثبت‌نام و ورود کاربر دریافت می‌شود، شماره تلفن همراه معتبر می‌باشد. این شماره صرفاً برای موارد زیر کاربرد دارد:
+                </p>
+                <ul>
+                    <li>ارسال کد یکبارمصرف ورود (OTP) جهت تایید هویت و پیشگیری از ورود غیرمجاز.</li>
+                    <li>حفظ و همگام‌سازی سوابق آموزشی، مراحل بازشده، امتیازات لیدربرد و اشتراک‌های فعال روی حساب کاربری شما.</li>
+                    <li>اطلاع‌رسانی‌های ضروری و پشتیبانی فنی مربوط به حساب کاربری.</li>
+                </ul>
+                <p>
+                    شماره موبایل و داده‌های شخصی کاربران به صورت محرمانه نزد ما نگهداری شده و تحت هیچ شرایطی به شرکت‌ها یا اشخاص ثالث فروخته یا واگذار نمی‌شود.
+                </p>
+            </section>
+
+            <section>
+                <h2>۴. پرداخت‌ها و امنیت تراکنش‌های مالی</h2>
+                <p>
+                    تمام تراکنش‌های مالی و خریدهای اشتراک ویژه از طریق درگاه‌های پرداخت امن و مجاز الکترونیکی (شاپرک / زرین‌پال) یا بسترهای معتبر پرداخت درون‌برنامه‌ای (کافه بازار و مایکت) صورت می‌گیرد:
+                </p>
+                <ul>
+                    <li>تراکنش‌ها مستقیماً بر روی درگاه رسمی بانک یا پروتکل‌های امن استورهای معتبر انجام می‌شوند.</li>
+                    <li>اپلیکیشن هیچ‌گونه دسترسی به شماره کارت، رمز پویا، CVV2 یا اطلاعات بانکی کاربران ندارد.</li>
+                    <li>تنها توکن تایید تراکنش و کد پیگیری مالی جهت فعال‌سازی حساب اشتراک در پایگاه‌داده ما ثبت می‌گردد.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>۵. امنیت داده‌ها و استانداردهای حفاظتی</h2>
+                <p>
+                    ارتباط میان اپلیکیشن کاربر و سرورهای مرکزی به صورت سرتاسری از طریق پروتکل‌های رمزنگاری شده امن (SSL/TLS با الگوریتم‌های استاندارد) انجام می‌پذیرد. همچنین توکن‌های دسترسی کاربران با امضای دیجیتال معتبر و رمزنگاری مدرن (JWT) محافظت می‌شوند تا امکان هرگونه سوءاستفاده یا جعل هویت به صفر برسد.
+                </p>
+            </section>
+
+            <section>
+                <h2>۶. تغییرات در قوانین و حریم خصوصی</h2>
+                <p>
+                    با توجه به توسعه قابلیت‌های جدید یا تغییر در الزامات قانونی، ممکن است این سند در بازه‌های زمانی مختلف به‌روزرسانی شود. تاریخ آخرین تغییرات همواره در ابتدای این صفحه درج خواهد شد و استفاده مداوم شما از سرویس به منزله پذیرش آخرین نسخه قوانین خواهد بود.
+                </p>
+            </section>
+
+            <section>
+                <h2>۷. تماس با پشتیبانی و ارتباط با ما</h2>
+                <p>
+                    در صورت داشتن هرگونه سوال، ابهام یا درخواست در خصوص حفظ حریم خصوصی و عملکرد اپلیکیشن، می‌توانید از طریق ایمیل رسمی ما با تیم پشتیبانی در ارتباط باشید:
+                </p>
+                <div class="highlight-box">
+                    <strong>ایمیل پشتیبانی:</strong> <a href="mailto:support@aispeaking.ir" style="color:#38bdf8; text-decoration:none;">support@aispeaking.ir</a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>تمامی حقوق این سرویس متعلق به AI Speaking Plus می‌باشد © ۱۴۰۵</p>
+    </footer>
+</body>
+</html>

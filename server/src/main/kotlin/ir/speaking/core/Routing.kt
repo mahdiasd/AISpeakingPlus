@@ -43,6 +43,13 @@ fun Application.configureRouting() {
         }
         staticResources("/resources", "static")
 
+        get("/privacy") {
+            call.respondResource("privacy.html", "static")
+        }
+        get("/privacy.html") {
+            call.respondResource("privacy.html", "static")
+        }
+
         // Unauthenticated health endpoint for Docker healthcheck and load balancers.
         get("/health") {
             call.respond(HttpStatusCode.OK, mapOf("status" to "UP"))

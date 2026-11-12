@@ -11,7 +11,7 @@ import java.util.UUID
 @Single
 class DynamicDiscountService {
 
-    private val bazaarPackageName = System.getenv("BAZAAR_PACKAGE_NAME") ?: "ir.aispeaking.androidApp"
+    private val bazaarPackageName = System.getenv("BAZAAR_PACKAGE_NAME") ?: "ir.aispeaking"
     private val discountSecret = System.getenv("BAZAAR_DISCOUNT_SECRET")
         ?: System.getenv("BAZAAR_CLIENT_SECRET")
         ?: "bazaar_dynamic_discount_secret"

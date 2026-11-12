@@ -24,9 +24,15 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 val SuspendedUserAttributeKey = AttributeKey<Boolean>("SuspendedUser")
 val ExpiredTokenAttributeKey = AttributeKey<Boolean>("ExpiredToken")
 
+private fun resolveJwtSecret(config: io.ktor.server.config.ApplicationConfig?): String {
+    return System.getenv("JWT_SECRET")
+        ?.takeIf { it.isNotBlank() }
+        ?: config?.propertyOrNull("jwt.secret")?.getString()
+        ?: "secret"
+}
+
 fun Application.configureSecurity() {
-    
-    val jwtSecret = environment.config.property("jwt.secret").getString()
+    val jwtSecret = resolveJwtSecret(environment.config)
     val issuer = environment.config.property("jwt.issuer").getString()
     val jwtAudience = environment.config.property("jwt.audience").getString()
     val jwtRealm = environment.config.property("jwt.realm").getString()
@@ -156,7 +162,7 @@ fun Application.configureSecurity() {
 }
 
 fun generateToken(call: ApplicationCall, uid: String, adminToken: Boolean = false): String {
-    val jwtSecret = call.application.environment.config.propertyOrNull("jwt.secret")?.getString() ?: "secret"
+    val jwtSecret = resolveJwtSecret(call.application.environment.config)
     val issuer = call.application.environment.config.propertyOrNull("jwt.issuer")?.getString() ?: "http://0.0.0.0:8080/"
     val jwtAudience =
         call.application.environment.config.propertyOrNull("jwt.audience")?.getString() ?: "http://0.0.0.0:8080/hello"
@@ -174,7 +180,7 @@ fun generateToken(call: ApplicationCall, uid: String, adminToken: Boolean = fals
 }
 
 fun generateToken(routing: Route, uid: String, adminToken: Boolean = false): String {
-    val jwtSecret = routing.environment.config.propertyOrNull("jwt.secret")?.getString() ?: "secret"
+    val jwtSecret = resolveJwtSecret(routing.environment.config)
     val issuer = routing.environment.config.propertyOrNull("jwt.issuer")?.getString() ?: "http://0.0.0.0:8080/"
     val jwtAudience =
         routing.environment.config.propertyOrNull("jwt.audience")?.getString() ?: "http://0.0.0.0:8080/hello"
@@ -192,7 +198,7 @@ fun generateToken(routing: Route, uid: String, adminToken: Boolean = false): Str
 }
 
 fun generateAdminToken(call: ApplicationCall, id: UUID, username: String, fullName: String, role: String): String {
-    val jwtSecret = call.application.environment.config.propertyOrNull("jwt.secret")?.getString() ?: "secret"
+    val jwtSecret = resolveJwtSecret(call.application.environment.config)
     val issuer = call.application.environment.config.propertyOrNull("jwt.issuer")?.getString() ?: "http://0.0.0.0:8080/"
     val jwtAudience =
         call.application.environment.config.propertyOrNull("jwt.audience")?.getString() ?: "http://0.0.0.0:8080/hello"

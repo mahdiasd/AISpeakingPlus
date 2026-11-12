@@ -52,10 +52,10 @@ class MarketVerificationService(
     private val bazaarClientId = System.getenv("BAZAAR_CLIENT_ID") ?: "bazaar_client_id"
     private val bazaarClientSecret = System.getenv("BAZAAR_CLIENT_SECRET") ?: "bazaar_client_secret"
     private val bazaarRefreshToken = System.getenv("BAZAAR_REFRESH_TOKEN") ?: "bazaar_refresh_token"
-    private val bazaarPackageName = System.getenv("BAZAAR_PACKAGE_NAME") ?: "ir.aispeaking.androidApp"
+    private val bazaarPackageName = System.getenv("BAZAAR_PACKAGE_NAME") ?: "ir.aispeaking"
 
     private val myketAccessToken = System.getenv("MYKET_ACCESS_TOKEN") ?: "myket_access_token"
-    private val myketPackageName = System.getenv("MYKET_PACKAGE_NAME") ?: "ir.aispeaking.androidApp"
+    private val myketPackageName = System.getenv("MYKET_PACKAGE_NAME") ?: "ir.aispeaking"
 
     suspend fun verifyPurchase(
         market: String,

@@ -12,7 +12,6 @@ captures
 local.properties
 service-account-key.json
 **/service-account-key.json
-*.env
 *.keystore
 *.gpg
 *yarn.lock
@@ -46,7 +45,6 @@ node_modules/
 **/node_modules/
 dist/
 **/dist/
-.env*
 server.log
 
 # Uploads

@@ -7,7 +7,12 @@ import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig
 import ir.speaking.feature.tts.model.KokoroVoices
 import ir.speaking.feature.tts.model.TtsResult
 import ir.speaking.feature.tts.model.TtsVoiceInfo
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -24,6 +29,7 @@ class TtsService(
     private var offlineTts: OfflineTts? = null
     private val mutex = Mutex()
     private val cacheDirectory: File = File(config.cacheDir)
+    private val cleanupScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     val isAvailable: Boolean
         get() = offlineTts != null
@@ -37,6 +43,7 @@ class TtsService(
         if (!cacheDirectory.exists()) {
             cacheDirectory.mkdirs()
         }
+        startScheduledCleanup()
     }
 
     private fun initializeEngine() {
@@ -400,6 +407,53 @@ class TtsService(
         } catch (e: Throwable) {
             logger.error("Tone fallback failed: ${e.message}", e)
             return null
+        }
+    }
+
+    fun cleanOldCacheFiles(maxAgeMs: Long = 3600_000L): Int {
+        var deletedCount = 0
+        var freedBytes = 0L
+        val now = System.currentTimeMillis()
+        val dirs = listOf(cacheDirectory, File("audio_cache"), File("server/audio_cache"), File("/app/audio_cache"))
+            .filter { it.exists() && it.isDirectory }
+            .distinctBy { it.canonicalPath }
+
+        for (dir in dirs) {
+            val files = dir.listFiles { f -> f.isFile && f.name.endsWith(".wav") } ?: continue
+            for (file in files) {
+                if (now - file.lastModified() > maxAgeMs) {
+                    val len = file.length()
+                    if (file.delete()) {
+                        deletedCount++
+                        freedBytes += len
+                    }
+                }
+            }
+        }
+        if (deletedCount > 0) {
+            logger.info("TtsService: Cleaned $deletedCount expired audio cache files (${freedBytes / (1024 * 1024)} MB freed)")
+        }
+        return deletedCount
+    }
+
+    private fun startScheduledCleanup() {
+        cleanupScope.launch {
+            // Initial cleanup on startup
+            try {
+                cleanOldCacheFiles()
+            } catch (e: Exception) {
+                logger.warn("Initial audio cache cleanup error: ${e.message}")
+            }
+
+            // Periodic cleanup every hour
+            while (isActive) {
+                delay(3600_000L)
+                try {
+                    cleanOldCacheFiles()
+                } catch (e: Exception) {
+                    logger.warn("Scheduled audio cache cleanup error: ${e.message}")
+                }
+            }
         }
     }
 
