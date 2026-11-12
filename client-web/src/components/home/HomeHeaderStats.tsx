@@ -57,7 +57,7 @@ export const HomeHeaderStats: React.FC<HomeHeaderStatsProps> = ({
       className={`w-full relative flex items-center justify-between gap-2 pointer-events-auto select-none ${className}`}
     >
       {/* 1. RIGHT (Start in RTL): Circular Frosted Glass Profile Button */}
-      <div className="flex items-center justify-start z-10">
+      <div className="flex items-center justify-start z-10 shrink-0">
         <motion.button
           whileTap={{ scale: 0.94 }}
           whileHover={{ scale: 1.04 }}
@@ -83,43 +83,42 @@ export const HomeHeaderStats: React.FC<HomeHeaderStatsProps> = ({
         </motion.button>
       </div>
 
-      {/* 2. CENTER: Frosted Liquid Glass Subscription Button («پلاس شو ✨») / Remaining Days Pill */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="pointer-events-auto">
-          {subscriberStatus ? (
-            <motion.button
-              whileTap={{ scale: 0.94 }}
-              whileHover={{ scale: 1.03 }}
-              transition={{ type: 'spring', stiffness: 450, damping: 26 }}
-              type="button"
-              onClick={onSubscribeClick}
-              className="h-10 px-3.5 sm:px-4 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 backdrop-blur-md border border-indigo-300/40 flex items-center justify-center gap-1.5 sm:gap-2 text-indigo-100 text-xs font-bold shadow-[0_4px_18px_rgba(99,102,241,0.25)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
-              title="مدیریت اشتراک پلاس"
-            >
-              <Gem className="w-4 h-4 text-indigo-300 drop-shadow-[0_0_8px_rgba(165,180,252,0.6)]" />
-              <span className="font-bold">
-                {daysLeft > 0 ? `${daysLeft.toLocaleString('fa-IR')} روز اشتراک` : 'اشتراک فعال'}
-              </span>
-            </motion.button>
-          ) : (
-            <motion.button
-              whileTap={{ scale: 0.94 }}
-              whileHover={{ scale: 1.03 }}
-              transition={{ type: 'spring', stiffness: 450, damping: 26 }}
-              type="button"
-              onClick={onSubscribeClick}
-              className="h-10 px-3.5 sm:px-4 rounded-full bg-rose-600/25 hover:bg-rose-600/35 backdrop-blur-md border border-rose-400/50 text-white font-black text-xs flex items-center justify-center gap-1.5 sm:gap-2 shadow-[0_4px_18px_rgba(225,29,72,0.3)] hover:border-rose-300/70 active:scale-95 transition-all cursor-pointer"
-              title="ارتقا به نسخه پلاس و باز کردن تمام مراحل"
-            >
-              <Sparkles className="w-4 h-4 text-rose-300 animate-pulse" />
-              <span>پلاس شو ✨</span>
-            </motion.button>
-          )}
-        </div>
+      {/* 2. CENTER: Frosted Glass Subscription Button («پلاس شو ✨») / Remaining Days Pill */}
+      {/* Symmetrical placement: Middle child of justify-between row for equal spacing to profile and stars */}
+      <div className="flex items-center justify-center z-10">
+        {subscriberStatus ? (
+          <motion.button
+            whileTap={{ scale: 0.94 }}
+            whileHover={{ scale: 1.03 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+            type="button"
+            onClick={onSubscribeClick}
+            className="h-10 px-3.5 sm:px-4 rounded-full bg-indigo-50/95 dark:bg-indigo-500/25 hover:bg-indigo-100 dark:hover:bg-indigo-500/35 backdrop-blur-md border border-indigo-300/80 dark:border-indigo-300/40 flex items-center justify-center gap-1.5 sm:gap-2 text-indigo-950 dark:text-indigo-100 text-xs font-bold shadow-[0_4px_18px_rgba(99,102,241,0.25)] hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+            title="مدیریت اشتراک پلاس"
+          >
+            <Gem className="w-4 h-4 text-indigo-600 dark:text-indigo-300 drop-shadow-[0_0_8px_rgba(165,180,252,0.6)]" />
+            <span className="font-bold">
+              {daysLeft > 0 ? `${daysLeft.toLocaleString('fa-IR')} روز اشتراک` : 'اشتراک فعال'}
+            </span>
+          </motion.button>
+        ) : (
+          <motion.button
+            whileTap={{ scale: 0.94 }}
+            whileHover={{ scale: 1.03 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+            type="button"
+            onClick={onSubscribeClick}
+            className="h-10 px-3.5 sm:px-4 rounded-full bg-amber-50/95 dark:bg-amber-400/20 hover:bg-amber-100 dark:hover:bg-amber-400/30 backdrop-blur-md border border-amber-400/80 dark:border-amber-400/50 text-amber-900 dark:text-amber-100 font-black text-xs flex items-center justify-center gap-1.5 sm:gap-2 shadow-[0_4px_18px_rgba(245,158,11,0.25)] hover:border-amber-400 active:scale-95 transition-all cursor-pointer"
+            title="ارتقا به نسخه پلاس و باز کردن تمام مراحل"
+          >
+            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-300 animate-pulse" />
+            <span>پلاس شو ✨</span>
+          </motion.button>
+        )}
       </div>
 
       {/* 3. LEFT (End in RTL): Floating Glass Capsule Star Counter Pill («۰ ستاره») */}
-      <div className="flex items-center justify-end z-10">
+      <div className="flex items-center justify-end z-10 shrink-0">
         <motion.button
           whileTap={{ scale: 0.95 }}
           whileHover={{ scale: 1.03 }}
