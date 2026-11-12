@@ -51,7 +51,7 @@ fun SubscriptionBenefitsList(
             containerBg = Color(0x285E5CE6)
         ),
         BenefitItem(
-            title = "تحلیل هوشمند جملات و فیدبک اصلاح تلفظ",
+            title = "تحلیل هوشمند ساختار جملات و اصلاح گرامر",
             icon = Res.drawable.ic_done,
             iconTint = Color(0xFF007AFF),
             containerBg = Color(0x22007AFF)
