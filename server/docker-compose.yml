@@ -21,6 +21,7 @@ services:
       - ZARINPAL_SANDBOX=${ZARINPAL_SANDBOX:-false}
       - BAZAAR_PACKAGE_NAME=${BAZAAR_PACKAGE_NAME:-ir.aispeaking}
       - MYKET_PACKAGE_NAME=${MYKET_PACKAGE_NAME:-ir.aispeaking}
+      - BAZAAR_DISCOUNT_SECRET=${BAZAAR_DISCOUNT_SECRET:-0lhha_wmtOrIGDXSzGcMFsuBYciuMo7xBIEcObrdtE4}
       - BAZAAR_CLIENT_ID=${BAZAAR_CLIENT_ID:-bazaar_client_id}
       - BAZAAR_CLIENT_SECRET=${BAZAAR_CLIENT_SECRET:-bazaar_client_secret}
       - BAZAAR_REFRESH_TOKEN=${BAZAAR_REFRESH_TOKEN:-bazaar_refresh_token}

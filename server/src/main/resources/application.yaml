@@ -60,7 +60,7 @@ market:
     clientSecret: "bazaar_client_secret"
     refreshToken: "bazaar_refresh_token"
     packageName: "ir.aispeaking"
-    discountPrivateKey: ""
+    discountPrivateKey: "0lhha_wmtOrIGDXSzGcMFsuBYciuMo7xBIEcObrdtE4"
   myket:
     accessToken: "myket_access_token"
     packageName: "ir.aispeaking"
