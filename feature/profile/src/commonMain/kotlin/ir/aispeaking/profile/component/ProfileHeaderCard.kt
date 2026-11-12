@@ -12,8 +12,11 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -146,9 +149,10 @@ fun ProfileHeaderCard(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Badges: Phone / Guest status + CEFR Level
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                // Badges: Phone / Guest status + CEFR Level (FlowRow prevents crushing on narrow mobile viewports)
+                @OptIn(ExperimentalLayoutApi::class)
+                FlowRow(
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (!user.isGuest && user.phoneNumber.isNotBlank()) {
@@ -171,7 +175,8 @@ fun ProfileHeaderCard(
                                 text = user.phoneNumber.toFaDigits(),
                                 color = if (isDark) Game.TextSecondary else Color(0xFF6B7280),
                                 size = 11.sp,
-                                bold = false
+                                bold = false,
+                                maxLines = 1
                             )
                             Box(
                                 modifier = Modifier
@@ -197,10 +202,11 @@ fun ProfileHeaderCard(
                                     .background(Game.Gold)
                             )
                             GameText(
-                                text = "حالت مهمان (موقتی)",
+                                text = "حالت مهمان",
                                 color = Game.Gold,
                                 size = 11.sp,
-                                bold = true
+                                bold = true,
+                                maxLines = 1
                             )
                         }
                     }
@@ -208,16 +214,19 @@ fun ProfileHeaderCard(
                     if (user.languageLevel.isNotBlank()) {
                         Box(
                             modifier = Modifier
+                                .defaultMinSize(minWidth = 56.dp)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(Game.Violet.copy(alpha = 0.15f))
                                 .border(1.dp, Game.Violet.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            contentAlignment = Alignment.Center
                         ) {
                             GameText(
                                 text = "سطح ${user.languageLevel}",
                                 color = Game.Violet,
                                 size = 11.sp,
-                                bold = true
+                                bold = true,
+                                maxLines = 1
                             )
                         }
                     }
