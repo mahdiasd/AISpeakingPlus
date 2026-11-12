@@ -311,50 +311,41 @@ private fun TopHud(
     onLeaderboard: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Box(
+    // Symmetrical layout: Row with SpaceBetween distributes equal spacing between Profile, Subscription and Stars
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 10.dp)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         // 1. Start anchor (Right in RTL): Profile Icon Button
-        Box(
-            modifier = Modifier.align(Alignment.CenterStart)
-        ) {
-            GameIconButton(
-                icon = Res.drawable.ic_profile,
-                onClick = onProfile,
-                contentDescription = "پروفایل من"
-            )
+        GameIconButton(
+            icon = Res.drawable.ic_profile,
+            onClick = onProfile,
+            contentDescription = "پروفایل من"
+        )
+
+        // 2. Center: Subscription Button (Not subscribed) / Remaining Days (Subscribed)
+        val centerText = if (isSubscriber) {
+            if (remainingDays > 0) "${remainingDays.fa()} روز اشتراک" else "اشتراک فعال"
+        } else {
+            "پلاس شو ✨"
         }
 
-        // 2. Exact Center: Subscription Button (Not subscribed) / Remaining Days (Subscribed)
-        Box(
-            modifier = Modifier.align(Alignment.Center)
-        ) {
-            val centerText = if (isSubscriber) {
-                if (remainingDays > 0) "${remainingDays.fa()} روز اشتراک" else "اشتراک فعال"
-            } else {
-                "پلاس شو ✨"
-            }
-
-            RubySubscriptionButton(
-                text = centerText,
-                onClick = onSubscribe,
-                isSubscriber = isSubscriber
-            )
-        }
+        RubySubscriptionButton(
+            text = centerText,
+            onClick = onSubscribe,
+            isSubscriber = isSubscriber
+        )
 
         // 3. End anchor (Left in RTL): Stars Pill with spring tactile touch
-        Box(
-            modifier = Modifier.align(Alignment.CenterEnd)
-        ) {
-            GameStatPill(
-                text = "${totalStars.fa()} ستاره",
-                icon = Res.drawable.ic_star,
-                accent = Game.Gold,
-                onClick = onLeaderboard
-            )
-        }
+        GameStatPill(
+            text = "${totalStars.fa()} ستاره",
+            icon = Res.drawable.ic_star,
+            accent = Game.Gold,
+            onClick = onLeaderboard
+        )
     }
 }
 

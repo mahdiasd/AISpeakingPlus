@@ -958,12 +958,12 @@ class AdminApiIntegrationTest {
 
         // Specifically verify Stage 1 and Stage 2 adhere to narrative goals
         val stage1 = stagesData.first { it.jsonObject["id"]?.jsonPrimitive?.content == "stage-01-inflight-london" }.jsonObject
-        assertEquals("Order a warm dinner and beverage from flight attendant Emily, and respond to her friendly question about your journey to London.", stage1["targetObjective"]?.jsonPrimitive?.content)
-        assertEquals("انتخاب و سفارش یک وعده شام گرم و نوشیدنی از مهماندار پرواز، و پاسخ به گپ‌وگفت کوتاه او درباره آغاز سفر تحصیلی‌ات به لندن.", stage1["targetObjectiveFa"]?.jsonPrimitive?.content)
+        assertEquals("Order a meal and beverage from flight attendant Emily.", stage1["targetObjective"]?.jsonPrimitive?.content)
+        assertEquals("سفارش یک وعده شام گرم و نوشیدنی از مهماندار، و گپ کوتاه درباره سفر تحصیلی.", stage1["targetObjectiveFa"]?.jsonPrimitive?.content)
 
-        val stage2 = stagesData.first { it.jsonObject["id"]?.jsonPrimitive?.content == "stage-02-heathrow-border" }.jsonObject
-        assertEquals("State your university study purpose, institution name, and planned student accommodation clearly to secure entry approval from the UK border officer.", stage2["targetObjective"]?.jsonPrimitive?.content)
-        assertEquals("پاسخ روشن به سوالات افسر مرزی درباره هدف تحصیلی سفر، نام دانشگاه و محل اقامت در لندن جهت اخذ تاییدیه ورود به بریتانیا.", stage2["targetObjectiveFa"]?.jsonPrimitive?.content)
+        val stage2 = stagesData.first { it.jsonObject["id"]?.jsonPrimitive?.content == "stage-02-border-control" }.jsonObject
+        assertEquals("Answer border officer questions about your studies and accommodation.", stage2["targetObjective"]?.jsonPrimitive?.content)
+        assertEquals("پاسخ شفاف به سوالات افسر مرزبانی درباره هدف سفر، دانشگاه و محل اقامت در لندن.", stage2["targetObjectiveFa"]?.jsonPrimitive?.content)
 
         // 2. Direct database test: verify StageTable default for targetObjectiveFa
         transaction {

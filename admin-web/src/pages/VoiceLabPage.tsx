@@ -1326,7 +1326,7 @@ export const VoiceLabPage: React.FC = () => {
                     <Mic className="w-8 h-8 opacity-40" />
                     <span>متن حاصل از تبدیل گفتار به صورت زنده در اینجا نمایان خواهد شد.</span>
                     <span className="text-[11px] text-slate-400">
-                      (برای بهترین نتیجه، با لهجه واضح انگلیسی صحبت کنید)
+                      (برای بهترین نتیجه، شمرده و واضح به انگلیسی صحبت کنید)
                     </span>
                   </div>
                 ) : (

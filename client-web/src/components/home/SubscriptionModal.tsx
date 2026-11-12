@@ -30,8 +30,8 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     },
     {
       icon: <Headphones className="w-4 h-4 text-apple-blue" />,
-      title: 'تصحیح لهجه و تلفظ بومی',
-      desc: 'شنیدن تلفظ با لهجه استاندارد بریتانیایی و بازخورد هوشمند جملات',
+      title: 'تبدیل دقیق صوت به متن و بازخورد هوشمند',
+      desc: 'تبدیل بلادرنگ گفتار شما به متن و بازخورد هوشمند جملات و اصلاح ساختار مکالمه',
     },
   ];
 

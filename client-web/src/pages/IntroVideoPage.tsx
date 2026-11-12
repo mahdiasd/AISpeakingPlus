@@ -13,7 +13,7 @@ export const IntroVideoPage: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [isEnded, setIsEnded] = useState(false);
 
-  const videoUrl = getAssetUrl('resources/video/intro.mp4?v=2');
+  const videoUrl = getAssetUrl('resources/video/intro.mp4?v=3');
 
   const togglePlay = () => {
     if (!videoRef.current) return;

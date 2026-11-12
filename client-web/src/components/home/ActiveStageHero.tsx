@@ -152,7 +152,7 @@ export const ActiveStageHero: React.FC<ActiveStageHeroProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-300 truncate">
-              {stage.briefingFa ? stage.briefingFa.slice(0, 52) + '...' : 'لهجه بومی بریتیش • سناریو مکالمه واقعی'}
+              {stage.briefingFa ? stage.briefingFa.slice(0, 52) + '...' : 'سناریوی تعاملی و مکالمه واقعی با هوش مصنوعی'}
             </p>
           </div>
         </div>

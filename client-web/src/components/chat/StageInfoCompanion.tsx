@@ -104,7 +104,7 @@ export const StageInfoCompanion: React.FC<StageInfoCompanionProps> = ({
               </h3>
             </div>
             <p className="text-xs text-apple-gray-300 truncate">
-              مکالمه طبیعی و ارزیابی زنده لهجه
+              مکالمه طبیعی و پردازش هوشمند گفتار
             </p>
           </div>
         </div>

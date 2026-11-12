@@ -82,15 +82,15 @@ export const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
             </motion.button>
           </div>
 
-          {/* Status Pills: Phone / Guest + CEFR Level */}
+          {/* Status Pills: Phone / Guest + CEFR Level (wrap gracefully on mobile) */}
           <div className="flex flex-wrap items-center gap-2">
             {isGuest ? (
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-apple-yellow/15 border border-apple-yellow/30 text-apple-yellow text-xs font-medium">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-apple-yellow/15 border border-apple-yellow/30 text-apple-yellow text-xs font-medium whitespace-nowrap shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-apple-yellow animate-pulse" />
-                <span>حالت مهمان (موقتی)</span>
+                <span>حالت مهمان</span>
               </div>
             ) : (
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/15 text-apple-gray-200 text-xs font-mono">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/15 text-apple-gray-200 text-xs font-mono whitespace-nowrap shrink-0">
                 <Smartphone className="w-3 h-3 text-apple-blue" />
                 <span dir="ltr">{profile?.phoneNumber}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-apple-green" />
@@ -102,7 +102,7 @@ export const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
               type="button"
               onClick={onLevelClick}
               whileTap={{ scale: 0.95 }}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${cefr.badgeBg} border ${cefr.badgeBorder} ${cefr.badgeText} text-xs font-semibold hover:brightness-110 transition-all`}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${cefr.badgeBg} border ${cefr.badgeBorder} ${cefr.badgeText} text-xs font-semibold hover:brightness-110 transition-all whitespace-nowrap shrink-0`}
               title="تغییر سطح زبان انگلیسی"
             >
               <Sparkles className="w-3 h-3" />

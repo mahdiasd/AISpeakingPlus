@@ -37,25 +37,25 @@ fun SubscriptionHeader(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Glowing Crown Hero Badge
+        // Compact Glowing Crown Hero Badge
         Box(
             modifier = Modifier
-                .size(68.dp)
+                .size(44.dp)
                 .shadow(
-                    elevation = 16.dp,
-                    shape = RoundedCornerShape(22.dp),
+                    elevation = 10.dp,
+                    shape = RoundedCornerShape(14.dp),
                     spotColor = Color(0xFFFFC83D)
                 )
-                .clip(RoundedCornerShape(22.dp))
+                .clip(RoundedCornerShape(14.dp))
                 .background(
                     Brush.linearGradient(
                         listOf(Color(0xFFFFC83D), Color(0xFFFFC83D), Color(0xFFD97706))
                     )
                 )
                 .border(
-                    width = 2.dp,
+                    width = 1.5.dp,
                     color = Color(0x66FFFFFF),
-                    shape = RoundedCornerShape(22.dp)
+                    shape = RoundedCornerShape(14.dp)
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -63,29 +63,28 @@ fun SubscriptionHeader(
                 painter = painterResource(Res.drawable.ic_crown),
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(38.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // Main Title
         GameText(
-            text = "دسترسی نامحدود به سفر داستانی",
+            text = "دسترسی نامحدود به AISpeaking Plus",
             color = Game.TextPrimary,
-            size = 22.sp,
+            size = 18.sp,
             bold = true,
             align = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Subtitle
         GameText(
-            text = "تمامی مراحل، سناریوهای پیشرفته و هوش مصنوعی بدون وقفه را آنلاک کنید",
+            text = "تمامی مراحل، سناریوهای پیشرفته و هوش مصنوعی بدون وقفه را باز کنید",
             color = Game.TextSecondary,
-            size = 13.sp,
-            lineHeight = 22.sp,
+            size = 12.sp,
             align = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 16.dp)
         )

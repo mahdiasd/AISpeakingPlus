@@ -200,8 +200,8 @@ export const SubscriptionPage: React.FC = () => {
     },
     {
       icon: <Headphones className="w-5 h-5 text-apple-blue" />,
-      title: 'تحلیل هوشمند جملات و فیدبک اصلاح تلفظ',
-      desc: 'شنیدن صدای مکالمه با لهجه بومی استاندارد جهت تقویت مهارت شنیداری و بهبود لهجه',
+      title: 'تحلیل هوشمند ساختار جملات و اصلاح گرامر',
+      desc: 'تبدیل دقیق صوت به متن و دریافت بازخورد هوشمند روی جملات و اصلاح ساختار مکالمه',
     },
     {
       icon: <Zap className="w-5 h-5 text-pink-400" />,
@@ -240,21 +240,21 @@ export const SubscriptionPage: React.FC = () => {
           </motion.div>
         )}
 
-        {/* 2. Golden Hero Crown Banner */}
-        <div className="relative p-6 rounded-[26px] apple-glass-card overflow-hidden text-center space-y-3.5 shadow-apple-card">
-          <div className="absolute top-0 right-1/2 translate-x-1/2 w-48 h-32 bg-apple-yellow/20 rounded-full blur-3xl pointer-events-none" />
+        {/* 2. Golden Hero Crown Banner (Compact Apple Glass) */}
+        <div className="relative p-4 rounded-[22px] apple-glass-card overflow-hidden text-center space-y-2 shadow-apple-card">
+          <div className="absolute top-0 right-1/2 translate-x-1/2 w-40 h-24 bg-apple-yellow/20 rounded-full blur-3xl pointer-events-none" />
 
           {/* Glowing Crown Badge */}
-          <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-[22px] bg-gradient-to-br from-[#FFC83D] via-[#FFB300] to-[#D97706] border-2 border-white/40 shadow-[0_0_24px_rgba(255,200,61,0.5)]">
-            <Crown className="w-9 h-9 fill-white text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]" />
+          <div className="relative inline-flex items-center justify-center w-11 h-11 rounded-[16px] bg-gradient-to-br from-[#FFC83D] via-[#FFB300] to-[#D97706] border-2 border-white/40 shadow-[0_0_16px_rgba(255,200,61,0.4)]">
+            <Crown className="w-6 h-6 fill-white text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.3)]" />
           </div>
 
-          <div className="space-y-1.5">
-            <h1 className="text-xl font-extrabold text-white tracking-tight">
-              دسترسی نامحدود به سفر داستانی
+          <div className="space-y-1">
+            <h1 className="text-lg font-extrabold text-white tracking-tight">
+              دسترسی نامحدود به AISpeaking Plus
             </h1>
             <p className="text-xs text-apple-gray-300 font-sans max-w-sm mx-auto leading-relaxed">
-              تمامی مراحل، سناریوهای پیشرفته و هوش مصنوعی بدون وقفه را آنلاک کنید
+              تمامی مراحل، سناریوهای پیشرفته و هوش مصنوعی بدون وقفه را باز کنید
             </p>
           </div>
         </div>

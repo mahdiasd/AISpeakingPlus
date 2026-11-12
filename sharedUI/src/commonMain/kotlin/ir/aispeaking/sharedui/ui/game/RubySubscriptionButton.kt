@@ -66,39 +66,41 @@ fun RubySubscriptionButton(
     val shape = RoundedCornerShape(22.dp)
 
     // Glass translucent backgrounds allowing the stage art underneath to be subtly visible
+    // In light theme, uses a high-opacity (92-94%) frosted surface to guarantee strong contrast against bright sky/cabin backdrops.
     val containerColor = if (isSubscriber) {
-        // Subscribed: Elegant amethyst / violet translucent glass
-        if (isDark) Color(0x3D6366F1) else Color(0x286366F1)
+        // Subscribed: Elegant amethyst / violet frosted glass
+        if (isDark) Color(0x4D6366F1) else Color(0xF0EEF2FF)
     } else {
-        // Non-subscribed: Warm Crown Gold translucent glass (harmonized with VIP Crown)
-        if (isDark) Color(0x38FFD60A) else Color(0x24F59E0B)
+        // Non-subscribed: Warm Crown Gold frosted glass (harmonized with VIP Crown)
+        if (isDark) Color(0x38FFD60A) else Color(0xF2FFFBEB)
     }
 
     // Specular border gradient (hairline reflection on top, subtle tone at bottom)
     val borderBrush = if (isSubscriber) {
         Brush.verticalGradient(
             listOf(
-                Color(0x99A5B4FC), // Indigo / lavender top light
-                Color(0x336366F1), // Translucent violet bottom
+                if (isDark) Color(0x99A5B4FC) else Color(0xFF818CF8), // Indigo / lavender top light
+                if (isDark) Color(0x336366F1) else Color(0xFF6366F1), // Translucent violet bottom
             )
         )
     } else {
         Brush.verticalGradient(
             listOf(
-                if (isDark) Color(0xCCFFE885) else Color(0xE6F59E0B), // Warm gold specular top highlight
-                if (isDark) Color(0x4DFFD60A) else Color(0x40D97706), // Translucent amber bottom
+                if (isDark) Color(0xCCFFE885) else Color(0xFFF59E0B), // Warm gold specular top highlight
+                if (isDark) Color(0x4DFFD60A) else Color(0xFFD97706), // Translucent amber bottom
             )
         )
     }
 
+    // High contrast typography for maximum legibility in both light and dark modes
     val contentColor = if (isSubscriber) {
-        if (isDark) Color(0xFFE0E7FF) else Color(0xFF3730A3)
+        if (isDark) Color(0xFFE0E7FF) else Color(0xFF312E81)
     } else {
-        if (isDark) Color(0xFFFFFBEB) else Color(0xFF92400E)
+        if (isDark) Color(0xFFFFFBEB) else Color(0xFF78350F)
     }
 
     val iconTint = if (isSubscriber) {
-        if (isDark) Color(0xFFA5B4FC) else Color(0xFF6366F1)
+        if (isDark) Color(0xFFA5B4FC) else Color(0xFF4F46E5)
     } else {
         if (isDark) Color(0xFFFFD60A) else Color(0xFFD97706)
     }
