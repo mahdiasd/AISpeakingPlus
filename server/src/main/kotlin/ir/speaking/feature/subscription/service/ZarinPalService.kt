@@ -167,6 +167,9 @@ class ZarinPalService(
                 orderId?.let { put("order_id", it) }
             }.ifEmpty { null }
 
+            // Gateway expects amount in Iranian Rials (IRR): 1 Toman = 10 Rials
+            val amountRials = amountTomans * 10L
+
             val response: HttpResponse = httpClient.post("$paymentBaseUrl/request.json") {
                 contentType(ContentType.Application.Json)
                 accept(ContentType.Application.Json)
@@ -175,8 +178,8 @@ class ZarinPalService(
                         ZarinPalRequestDto.serializer(),
                         ZarinPalRequestDto(
                             merchantId = merchantId,
-                            amount = amountTomans,
-                            currency = "IRT",
+                            amount = amountRials,
+                            currency = "IRR",
                             description = description,
                             callbackUrl = callbackUrl,
                             metadata = metadata
@@ -233,6 +236,9 @@ class ZarinPalService(
         }
 
         return try {
+            // Gateway expects amount in Iranian Rials (IRR): 1 Toman = 10 Rials
+            val amountRials = amountTomans * 10L
+
             val response: HttpResponse = httpClient.post("$paymentBaseUrl/verify.json") {
                 contentType(ContentType.Application.Json)
                 accept(ContentType.Application.Json)
@@ -241,7 +247,7 @@ class ZarinPalService(
                         ZarinPalVerifyDto.serializer(),
                         ZarinPalVerifyDto(
                             merchantId = merchantId,
-                            amount = amountTomans,
+                            amount = amountRials,
                             authority = authority
                         )
                     )

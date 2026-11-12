@@ -52,7 +52,7 @@ class ProgressSyncRoutingTest {
         }
 
         // 1. Stage 2 unauthenticated should return 401 AUTH_REQUIRED
-        val stage2Response = client.get("/api/v2/stages/stage-02-heathrow-border")
+        val stage2Response = client.get("/api/v2/stages/stage-02-border-control")
         assertEquals(HttpStatusCode.Unauthorized, stage2Response.status)
         assertTrue(stage2Response.bodyAsText().contains("AUTH_REQUIRED"))
 

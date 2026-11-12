@@ -81,8 +81,8 @@ class StageRoutingTest {
         assertTrue(body.contains("GUEST"))
         assertTrue(body.contains("stage-01-inflight-london"))
 
-        // 2. Unauthenticated GET /api/v2/stages/stage-02-heathrow-border
-        val stage2Response = client.get("/api/v2/stages/stage-02-heathrow-border")
+        // 2. Unauthenticated GET /api/v2/stages/stage-02-border-control
+        val stage2Response = client.get("/api/v2/stages/stage-02-border-control")
         assertEquals(HttpStatusCode.Unauthorized, stage2Response.status)
         val stage2Body = stage2Response.bodyAsText()
         assertTrue(stage2Body.contains("AUTH_REQUIRED"))
