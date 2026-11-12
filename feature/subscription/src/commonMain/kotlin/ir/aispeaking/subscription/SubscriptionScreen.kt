@@ -158,9 +158,9 @@ fun SubscriptionScreen(
                             .fillMaxWidth()
                             .weight(1f)
                             .verticalScroll(scrollState)
-                            .padding(horizontal = 18.dp, vertical = 8.dp),
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         SubscriptionHeader(currentStatus = uiState.currentStatus)
 
