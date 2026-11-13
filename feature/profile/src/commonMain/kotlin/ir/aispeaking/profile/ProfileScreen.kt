@@ -48,6 +48,7 @@ import ir.aispeaking.profile.component.AvatarPickerDialog
 import ir.aispeaking.profile.component.EditNickNameDialog
 import ir.aispeaking.profile.component.GuestBannerCard
 import ir.aispeaking.profile.component.LevelPickerBottomSheet
+import ir.aispeaking.profile.component.PlacementTestCard
 import ir.aispeaking.profile.component.ProfileHeaderCard
 import ir.aispeaking.profile.component.SignOutConfirmDialog
 import ir.aispeaking.profile.component.StoryVideoCard
@@ -73,6 +74,7 @@ fun ProfileScreen(
     onNavigateBack: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToSubscription: () -> Unit,
+    onNavigateToPlacementTest: () -> Unit = {},
     onNavigateToIntroVideo: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -209,6 +211,11 @@ fun ProfileScreen(
                         AchievementStatsCard(
                             user = user,
                             onLevelClick = { viewModel.onLevelPickerClicked() }
+                        )
+
+                        PlacementTestCard(
+                            user = user,
+                            onClick = onNavigateToPlacementTest
                         )
 
                         // Apple Theme Appearance Selector (System / Dark / Light)

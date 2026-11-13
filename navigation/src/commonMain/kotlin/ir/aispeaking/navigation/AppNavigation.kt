@@ -28,6 +28,7 @@ import ir.aispeaking.main.IntroVideoScreen
 import ir.aispeaking.main.JourneyMapScreen
 import ir.aispeaking.main.leaderboard.LeaderboardScreen
 import ir.aispeaking.profile.ProfileScreen
+import ir.aispeaking.profile.placement.PlacementTestScreen
 import ir.aispeaking.sharedui.ui.dialog.AnnouncementDialog
 import ir.aispeaking.splash.SplashRoute
 import ir.aispeaking.stageslist.StagesListScreen
@@ -82,7 +83,7 @@ fun AppNavigation(
 
     LaunchedEffect(Unit) {
         AppDeepLinkManager.navigationRequests.collect { route ->
-            if (route is StageChatRoute || route is ProfileRoute || route is SubscriptionRoute || route is StagesListRoute || route is LeaderboardRoute) {
+            if (route is StageChatRoute || route is ProfileRoute || route is SubscriptionRoute || route is StagesListRoute || route is LeaderboardRoute || route is PlacementTestRoute) {
                 if (backStack.none { it is MainRoute }) {
                     backStack.removeAll { it is SplashRoute }
                     backStack.add(MainRoute)
@@ -284,9 +285,19 @@ fun AppNavigation(
                         onNavigateToSubscription = {
                             backStack.add(SubscriptionRoute)
                         },
+                        onNavigateToPlacementTest = {
+                            backStack.add(PlacementTestRoute)
+                        },
                         onNavigateToIntroVideo = {
                             backStack.add(IntroVideoRoute)
                         }
+                    )
+                }
+
+                entry<PlacementTestRoute> {
+                    PlacementTestScreen(
+                        viewModel = koinViewModel(),
+                        onNavigateBack = { backStack.removeLastOrNull() }
                     )
                 }
 
