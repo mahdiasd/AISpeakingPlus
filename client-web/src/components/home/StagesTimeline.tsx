@@ -197,64 +197,94 @@ export const StagesTimeline: React.FC<StagesTimelineProps> = ({
       )}
 
       {/* 3. Phase Sections & Stage Items */}
-      {phaseGroups.map((group) => {
+      {phaseGroups.map((group, groupIdx) => {
         const isPhaseFinished = group.isCompleted;
 
         return (
-          <section key={group.phaseNumber} className="space-y-3.5">
+          <section key={group.phaseNumber} className={clsx('space-y-3.5', groupIdx > 0 && 'pt-3')}>
             {/* Phase Section Header Card */}
-            <div className="relative rounded-2xl p-3 sm:p-3.5 apple-glass border border-white/15 backdrop-blur-md select-none shadow-apple-sm">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  {/* 3D Phase Orb Badge */}
-                  <div
-                    className={clsx(
-                      'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-apple-sm shrink-0 border border-white/40',
-                      isPhaseFinished
-                        ? 'bg-gradient-to-br from-[#FFD60A] to-[#D4A000] text-black'
-                        : 'bg-gradient-to-br from-[#0A84FF] to-[#0056B3] text-white font-mono'
-                    )}
-                  >
-                    {isPhaseFinished ? (
-                      <CheckCircle2 className="w-5 h-5 fill-black text-black" />
-                    ) : (
-                      toFa(group.phaseNumber)
-                    )}
-                  </div>
+            <div
+              className={clsx(
+                'relative rounded-[22px] p-3.5 sm:p-4 select-none overflow-hidden transition-all duration-300 border backdrop-blur-md',
+                isPhaseFinished
+                  ? 'bg-gradient-to-br from-[#261e12]/95 via-[#1a140c]/95 to-[#120e09]/95 border-amber-500/45 shadow-[0_4px_24px_rgba(255,204,0,0.12)]'
+                  : 'bg-gradient-to-br from-[#131b2e]/95 via-[#0e1322]/95 to-[#080b14]/95 border-apple-blue/45 shadow-[0_4px_24px_rgba(0,122,255,0.12)]'
+              )}
+            >
+              {/* Specular Edge Highlight */}
+              <div
+                aria-hidden="true"
+                className={clsx(
+                  'absolute inset-x-0 top-0 h-[1.5px] pointer-events-none',
+                  isPhaseFinished
+                    ? 'bg-gradient-to-r from-transparent via-apple-yellow/80 to-transparent'
+                    : 'bg-gradient-to-r from-transparent via-apple-blue/80 to-transparent'
+                )}
+              />
 
-                  <div className="space-y-0.5">
-                    <h3 className="text-sm font-bold text-white tracking-tight">
-                      {group.phaseTitleFa}
-                    </h3>
-                    <span
+              <div className="relative z-10 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {/* 3D Phase Orb Badge */}
+                    <div
                       className={clsx(
-                        'text-[11px] block',
+                        'w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm shadow-apple-sm shrink-0 border border-white/40',
                         isPhaseFinished
-                          ? 'text-apple-yellow font-medium'
-                          : 'text-apple-gray-400 font-mono'
+                          ? 'bg-gradient-to-br from-[#FFD60A] to-[#D4A000] text-black shadow-[0_0_14px_rgba(255,214,10,0.4)]'
+                          : 'bg-gradient-to-br from-[#0A84FF] to-[#0056B3] text-white font-mono shadow-[0_0_14px_rgba(10,132,255,0.4)]'
                       )}
                     >
-                      {isPhaseFinished
-                        ? 'تمام مراحل این فاز تکمیل شده ✨'
-                        : `${toFa(group.completedStages)} از ${toFa(group.totalStages)} مرحله تکمیل شده`}
-                    </span>
+                      {isPhaseFinished ? (
+                        <CheckCircle2 className="w-5 h-5 fill-black text-black" />
+                      ) : (
+                        toFa(group.phaseNumber)
+                      )}
+                    </div>
+
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={clsx(
+                            'text-[10px] font-bold px-2 py-0.5 rounded-full border',
+                            isPhaseFinished
+                              ? 'bg-apple-yellow/15 border-apple-yellow/35 text-apple-yellow'
+                              : 'bg-apple-blue/15 border-apple-blue/35 text-apple-blue'
+                          )}
+                        >
+                          فاز {toFa(group.phaseNumber)}
+                        </span>
+                      </div>
+                      <h3 className="text-sm sm:text-base font-bold text-white tracking-tight truncate">
+                        {group.phaseTitleFa}
+                      </h3>
+                    </div>
                   </div>
+
+                  {isPhaseFinished ? (
+                    <div className="px-3 py-1 rounded-full text-xs font-bold bg-apple-yellow/20 text-apple-yellow border border-apple-yellow/45 shadow-sm shrink-0">
+                      تکمیل شد ✨
+                    </div>
+                  ) : (
+                    <div className="px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold bg-white/10 text-apple-gray-300 border border-white/15 shrink-0">
+                      {toFa(group.completedStages)} از {toFa(group.totalStages)} مرحله
+                    </div>
+                  )}
                 </div>
 
-                {isPhaseFinished ? (
-                  <div className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-apple-yellow/20 text-apple-yellow border border-apple-yellow/40">
-                    تکمیل
-                  </div>
-                ) : (
-                  <div className="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                    <div
-                      className="h-full bg-apple-blue rounded-full transition-all duration-300"
-                      style={{
-                        width: `${Math.min(100, Math.max(0, group.progressPercentage * 100))}%`,
-                      }}
-                    />
-                  </div>
-                )}
+                {/* Slim Apple progress indicator */}
+                <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className={clsx(
+                      'h-full rounded-full transition-all duration-500',
+                      isPhaseFinished
+                        ? 'bg-gradient-to-l from-apple-yellow to-amber-500'
+                        : 'bg-gradient-to-l from-apple-blue to-apple-teal'
+                    )}
+                    style={{
+                      width: `${Math.min(100, Math.max(0, group.progressPercentage * 100))}%`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -352,7 +382,11 @@ export const StagesTimeline: React.FC<StagesTimelineProps> = ({
                           <div
                             className={clsx(
                               'w-6 h-6 rounded-full overflow-hidden bg-slate-800 flex items-center justify-center shrink-0 ring-1',
-                              isActive ? 'ring-apple-blue' : 'ring-white/20'
+                              isActive
+                                ? 'ring-apple-blue'
+                                : isCompleted
+                                ? 'ring-apple-yellow/70'
+                                : 'ring-white/20'
                             )}
                           >
                             {stage.characterAvatarUrl ? (
@@ -371,7 +405,10 @@ export const StagesTimeline: React.FC<StagesTimelineProps> = ({
                             )}
                           </div>
                           <span
-                            className="text-xs font-semibold text-slate-300 font-mono tracking-tight truncate max-w-[150px] sm:max-w-[210px]"
+                            className={clsx(
+                              'text-xs font-semibold font-mono tracking-tight truncate max-w-[150px] sm:max-w-[210px]',
+                              isCompleted ? 'text-apple-yellow font-bold' : 'text-slate-300'
+                            )}
                             dir="ltr"
                           >
                             {stage.characterName}

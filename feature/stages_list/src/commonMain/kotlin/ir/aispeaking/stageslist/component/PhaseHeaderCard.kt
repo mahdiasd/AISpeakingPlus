@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
@@ -35,6 +36,11 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * Apple-grade frosted glass section header separating phases on the journey map.
+ * Visually distinct from individual stage cards with:
+ * - Rich accent tinted glass surface (sapphire for active, amber/gold for completed)
+ * - Apple specular edge highlight at the top rim
+ * - Category micro-pill and bold phase title
+ * - Smooth Apple animated progress bar
  */
 @Composable
 fun PhaseHeaderCard(
@@ -47,14 +53,52 @@ fun PhaseHeaderCard(
     val isPhaseCompleted = completedStages == totalStages && totalStages > 0
     val progress = if (totalStages > 0) completedStages.toFloat() / totalStages else 0f
     val isDark = AppTheme.isDark
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(22.dp)
 
-    val surfaceBg = if (isDark) Color(0xBF161924) else Color(0xE0FFFFFF)
+    // Distinct tinted glass surfaces
+    val surfaceBrush = if (isDark) {
+        if (isPhaseCompleted) {
+            Brush.linearGradient(
+                listOf(Color(0xE6251E12), Color(0xCC1A140C))
+            )
+        } else {
+            Brush.linearGradient(
+                listOf(Color(0xEB151D33), Color(0xD90E1424))
+            )
+        }
+    } else {
+        if (isPhaseCompleted) {
+            Brush.linearGradient(
+                listOf(Color(0xFFFFFDF5), Color(0xFFFFF8E1))
+            )
+        } else {
+            Brush.linearGradient(
+                listOf(Color(0xFFF3F7FF), Color(0xFFE9F2FE))
+            )
+        }
+    }
+
     val specularStroke = Brush.verticalGradient(
         if (isDark) {
-            listOf(Color(0x4DFFFFFF), Color(0x12FFFFFF))
+            if (isPhaseCompleted) {
+                listOf(Game.Gold.copy(alpha = 0.55f), Game.Gold.copy(alpha = 0.18f))
+            } else {
+                listOf(Game.Blue.copy(alpha = 0.55f), Game.Blue.copy(alpha = 0.18f))
+            }
         } else {
-            listOf(Color(0x99FFFFFF), Color(0x1C000000))
+            if (isPhaseCompleted) {
+                listOf(Game.Gold.copy(alpha = 0.5f), Game.Gold.copy(alpha = 0.2f))
+            } else {
+                listOf(Game.Blue.copy(alpha = 0.45f), Game.Blue.copy(alpha = 0.18f))
+            }
+        }
+    )
+
+    val topRimBrush = Brush.horizontalGradient(
+        if (isPhaseCompleted) {
+            listOf(Color.Transparent, Game.Gold.copy(alpha = 0.85f), Game.GoldDeep.copy(alpha = 0.85f), Color.Transparent)
+        } else {
+            listOf(Color.Transparent, Game.Blue.copy(alpha = 0.85f), Game.Sky.copy(alpha = 0.85f), Color.Transparent)
         }
     )
 
@@ -67,24 +111,31 @@ fun PhaseHeaderCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
             .clip(shape)
-            .background(surfaceBg)
-            .border(1.dp, specularStroke, shape)
+            .background(surfaceBrush)
+            .border(1.2.dp, specularStroke, shape)
     ) {
+        // Specular top edge highlight line
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.5.dp)
+                .background(topRimBrush)
+        )
+
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // 3D Phase Orb Badge
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(42.dp)
                         .clip(CircleShape)
                         .background(
                             if (isPhaseCompleted) {
@@ -93,7 +144,7 @@ fun PhaseHeaderCard(
                                 Brush.linearGradient(listOf(Color(0xFF0A84FF), Color(0xFF0056B3)))
                             }
                         )
-                        .border(1.5.dp, Color.White.copy(alpha = 0.5f), CircleShape),
+                        .border(1.5.dp, Color.White.copy(alpha = 0.55f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     if (isPhaseCompleted) {
@@ -113,37 +164,82 @@ fun PhaseHeaderCard(
                     }
                 }
 
-                // Phase Title & Micro-status
+                // Phase Title & Category micro-pill
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(
+                                    if (isPhaseCompleted) Game.Gold.copy(alpha = 0.16f)
+                                    else Game.Blue.copy(alpha = 0.16f)
+                                )
+                                .border(
+                                    1.dp,
+                                    if (isPhaseCompleted) Game.Gold.copy(alpha = 0.35f)
+                                    else Game.Blue.copy(alpha = 0.35f),
+                                    RoundedCornerShape(50)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            GameText(
+                                text = "فاز ${phaseNumber.fa()}",
+                                size = 10.sp,
+                                bold = true,
+                                color = if (isPhaseCompleted) Game.Gold else Game.Sky
+                            )
+                        }
+                    }
+
                     GameText(
                         text = phaseTitleFa,
                         size = 15.sp,
                         bold = true,
-                        color = Game.TextPrimary
-                    )
-                    GameText(
-                        text = if (isPhaseCompleted) "تمام مراحل این فاز تکمیل شده ✨" else "${completedStages.fa()} از ${totalStages.fa()} مرحله تکمیل شده",
-                        size = 12.sp,
-                        color = if (isPhaseCompleted) Game.Gold else Game.TextSecondary
+                        color = Game.TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
+                // Status chip (completed or fraction)
                 if (isPhaseCompleted) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Game.Gold.copy(alpha = 0.16f))
-                            .border(1.dp, Game.Gold.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                            .background(Game.Gold.copy(alpha = 0.18f))
+                            .border(1.dp, Game.Gold.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
                         GameText(
-                            text = "تکمیل",
+                            text = "تکمیل شد ✨",
                             size = 11.sp,
                             bold = true,
                             color = Game.Gold
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isDark) Color(0x28FFFFFF) else Color(0x1F000000))
+                            .border(
+                                1.dp,
+                                if (isDark) Color(0x28FFFFFF) else Color(0x1A000000),
+                                RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 9.dp, vertical = 4.dp)
+                    ) {
+                        GameText(
+                            text = "${completedStages.fa()} از ${totalStages.fa()}",
+                            size = 11.sp,
+                            bold = true,
+                            color = Game.TextSecondary
                         )
                     }
                 }

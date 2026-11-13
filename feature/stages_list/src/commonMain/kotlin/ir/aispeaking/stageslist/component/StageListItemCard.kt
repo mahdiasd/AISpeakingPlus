@@ -305,7 +305,11 @@ fun StageListItemCard(
                         name = stage.characterName,
                         imageUrl = stage.characterAvatarUrl,
                         size = 28.dp,
-                        ring = if (isActiveCurrentStage) Game.Blue else Game.Stroke
+                        ring = when {
+                            isActiveCurrentStage -> Game.Blue
+                            hasPlayed -> Game.Gold.copy(alpha = 0.85f)
+                            else -> Game.Stroke
+                        }
                     )
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                         GameText(
@@ -313,7 +317,7 @@ fun StageListItemCard(
                             size = 12.sp,
                             latin = true,
                             bold = true,
-                            color = Game.TextSecondary,
+                            color = if (hasPlayed) Game.Gold else Game.TextSecondary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
