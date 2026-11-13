@@ -17,3 +17,21 @@ enum class SttSessionStatus {
     ERROR,
     CLOSED
 }
+
+enum class SttEngine(val key: String) {
+    APP("app"),
+    BROWSER("browser");
+
+    companion object {
+        fun fromKey(key: String?): SttEngine {
+            return entries.firstOrNull { it.key.equals(key, ignoreCase = true) } ?: APP
+        }
+    }
+}
+
+enum class SttConnectionStatus {
+    CONNECTING,
+    CONNECTED,
+    DISCONNECTED,
+    ERROR
+}

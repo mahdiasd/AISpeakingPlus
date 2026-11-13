@@ -67,13 +67,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Spacer
+import ir.aispeaking.domain.model.stt.SttConnectionStatus
+import ir.aispeaking.domain.model.stt.SttEngine
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_clear
 import ir.aispeaking.sharedui.ic_edit
 import ir.aispeaking.sharedui.ic_keyboard
 import ir.aispeaking.sharedui.ic_lamp
 import ir.aispeaking.sharedui.ic_microphone
+import ir.aispeaking.sharedui.ic_refresh
 import ir.aispeaking.sharedui.ic_send
+import ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameIconButton
 import ir.aispeaking.sharedui.ui.game.GameText
@@ -109,6 +115,9 @@ fun ChatBottomBar(
     enabled: Boolean = true,
     hintsUsedCount: Int = 0,
     isRequestingHint: Boolean = false,
+    sttEngine: SttEngine = SttEngine.APP,
+    sttConnectionStatus: SttConnectionStatus = SttConnectionStatus.CONNECTED,
+    onReconnectStt: () -> Unit = {},
     onTextChange: (String) -> Unit,
     onInputModeChange: (ChatInputMode) -> Unit,
     onVoiceToggle: (Boolean) -> Unit,
@@ -126,6 +135,19 @@ fun ChatBottomBar(
                 WindowInsets.navigationBars.union(WindowInsets.ime).only(WindowInsetsSides.Bottom)
             )
     ) {
+        // Floating Connection Warning Capsule (when App STT socket is disconnected/error)
+        AnimatedVisibility(
+            visible = inputMode == ChatInputMode.VOICE &&
+                    sttEngine == SttEngine.APP &&
+                    (sttConnectionStatus == SttConnectionStatus.DISCONNECTED || sttConnectionStatus == SttConnectionStatus.ERROR),
+            enter = fadeIn(tween(140)) + slideInVertically(tween(160)) { it / 2 },
+            exit = fadeOut(tween(100)) + slideOutVertically(tween(120)) { it / 2 }
+        ) {
+            CompactConnectionWarningCapsule(
+                onRetry = onReconnectStt
+            )
+        }
+
         // Floating Transcript Preview Capsule (shown when speech recognition has recognized text and AI not speaking)
         AnimatedVisibility(
             visible = text.isNotBlank() && inputMode == ChatInputMode.VOICE && !isModelSpeaking,
@@ -160,6 +182,9 @@ fun ChatBottomBar(
                     enabled = enabled,
                     hintsUsedCount = hintsUsedCount,
                     isRequestingHint = isRequestingHint,
+                    sttEngine = sttEngine,
+                    sttConnectionStatus = sttConnectionStatus,
+                    onReconnectStt = onReconnectStt,
                     onSwitchToText = { onInputModeChange(ChatInputMode.TEXT) },
                     onVoiceToggle = onVoiceToggle,
                     onSendClick = onSendClick,
@@ -197,6 +222,9 @@ private fun CompactVoiceRow(
     enabled: Boolean,
     hintsUsedCount: Int,
     isRequestingHint: Boolean,
+    sttEngine: SttEngine = SttEngine.APP,
+    sttConnectionStatus: SttConnectionStatus = SttConnectionStatus.CONNECTED,
+    onReconnectStt: () -> Unit = {},
     onSwitchToText: () -> Unit,
     onVoiceToggle: (Boolean) -> Unit,
     onSendClick: () -> Unit,
@@ -229,20 +257,32 @@ private fun CompactVoiceRow(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                if (isRecording) {
-                    if (isRecordingPreparing) {
-                        AppleRecordingPreparingPill(onStop = { onVoiceToggle(false) })
-                    } else {
-                        AppleRecordingActivePill(onStop = { onVoiceToggle(false) })
+                when {
+                    isRecording -> {
+                        if (isRecordingPreparing) {
+                            AppleRecordingPreparingPill(onStop = { onVoiceToggle(false) })
+                        } else {
+                            AppleRecordingActivePill(onStop = { onVoiceToggle(false) })
+                        }
                     }
-                } else {
-                    AppleRecordPill(
-                        hasText = text.isNotBlank(),
-                        enabled = enabled,
-                        isModelSpeaking = isModelSpeaking,
-                        onClick = { if (isInteractive) onVoiceToggle(true) },
-                        modifier = micModifier
-                    )
+                    sttEngine == SttEngine.APP && sttConnectionStatus == SttConnectionStatus.CONNECTING -> {
+                        AppleConnectingPill()
+                    }
+                    sttEngine == SttEngine.APP && (sttConnectionStatus == SttConnectionStatus.DISCONNECTED || sttConnectionStatus == SttConnectionStatus.ERROR) -> {
+                        AppleDisconnectedPill(
+                            onRetry = onReconnectStt,
+                            modifier = micModifier
+                        )
+                    }
+                    else -> {
+                        AppleRecordPill(
+                            hasText = text.isNotBlank(),
+                            enabled = enabled,
+                            isModelSpeaking = isModelSpeaking,
+                            onClick = { if (isInteractive) onVoiceToggle(true) },
+                            modifier = micModifier
+                        )
+                    }
                 }
             }
 
@@ -782,5 +822,137 @@ private fun AppleHintButton(
                 )
             }
         }
+    }
+}
+
+/**
+ * 2026 Apple Liquid Glass Floating Warning Capsule.
+ * Informs the user in friendly, non-technical Persian when the voice service is disconnected,
+ * with a direct retry action.
+ */
+@Composable
+private fun CompactConnectionWarningCapsule(
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(20.dp)
+    Row(
+        modifier = modifier
+            .padding(horizontal = 20.dp, vertical = 4.dp)
+            .fillMaxWidth()
+            .clip(shape)
+            .background(Color(0x33FF9F0A))
+            .border(1.dp, Color(0x66FF9F0A), shape)
+            .clickable(onClick = onRetry)
+            .padding(horizontal = 14.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFFF9F0A))
+            )
+            GameText(
+                text = "ارتباط با سرویس صوتی برقرار نیست",
+                size = 12.sp,
+                bold = true,
+                color = Game.TextPrimary
+            )
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_refresh),
+                contentDescription = null,
+                tint = Color(0xFFFF9F0A),
+                modifier = Modifier.size(13.dp)
+            )
+            GameText(
+                text = "تلاش مجدد",
+                size = 11.5.sp,
+                bold = true,
+                color = Color(0xFFFF9F0A)
+            )
+        }
+    }
+}
+
+/**
+ * 2026 Apple Liquid Glass Connecting Pill for recording dock.
+ */
+@Composable
+private fun AppleConnectingPill(
+    modifier: Modifier = Modifier
+) {
+    val pillShape = RoundedCornerShape(22.dp)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .clip(pillShape)
+            .background(Color(0x18007AFF))
+            .border(1.dp, Color(0x3D007AFF), pillShape)
+            .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        AppLoadingIndicator(
+            size = 16.dp,
+            color = AppleChatTheme.PrimaryAzure
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        GameText(
+            text = "در حال اتصال به سرویس صوتی…",
+            size = 12.5.sp,
+            color = Game.TextSecondary
+        )
+    }
+}
+
+/**
+ * 2026 Apple Liquid Glass Disconnected / Retry Pill for recording dock.
+ * Replaces the record button when offline, making it crystal clear to the user.
+ */
+@Composable
+private fun AppleDisconnectedPill(
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val pillShape = RoundedCornerShape(22.dp)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .clip(pillShape)
+            .background(Color(0x22FF453A))
+            .border(1.2.dp, Color(0x66FF453A), pillShape)
+            .clickable(onClick = onRetry)
+            .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_refresh),
+            contentDescription = null,
+            tint = Color(0xFFFF453A),
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        GameText(
+            text = "قطع ارتباط • لمس برای تلاش مجدد",
+            size = 12.5.sp,
+            bold = true,
+            color = Color(0xFFFF453A)
+        )
     }
 }

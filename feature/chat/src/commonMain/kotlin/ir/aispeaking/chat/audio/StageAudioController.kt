@@ -20,6 +20,7 @@ interface StageAudioController {
     fun notifyRecordingReady() {}
 
     fun startRecording(
+        engine: String = "app",
         onSpeechRecognized: (String) -> Unit,
         onSilenceDetected: () -> Unit
     )
@@ -59,6 +60,7 @@ class DefaultStageAudioController : StageAudioController {
     var onPlatformPrimeAudioPlayback: (() -> Unit)? = null
     var onPlatformStopVoice: (() -> Unit)? = null
     var onPlatformStartRecording: (((String) -> Unit, () -> Unit) -> Unit)? = null
+    var onPlatformStartRecordingWithEngine: ((String, (String) -> Unit, () -> Unit) -> Unit)? = null
     var onPlatformStopRecording: (() -> Unit)? = null
     var onPlatformCheckMicrophonePermission: (((Boolean) -> Unit) -> Unit)? = null
     var onPlatformRequestMicrophonePermission: (((Boolean) -> Unit) -> Unit)? = null
@@ -124,6 +126,7 @@ class DefaultStageAudioController : StageAudioController {
     override fun isVoicePlaying(): Boolean = isPlayingState
 
     override fun startRecording(
+        engine: String,
         onSpeechRecognized: (String) -> Unit,
         onSilenceDetected: () -> Unit
     ) {
@@ -137,7 +140,19 @@ class DefaultStageAudioController : StageAudioController {
 
         resetSilenceTimer(onSilenceDetected)
 
-        if (onPlatformStartRecording != null) {
+        if (onPlatformStartRecordingWithEngine != null) {
+            onPlatformStartRecordingWithEngine?.invoke(
+                engine,
+                { text ->
+                    resetSilenceTimer(onSilenceDetected)
+                    onSpeechRecognized(text)
+                },
+                {
+                    stopRecording()
+                    onSilenceDetected()
+                }
+            )
+        } else if (onPlatformStartRecording != null) {
             onPlatformStartRecording?.invoke(
                 { text ->
                     resetSilenceTimer(onSilenceDetected)

@@ -183,22 +183,22 @@ fun ChatScreen(
                 listOf(
                     GuideStep(
                         key = "chat_mic",
-                        title = "ضبط و ارسال صدا",
-                        description = "برای صحبت کردن به زبان انگلیسی، این دکمه را لمس کنید. صدای شما شنیده و تحلیل می‌شود.",
+                        title = "صحبت با هوش مصنوعی",
+                        description = "برای اینکه انگلیسی صحبت کنی، این دکمه رو بزن. صدات رو می‌شنویم و باهم گپ می‌زنیم!",
                         icon = Res.drawable.ic_microphone,
                         alignment = GuideAlignment.Top
                     ),
                     GuideStep(
                         key = "chat_objective",
-                        title = "اهداف مرحله",
-                        description = "از اینجا ماموریت‌ها و اهداف این مکالمه را مشاهده کنید تا بدانید سناریو درباره چیست.",
+                        title = "هدف این مرحله",
+                        description = "از اینجا می‌تونی ببینی ماجرا چیه و قراره در مورد چه موضوعی باهم صحبت کنیم.",
                         icon = Res.drawable.ic_lamp,
                         alignment = GuideAlignment.Bottom
                     ),
                     GuideStep(
                         key = "chat_hint",
-                        title = "درخواست راهنمایی",
-                        description = "اگر در پاسخ دادن به انگلیسی مطمئن نبودید، این دکمه جملات پیشنهادی متناسب با گفتگو را به شما ارائه می‌دهد.",
+                        title = "راهنمایی گرفتن",
+                        description = "هر جا احساس کردی کلمه یا جمله کم آوردی، این دکمه رو بزن تا یه پیشنهاد عالی بهت بدیم!",
                         icon = Res.drawable.ic_spell_check,
                         alignment = GuideAlignment.Top
                     )
@@ -248,6 +248,7 @@ fun ChatScreen(
                         showExitConfirmDialog = true
                     },
                     onObjectiveClick = { showObjectiveSheet = true },
+                    onSettingsClick = { viewModel.setSettingsSheetVisible(true) },
                     onHeaderClick = { showLanguageLevelSheet = true },
                     onFinishConversationClick = {
                         isFinishTriggeredByFinishButton = true
@@ -361,6 +362,9 @@ fun ChatScreen(
                         enabled = !uiState.isModelSpeaking && !uiState.isSubmittingEvaluation,
                         hintsUsedCount = uiState.hintsUsedCount,
                         isRequestingHint = uiState.isRequestingHint,
+                        sttEngine = uiState.sttEngine,
+                        sttConnectionStatus = uiState.sttConnectionStatus,
+                        onReconnectStt = { viewModel.reconnectSttSocket() },
                         onTextChange = { viewModel.onMessageTextChanged(it) },
                         onInputModeChange = { viewModel.setInputMode(it) },
                         onVoiceToggle = { start -> viewModel.toggleRecording(start) },
@@ -377,6 +381,17 @@ fun ChatScreen(
                 visible = showObjectiveSheet,
                 stage = stage,
                 onDismiss = { showObjectiveSheet = false }
+            )
+
+            // Speech-to-Text Settings Sheet
+            ChatSettingsSheet(
+                visible = uiState.showSettingsSheet,
+                currentEngine = uiState.sttEngine,
+                connectionStatus = uiState.sttConnectionStatus,
+                hasBrowserSupport = uiState.hasBrowserSupport,
+                onSelectEngine = { viewModel.setSttEngine(it) },
+                onReconnect = { viewModel.reconnectSttSocket() },
+                onDismiss = { viewModel.setSettingsSheetVisible(false) }
             )
 
             // Language Level Explanation Bottom Sheet
@@ -605,12 +620,12 @@ private fun YourTurnState(
                 ring = AppleChatTheme.PrimaryAzure
             )
             GameText(
-                text = "نوبت توست!",
+                text = "نوبت توئه!",
                 size = 18.sp,
                 bold = true
             )
             GameText(
-                text = "$characterName منتظر توست. اولین جمله را به انگلیسی بگو.",
+                text = "$characterName منتظرته! اولین جمله رو به انگلیسی بگو تا شروع کنیم.",
                 size = 13.sp,
                 lineHeight = 22.sp,
                 color = Game.TextSecondary,

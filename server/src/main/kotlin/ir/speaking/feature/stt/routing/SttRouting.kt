@@ -123,51 +123,61 @@ private suspend fun DefaultWebSocketServerSession.handleSttSession(sttService: S
         isGuest
     )
 
-    // Try to acquire one of the limited concurrent stream slots.
-    val stream = sttService.tryAcquireStream()
-    if (stream == null) {
-        sttLogger.warn("STT server busy ({}/{} streams in use); rejecting connection",
-            sttService.activeStreams, sttService.maxConcurrentStreams)
-        sendText(SttMessage.ErrorMessage("server_busy"))
-        close(CloseReason(CloseReason.Codes.TRY_AGAIN_LATER, "server_busy"))
-        return
-    }
+    // Signal readiness immediately upon WebSocket connection so client knows socket is live and ready
+    sendText(SttMessage.ReadyMessage("Connected to speech service"))
 
-    sttLogger.info("STT stream acquired ({}/{} active)",
-        sttService.activeStreams, sttService.maxConcurrentStreams)
+    var stream: com.k2fsa.sherpa.onnx.OnlineStream? = null
+    var lastPartialText = ""
 
     try {
-        // Signal readiness so the client knows it can start sending audio.
-        sendText(SttMessage.ReadyMessage())
-
-        var lastPartialText = ""
-
         for (frame in incoming) {
             when (frame) {
-                is Frame.Binary -> handleBinaryFrame(
-                    sttService = sttService,
-                    stream = stream,
-                    frame = frame,
-                    send = { msg -> sendText(msg) },
-                    currentPartial = lastPartialText,
-                    onPartial = { newText ->
-                        lastPartialText = newText
-                    },
-                )
+                is Frame.Binary -> {
+                    if (stream == null) {
+                        stream = sttService.tryAcquireStream()
+                        if (stream == null) {
+                            sttLogger.warn("STT server busy ({}/{} streams in use); cannot acquire stream for audio frame",
+                                sttService.activeStreams, sttService.maxConcurrentStreams)
+                            sendText(SttMessage.ErrorMessage("server_busy"))
+                            continue
+                        }
+                        sttLogger.info("STT stream acquired ({}/{} active)",
+                            sttService.activeStreams, sttService.maxConcurrentStreams)
+                    }
+                    val activeStream = stream
+                    handleBinaryFrame(
+                        sttService = sttService,
+                        stream = activeStream,
+                        frame = frame,
+                        send = { msg -> sendText(msg) },
+                        currentPartial = lastPartialText,
+                        onPartial = { newText ->
+                            lastPartialText = newText
+                        },
+                    )
+                }
                 is Frame.Text -> {
                     val textContent = frame.readText().trim()
                     if (textContent.contains("stop", ignoreCase = true) || textContent.contains("finish", ignoreCase = true)) {
                         sttLogger.info("Client requested STT stop/finish via text frame")
-                        try {
-                            sttService.inputFinished(stream)
-                            sttService.decodeIfReady(stream)
-                            val finalRemaining = sttService.getText(stream)
-                            if (finalRemaining.isNotBlank()) {
-                                sendText(SttMessage.FinalTranscript(finalRemaining))
-                                lastPartialText = ""
+                        val activeStream = stream
+                        if (activeStream != null) {
+                            try {
+                                sttService.inputFinished(activeStream)
+                                sttService.decodeIfReady(activeStream)
+                                val finalRemaining = sttService.getText(activeStream)
+                                if (finalRemaining.isNotBlank()) {
+                                    sendText(SttMessage.FinalTranscript(finalRemaining))
+                                    lastPartialText = ""
+                                }
+                            } catch (e: Throwable) {
+                                sttLogger.warn("Error finalizing stream on stop frame: {}", e.message)
+                            } finally {
+                                sttService.releaseStream(activeStream)
+                                stream = null
+                                sttLogger.info("STT stream released after stop frame ({}/{} active)",
+                                    sttService.activeStreams, sttService.maxConcurrentStreams)
                             }
-                        } catch (e: Throwable) {
-                            sttLogger.warn("Error finalizing stream on stop frame: {}", e.message)
                         }
                     }
                 }
@@ -180,21 +190,27 @@ private suspend fun DefaultWebSocketServerSession.handleSttSession(sttService: S
         }
 
         // Flush any remaining decoded text at end of stream
-        try {
-            sttService.inputFinished(stream)
-            sttService.decodeIfReady(stream)
-            val finalRemaining = sttService.getText(stream)
-            if (finalRemaining.isNotBlank()) {
-                sttLogger.info("Flushing final text on session end: {}", finalRemaining)
-                sendText(SttMessage.FinalTranscript(finalRemaining))
-            }
-        } catch (_: Throwable) {}
+        val activeStream = stream
+        if (activeStream != null) {
+            try {
+                sttService.inputFinished(activeStream)
+                sttService.decodeIfReady(activeStream)
+                val finalRemaining = sttService.getText(activeStream)
+                if (finalRemaining.isNotBlank()) {
+                    sttLogger.info("Flushing final text on session end: {}", finalRemaining)
+                    sendText(SttMessage.FinalTranscript(finalRemaining))
+                }
+            } catch (_: Throwable) {}
+        }
     } catch (e: Throwable) {
         sttLogger.error("STT WebSocket error from {}", call.request.local.remoteHost, e)
     } finally {
-        sttService.releaseStream(stream)
-        sttLogger.info("STT stream released ({}/{} active)",
-            sttService.activeStreams, sttService.maxConcurrentStreams)
+        if (stream != null) {
+            sttService.releaseStream(stream)
+            sttLogger.info("STT stream released on session exit ({}/{} active)",
+                sttService.activeStreams, sttService.maxConcurrentStreams)
+            stream = null
+        }
     }
 }
 

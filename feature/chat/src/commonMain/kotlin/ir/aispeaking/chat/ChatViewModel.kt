@@ -15,6 +15,8 @@ import ir.aispeaking.domain.model.stage.EvaluationSession
 import ir.aispeaking.domain.model.stage.GrammarErrorDetail
 import ir.aispeaking.domain.model.stage.LocalGuestProgress
 import ir.aispeaking.domain.model.stage.Stage
+import ir.aispeaking.domain.model.stt.SttConnectionStatus
+import ir.aispeaking.domain.model.stt.SttEngine
 import ir.aispeaking.domain.model.stt.SttStreamEvent
 import ir.aispeaking.domain.repository.stage.StageRepository
 import ir.aispeaking.domain.usecase.auth.GetCurrentAccessTierUseCase
@@ -24,6 +26,8 @@ import ir.aispeaking.domain.usecase.stage.GetStageDetailUseCase
 import ir.aispeaking.domain.usecase.stage.RequestStageHintUseCase
 import ir.aispeaking.domain.usecase.stage.SubmitStageEvaluationUseCase
 import ir.aispeaking.domain.usecase.stt.CloseSttSessionUseCase
+import ir.aispeaking.domain.usecase.stt.GetSttEngineUseCase
+import ir.aispeaking.domain.usecase.stt.SaveSttEngineUseCase
 import ir.aispeaking.domain.usecase.stt.SendAudioChunkUseCase
 import ir.aispeaking.domain.usecase.stt.SendStopSttUseCase
 import ir.aispeaking.domain.usecase.stt.StreamSpeechToTextUseCase
@@ -78,7 +82,11 @@ data class ChatUiState(
     val currentlyPlayingUid: String? = null,
     val showMicPermissionDialog: Boolean = false,
     val isMicPermissionGranted: Boolean = false,
-    val isMicPermissionPermanentlyDenied: Boolean = false
+    val isMicPermissionPermanentlyDenied: Boolean = false,
+    val sttEngine: SttEngine = SttEngine.APP,
+    val sttConnectionStatus: SttConnectionStatus = SttConnectionStatus.DISCONNECTED,
+    val hasBrowserSupport: Boolean = false,
+    val showSettingsSheet: Boolean = false
 )
 
 @Factory
@@ -94,6 +102,8 @@ class ChatViewModel(
     private val sendAudioChunkUseCase: SendAudioChunkUseCase,
     private val closeSttSessionUseCase: CloseSttSessionUseCase,
     private val sendStopSttUseCase: SendStopSttUseCase? = null,
+    private val getSttEngineUseCase: GetSttEngineUseCase? = null,
+    private val saveSttEngineUseCase: SaveSttEngineUseCase? = null,
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
     private val isGuideCompletedUseCase: IsGuideCompletedUseCase? = null,
@@ -113,8 +123,140 @@ class ChatViewModel(
     private var sttStreamJob: Job? = null
     private var audioChunkChannel: Channel<ByteArray>? = null
     private var audioSenderJob: Job? = null
+    private var sessionFinalizedTranscript: String = ""
+
+    fun setSettingsSheetVisible(visible: Boolean) {
+        _uiState.update { it.copy(showSettingsSheet = visible) }
+    }
+
+    fun setSttEngine(engine: SttEngine) {
+        saveSttEngineUseCase?.invoke(engine.name.lowercase())
+        _uiState.update { it.copy(sttEngine = engine) }
+        if (engine == SttEngine.APP) {
+            connectSttSocket(force = true)
+        } else {
+            disconnectSttSocket()
+            _uiState.update { it.copy(sttConnectionStatus = SttConnectionStatus.CONNECTED) }
+        }
+    }
+
+    fun reconnectSttSocket() {
+        connectSttSocket(force = true)
+    }
+
+    fun connectSttSocket(force: Boolean = false) {
+        if (_uiState.value.sttEngine != SttEngine.APP) {
+            _uiState.update { it.copy(sttConnectionStatus = SttConnectionStatus.CONNECTED) }
+            return
+        }
+        if (!force && (_uiState.value.sttConnectionStatus == SttConnectionStatus.CONNECTED || _uiState.value.sttConnectionStatus == SttConnectionStatus.CONNECTING)) {
+            return
+        }
+
+        sttStreamJob?.cancel()
+        _uiState.update { it.copy(sttConnectionStatus = SttConnectionStatus.CONNECTING, sttError = null) }
+
+        sttStreamJob = viewModelScope.launch {
+            try {
+                streamSpeechToTextUseCase().collect { event ->
+                    when (event) {
+                        is SttStreamEvent.Ready -> {
+                            _uiState.update {
+                                it.copy(
+                                    sttConnectionStatus = SttConnectionStatus.CONNECTED,
+                                    sttError = null
+                                )
+                            }
+                        }
+                        is SttStreamEvent.PartialTranscript -> {
+                            if (_uiState.value.isRecording && !_uiState.value.isModelSpeaking && event.text.isNotBlank()) {
+                                audioController.notifyVoiceActivity()
+                                val combined = if (sessionFinalizedTranscript.isEmpty()) {
+                                    event.text
+                                } else {
+                                    "$sessionFinalizedTranscript ${event.text}"
+                                }
+                                _uiState.update { it.copy(messageText = combined) }
+                            }
+                        }
+                        is SttStreamEvent.FinalTranscript -> {
+                            if (_uiState.value.isRecording && !_uiState.value.isModelSpeaking && event.text.isNotBlank()) {
+                                audioController.notifyVoiceActivity()
+                                sessionFinalizedTranscript = if (sessionFinalizedTranscript.isEmpty()) {
+                                    event.text
+                                } else {
+                                    "$sessionFinalizedTranscript ${event.text}"
+                                }
+                                _uiState.update { it.copy(messageText = sessionFinalizedTranscript) }
+                            }
+                        }
+                        is SttStreamEvent.Error -> {
+                            if (_uiState.value.isRecording) {
+                                stopRecordingSession()
+                            }
+                            val errorMsg = event.message.ifBlank {
+                                "در سرویس صوتی هوشمند مشکلی پیش اومد. لطفاً دوباره تلاش کن."
+                            }
+                            _uiState.update {
+                                it.copy(
+                                    sttConnectionStatus = SttConnectionStatus.ERROR,
+                                    sttError = errorMsg,
+                                    isRecording = false,
+                                    isRecordingPreparing = false
+                                )
+                            }
+                        }
+                        is SttStreamEvent.Disconnected -> {
+                            _uiState.update {
+                                it.copy(sttConnectionStatus = SttConnectionStatus.DISCONNECTED)
+                            }
+                        }
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        sttConnectionStatus = SttConnectionStatus.DISCONNECTED,
+                        sttError = e.message
+                    )
+                }
+            }
+        }
+    }
+
+    private fun disconnectSttSocket() {
+        sttStreamJob?.cancel()
+        sttStreamJob = null
+        viewModelScope.launch {
+            try {
+                closeSttSessionUseCase()
+            } catch (_: Throwable) {}
+        }
+    }
 
     fun initStage(stageId: String, tier: AccessTier? = null) {
+        val hasNative = audioController.hasNativeSpeechRecognition()
+        val persistedEngine = getSttEngineUseCase?.invoke() ?: "app"
+        val engine = if (persistedEngine.equals("browser", ignoreCase = true) && hasNative) {
+            SttEngine.BROWSER
+        } else {
+            SttEngine.APP
+        }
+
+        _uiState.update {
+            it.copy(
+                hasBrowserSupport = hasNative,
+                sttEngine = engine,
+                sttConnectionStatus = if (engine == SttEngine.BROWSER) SttConnectionStatus.CONNECTED else SttConnectionStatus.DISCONNECTED
+            )
+        }
+
+        if (engine == SttEngine.APP) {
+            connectSttSocket()
+        }
+
         if (currentStageId == stageId && _uiState.value.stage != null) return
         currentStageId = stageId
         _uiState.update { it.copy(stageLoadError = null) }
@@ -179,7 +321,7 @@ class ChatViewModel(
                     _uiState.update {
                         it.copy(
                             stage = null,
-                            stageLoadError = "امکان بارگذاری اطلاعات این مرحله وجود ندارد. لطفاً دسترسی یا اتصال اینترنت خود را بررسی کنید."
+                            stageLoadError = "نتونستیم اطلاعات این مرحله رو بارگذاری کنیم. اینترنتت رو چک کن و دوباره امتحان کن."
                         )
                     }
                 }
@@ -298,7 +440,7 @@ class ChatViewModel(
                     it.copy(
                         chats = kotlinx.collections.immutable.persistentListOf(),
                         isModelSpeaking = false,
-                        stageLoadError = starterError ?: "خطا در شروع مکالمه. لطفاً دوباره تلاش کنید."
+                        stageLoadError = starterError ?: "نتونستیم مکالمه رو شروع کنیم. لطفاً دوباره تلاش کن."
                     )
                 }
             }
@@ -416,7 +558,11 @@ class ChatViewModel(
 
     private fun startRecordingInternal() {
         if (_uiState.value.isModelSpeaking || _uiState.value.isSubmittingEvaluation) return
+        val currentEngine = _uiState.value.sttEngine
+
         audioController.stopVoice()
+        sessionFinalizedTranscript = ""
+
         _uiState.update {
             it.copy(
                 isRecording = true,
@@ -438,14 +584,17 @@ class ChatViewModel(
             }
         }
 
-        val hasNativeStt = audioController.hasNativeSpeechRecognition()
-        val sttEngine = if (hasNativeStt) AnalyticsEvents.STT_ENGINE_NATIVE else AnalyticsEvents.STT_ENGINE_WEBSOCKET
+        val sttEngineTag = if (currentEngine == SttEngine.BROWSER) AnalyticsEvents.STT_ENGINE_NATIVE else AnalyticsEvents.STT_ENGINE_WEBSOCKET
         analyticsTracker.logSttRecordingStarted(
-            sttEngine = sttEngine,
+            sttEngine = sttEngineTag,
             stageId = currentStageId
         )
 
-        if (!hasNativeStt) {
+        if (currentEngine == SttEngine.APP) {
+            if (sttStreamJob == null || !sttStreamJob!!.isActive) {
+                connectSttSocket()
+            }
+
             audioSenderJob?.cancel()
             audioChunkChannel?.close()
             val chunkChannel = Channel<ByteArray>(capacity = Channel.UNLIMITED)
@@ -465,74 +614,11 @@ class ChatViewModel(
             audioController.onAudioChunkCaptured = { pcm16Bytes ->
                 audioChunkChannel?.trySend(pcm16Bytes)
             }
-
-            sttStreamJob?.cancel()
-            sttStreamJob = viewModelScope.launch {
-                var sessionFinalizedText = ""
-                try {
-                    streamSpeechToTextUseCase().collect { event ->
-                        when (event) {
-                            is SttStreamEvent.Ready -> {
-                                audioController.onAudioChunkCaptured = { pcm16Bytes ->
-                                    audioChunkChannel?.trySend(pcm16Bytes)
-                                }
-                            }
-                            is SttStreamEvent.PartialTranscript -> {
-                                if (_uiState.value.isRecording && !_uiState.value.isModelSpeaking && event.text.isNotBlank()) {
-                                    audioController.notifyVoiceActivity()
-                                    val combined = if (sessionFinalizedText.isEmpty()) {
-                                        event.text
-                                    } else {
-                                        "$sessionFinalizedText ${event.text}"
-                                    }
-                                    _uiState.update { it.copy(messageText = combined) }
-                                }
-                            }
-                            is SttStreamEvent.FinalTranscript -> {
-                                if (_uiState.value.isRecording && !_uiState.value.isModelSpeaking && event.text.isNotBlank()) {
-                                    audioController.notifyVoiceActivity()
-                                    sessionFinalizedText = if (sessionFinalizedText.isEmpty()) {
-                                        event.text
-                                    } else {
-                                        "$sessionFinalizedText ${event.text}"
-                                    }
-                                    _uiState.update { it.copy(messageText = sessionFinalizedText) }
-                                }
-                            }
-                            is SttStreamEvent.Error -> {
-                                stopRecordingSession()
-                                val errorMsg = event.message.ifBlank {
-                                    "خطا در سرویس تشخیص گفتار. لطفاً دوباره تلاش کنید."
-                                }
-                                _uiState.update {
-                                    it.copy(
-                                        isRecording = false,
-                                        isRecordingPreparing = false,
-                                        sttError = errorMsg,
-                                        hintError = errorMsg
-                                    )
-                                }
-                            }
-                            is SttStreamEvent.Disconnected -> {
-                                // Background socket disconnect does not disrupt native speech recognition
-                            }
-                        }
-                    }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    if (_uiState.value.messageText.isBlank()) {
-                        val errorMsg = e.message?.takeIf { it.isNotBlank() }
-                            ?: "خطا در ارتباط با سرویس تشخیص گفتار."
-                        _uiState.update {
-                            it.copy(sttError = errorMsg)
-                        }
-                    }
-                }
-            }
         }
 
+        val engineArg = if (currentEngine == SttEngine.APP) "app" else "browser"
         audioController.startRecording(
+            engine = engineArg,
             onSpeechRecognized = { text ->
                 if (_uiState.value.isRecording && !_uiState.value.isModelSpeaking && text.isNotBlank()) {
                     _uiState.update { it.copy(messageText = text) }
@@ -554,19 +640,14 @@ class ChatViewModel(
         channel?.close()
         val senderJob = audioSenderJob
         audioSenderJob = null
-        val streamJob = sttStreamJob
-        sttStreamJob = null
-
-        streamJob?.cancel()
         senderJob?.cancel()
 
-        viewModelScope.launch {
-            try {
-                sendStopSttUseCase?.invoke()
-            } catch (_: Throwable) {}
-            try {
-                closeSttSessionUseCase()
-            } catch (_: Throwable) {}
+        if (_uiState.value.sttEngine == SttEngine.APP) {
+            viewModelScope.launch {
+                try {
+                    sendStopSttUseCase?.invoke()
+                } catch (_: Throwable) {}
+            }
         }
     }
 
@@ -845,7 +926,7 @@ class ChatViewModel(
                 is DataResult.Failure -> {
                     // Do not increment hintsUsedCount on network failure
                     val errorMsg = result.appError.getErrorMessage().ifBlank {
-                        "خطا در دریافت راهنمایی. لطفاً اتصال اینترنت خود را بررسی کنید."
+                        "نتونستیم راهنمایی رو دریافت کنیم. اینترنتت رو چک کن و دوباره امتحان کن."
                     }
                     _uiState.update {
                         it.copy(
@@ -965,7 +1046,7 @@ class ChatViewModel(
                             grammarErrors = localGrammarErrors,
                             calculatedStars = 0,
                             score = 0,
-                            feedbackFa = "مکالمه پیش از رسیدن به هدف مرحله پایان یافت. برای دریافت ستاره و تکمیل مرحله، مکالمه را ادامه دهید."
+                            feedbackFa = "مکالمه قبل از اینکه به هدف برسی تموم شد. برای دریافت ستاره و تکمیل مرحله، مکالمه رو ادامه بده."
                         )
                     } else {
                         val penalties = hintsCount + localGrammarErrorsCount
@@ -986,9 +1067,10 @@ class ChatViewModel(
                                 3 -> 100
                                 2 -> 85
                                 1 -> 70
-                                else -> 50
+                                0 -> 50
+                                else -> 0
                             },
-                            feedbackFa = "مکالمه به پایان رسید و پیشرفت شما ثبت شد."
+                            feedbackFa = "مکالمه تموم شد و پیشرفتت با موفقیت ثبت شد!"
                         )
                     }
                 }
@@ -1064,6 +1146,7 @@ class ChatViewModel(
     override fun onCleared() {
         super.onCleared()
         stopRecordingSession()
+        disconnectSttSocket()
         audioController.stopVoice()
     }
 }
