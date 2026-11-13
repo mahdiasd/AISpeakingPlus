@@ -81,6 +81,8 @@ class ProfileViewModelThemeTest {
         override suspend fun sendOtp(mobile: String): DataResult<Int> = DataResult.Success(120)
         override suspend fun verifyOtp(mobile: String, otpCode: String): DataResult<User> = DataResult.Success(User("u1", "User", mobile = mobile))
         override suspend fun fetchCurrentUserRemote(): DataResult<User> = DataResult.Success(User("u1", "User", mobile = "09123456789"))
+        override fun hasSeenIntroVideo(): Boolean = false
+        override fun setHasSeenIntroVideo(seen: Boolean) {}
     }
 
     @BeforeTest

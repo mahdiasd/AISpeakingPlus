@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Check, AlertCircle } from 'lucide-react';
 
@@ -10,6 +10,21 @@ interface EditNickNameModalProps {
   onClose: () => void;
 }
 
+/**
+ * Returns true if the first word starts with an English (Latin) letter.
+ * Returns false (RTL) for Persian/Arabic, empty text, or other scripts.
+ */
+export const isEnglishFirstWord = (text: string): boolean => {
+  const trimmed = text.trimStart();
+  if (!trimmed) return false;
+  const firstWord = trimmed.split(/\s+/)[0] || '';
+  const match = firstWord.match(/[a-zA-Z\u0600-\u06FF\uFB50-\uFEFC]/);
+  if (match) {
+    return /^[a-zA-Z]$/.test(match[0]);
+  }
+  return /^[a-zA-Z]/.test(firstWord);
+};
+
 export const EditNickNameModal: React.FC<EditNickNameModalProps> = ({
   isOpen,
   currentNickName,
@@ -19,11 +34,31 @@ export const EditNickNameModal: React.FC<EditNickNameModalProps> = ({
 }) => {
   const [nickName, setNickName] = useState(currentNickName);
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
-      setNickName(currentNickName);
+      const initial = currentNickName || '';
+      setNickName(initial);
       setError(null);
+
+      const focusAndSetCursorToEnd = () => {
+        const input = inputRef.current;
+        if (input) {
+          input.focus();
+          const len = input.value.length;
+          input.setSelectionRange(len, len);
+        }
+      };
+
+      focusAndSetCursorToEnd();
+      const rafId = requestAnimationFrame(focusAndSetCursorToEnd);
+      const timer = setTimeout(focusAndSetCursorToEnd, 80);
+
+      return () => {
+        cancelAnimationFrame(rafId);
+        clearTimeout(timer);
+      };
     }
   }, [isOpen, currentNickName]);
 
@@ -46,6 +81,8 @@ export const EditNickNameModal: React.FC<EditNickNameModalProps> = ({
       setError(err instanceof Error ? err.message : 'خطا در ذخیره نام مستعار');
     }
   };
+
+  const isEnglish = isEnglishFirstWord(nickName);
 
   return (
     <AnimatePresence>
@@ -89,16 +126,25 @@ export const EditNickNameModal: React.FC<EditNickNameModalProps> = ({
                     <User className="w-4 h-4" />
                   </div>
                   <input
+                    ref={inputRef}
                     type="text"
                     value={nickName}
+                    dir={isEnglish ? 'ltr' : 'rtl'}
                     onChange={(e) => {
                       setNickName(e.target.value);
                       if (error) setError(null);
                     }}
+                    onFocus={(e) => {
+                      if (e.currentTarget.selectionStart === 0 && e.currentTarget.selectionEnd === 0) {
+                        const len = e.currentTarget.value.length;
+                        e.currentTarget.setSelectionRange(len, len);
+                      }
+                    }}
                     placeholder="مثال: رضا احمدی"
                     maxLength={50}
-                    autoFocus
-                    className="w-full pr-10 pl-3.5 py-2.5 rounded-2xl bg-white/5 border border-white/10 focus:border-apple-blue focus:ring-2 focus:ring-apple-blue/20 text-sm text-white placeholder-apple-gray-400 outline-none transition-all"
+                    className={`w-full py-2.5 rounded-2xl bg-white/5 border border-white/10 focus:border-apple-blue focus:ring-2 focus:ring-apple-blue/20 text-sm text-white placeholder-apple-gray-400 outline-none transition-all ${
+                      isEnglish ? 'text-left pl-3.5 pr-10' : 'text-right pr-10 pl-3.5'
+                    }`}
                   />
                 </div>
                 <div className="flex justify-between text-[11px] text-apple-gray-400 px-1">

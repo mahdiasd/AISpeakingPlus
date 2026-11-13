@@ -71,8 +71,10 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -830,9 +832,10 @@ fun Modifier.dimmed(enabled: Boolean): Modifier = if (enabled) this else this.al
  */
 @Composable
 fun GameTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
+    fieldModifier: Modifier = Modifier,
     label: String? = null,
     placeholder: String = "",
     keyboardType: androidx.compose.ui.text.input.KeyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
@@ -849,66 +852,126 @@ fun GameTextField(
     var focused by remember { mutableStateOf(false) }
     val direction = if (ltr) androidx.compose.ui.text.style.TextDirection.Ltr else androidx.compose.ui.text.style.TextDirection.Rtl
     val fontFamily = AppTheme.typography.persianRegular
+    val inputLayoutDirection = if (ltr) LayoutDirection.Ltr else LayoutDirection.Rtl
+
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (label != null) {
             GameText(text = label, size = 13.sp, bold = true, color = Game.TextSecondary)
         }
-        androidx.compose.foundation.text.BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            singleLine = singleLine,
-            textStyle = androidx.compose.ui.text.TextStyle(
-                color = Game.TextPrimary,
-                fontSize = 16.sp,
-                fontFamily = fontFamily,
-                textDirection = direction,
-                textAlign = if (centered) TextAlign.Center else TextAlign.Start,
-            ),
-            cursorBrush = androidx.compose.ui.graphics.SolidColor(accent),
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                keyboardType = keyboardType,
-                imeAction = imeAction,
-            ),
-            keyboardActions = androidx.compose.foundation.text.KeyboardActions(
-                onDone = { onImeAction() },
-                onSend = { onImeAction() },
-                onGo = { onImeAction() },
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .trackFocus { focused = it },
-            decorationBox = { inner ->
-                val borderColor = when {
-                    isError -> Game.Coral
-                    focused -> accent.copy(alpha = 0.85f)
-                    else -> Game.Stroke
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 50.dp)
-                        .background(Game.PanelRaised, shape)
-                        .border(if (focused || isError) 1.5.dp else 1.dp, borderColor, shape)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    if (leading != null) leading()
-                    Box(modifier = Modifier.weight(1f), contentAlignment = if (centered) Alignment.Center else Alignment.CenterStart) {
-                        if (value.isEmpty()) {
-                            GameText(
-                                text = placeholder,
-                                size = 16.sp,
-                                color = Game.TextMuted,
-                                align = if (centered) TextAlign.Center else null,
-                            )
-                        }
-                        inner()
+        CompositionLocalProvider(LocalLayoutDirection provides inputLayoutDirection) {
+            androidx.compose.foundation.text.BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = singleLine,
+                textStyle = androidx.compose.ui.text.TextStyle(
+                    color = Game.TextPrimary,
+                    fontSize = 16.sp,
+                    fontFamily = fontFamily,
+                    textDirection = direction,
+                    textAlign = if (centered) TextAlign.Center else TextAlign.Start,
+                ),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(accent),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = keyboardType,
+                    imeAction = imeAction,
+                ),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                    onDone = { onImeAction() },
+                    onSend = { onImeAction() },
+                    onGo = { onImeAction() },
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(fieldModifier)
+                    .trackFocus { focused = it },
+                decorationBox = { inner ->
+                    val borderColor = when {
+                        isError -> Game.Coral
+                        focused -> accent.copy(alpha = 0.85f)
+                        else -> Game.Stroke
                     }
-                }
-            },
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 50.dp)
+                            .background(Game.PanelRaised, shape)
+                            .border(if (focused || isError) 1.5.dp else 1.dp, borderColor, shape)
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        if (leading != null) leading()
+                        Box(
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = if (centered) Alignment.Center else Alignment.CenterStart
+                        ) {
+                            if (value.text.isEmpty()) {
+                                GameText(
+                                    text = placeholder,
+                                    size = 16.sp,
+                                    color = Game.TextMuted,
+                                    align = if (centered) TextAlign.Center else null,
+                                )
+                            }
+                            inner()
+                        }
+                    }
+                },
+            )
+        }
+    }
+}
+
+@Composable
+fun GameTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    fieldModifier: Modifier = Modifier,
+    label: String? = null,
+    placeholder: String = "",
+    keyboardType: androidx.compose.ui.text.input.KeyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
+    imeAction: androidx.compose.ui.text.input.ImeAction = androidx.compose.ui.text.input.ImeAction.Done,
+    onImeAction: () -> Unit = {},
+    ltr: Boolean = false,
+    isError: Boolean = false,
+    singleLine: Boolean = true,
+    centered: Boolean = false,
+    accent: Color = Game.Blue,
+    leading: (@Composable () -> Unit)? = null,
+) {
+    var textFieldValueState by remember {
+        mutableStateOf(
+            TextFieldValue(
+                text = value,
+                selection = TextRange(value.length)
+            )
         )
     }
+    val textFieldValue = textFieldValueState.copy(text = value)
+
+    GameTextField(
+        value = textFieldValue,
+        onValueChange = { newValue ->
+            textFieldValueState = newValue
+            if (value != newValue.text) {
+                onValueChange(newValue.text)
+            }
+        },
+        modifier = modifier,
+        fieldModifier = fieldModifier,
+        label = label,
+        placeholder = placeholder,
+        keyboardType = keyboardType,
+        imeAction = imeAction,
+        onImeAction = onImeAction,
+        ltr = ltr,
+        isError = isError,
+        singleLine = singleLine,
+        centered = centered,
+        accent = accent,
+        leading = leading,
+    )
 }
 
 private fun Modifier.trackFocus(onChange: (Boolean) -> Unit): Modifier =
