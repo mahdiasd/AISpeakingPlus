@@ -108,20 +108,29 @@ export const HomeHeaderStats: React.FC<HomeHeaderStatsProps> = ({
             transition={{ type: 'spring', stiffness: 450, damping: 26 }}
             type="button"
             onClick={onSubscribeClick}
-            className="relative p-[1.5px] rounded-full overflow-hidden shadow-[0_4px_18px_rgba(245,158,11,0.25)] hover:brightness-105 active:scale-95 transition-all cursor-pointer group"
+            className="relative h-10 px-3.5 sm:px-4 rounded-full bg-amber-50/90 dark:bg-amber-400/20 hover:bg-amber-100/90 dark:hover:bg-amber-400/30 backdrop-blur-md text-amber-900 dark:text-amber-100 font-black text-xs flex items-center justify-center gap-1.5 sm:gap-2 shadow-[0_4px_18px_rgba(245,158,11,0.25)] active:scale-95 transition-all cursor-pointer group"
             title="ارتقا به نسخه پلاس و باز کردن تمام مراحل"
           >
-            {/* Animated rotating border gradient (matching Compose animatedBorder sweep gradient) */}
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
-              className="absolute -inset-[100%] bg-[conic-gradient(from_0deg,#ab47bc,#2196f3,#7cb342,#ffb300,#ab47bc)]"
-            />
-            {/* Inner button surface */}
-            <div className="relative z-10 h-10 px-3.5 sm:px-4 rounded-full bg-amber-50/95 dark:bg-[#151324]/90 backdrop-blur-md text-amber-900 dark:text-amber-100 font-black text-xs flex items-center justify-center gap-1.5 sm:gap-2">
-              <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-300 animate-pulse" />
-              <span>پلاس شو ✨</span>
-            </div>
+            {/* Animated rotating border gradient (masked to only 1.5px border stroke, center 100% transparent/hollow) */}
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 rounded-full p-[1.5px] pointer-events-none overflow-hidden"
+              style={{
+                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                WebkitMaskComposite: 'xor',
+                mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                maskComposite: 'exclude',
+              }}
+            >
+              <motion.span
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 2.8, ease: 'linear' }}
+                className="absolute -inset-[150%] bg-[conic-gradient(from_0deg,#ab47bc,#2196f3,#7cb342,#ffb300,#ab47bc)]"
+              />
+            </span>
+
+            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-300 animate-pulse relative z-10" />
+            <span className="relative z-10">پلاس شو ✨</span>
           </motion.button>
         )}
       </div>

@@ -122,9 +122,10 @@ fun RubySubscriptionButton(
                 scaleX = scale
                 scaleY = scale
             }
+            .clip(shape)
+            .background(containerColor)
             .animatedBorder(
                 borderColors = animatedBorderColors,
-                backgroundColor = containerColor,
                 shape = shape,
                 borderWidth = 1.5.dp,
                 animationDurationInMillis = 2800

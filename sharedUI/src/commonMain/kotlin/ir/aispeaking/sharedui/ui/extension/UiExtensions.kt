@@ -38,12 +38,17 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.AndroidUiModes.UI_MODE_NIGHT_NO
@@ -248,10 +253,10 @@ fun DashedDivider(
 @Composable
 fun Modifier.animatedBorder(
     borderColors: List<Color>,
-    backgroundColor: Color,
+    backgroundColor: Color? = null,
     shape: Shape = AppTheme.shapes.roundMedium,
-    borderWidth: Dp,
-    animationDurationInMillis: Int = 1000,
+    borderWidth: Dp = 1.5.dp,
+    animationDurationInMillis: Int = 2000,
     easing: Easing = LinearEasing,
 ): Modifier {
     val brush = Brush.sweepGradient(borderColors)
@@ -267,16 +272,50 @@ fun Modifier.animatedBorder(
 
     return this
         .clip(shape)
-        .drawBehind {
-            rotate(angle) {
-                drawCircle(
-                    brush = brush,
-                    radius = maxOf(size.width, size.height),
-                )
+        .then(
+            if (backgroundColor != null) Modifier.background(color = backgroundColor, shape = shape)
+            else Modifier
+        )
+        .drawWithContent {
+            // 1. Draw inner content (which may have its own translucent glass background)
+            drawContent()
+
+            // 2. Draw rotating gradient ONLY on the border ring, keeping the interior 100% hollow
+            val strokePx = borderWidth.toPx()
+            if (strokePx > 0f && size.width > 0f && size.height > 0f) {
+                val outerOutline = shape.createOutline(size, layoutDirection, this)
+                val innerWidth = (size.width - 2 * strokePx).coerceAtLeast(0f)
+                val innerHeight = (size.height - 2 * strokePx).coerceAtLeast(0f)
+                val innerOutline = shape.createOutline(Size(innerWidth, innerHeight), layoutDirection, this)
+
+                val outerPath = Path().apply {
+                    when (outerOutline) {
+                        is Outline.Rectangle -> addRect(outerOutline.rect)
+                        is Outline.Rounded -> addRoundRect(outerOutline.roundRect)
+                        is Outline.Generic -> addPath(outerOutline.path)
+                    }
+                }
+                val innerPath = Path().apply {
+                    when (innerOutline) {
+                        is Outline.Rectangle -> addRect(innerOutline.rect)
+                        is Outline.Rounded -> addRoundRect(innerOutline.roundRect)
+                        is Outline.Generic -> addPath(innerOutline.path)
+                    }
+                    translate(Offset(strokePx, strokePx))
+                }
+
+                clipPath(outerPath) {
+                    clipPath(innerPath, clipOp = ClipOp.Difference) {
+                        rotate(angle) {
+                            drawCircle(
+                                brush = brush,
+                                radius = maxOf(size.width, size.height),
+                            )
+                        }
+                    }
+                }
             }
         }
-        .padding(borderWidth)
-        .background(color = backgroundColor, shape = shape)
 }
 
 @Preview(
