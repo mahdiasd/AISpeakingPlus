@@ -82,7 +82,7 @@ fun SubscriptionHeader(
 
         // Subtitle
         GameText(
-            text = "تمامی مراحل، سناریوهای پیشرفته و هوش مصنوعی بدون وقفه را باز کنید",
+            text = "همه مراحل، سناریوهای جذاب و مکالمه بدون محدودیت با هوش مصنوعی رو باز کن",
             color = Game.TextSecondary,
             size = 12.sp,
             align = TextAlign.Center,
@@ -124,13 +124,13 @@ fun SubscriptionHeader(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         GameText(
-                            text = "شما دارای اشتراک فعال هستید",
+                            text = "اشتراک فعال داری! ✨",
                             color = if (isDark) Color(0xFFFFC83D) else Color(0xFFB45309),
                             size = 13.sp,
                             bold = true
                         )
                         GameText(
-                            text = "خرید پلن جدید به انتهای روزهای باقیمانده شما اضافه خواهد شد.",
+                            text = "با خرید پلن جدید، روزها به انتهای اشتراک فعلیت اضافه میشه.",
                             color = Game.TextSecondary,
                             size = 11.sp
                         )
@@ -143,7 +143,7 @@ fun SubscriptionHeader(
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         GameText(
-                            text = "${formatToPersian(currentStatus.remainingDays)} روز باقیمانده",
+                            text = "${formatToPersian(currentStatus.remainingDays)} روز باقی‌مونده",
                             color = if (isDark) Color(0xFFFFC83D) else Color(0xFFB45309),
                             size = 12.sp,
                             bold = true

@@ -95,7 +95,7 @@ class LoginViewModel(
         val phone = _uiState.value.phoneNumber.trim()
         if (!isValidIranianPhone(phone)) {
             _uiState.update {
-                it.copy(phoneError = "لطفاً شماره موبایل معتبر ۱۱ رقمی (مانند 09123456789) وارد کنید.")
+                it.copy(phoneError = "شماره موبایل باید ۱۱ رقمی و معتبر باشه (مثلاً ۰۹۱۲۳۴۵۶۷۸۹)")
             }
             return
         }
@@ -141,7 +141,7 @@ class LoginViewModel(
         val otp = _uiState.value.otpCode.trim()
 
         if (otp.length < 4) {
-            _uiState.update { it.copy(otpError = "لطفاً کد تایید را کامل وارد نمایید.") }
+            _uiState.update { it.copy(otpError = "کد تایید رو کامل وارد کن.") }
             return
         }
 
@@ -184,7 +184,7 @@ class LoginViewModel(
                     _effect.send(LoginEffect.NavigateToMain)
                 }
                 is DataResult.Failure -> {
-                    val errorMsg = result.appError.getErrorMessage().ifBlank { "کد تایید اشتباه است یا منقضی شده است" }
+                    val errorMsg = result.appError.getErrorMessage().ifBlank { "کد تایید اشتباهه یا منقضی شده، لطفاً دوباره چک کن." }
                     analyticsTracker.logEvent(
                         "login_failed",
                         mapOf(

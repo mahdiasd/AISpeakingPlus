@@ -78,7 +78,7 @@ fun HintConfirmDialog(
             )
 
             GameText(
-                text = "یک جمله مناسب برای ادامه گفتگو بهت پیشنهاد می‌دهیم تا گیر نکنی.",
+                text = "یه جمله آماده و کاربردی بهت پیشنهاد می‌دیم تا مکالمه رو راحت ادامه بدی و گیر نکنی.",
                 size = 14.sp,
                 lineHeight = 22.sp,
                 color = Game.TextSecondary,
@@ -97,13 +97,13 @@ fun HintConfirmDialog(
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 GameText(
-                    text = "نکته مهم",
+                    text = "یه نکته کوچیک",
                     size = 13.sp,
                     bold = true,
                     color = AppleChatTheme.Gold
                 )
                 GameText(
-                    text = "هر بار گرفتن راهنما از ستاره‌های این مرحله کم می‌کند. برای گرفتن ۳ ستاره، بدون راهنما و بدون خطا جلو برو.",
+                    text = "هر بار گرفتن راهنما از ستاره‌های این مرحله کم می‌کنه. اگه ۳ تا ستاره کامل می‌خوای، سعی کن بدون راهنما و خطا صحبت کنی!",
                     size = 13.sp,
                     lineHeight = 21.sp,
                     color = Game.TextPrimary,
@@ -112,7 +112,7 @@ fun HintConfirmDialog(
                 )
                 if (hintsUsedCount > 0) {
                     GameText(
-                        text = "تا الان ${hintsUsedCount.fa()} بار راهنما گرفته‌ای.",
+                        text = "تا الان ${hintsUsedCount.fa()} بار از راهنما استفاده کردی.",
                         size = 12.sp,
                         color = AppleChatTheme.SuccessCyan
                     )
@@ -121,7 +121,7 @@ fun HintConfirmDialog(
 
             // CTAs
             GameButton(
-                text = "بله، راهنما بده",
+                text = "آره، راهنمایی کن",
                 onClick = onConfirm,
                 modifier = Modifier.fillMaxWidth(),
                 style = GameButtonStyle.Gold,
@@ -129,7 +129,7 @@ fun HintConfirmDialog(
             )
 
             GameButton(
-                text = "فعلاً نه",
+                text = "نه، خودم می‌تونم",
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),
                 style = GameButtonStyle.Glass,

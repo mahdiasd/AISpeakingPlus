@@ -116,9 +116,9 @@ fun LevelPickerBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            GameText(text = "سطح زبانت چیست؟", size = 18.sp, bold = true, align = TextAlign.Center)
+            GameText(text = "سطح زبانت چیه؟", size = 18.sp, bold = true, align = TextAlign.Center)
             GameText(
-                text = "سطح انگلیسی خودت را انتخاب کن؛ بعداً هم می‌توانی تغییرش بدهی.",
+                text = "سطح انگلیسیت رو انتخاب کن تا مکالمه‌ها باهات هماهنگ بشن؛ بعداً هم هر وقت خواستی می‌تونی تغییرش بدی.",
                 size = 12.sp,
                 color = Game.TextSecondary,
                 align = TextAlign.Center

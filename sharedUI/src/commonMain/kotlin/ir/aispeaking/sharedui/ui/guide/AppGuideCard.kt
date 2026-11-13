@@ -212,7 +212,7 @@ fun AppGuideCard(
                         contentAlignment = Alignment.Center
                     ) {
                         GameText(
-                            text = if (isLast) "متوجه شدم" else "بعدی",
+                            text = if (isLast) "حله، متوجه شدم!" else "بعدی",
                             size = 12.sp,
                             bold = true,
                             color = if (isDark) Color.Black else Color.White

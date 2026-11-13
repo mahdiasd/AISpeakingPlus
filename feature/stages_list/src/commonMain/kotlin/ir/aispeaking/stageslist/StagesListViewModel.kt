@@ -81,7 +81,7 @@ class StagesListViewModel(
                 }
                 if (action.stage.lockStatus == ir.aispeaking.domain.model.stage.StageLockStatus.LOCKED_PREVIOUS_STAGE) {
                     _uiState.update {
-                        it.copy(errorMessage = "برای باز شدن این مرحله، ابتدا مرحله قبلی را تکمیل کنید.")
+                        it.copy(errorMessage = "برای باز شدن این مرحله، اول باید مرحله قبل رو تموم کنی.")
                     }
                 }
             }

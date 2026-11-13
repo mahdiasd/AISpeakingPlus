@@ -116,7 +116,7 @@ fun StageBriefingDialog(
                 icon = Res.drawable.ic_done,
                 iconTint = Game.Blue,
                 badgeBg = Game.Blue.copy(alpha = 0.16f),
-                title = "هدف این مکالمه",
+                title = "هدفت توی این مکالمه",
                 body = targetFa,
                 latinSubtext = targetEn
             )
@@ -127,7 +127,7 @@ fun StageBriefingDialog(
                     icon = Res.drawable.ic_scenario,
                     iconTint = Game.Sky,
                     badgeBg = Game.Sky.copy(alpha = 0.16f),
-                    title = "سناریو و موقعیت",
+                    title = "ماجرا و موقعیت",
                     body = stage.briefingFa
                 )
             }

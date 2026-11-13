@@ -67,13 +67,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ir.aispeaking.domain.model.stt.SttConnectionStatus
+import ir.aispeaking.domain.model.stt.SttEngine
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_clear
 import ir.aispeaking.sharedui.ic_edit
 import ir.aispeaking.sharedui.ic_keyboard
 import ir.aispeaking.sharedui.ic_lamp
 import ir.aispeaking.sharedui.ic_microphone
+import ir.aispeaking.sharedui.ic_refresh
 import ir.aispeaking.sharedui.ic_send
+import ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameIconButton
 import ir.aispeaking.sharedui.ui.game.GameText
@@ -109,6 +113,9 @@ fun ChatBottomBar(
     enabled: Boolean = true,
     hintsUsedCount: Int = 0,
     isRequestingHint: Boolean = false,
+    sttEngine: SttEngine = SttEngine.APP,
+    sttConnectionStatus: SttConnectionStatus = SttConnectionStatus.CONNECTED,
+    onReconnectStt: () -> Unit = {},
     onTextChange: (String) -> Unit,
     onInputModeChange: (ChatInputMode) -> Unit,
     onVoiceToggle: (Boolean) -> Unit,
@@ -126,6 +133,19 @@ fun ChatBottomBar(
                 WindowInsets.navigationBars.union(WindowInsets.ime).only(WindowInsetsSides.Bottom)
             )
     ) {
+        // Warning banner when speech service connection is lost (voice mode)
+        AnimatedVisibility(
+            visible = inputMode == ChatInputMode.VOICE &&
+                sttEngine == SttEngine.APP &&
+                (sttConnectionStatus == SttConnectionStatus.DISCONNECTED || sttConnectionStatus == SttConnectionStatus.ERROR),
+            enter = fadeIn(tween(160)) + slideInVertically(tween(180)) { it / 2 },
+            exit = fadeOut(tween(120)) + slideOutVertically(tween(140)) { it / 2 }
+        ) {
+            CompactConnectionWarningCapsule(
+                onReconnect = onReconnectStt
+            )
+        }
+
         // Floating Transcript Preview Capsule (shown when speech recognition has recognized text and AI not speaking)
         AnimatedVisibility(
             visible = text.isNotBlank() && inputMode == ChatInputMode.VOICE && !isModelSpeaking,
@@ -160,6 +180,9 @@ fun ChatBottomBar(
                     enabled = enabled,
                     hintsUsedCount = hintsUsedCount,
                     isRequestingHint = isRequestingHint,
+                    sttEngine = sttEngine,
+                    sttConnectionStatus = sttConnectionStatus,
+                    onReconnectStt = onReconnectStt,
                     onSwitchToText = { onInputModeChange(ChatInputMode.TEXT) },
                     onVoiceToggle = onVoiceToggle,
                     onSendClick = onSendClick,
@@ -197,6 +220,9 @@ private fun CompactVoiceRow(
     enabled: Boolean,
     hintsUsedCount: Int,
     isRequestingHint: Boolean,
+    sttEngine: SttEngine,
+    sttConnectionStatus: SttConnectionStatus,
+    onReconnectStt: () -> Unit,
     onSwitchToText: () -> Unit,
     onVoiceToggle: (Boolean) -> Unit,
     onSendClick: () -> Unit,
@@ -236,13 +262,19 @@ private fun CompactVoiceRow(
                         AppleRecordingActivePill(onStop = { onVoiceToggle(false) })
                     }
                 } else {
-                    AppleRecordPill(
-                        hasText = text.isNotBlank(),
-                        enabled = enabled,
-                        isModelSpeaking = isModelSpeaking,
-                        onClick = { if (isInteractive) onVoiceToggle(true) },
-                        modifier = micModifier
-                    )
+                    if (sttEngine == SttEngine.APP && (sttConnectionStatus == SttConnectionStatus.DISCONNECTED || sttConnectionStatus == SttConnectionStatus.ERROR)) {
+                        AppleDisconnectedPill(onReconnect = onReconnectStt)
+                    } else if (sttEngine == SttEngine.APP && sttConnectionStatus == SttConnectionStatus.CONNECTING) {
+                        AppleConnectingPill()
+                    } else {
+                        AppleRecordPill(
+                            hasText = text.isNotBlank(),
+                            enabled = enabled,
+                            isModelSpeaking = isModelSpeaking,
+                            onClick = { if (isInteractive) onVoiceToggle(true) },
+                            modifier = micModifier
+                        )
+                    }
                 }
             }
 
@@ -388,6 +420,68 @@ private fun CompactTextRow(
                     size = 42.dp,
                     enabled = isInteractive,
                     onClick = { if (isInteractive) onHintClick() }
+                )
+            }
+        }
+    }
+}
+
+/** Floating warning capsule above dock when speech service connection is dropped */
+@Composable
+private fun CompactConnectionWarningCapsule(
+    onReconnect: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 4.dp)
+    ) {
+        val shape = RoundedCornerShape(16.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .background(AppleChatTheme.Coral.copy(alpha = 0.14f))
+                .border(1.dp, AppleChatTheme.Coral.copy(alpha = 0.5f), shape)
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(AppleChatTheme.Coral, CircleShape)
+            )
+
+            GameText(
+                text = "ارتباط با سرویس صوتی برقرار نیست.",
+                size = 12.sp,
+                bold = true,
+                color = AppleChatTheme.Coral,
+                modifier = Modifier.weight(1f)
+            )
+
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(AppleChatTheme.Coral.copy(alpha = 0.18f))
+                    .border(0.8.dp, AppleChatTheme.Coral.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                    .applePressEffect(targetScale = 0.94f, onClick = onReconnect)
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_refresh),
+                    contentDescription = "تلاش مجدد",
+                    tint = AppleChatTheme.Coral,
+                    modifier = Modifier.size(13.dp)
+                )
+                GameText(
+                    text = "تلاش مجدد",
+                    size = 11.sp,
+                    bold = true,
+                    color = AppleChatTheme.Coral
                 )
             }
         }
@@ -605,6 +699,67 @@ private fun AppleRecordingActivePill(onStop: () -> Unit) {
             modifier = Modifier
                 .size(13.dp)
                 .background(AppleChatTheme.Coral, RoundedCornerShape(3.dp))
+        )
+    }
+}
+
+/** Apple pill shown in place of record button when speech service is disconnected */
+@Composable
+private fun AppleDisconnectedPill(
+    onReconnect: () -> Unit
+) {
+    val shape = RoundedCornerShape(22.dp)
+    val color = AppleChatTheme.Coral
+
+    Row(
+        modifier = Modifier
+            .applePressEffect(targetScale = 0.95f, onClick = onReconnect)
+            .clip(shape)
+            .background(color.copy(alpha = 0.16f))
+            .border(1.dp, color.copy(alpha = 0.55f), shape)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_refresh),
+            contentDescription = "تلاش مجدد برای اتصال",
+            tint = color,
+            modifier = Modifier.size(16.dp)
+        )
+        GameText(
+            text = "قطع ارتباط • لمس برای تلاش مجدد",
+            size = 12.sp,
+            bold = true,
+            color = color
+        )
+    }
+}
+
+/** Apple pill shown while connecting to speech service */
+@Composable
+private fun AppleConnectingPill() {
+    val shape = RoundedCornerShape(22.dp)
+    val azure = AppleChatTheme.PrimaryAzure
+
+    Row(
+        modifier = Modifier
+            .clip(shape)
+            .background(azure.copy(alpha = 0.14f))
+            .border(1.dp, azure.copy(alpha = 0.45f), shape)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        AppLoadingIndicator(
+            size = 14.dp,
+            color = azure
+        )
+        GameText(
+            text = "در حال اتصال به سرویس صوتی…",
+            size = 12.sp,
+            bold = true,
+            color = azure
         )
     }
 }

@@ -55,7 +55,7 @@ fun PlacementExitConfirmDialog(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     GameText(
-                        text = "خروج از آزمون تعیین سطح؟",
+                        text = "از آزمون تعیین سطح خارج میشی؟",
                         size = 17.sp,
                         bold = true,
                         color = if (isDark) Game.TextPrimary else Color(0xFF0F172A),
@@ -63,7 +63,7 @@ fun PlacementExitConfirmDialog(
                     )
 
                     GameText(
-                        text = "در صورت خروج، پاسخ‌های ثبت‌شده ذخیره نمی‌شوند و آزمون لغو خواهد شد.",
+                        text = "اگه الان خارج بشی، پاسخ‌هات ذخیره نمیشن و آزمون لغو میشه.",
                         size = 13.sp,
                         lineHeight = 22.sp,
                         color = if (isDark) Game.TextSecondary else Color(0xFF64748B),

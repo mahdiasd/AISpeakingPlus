@@ -58,9 +58,9 @@ fun PlacementTestCard(
 
     val levelText = user.languageLevel.takeIf { it.isNotBlank() } ?: "تعیین‌نشده"
     val subtitleText = if (user.languageLevel.isNotBlank()) {
-        "سطح ثبت‌شده: $levelText • برای ارتقا دوباره آزمون دهید"
+        "سطح ثبت‌شده: $levelText • برای ارتقا دوباره آزمون بده"
     } else {
-        "سطح تسلط زبان انگلیسی خود را در ۵ دقیقه دقیق بسنجید"
+        "سطح تسلط زبان انگلیسیت رو در ۵ دقیقه دقیق بسنج"
     }
 
     val iconGradient = if (isDark) {

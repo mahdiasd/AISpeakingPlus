@@ -335,7 +335,7 @@ fun StageListItemCard(
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
                             GameText(
-                                text = "مرحله فعال شما",
+                                text = "مرحله فعلی تو",
                                 size = 11.sp,
                                 bold = true,
                                 color = Game.Blue
@@ -457,10 +457,10 @@ fun StageListItemCard(
                 // Secondary hint/stats on start side
                 val targetText = when {
                     hasPlayed -> "بهترین امتیاز: ${(stage.userProgress?.bestScore ?: 0).fa()}"
-                    isActiveCurrentStage -> "آماده مکالمه صوتی و متنی"
-                    stage.lockStatus == StageLockStatus.LOCKED_PREVIOUS_STAGE -> "نیاز به اتمام مرحله قبل"
-                    stage.lockStatus == StageLockStatus.LOCKED_REGISTRATION -> "ورود به حساب لازم است"
-                    stage.lockStatus == StageLockStatus.LOCKED_SUBSCRIPTION -> "دسترسی با اشتراک ویژه"
+                    isActiveCurrentStage -> "آماده شروع مکالمه"
+                    stage.lockStatus == StageLockStatus.LOCKED_PREVIOUS_STAGE -> "اول مرحله قبل رو تموم کن"
+                    stage.lockStatus == StageLockStatus.LOCKED_REGISTRATION -> "نیاز به ورود به حساب"
+                    stage.lockStatus == StageLockStatus.LOCKED_SUBSCRIPTION -> "نیاز به اشتراک ویژه"
                     else -> "مرحله آزاد"
                 }
 

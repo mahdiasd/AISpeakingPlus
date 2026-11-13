@@ -327,7 +327,7 @@ private fun PhoneInputStep(
     ) {
         GameText(text = "ورود / ثبت‌نام", size = 22.sp, bold = true, align = TextAlign.Center)
         GameText(
-            text = "برای شروع ماجراجویی مکالمه انگلیسی، شماره موبایلت را وارد کن.",
+            text = "برای شروع یادگیری و گفتگو، شماره موبایلت رو وارد کن.",
             size = 13.sp,
             lineHeight = 21.sp,
             color = Game.TextSecondary,
@@ -379,7 +379,7 @@ private fun PhoneInputStep(
             enabled = !uiState.isLoading
         )
         GameText(
-            text = "بدون ثبت‌نام شروع کن؛ پیشرفتت فقط روی همین دستگاه ذخیره می‌شود.",
+            text = "می‌تونی بدون ثبت‌نام شروع کنی؛ فقط یادت باشه پیشرفتت روی همین دستگاه ذخیره میشه.",
             size = 11.sp,
             lineHeight = 18.sp,
             color = Game.TextMuted,
@@ -403,9 +403,9 @@ private fun OtpInputStep(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        GameText(text = "کد تایید را وارد کن", size = 22.sp, bold = true, align = TextAlign.Center)
+        GameText(text = "کد تایید رو وارد کن", size = 22.sp, bold = true, align = TextAlign.Center)
         GameText(
-            text = "کد پیامک‌شده به این شماره را بنویس:",
+            text = "کدی که برات پیامک کردیم رو بنویس:",
             size = 13.sp,
             color = Game.TextSecondary,
             align = TextAlign.Center
@@ -541,7 +541,7 @@ private fun OtpResendSection(
             )
         } else {
             GameText(
-                text = "ارسال دوباره کد تا ${countdownSeconds.fa()} ثانیه دیگر",
+                text = "ارسال دوباره کد تا ${countdownSeconds.fa()} ثانیه دیگه",
                 size = 12.sp,
                 color = Game.TextSecondary
             )

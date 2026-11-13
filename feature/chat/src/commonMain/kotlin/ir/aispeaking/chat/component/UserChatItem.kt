@@ -353,7 +353,7 @@ private fun GrammarLoadingBadge(isDark: Boolean) {
         }
 
         GameText(
-            text = "بررسی گرامر...",
+            text = "بررسی گرامر…",
             size = 10.5.sp,
             bold = false,
             color = if (isDark) Color(0xEEFFFFFF) else Color(0xDD0F172A)
@@ -398,7 +398,7 @@ private fun GrammarSuccessBadge(isDark: Boolean) {
             modifier = Modifier.size(13.dp)
         )
         GameText(
-            text = "گرامر درست بود",
+            text = "گرامرت درسته!",
             size = 11.sp,
             bold = true,
             color = AppleChatTheme.SuccessCyan
@@ -513,7 +513,7 @@ private fun GrammarTipCard(
             )
         } else if (correctedSentence.isNullOrBlank()) {
             GameText(
-                text = "جمله شما از نظر گرامری نیاز به اصلاح دارد.",
+                text = "این جمله یه نکته گرامری کوچیک داره:",
                 size = 12.sp,
                 lineHeight = 19.sp,
                 color = Game.TextPrimary

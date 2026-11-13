@@ -94,9 +94,9 @@ fun FinishConversationDialog(
                     GameText(
                         text = when (stars) {
                             3 -> "عالی بود! کامل تمامش کردی"
-                            2 -> "آفرین! خیلی خوب بود"
-                            1 -> "خوب بود، ادامه بده"
-                            else -> "این بار ستاره نگرفتی"
+                            2 -> "آفرین! خیلی خوب صحبت کردی"
+                            1 -> "خوب بود! بازم تمرین کنی عالی میشی"
+                            else -> "اشکالی نداره، این بار ستاره نگرفتی ولی تجربه خوبی شد!"
                         },
                         size = 18.sp,
                         bold = true,
@@ -119,16 +119,16 @@ fun FinishConversationDialog(
                         earnedTint = AppleChatTheme.Gold
                     )
                     GameText(
-                        text = "هدف مرحله انجام نشده است",
+                        text = "هدف مرحله هنوز کامل نشده!",
                         size = 18.sp,
                         bold = true,
                         color = AppleChatTheme.Coral,
                         align = TextAlign.Center
                     )
                     GameText(
-                        text = "مکالمه پیش از رسیدن به هدف پایان یافت، بنابراین ستاره‌ای دریافت نمی‌کنید.",
-                        size = 12.sp,
-                        lineHeight = 18.sp,
+                        text = "مکالمه قبل از اینکه به هدف برسی تموم شد، واسه همین ستاره‌ای نگرفتی. حیفه، برگرد و هدف رو کامل کن!",
+                        size = 12.5.sp,
+                        lineHeight = 19.sp,
                         color = Game.TextSecondary,
                         align = TextAlign.Center
                     )

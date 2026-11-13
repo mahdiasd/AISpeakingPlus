@@ -263,8 +263,8 @@ fun SubscriptionScreen(
 
             RegisterBottomSheet(
                 visible = uiState.showRegisterDialog,
-                title = "ورود یا ثبت‌نام جهت خرید اشتراک",
-                subtitle = "برای خرید و فعال‌سازی اشتراک ویژه، ابتدا باید شماره موبایل خود را وارد و تایید کنید.",
+                title = "ورود یا ثبت‌نام برای خرید اشتراک",
+                subtitle = "برای فعال‌سازی اشتراک ویژه، اول شماره موبایلت رو وارد کن تا اشتراک روی حسابت فعال بشه.",
                 confirmButtonText = "تایید و ادامه خرید",
                 onDismiss = { viewModel.processIntent(SubscriptionIntent.DismissRegisterDialog) },
                 onRegisterSuccess = {},

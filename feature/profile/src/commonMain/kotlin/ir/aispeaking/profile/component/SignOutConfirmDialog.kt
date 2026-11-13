@@ -58,14 +58,14 @@ fun SignOutConfirmDialog(
             }
 
             GameText(
-                text = "خروج از حساب کاربری؟",
+                text = "می‌خوای از حساب خارج بشی؟",
                 size = 18.sp,
                 bold = true,
                 align = TextAlign.Center
             )
 
             GameText(
-                text = "با خروج از حساب، برای دسترسی مجدد باید با شماره موبایل خود وارد شوید.",
+                text = "اگه خارج بشی، برای برگشتن دوباره باید با شماره موبایلت وارد برنامه بشی.",
                 size = 13.sp,
                 lineHeight = 21.sp,
                 color = Game.TextSecondary,
@@ -73,7 +73,7 @@ fun SignOutConfirmDialog(
             )
 
             GameButton(
-                text = "بله، خارج شو",
+                text = "آره، خارج شو",
                 onClick = onConfirm,
                 modifier = Modifier.fillMaxWidth(),
                 style = GameButtonStyle.Danger,
@@ -81,7 +81,7 @@ fun SignOutConfirmDialog(
             )
 
             GameButton(
-                text = "انصراف",
+                text = "نه، می‌مونم",
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),
                 style = GameButtonStyle.Glass,

@@ -592,7 +592,7 @@ private fun LeaderboardRowItem(
                                 .padding(horizontal = 5.dp, vertical = 1.dp)
                         ) {
                             GameText(
-                                text = "شما",
+                                text = "تو",
                                 size = 9.sp,
                                 bold = true,
                                 color = Color(0xFF38BDF8)
@@ -703,7 +703,7 @@ private fun CurrentUserStickyBar(
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         GameText(
-                            text = "جایگاه شما",
+                            text = "جایگاه تو",
                             size = 11.sp,
                             color = Color(0xFF38BDF8),
                             bold = true
@@ -785,7 +785,7 @@ private fun GuestLoginPromptBar(
                     color = Color.White
                 )
                 GameText(
-                    text = "برای حضور در جدول رقابت و ثبت ستاره‌ها، وارد شوید.",
+                    text = "برای اینکه اسمت توی جدول بیاد و ستاره‌هات ثبت بشن، وارد حسابت شو.",
                     size = 11.sp,
                     color = Color(0xFF94A3B8)
                 )

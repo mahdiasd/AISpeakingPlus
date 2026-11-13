@@ -52,7 +52,7 @@ fun JourneyLeaderboardSheet(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "بر اساس بیشترین ستاره‌ها و مراحل تکمیل‌شده مسیر داستانی",
+                text = "بر اساس بیشترین ستاره‌ها و مراحل کامل‌شده",
                 color = Game.TextSecondary,
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center
@@ -97,9 +97,9 @@ fun JourneyLeaderboardSheet(
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
-                                Text("رتبه شما", color = Game.TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                Text("رتبه تو", color = Game.TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                                 Text(
-                                    "${userRank.completedStages} مرحله تکمیل شده",
+                                    "${userRank.completedStages} مرحله کامل‌شده",
                                     color = if (isDark) Color(0xFFA5B4FC) else Game.Blue,
                                     fontSize = 12.sp
                                 )

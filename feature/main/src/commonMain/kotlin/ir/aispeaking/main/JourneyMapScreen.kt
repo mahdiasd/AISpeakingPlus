@@ -124,15 +124,15 @@ fun JourneyMapScreen(
                 listOf(
                     GuideStep(
                         key = "journey_active_stage",
-                        title = "مرحله فعال شما",
-                        description = "این مرحله، درس و داستان جاری شماست. برای شروع تمرین مکالمه، از این دکمه وارد شوید.",
+                        title = "مرحله فعلی تو",
+                        description = "این مرحله داستان و تمرین فعلیته. دکمه رو بزن تا باهم مکالمه رو شروع کنیم!",
                         icon = Res.drawable.ic_play,
                         alignment = GuideAlignment.Top
                     ),
                     GuideStep(
                         key = "journey_stages_list",
-                        title = "فهرست کامل مرحله‌ها",
-                        description = "برای مشاهده تمام مراحل در یک لیست و مرور پیشرفت، از این قسمت به نمای فهرست بروید.",
+                        title = "فهرست مرحله‌ها",
+                        description = "از اینجا می‌تونی همه مرحله‌ها رو یکجا ببینی و میزان پیشرفتت رو چک کنی.",
                         icon = Res.drawable.ic_roadmap,
                         alignment = GuideAlignment.Top
                     )
@@ -149,13 +149,13 @@ fun JourneyMapScreen(
         ) {
             when {
                 uiState.isLoading && currentStage == null -> {
-                    CenterMessage(loading = true, text = "در حال بارگذاری ماجراجویی…")
+                    CenterMessage(loading = true, text = "در حال آماده‌سازی ماجراجویی تو…")
                 }
 
                 currentStage == null -> {
                     CenterMessage(
                         loading = false,
-                        text = "مرحله‌ها بارگذاری نشدند. اتصال اینترنت را بررسی کن.",
+                        text = "نتونستیم مرحله‌ها رو بارگذاری کنیم. اینترنتت رو چک کن و دوباره امتحان کن.",
                         actionText = "تلاش دوباره",
                         onAction = { viewModel.refreshStages() }
                     )
@@ -211,7 +211,7 @@ fun JourneyMapScreen(
                             exit = fadeOut() + slideOutVertically { -it / 2 }
                         ) {
                             GameChip(
-                                text = "در حال مرور مرحله قبلی · بازگشت به مرحله فعلی",
+                                text = "داری مرحله‌های قبلی رو مرور می‌کنی · برگشت به مرحله فعلی",
                                 icon = Res.drawable.ic_history,
                                 accent = Game.Sky,
                                 container = Game.Panel,
@@ -367,7 +367,7 @@ private fun StageCard(
         StageLockStatus.UNLOCKED -> (if (isReplay || stars > 0) "تکرار مرحله" else "شروع مرحله") to GameButtonStyle.Primary
         StageLockStatus.LOCKED_REGISTRATION -> "ورود و باز کردن مرحله" to GameButtonStyle.Violet
         StageLockStatus.LOCKED_SUBSCRIPTION -> "باز کردن با اشتراک" to GameButtonStyle.Ruby
-        StageLockStatus.LOCKED_PREVIOUS_STAGE -> "ابتدا مرحله قبل را تمام کن" to GameButtonStyle.Glass
+        StageLockStatus.LOCKED_PREVIOUS_STAGE -> "اول مرحله قبل رو تموم کن" to GameButtonStyle.Glass
     }
 
     GlassPanel(
@@ -437,7 +437,7 @@ private fun StageCard(
             )
 
             GameButton(
-                text = if (pastCount > 0) "همه مرحله‌ها و پیشرفت (${pastCount.fa()} انجام شده)" else "همه مرحله‌ها و پیشرفت",
+                text = if (pastCount > 0) "همه مرحله‌ها (${pastCount.fa()} تا کامل شده)" else "همه مرحله‌ها و پیشرفت",
                 onClick = onOpenList,
                 modifier = Modifier.fillMaxWidth().then(listModifier),
                 style = GameButtonStyle.Glass,

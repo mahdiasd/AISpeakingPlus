@@ -39,7 +39,7 @@ fun PromoCodeInputRow(
                 onValueChange = onPromoCodeChanged,
                 placeholder = {
                     GameText(
-                        text = "کد تخفیف دارید؟",
+                        text = "کد تخفیف داری؟",
                         color = Game.TextMuted,
                         size = 13.sp
                     )

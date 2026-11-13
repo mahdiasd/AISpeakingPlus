@@ -109,7 +109,7 @@ fun SupportDialog(
                     align = TextAlign.Center
                 )
                 GameText(
-                    text = "جهت دریافت راهنمایی یا گزارش مشکل، پیام‌رسان مورد نظر خود را انتخاب کنید:",
+                    text = "برای راهنمایی، سوال یا هر مشکلی، خوشحال میشیم بهمون پیام بدی. پیام‌رسان دلخواهت رو انتخاب کن:",
                     size = 13.sp,
                     lineHeight = 21.sp,
                     color = Game.TextSecondary,

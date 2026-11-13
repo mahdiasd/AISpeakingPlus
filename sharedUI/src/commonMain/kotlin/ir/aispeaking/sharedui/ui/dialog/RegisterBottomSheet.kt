@@ -50,16 +50,16 @@ fun RegisterBottomSheet(
     val activeError = errorMessage ?: localError
 
     val displayTitle = when {
-        activeStep != 1 -> "کد تایید را وارد کن"
+        activeStep != 1 -> "کد تایید رو وارد کن"
         stage != null -> "برای ادامه ماجراجویی وارد شو"
         else -> title
     }
 
     val displaySubtitle = when {
-        activeStep != 1 -> "کدی که برای شماره $phoneNumber پیامک شد را وارد کن."
-        stage != null -> "با ورود، مرحله «${stage.titleFa}» باز می‌شود و پیشرفتت روی حسابت ذخیره می‌ماند."
+        activeStep != 1 -> "کدی که برات به شماره $phoneNumber پیامک کردیم رو بنویس."
+        stage != null -> "با ورود به حساب، مرحله «${stage.titleFa}» باز میشه و پیشرفتت همیشه ذخیره می‌مونه."
         subtitle != null -> subtitle
-        else -> "برای فعال‌سازی و ذخیره حساب، لطفاً شماره همراه خود را وارد کنید."
+        else -> "برای ذخیره همیشگی پیشرفتت، شماره همراهت رو وارد کن."
     }
 
     val displayConfirmText = when {

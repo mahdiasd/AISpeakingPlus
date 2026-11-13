@@ -93,7 +93,7 @@ fun PlacementResultView(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 GameText(
-                    text = "سطح شما مشخص شد!",
+                    text = "سطحت مشخص شد! 🎉",
                     size = 14.sp,
                     color = if (isDark) Game.TextSecondary else Color(0xFF64748B)
                 )
@@ -195,7 +195,7 @@ fun PlacementResultView(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 GameButton(
-                    text = "آزمون مجدد",
+                    text = "آزمون دوباره",
                     style = GameButtonStyle.Glass,
                     onClick = onRetakeClick,
                     modifier = Modifier.weight(1f)

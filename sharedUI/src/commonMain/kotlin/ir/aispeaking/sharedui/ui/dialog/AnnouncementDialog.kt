@@ -212,7 +212,7 @@ fun AnnouncementDialog(
                         modifier = Modifier.size(18.dp)
                     )
                     GameText(
-                        text = "تا ۲۴ ساعت آینده نشان نده",
+                        text = "تا ۲۴ ساعت آینده نشون نده",
                         size = 12.sp,
                         color = if (suppressFor24h) Game.TextPrimary else Game.TextMuted
                     )

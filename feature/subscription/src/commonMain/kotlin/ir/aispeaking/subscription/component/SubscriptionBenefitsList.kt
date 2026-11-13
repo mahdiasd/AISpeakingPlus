@@ -39,19 +39,19 @@ fun SubscriptionBenefitsList(
 ) {
     val benefits = listOf(
         BenefitItem(
-            title = "دسترسی نامحدود به تمامی مراحل سفر داستانی",
+            title = "دسترسی نامحدود به تمام مرحله‌های مسیر داستانی",
             icon = Res.drawable.ic_crown,
             iconTint = Color(0xFFFFC83D),
             containerBg = Color(0x33FFD700)
         ),
         BenefitItem(
-            title = "مکالمه نامحدود و بدون وقفه با هوش مصنوعی",
+            title = "مکالمه نامحدود و روان با هوش مصنوعی",
             icon = Res.drawable.ic_star,
             iconTint = Color(0xFF5E5CE6),
             containerBg = Color(0x285E5CE6)
         ),
         BenefitItem(
-            title = "تحلیل هوشمند ساختار جملات و اصلاح گرامر",
+            title = "تحلیل هوشمند و اصلاح گرامر جملاتت",
             icon = Res.drawable.ic_done,
             iconTint = Color(0xFF007AFF),
             containerBg = Color(0x22007AFF)
