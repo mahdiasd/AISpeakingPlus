@@ -280,16 +280,21 @@ fun StagesListScreen(
                             }
 
                             // Phase Groups & Stages
+                            val firstPhaseKey = phaseGroups.keys.firstOrNull()
                             phaseGroups.forEach { (phaseNum, stagesInPhase) ->
                                 item(key = "phase_header_$phaseNum") {
                                     val completedCount = stagesInPhase.count { (it.userProgress?.stars ?: 0) > 0 }
                                     val phaseTitle = stagesInPhase.firstOrNull()?.phaseTitleFa ?: "فاز $phaseNum"
+                                    val isFirstPhase = phaseNum == firstPhaseKey
                                     PhaseHeaderCard(
                                         phaseNumber = phaseNum,
                                         phaseTitleFa = phaseTitle,
                                         completedStages = completedCount,
                                         totalStages = stagesInPhase.size,
-                                        modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
+                                        modifier = Modifier.padding(
+                                            top = if (isFirstPhase) 6.dp else 18.dp,
+                                            bottom = 10.dp
+                                        )
                                     )
                                 }
 
