@@ -53,3 +53,9 @@ data object LeaderboardRoute : AppRoute {
     override val screenName: String = "Leaderboard"
 }
 
+@Serializable
+data object PlacementTestRoute : AppRoute {
+    override val screenName: String = "PlacementTest"
+}
+
+

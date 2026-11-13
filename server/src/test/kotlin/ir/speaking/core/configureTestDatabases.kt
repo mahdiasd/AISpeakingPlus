@@ -1,6 +1,9 @@
 package ir.speaking.core
 
 import io.ktor.server.application.*
+import ir.speaking.feature.placement.db.PlacementQuestionsTable
+import ir.speaking.feature.placement.db.PlacementSessionsTable
+import ir.speaking.feature.placement.db.PlacementSeedData
 import ir.speaking.feature.stage.db.StageSeedData
 import ir.speaking.feature.stage.db.StageTable
 import ir.speaking.feature.stage_progress.db.StageProgressTable
@@ -51,10 +54,13 @@ internal fun Application.configureTestDatabases(dropTables: Boolean = false) {
                     ir.speaking.feature.subscription.db.PromoCodeTable,
                     ir.speaking.feature.subscription.db.PromoCodeRedemptionTable,
                     ir.speaking.feature.subscription.db.MarketPaymentTable,
-                    ir.speaking.feature.announcement.db.AnnouncementTable
+                    ir.speaking.feature.announcement.db.AnnouncementTable,
+                    PlacementQuestionsTable,
+                    PlacementSessionsTable
                 )
                 seedSuperAdminIfEmpty()
                 seedOrSyncStages()
+                PlacementSeedData.seedIfEmpty()
                 if (ir.speaking.feature.subscription.db.PromoCodeTable.selectAll().where { ir.speaking.feature.subscription.db.PromoCodeTable.code eq "GOLD20" }.empty()) {
                     ir.speaking.feature.subscription.db.PromoCodeTable.insert {
                         it[code] = "GOLD20"
