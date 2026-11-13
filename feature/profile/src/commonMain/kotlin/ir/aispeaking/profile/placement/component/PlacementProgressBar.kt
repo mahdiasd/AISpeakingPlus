@@ -1,8 +1,8 @@
 package ir.aispeaking.profile.placement.component
 
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,10 +34,10 @@ fun PlacementProgressBar(
     modifier: Modifier = Modifier
 ) {
     val isDark = AppTheme.isDark
-    val fraction = if (totalQuestions > 0) (currentIndex + 1).toFloat() / totalQuestions else 0f
+    val fraction = if (totalQuestions > 0) ((currentIndex + 1).toFloat() / totalQuestions).coerceIn(0.001f, 1f) else 0.001f
     val animatedProgress by animateFloatAsState(
         targetValue = fraction,
-        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
         label = "placement_progress_anim"
     )
 
@@ -91,7 +91,7 @@ fun PlacementProgressBar(
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(animatedProgress)
+                    .fillMaxWidth(animatedProgress.coerceIn(0.001f, 1f))
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .background(Brush.horizontalGradient(gradientColors))

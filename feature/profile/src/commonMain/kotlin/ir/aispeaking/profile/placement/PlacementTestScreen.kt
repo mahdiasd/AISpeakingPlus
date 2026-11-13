@@ -30,6 +30,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,6 +69,7 @@ fun PlacementTestScreen(
     val screenBg = if (isDark) Color(0xFF0F1015) else Color(0xFFF2F4F7)
 
     val pagerState = rememberPagerState(pageCount = { uiState.totalQuestions })
+    val coroutineScope = rememberCoroutineScope()
 
     // Sync pager state with ViewModel
     LaunchedEffect(pagerState.currentPage) {
@@ -80,7 +83,11 @@ fun PlacementTestScreen(
             when (effect) {
                 is PlacementTestUiEffect.ScrollToPage -> {
                     if (effect.pageIndex in 0 until uiState.totalQuestions) {
-                        pagerState.animateScrollToPage(effect.pageIndex)
+                        try {
+                            pagerState.animateScrollToPage(effect.pageIndex)
+                        } catch (_: Throwable) {
+                            // Catch cancellation exception so collector never dies
+                        }
                     }
                 }
                 is PlacementTestUiEffect.Finished -> {
@@ -248,6 +255,7 @@ fun PlacementTestScreen(
                             // Horizontal Pager for Questions
                             HorizontalPager(
                                 state = pagerState,
+                                key = { page -> uiState.questions.getOrNull(page)?.id ?: page.toString() },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f)
@@ -279,7 +287,13 @@ fun PlacementTestScreen(
                                     GameButton(
                                         text = "قبلی",
                                         style = GameButtonStyle.Glass,
-                                        onClick = { viewModel.onEvent(PlacementTestUiEvent.PreviousQuestion) },
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                try {
+                                                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                                                } catch (_: Throwable) {}
+                                            }
+                                        },
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -295,7 +309,15 @@ fun PlacementTestScreen(
                                 } else {
                                     GameButton(
                                         text = "بعدی",
-                                        onClick = { viewModel.onEvent(PlacementTestUiEvent.NextQuestion) },
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                try {
+                                                    if (pagerState.currentPage < uiState.totalQuestions - 1) {
+                                                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                                    }
+                                                } catch (_: Throwable) {}
+                                            }
+                                        },
                                         modifier = Modifier.weight(if (pagerState.currentPage > 0) 1.6f else 1f)
                                     )
                                 }
