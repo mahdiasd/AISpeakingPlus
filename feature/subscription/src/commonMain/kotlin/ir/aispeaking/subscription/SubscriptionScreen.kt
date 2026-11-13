@@ -1,12 +1,16 @@
 package ir.aispeaking.subscription
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,7 +18,11 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -28,27 +36,63 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ir.aispeaking.sharedui.Res
-import ir.aispeaking.sharedui.ic_back
-import ir.aispeaking.sharedui.ic_crown
+import ir.aispeaking.domain.model.stage.SubscriptionPlan
+import ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator
 import ir.aispeaking.sharedui.ui.dialog.RegisterBottomSheet
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
-import ir.aispeaking.sharedui.ui.game.GameIconButton
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.GlassPanel
-import ir.aispeaking.subscription.component.PlanSelectionCard
-import ir.aispeaking.subscription.component.PromoCodeInputRow
-import ir.aispeaking.subscription.component.SubscriptionBenefitsList
-import ir.aispeaking.subscription.component.SubscriptionHeader
+import ir.aispeaking.sharedui.ui.them.AppTheme
+import ir.aispeaking.subscription.component.ModernPlanCard
+import ir.aispeaking.subscription.component.ModernPromoRow
+import ir.aispeaking.subscription.component.ModernSubscriptionHeader
 import ir.aispeaking.subscription.component.TrustBadgesRow
 import kotlinx.coroutines.delay
+import kotlin.math.absoluteValue
+
+private val defaultFallbackPlans = listOf(
+    SubscriptionPlan(
+        id = "plan-1m",
+        type = "1_MONTH",
+        titleFa = "اشتراک ۱ ماهه",
+        durationDays = 30,
+        priceTomans = 65_000L,
+        originalPriceTomans = 119_000L,
+        discountPercent = 45,
+        badge = null
+    ),
+    SubscriptionPlan(
+        id = "plan-3m",
+        type = "3_MONTHS",
+        titleFa = "اشتراک ۳ ماهه ویژه",
+        durationDays = 90,
+        priceTomans = 115_000L,
+        originalPriceTomans = 299_000L,
+        discountPercent = 62,
+        badge = "محبوب‌ترین"
+    ),
+    SubscriptionPlan(
+        id = "plan-6m",
+        type = "6_MONTHS",
+        titleFa = "اشتراک ۶ ماهه طلایی",
+        durationDays = 180,
+        priceTomans = 200_000L,
+        originalPriceTomans = 499_000L,
+        discountPercent = 60,
+        badge = "بهترین ارزش"
+    )
+)
 
 @Composable
 fun SubscriptionScreen(
@@ -60,8 +104,8 @@ fun SubscriptionScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
     var toast by remember { mutableStateOf<String?>(null) }
-
-    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val uriHandler = LocalUriHandler.current
+    val isDark = AppTheme.isDark
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
@@ -85,35 +129,74 @@ fun SubscriptionScreen(
         }
     }
 
+    val effectivePlans = if (uiState.plans.isNotEmpty()) uiState.plans else defaultFallbackPlans
+
+    val initialIndex = remember(effectivePlans, uiState.selectedPlanId) {
+        val found = effectivePlans.indexOfFirst { it.id == uiState.selectedPlanId }
+        if (found >= 0) found else 1.coerceAtMost(effectivePlans.size - 1)
+    }
+
+    val pagerState = rememberPagerState(initialPage = initialIndex) { effectivePlans.size }
+
+    // Sync pager scroll to ViewModel selectedPlanId
+    LaunchedEffect(pagerState.currentPage, effectivePlans) {
+        val plan = effectivePlans.getOrNull(pagerState.currentPage)
+        if (plan != null && plan.id != uiState.selectedPlanId) {
+            viewModel.processIntent(SubscriptionIntent.SelectPlan(plan.id))
+        }
+    }
+
+    // Sync ViewModel selectedPlanId to pager scroll
+    LaunchedEffect(uiState.selectedPlanId, effectivePlans) {
+        val targetIndex = effectivePlans.indexOfFirst { it.id == uiState.selectedPlanId }
+        if (targetIndex >= 0 && targetIndex != pagerState.currentPage) {
+            pagerState.animateScrollToPage(targetIndex)
+        }
+    }
+
+    // Dynamic ambient glow color based on active plan page
+    val currentTargetColor = when (pagerState.currentPage) {
+        0 -> Color(0xFFFF7A45) // Orange / Peach for 1 Month
+        1 -> Color(0xFF22C55E) // Mint Green for 3 Months
+        2 -> Color(0xFF0EA5E9) // Sky Blue for 6 Months
+        else -> Color(0xFF22C55E)
+    }
+
+    val animatedAmbientColor by animateColorAsState(
+        targetValue = currentTargetColor,
+        animationSpec = tween(durationMillis = 400),
+        label = "ambientGlowColor"
+    )
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(Game.FallbackBackground)
+                .background(if (isDark) Color(0xFF0B0F17) else Color(0xFFF8F9FC))
         ) {
+            // Dynamic Ambient Bottom Glow (matching the image design)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.60f)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                animatedAmbientColor.copy(alpha = if (isDark) 0.12f else 0.18f),
+                                animatedAmbientColor.copy(alpha = if (isDark) 0.32f else 0.45f)
+                            )
+                        )
+                    )
+            )
+
             Column(modifier = Modifier.fillMaxSize()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    GameIconButton(
-                        icon = Res.drawable.ic_back,
-                        onClick = onNavigateBack,
-                        contentDescription = "بازگشت"
-                    )
-                    GameText(
-                        text = "اشتراک ویژه",
-                        size = 18.sp,
-                        bold = true,
-                        align = TextAlign.Center,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.size(44.dp))
-                }
+                // Top Header Section with Back Button & 3 Feature Pills
+                ModernSubscriptionHeader(
+                    currentStatus = uiState.currentStatus,
+                    onNavigateBack = onNavigateBack
+                )
 
                 if (uiState.isLoading && uiState.plans.isEmpty()) {
                     Box(
@@ -122,8 +205,8 @@ fun SubscriptionScreen(
                             .weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
-                        ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator(
-                            color = Game.Gold,
+                        AppLoadingIndicator(
+                            color = animatedAmbientColor,
                             size = 40.dp
                         )
                     }
@@ -153,114 +236,140 @@ fun SubscriptionScreen(
                         }
                     }
                 } else {
+                    // Scrollable main content area
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
                             .verticalScroll(scrollState)
-                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                            .padding(vertical = 10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        SubscriptionHeader(currentStatus = uiState.currentStatus)
-
-                        uiState.plans.forEach { plan ->
-                            val isSelected = plan.id == uiState.selectedPlanId
+                        // Horizontal 3D Coverflow Pager with tilted side cards
+                        HorizontalPager(
+                            state = pagerState,
+                            contentPadding = PaddingValues(horizontal = 42.dp),
+                            pageSpacing = 16.dp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(560.dp)
+                        ) { page ->
+                            val plan = effectivePlans[page]
+                            val isSelected = plan.id == uiState.selectedPlanId ||
+                                    (uiState.selectedPlanId.isEmpty() && page == pagerState.currentPage)
                             val finalPrice = uiState.calculateFinalPrice(plan)
-                            PlanSelectionCard(
+
+                            // 3D coverflow calculation
+                            val pageOffset = ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction)
+                            val absOffset = pageOffset.absoluteValue.coerceIn(0f, 1.5f)
+
+                            val scale = 1f - (absOffset * 0.10f)
+                            val alpha = 1f - (absOffset * 0.28f).coerceIn(0f, 0.35f)
+                            val rotationZ = -pageOffset * 4.5f
+                            val rotationY = pageOffset * 10f
+
+                            ModernPlanCard(
                                 plan = plan,
                                 finalPriceTomans = finalPrice,
                                 isSelected = isSelected,
-                                onClick = {
+                                isPurchasing = uiState.isPurchasing,
+                                purchaseProgressMessage = uiState.purchaseProgressMessage,
+                                onPurchaseClick = {
+                                    if (plan.id != uiState.selectedPlanId) {
+                                        viewModel.processIntent(SubscriptionIntent.SelectPlan(plan.id))
+                                    }
+                                    viewModel.processIntent(SubscriptionIntent.PurchaseSelectedPlan)
+                                },
+                                onCardClick = {
                                     viewModel.processIntent(SubscriptionIntent.SelectPlan(plan.id))
-                                }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .graphicsLayer {
+                                        scaleX = scale
+                                        scaleY = scale
+                                        this.alpha = alpha
+                                        this.rotationZ = rotationZ
+                                        this.rotationY = rotationY
+                                        cameraDistance = 16f * density
+                                        translationY = absOffset * 6.dp.toPx()
+                                    }
                             )
                         }
 
-                        PromoCodeInputRow(
+                        // Pager Dots Indicator
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            repeat(effectivePlans.size) { index ->
+                                val isCurrent = index == pagerState.currentPage
+                                val dotWidth by animateDpAsState(
+                                    targetValue = if (isCurrent) 22.dp else 7.dp,
+                                    animationSpec = tween(300),
+                                    label = "dotWidth"
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .height(6.dp)
+                                        .width(dotWidth)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (isCurrent) animatedAmbientColor
+                                            else if (isDark) Color(0x33FFFFFF)
+                                            else Color(0x22000000)
+                                        )
+                                )
+                            }
+                        }
+
+                        // Minimalist Promo Code Row
+                        ModernPromoRow(
                             promoCode = uiState.promoCodeInput,
+                            appliedDiscountPercent = uiState.appliedDiscountPercent,
+                            feedbackMessage = uiState.promoFeedbackMessage,
+                            isError = uiState.isPromoError,
                             onPromoCodeChanged = {
                                 viewModel.processIntent(SubscriptionIntent.OnPromoCodeChanged(it))
                             },
                             onApplyClicked = {
                                 viewModel.processIntent(SubscriptionIntent.ApplyPromoCode)
-                            },
-                            feedbackMessage = uiState.promoFeedbackMessage,
-                            isError = uiState.isPromoError
+                            }
                         )
 
-                        SubscriptionBenefitsList()
-                        TrustBadgesRow()
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-                }
+                        // Trust Badges Row
+                        TrustBadgesRow(
+                            modifier = Modifier.padding(horizontal = 24.dp)
+                        )
 
-                // Sticky purchase bar
-                val dockShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(dockShape)
-                        .background(Game.Panel)
-                        .border(1.dp, Game.Stroke, dockShape)
-                        .navigationBarsPadding()
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    val selectedPlan = uiState.selectedPlan
-                    val finalPrice = selectedPlan?.let { uiState.calculateFinalPrice(it) } ?: 0L
-
-                    if (finalPrice > 0) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            GameText(text = "مبلغ قابل پرداخت", size = 13.sp, color = Game.TextSecondary)
-                            GameText(
-                                text = "${formatToPersian(finalPrice)} تومان",
-                                size = 16.sp,
-                                bold = true,
-                                color = Game.Gold
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
-                    GameButton(
-                        text = if (uiState.isPurchasing) {
-                            uiState.purchaseProgressMessage ?: "در حال اتصال به درگاه..."
-                        } else {
-                            "خرید اشتراک و شروع یادگیری"
-                        },
-                        onClick = { viewModel.processIntent(SubscriptionIntent.PurchaseSelectedPlan) },
-                        modifier = Modifier.fillMaxWidth(),
-                        style = GameButtonStyle.Gold,
-                        icon = Res.drawable.ic_crown,
-                        enabled = !uiState.isPurchasing && !uiState.isLoading,
-                        loading = uiState.isPurchasing
-                    )
                 }
             }
 
+            // Top floating feedback toast
             toast?.let { message ->
                 GlassPanel(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .statusBarsPadding()
-                        .padding(top = 64.dp, start = 16.dp, end = 16.dp),
+                        .padding(top = 56.dp, start = 16.dp, end = 16.dp),
                     shape = RoundedCornerShape(18.dp),
-                    color = Game.PanelSolid,
-                    border = Game.Sky.copy(alpha = 0.6f)
+                    color = if (isDark) Color(0xFF1E2638) else Color.White,
+                    border = animatedAmbientColor.copy(alpha = 0.6f)
                 ) {
                     GameText(
                         text = message,
                         size = 13.sp,
                         lineHeight = 20.sp,
+                        color = if (isDark) Color.White else Color(0xFF0F172A),
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                     )
                 }
             }
 
+            // Phone registration bottom sheet for guest checkouts
             RegisterBottomSheet(
                 visible = uiState.showRegisterDialog,
                 title = "ورود یا ثبت‌نام جهت خرید اشتراک",
@@ -275,31 +384,6 @@ fun SubscriptionScreen(
                 onVerifyOtp = { phone, otp -> viewModel.processIntent(SubscriptionIntent.VerifyRegisterOtp(phone, otp)) },
                 onEditPhone = { viewModel.processIntent(SubscriptionIntent.ResetRegisterStep) }
             )
-        }
-    }
-}
-
-private fun formatToPersian(number: Long): String {
-    val persianDigits = listOf('۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹')
-    val formatted = number.toString().reversed().chunked(3).joinToString(",").reversed()
-    return formatted.map { char ->
-        if (char in '0'..'9') persianDigits[char - '0'] else char
-    }.joinToString("")
-}
-
-/* --------------------------------- Previews --------------------------------- */
-
-@androidx.compose.ui.tooling.preview.Preview
-@Composable
-private fun SubscriptionScreenPreview() {
-    ir.aispeaking.sharedui.ui.them.AppTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Game.Ink),
-            contentAlignment = Alignment.Center
-        ) {
-            GameText(text = "پیش‌نمایش صفحه ارتقا و اشتراک ویژه", size = 16.sp)
         }
     }
 }
