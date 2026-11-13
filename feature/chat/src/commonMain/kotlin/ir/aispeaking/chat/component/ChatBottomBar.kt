@@ -647,12 +647,20 @@ private fun AppleRecordPill(
     } else {
         AppleChatTheme.PrimaryAzure.copy(alpha = 0.55f)
     }
-    val accentColor = if (!isInteractive) {
+    val contentColor = if (!isInteractive) {
         Game.TextMuted
     } else if (hasText) {
         Game.TextPrimary
     } else {
-        if (isDark) AppleChatTheme.SuccessCyan else AppleChatTheme.PrimaryAzure
+        if (isDark) Color.White else AppleChatTheme.AzureDeep
+    }
+
+    val iconTint = if (!isInteractive) {
+        Game.TextMuted
+    } else if (hasText) {
+        Game.TextPrimary
+    } else {
+        if (isDark) AppleChatTheme.SiriCyan else AppleChatTheme.PrimaryAzure
     }
 
     val pillText = when {
@@ -681,7 +689,7 @@ private fun AppleRecordPill(
             Icon(
                 painter = painterResource(Res.drawable.ic_microphone),
                 contentDescription = "ضبط صدا",
-                tint = accentColor,
+                tint = iconTint,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -689,7 +697,7 @@ private fun AppleRecordPill(
             text = pillText,
             size = 13.sp,
             bold = true,
-            color = accentColor
+            color = contentColor
         )
     }
 }

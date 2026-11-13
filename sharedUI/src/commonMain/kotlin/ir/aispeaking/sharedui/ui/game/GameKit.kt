@@ -432,7 +432,7 @@ fun GameStatPill(
     val shape = RoundedCornerShape(50)
     Box(
         modifier = modifier
-            .defaultMinSize(minHeight = 44.dp)
+            .defaultMinSize(minHeight = 44.dp, minWidth = 44.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -464,9 +464,9 @@ fun GameStatPill(
         )
 
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             if (icon != null) {
                 Icon(

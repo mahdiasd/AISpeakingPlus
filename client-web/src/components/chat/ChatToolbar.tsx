@@ -11,6 +11,7 @@ export interface ChatToolbarProps {
   isFinishing?: boolean;
   onBackClick: () => void;
   onObjectiveClick: () => void;
+  onHeaderClick?: () => void;
   onFinishClick: () => void;
 }
 
@@ -28,6 +29,7 @@ export const ChatToolbar: React.FC<ChatToolbarProps> = ({
   isFinishing = false,
   onBackClick,
   onObjectiveClick,
+  onHeaderClick,
   onFinishClick,
 }) => {
   const currentMax = stage?.maxTurns || maxTurns;
@@ -51,10 +53,15 @@ export const ChatToolbar: React.FC<ChatToolbarProps> = ({
           <ChevronRight className="w-5 h-5 stroke-[2.5]" />
         </motion.button>
 
-        {/* Center: Liquid Glass Stage Info Capsule */}
-        <div className="flex-1 min-w-0 h-9 px-3 rounded-full bg-[#121526]/60 backdrop-blur-md border border-white/20 shadow-sm flex items-center justify-center overflow-hidden">
+        {/* Center: Liquid Glass Stage Info Capsule (Clickable for language level details) */}
+        <button
+          type="button"
+          onClick={onHeaderClick}
+          className="flex-1 min-w-0 h-9 px-3 rounded-full bg-[#121526]/60 hover:bg-[#121526]/85 active:scale-[0.98] transition-all cursor-pointer backdrop-blur-md border border-white/20 shadow-sm flex items-center justify-center overflow-hidden group"
+          title="مشاهده اطلاعات سطح زبان این مکالمه"
+        >
           <div className="flex flex-col items-center justify-center leading-tight">
-            <h2 className="text-[12.5px] font-bold text-white truncate max-w-[180px] sm:max-w-xs">
+            <h2 className="text-[12.5px] font-bold text-white truncate max-w-[180px] sm:max-w-xs group-hover:text-cyan-200 transition-colors">
               {stage?.titleFa || 'مکالمه انگلیسی'}
             </h2>
 
@@ -71,7 +78,7 @@ export const ChatToolbar: React.FC<ChatToolbarProps> = ({
               )}
             </div>
           </div>
-        </div>
+        </button>
 
         {/* Left (End anchor in RTL): Finish Conversation Button (Yellow Gold Pill matching Compose) */}
         <motion.button

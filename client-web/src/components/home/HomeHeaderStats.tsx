@@ -108,16 +108,25 @@ export const HomeHeaderStats: React.FC<HomeHeaderStatsProps> = ({
             transition={{ type: 'spring', stiffness: 450, damping: 26 }}
             type="button"
             onClick={onSubscribeClick}
-            className="h-10 px-3.5 sm:px-4 rounded-full bg-amber-50/95 dark:bg-amber-400/20 hover:bg-amber-100 dark:hover:bg-amber-400/30 backdrop-blur-md border border-amber-400/80 dark:border-amber-400/50 text-amber-900 dark:text-amber-100 font-black text-xs flex items-center justify-center gap-1.5 sm:gap-2 shadow-[0_4px_18px_rgba(245,158,11,0.25)] hover:border-amber-400 active:scale-95 transition-all cursor-pointer"
+            className="relative p-[1.5px] rounded-full overflow-hidden shadow-[0_4px_18px_rgba(245,158,11,0.25)] hover:brightness-105 active:scale-95 transition-all cursor-pointer group"
             title="ارتقا به نسخه پلاس و باز کردن تمام مراحل"
           >
-            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-300 animate-pulse" />
-            <span>پلاس شو ✨</span>
+            {/* Animated rotating border gradient (matching Compose animatedBorder sweep gradient) */}
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
+              className="absolute -inset-[100%] bg-[conic-gradient(from_0deg,#ab47bc,#2196f3,#7cb342,#ffb300,#ab47bc)]"
+            />
+            {/* Inner button surface */}
+            <div className="relative z-10 h-10 px-3.5 sm:px-4 rounded-full bg-amber-50/95 dark:bg-[#151324]/90 backdrop-blur-md text-amber-900 dark:text-amber-100 font-black text-xs flex items-center justify-center gap-1.5 sm:gap-2">
+              <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-300 animate-pulse" />
+              <span>پلاس شو ✨</span>
+            </div>
           </motion.button>
         )}
       </div>
 
-      {/* 3. LEFT (End in RTL): Floating Glass Capsule Star Counter Pill («۰ ستاره») */}
+      {/* 3. LEFT (End in RTL): Floating Glass Capsule Star Counter Pill */}
       <div className="flex items-center justify-end z-10 shrink-0">
         <motion.button
           whileTap={{ scale: 0.95 }}
@@ -125,15 +134,12 @@ export const HomeHeaderStats: React.FC<HomeHeaderStatsProps> = ({
           transition={{ type: 'spring', stiffness: 450, damping: 26 }}
           type="button"
           onClick={onLeaderboardClick || onProfileClick}
-          className="h-10 px-3.5 sm:px-4 rounded-full bg-amber-400/15 hover:bg-amber-400/25 backdrop-blur-md border border-amber-400/40 shadow-[0_4px_16px_rgba(255,204,0,0.2)] flex items-center justify-center gap-1.5 text-apple-yellow cursor-pointer hover:border-amber-400/60 active:scale-95 transition-all"
+          className="h-10 min-w-10 px-3 sm:px-3.5 rounded-full bg-amber-400/15 hover:bg-amber-400/25 backdrop-blur-md border border-amber-400/40 shadow-[0_4px_16px_rgba(255,204,0,0.2)] flex items-center justify-center gap-1.5 text-apple-yellow cursor-pointer hover:border-amber-400/60 active:scale-95 transition-all"
           title="مجموع ستاره‌های کسب شده در ماجراجویی"
         >
           <Star className="w-4 h-4 fill-apple-yellow text-apple-yellow drop-shadow-[0_0_8px_rgba(255,204,0,0.7)]" />
           <span className="text-sm font-black font-mono tracking-tight text-white drop-shadow-sm">
             {starsCount.toLocaleString('fa-IR')}
-          </span>
-          <span className="text-xs font-bold text-apple-yellow">
-            ستاره
           </span>
         </motion.button>
       </div>

@@ -101,6 +101,7 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     var showHintConfirmDialog by remember { mutableStateOf(false) }
     var showObjectiveSheet by remember { mutableStateOf(false) }
+    var showLanguageLevelSheet by remember { mutableStateOf(false) }
     var showExitConfirmDialog by remember { mutableStateOf(false) }
     var isFinishTriggeredByFinishButton by remember { mutableStateOf(false) }
     var toastMessage by remember { mutableStateOf<String?>(null) }
@@ -247,6 +248,7 @@ fun ChatScreen(
                         showExitConfirmDialog = true
                     },
                     onObjectiveClick = { showObjectiveSheet = true },
+                    onHeaderClick = { showLanguageLevelSheet = true },
                     onFinishConversationClick = {
                         isFinishTriggeredByFinishButton = true
                         showExitConfirmDialog = true
@@ -375,6 +377,13 @@ fun ChatScreen(
                 visible = showObjectiveSheet,
                 stage = stage,
                 onDismiss = { showObjectiveSheet = false }
+            )
+
+            // Language Level Explanation Bottom Sheet
+            LanguageLevelSheet(
+                visible = showLanguageLevelSheet,
+                userLevel = uiState.userLevel,
+                onDismiss = { showLanguageLevelSheet = false }
             )
 
             // Exit / Finish Confirmation Modal

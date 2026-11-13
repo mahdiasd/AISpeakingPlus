@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_gem
+import ir.aispeaking.sharedui.ui.extension.animatedBorder
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -105,8 +106,37 @@ fun RubySubscriptionButton(
         if (isDark) Color(0xFFFFD60A) else Color(0xFFD97706)
     }
 
-    Box(
-        modifier = modifier
+    val animatedBorderColors = listOf(
+        Color(0xFFAB47BC), // Vivid purple / magenta
+        Color(0xFF2196F3), // Bright blue
+        Color(0xFF7CB342), // Fresh green
+        Color(0xFFFFB300), // Golden amber
+        Color(0xFFAB47BC), // Seamless loop
+    )
+
+    val boxModifier = if (!isSubscriber) {
+        modifier
+            .height(height)
+            .defaultMinSize(minWidth = 110.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .animatedBorder(
+                borderColors = animatedBorderColors,
+                backgroundColor = containerColor,
+                shape = shape,
+                borderWidth = 1.5.dp,
+                animationDurationInMillis = 2800
+            )
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick
+            )
+    } else {
+        modifier
             .height(height)
             .defaultMinSize(minWidth = 110.dp)
             .graphicsLayer {
@@ -121,13 +151,18 @@ fun RubySubscriptionButton(
                 indication = null,
                 enabled = enabled,
                 onClick = onClick
-            ),
+            )
+    }
+
+    Box(
+        modifier = boxModifier,
         contentAlignment = Alignment.Center
     ) {
         // Subtle top specular shine inside the glass capsule
         Box(
             modifier = Modifier
                 .matchParentSize()
+                .clip(shape)
                 .background(
                     Brush.verticalGradient(
                         0.0f to (if (isDark) Color(0x2BFFFFFF) else Color(0x40FFFFFF)),

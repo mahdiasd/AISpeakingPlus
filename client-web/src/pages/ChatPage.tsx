@@ -10,6 +10,7 @@ import { ChatBottomBar } from '../components/chat/ChatBottomBar';
 import { StageInfoCompanion } from '../components/chat/StageInfoCompanion';
 import { LiveTelemetryCompanion } from '../components/chat/LiveTelemetryCompanion';
 import { ObjectiveModal } from '../components/chat/ObjectiveModal';
+import { LanguageLevelModal } from '../components/chat/LanguageLevelModal';
 import { HintModal } from '../components/chat/HintModal';
 import { EvaluationModal } from '../components/chat/EvaluationModal';
 import { ExitConfirmModal } from '../components/chat/ExitConfirmModal';
@@ -60,6 +61,7 @@ export const ChatPage: React.FC = () => {
 
   // Modals state
   const [isObjectiveOpen, setIsObjectiveOpen] = useState(false);
+  const [isLanguageLevelOpen, setIsLanguageLevelOpen] = useState(false);
   const [isHintOpen, setIsHintOpen] = useState(false);
   const [hintData, setHintData] = useState<HintResponse | null>(null);
   const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
@@ -484,6 +486,7 @@ export const ChatPage: React.FC = () => {
                 isFinishing={isSubmittingEvaluation}
                 onBackClick={handleBackClick}
                 onObjectiveClick={() => setIsObjectiveOpen(true)}
+                onHeaderClick={() => setIsLanguageLevelOpen(true)}
                 onFinishClick={handleFinishConversation}
               />
             </header>
@@ -597,6 +600,13 @@ export const ChatPage: React.FC = () => {
         isOpen={isObjectiveOpen}
         onClose={() => setIsObjectiveOpen(false)}
         stage={stage}
+      />
+
+      {/* 3.5. Language Level Explanation Modal */}
+      <LanguageLevelModal
+        isOpen={isLanguageLevelOpen}
+        onClose={() => setIsLanguageLevelOpen(false)}
+        userLevel={profile?.languageLevel || 'A1'}
       />
 
       {/* 4. Hint Suggestion Modal */}

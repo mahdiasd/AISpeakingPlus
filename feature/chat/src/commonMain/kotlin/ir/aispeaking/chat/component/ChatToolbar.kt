@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,6 +60,7 @@ fun ChatToolbar(
     showProgress: Boolean = false,
     onBackClick: () -> Unit = {},
     onObjectiveClick: () -> Unit = {},
+    onHeaderClick: () -> Unit = {},
     onFinishConversationClick: () -> Unit,
     objectiveModifier: Modifier = Modifier
 ) {
@@ -93,6 +95,7 @@ fun ChatToolbar(
                     .clip(headerShape)
                     .background(AppleChatTheme.GlassPanel)
                     .border(1.dp, AppleChatTheme.SpecularStrokeBrush, headerShape)
+                    .clickable(onClick = onHeaderClick)
                     .padding(horizontal = 10.dp, vertical = 2.dp),
                 contentAlignment = Alignment.Center
             ) {

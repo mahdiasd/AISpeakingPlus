@@ -341,7 +341,7 @@ private fun TopHud(
 
         // 3. End anchor (Left in RTL): Stars Pill with spring tactile touch
         GameStatPill(
-            text = "${totalStars.fa()} ستاره",
+            text = totalStars.fa(),
             icon = Res.drawable.ic_star,
             accent = Game.Gold,
             onClick = onLeaderboard
