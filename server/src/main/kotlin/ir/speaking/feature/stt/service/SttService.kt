@@ -3,32 +3,30 @@ package ir.speaking.feature.stt.service
 import com.k2fsa.sherpa.onnx.EndpointConfig
 import com.k2fsa.sherpa.onnx.EndpointRule
 import com.k2fsa.sherpa.onnx.FeatureConfig
+import com.k2fsa.sherpa.onnx.OfflineModelConfig
+import com.k2fsa.sherpa.onnx.OfflineRecognizer
+import com.k2fsa.sherpa.onnx.OfflineRecognizerConfig
+import com.k2fsa.sherpa.onnx.OfflineSenseVoiceModelConfig
 import com.k2fsa.sherpa.onnx.OnlineModelConfig
 import com.k2fsa.sherpa.onnx.OnlineRecognizer
 import com.k2fsa.sherpa.onnx.OnlineRecognizerConfig
 import com.k2fsa.sherpa.onnx.OnlineStream
 import com.k2fsa.sherpa.onnx.OnlineTransducerModelConfig
 import org.koin.core.annotation.Single
+import org.slf4j.LoggerFactory
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URI
 
 /**
- * Singleton service that owns the single shared [OnlineRecognizer] instance
- * and enforces a hard cap on the number of concurrent [OnlineStream]s via
- * a [StreamConcurrencyLimiter] (backed by a fair [Semaphore]).
- *
- * The native model is loaded exactly once when this class is instantiated by
- * Koin (at application startup) and kept in memory for the lifetime of the
- * process. Each WebSocket session calls [tryAcquireStream] to obtain a
- * dedicated [OnlineStream]; when the session ends (normally or abruptly)
- * it must call [releaseStream] so the native resources are freed and the
- * semaphore permit is returned.
+ * Unified STT service supporting both high-accuracy SenseVoice (offline non-autoregressive)
+ * and Zipformer (online streaming transducer).
  */
 @Single
 class SttService(
     private val config: SttConfig
 ) {
-    private val logger = org.slf4j.LoggerFactory.getLogger(SttService::class.java)
-    private val recognizer: OnlineRecognizer
+    private val logger = LoggerFactory.getLogger(SttService::class.java)
     private val limiter: StreamConcurrencyLimiter =
         StreamConcurrencyLimiter(config.maxConcurrentStreams)
 
@@ -36,99 +34,151 @@ class SttService(
     val maxConcurrentStreams: Int get() = limiter.maxConcurrent
     val activeStreams: Int get() = limiter.active
 
+    val isSenseVoice: Boolean
+    private val offlineRecognizer: OfflineRecognizer?
+    private val onlineRecognizer: OnlineRecognizer?
+
     init {
-        val modelDir = findValidModelDir()
+        var modelDir = findValidModelDir()
+        if (modelDir == null && config.autoDownload) {
+            val targetDir = File(config.modelDir)
+            logger.info("STT model files not found. Attempting automatic download of SenseVoice model to: {}", targetDir.absolutePath)
+            if (downloadSenseVoiceModelIfMissing(targetDir)) {
+                modelDir = targetDir
+            }
+        }
+
+        val resolvedModelDir = modelDir
             ?: throw IllegalArgumentException(
                 "STT model directory not found or incomplete: ${config.modelDir}. " +
-                "Ensure encoder, decoder, joiner (.onnx/.int8.onnx) and tokens.txt are present."
+                "Ensure either SenseVoice (model.int8.onnx + tokens.txt) or Zipformer (encoder, decoder, joiner, tokens.txt) are present."
             )
-        logger.info("Using STT model directory: {}", modelDir.absolutePath)
 
-        // Locate the transducer model files. The naming convention for the
-        // 2023-06-21 release is:
-        //   encoder-epoch-99-avg-1.int8.onnx
-        //   decoder-epoch-99-avg-1.onnx
-        //   joiner-epoch-99-avg-1.int8.onnx
-        //   tokens.txt
-        // We resolve them dynamically so the service also works if a newer
-        // model with a different epoch/avg suffix is dropped in.
-        val encoder = findModel(modelDir, "encoder", ".int8.onnx", ".onnx")
-            ?: throw IllegalArgumentException("encoder .onnx not found in ${modelDir.absolutePath}")
-        val decoder = findModel(modelDir, "decoder", ".onnx", ".int8.onnx")
-            ?: throw IllegalArgumentException("decoder .onnx not found in ${modelDir.absolutePath}")
-        val joiner = findModel(modelDir, "joiner", ".int8.onnx", ".onnx")
-            ?: throw IllegalArgumentException("joiner .onnx not found in ${modelDir.absolutePath}")
-        val tokens = File(modelDir, "tokens.txt")
-        require(tokens.isFile) { "tokens.txt not found in ${modelDir.absolutePath}" }
+        logger.info("Using STT model directory: {}", resolvedModelDir.absolutePath)
 
-        logger.info("Resolved STT models:\n  encoder={}\n  decoder={}\n  joiner={}\n  tokens={}",
-            encoder, decoder, joiner, tokens.absolutePath)
+        val senseVoiceModel = findSenseVoiceModel(resolvedModelDir)
+        val tokensFile = File(resolvedModelDir, "tokens.txt")
+        require(tokensFile.isFile) { "tokens.txt not found in ${resolvedModelDir.absolutePath}" }
 
-        val transducer = OnlineTransducerModelConfig.builder()
-            .setEncoder(encoder)
-            .setDecoder(decoder)
-            .setJoiner(joiner)
-            .build()
+        if (senseVoiceModel != null) {
+            isSenseVoice = true
+            onlineRecognizer = null
+            logger.info("Initializing SenseVoice STT engine:\n  model={}\n  tokens={}\n  lang={}\n  useItn={}",
+                senseVoiceModel, tokensFile.absolutePath, config.language, config.useItn)
 
-        val modelConfig = OnlineModelConfig.builder()
-            .setTransducer(transducer)
-            .setTokens(tokens.absolutePath)
-            .setNumThreads(config.numThreads)
-            .setDebug(true)
-            .setProvider("cpu")
-            .build()
+            val senseVoiceConfig = OfflineSenseVoiceModelConfig.builder()
+                .setModel(senseVoiceModel)
+                .setLanguage(config.language)
+                .setInverseTextNormalization(config.useItn)
+                .build()
 
-        val featureConfig = FeatureConfig.builder()
-            .setSampleRate(config.sampleRate)
-            .build()
+            val modelConfig = OfflineModelConfig.builder()
+                .setSenseVoice(senseVoiceConfig)
+                .setTokens(tokensFile.absolutePath)
+                .setNumThreads(config.numThreads)
+                .setDebug(false)
+                .setProvider("cpu")
+                .build()
 
-        val endpointConfig = EndpointConfig.builder()
-            .setRule1(
-                EndpointRule.builder()
-                    .setMustContainNonSilence(config.rule1MustContainNonSilence)
-                    .setMinTrailingSilence(config.rule1MinTrailingSilence)
-                    .setMinUtteranceLength(config.rule1MinUtteranceLength)
-                    .build()
-            )
-            .setRule2(
-                EndpointRule.builder()
-                    .setMustContainNonSilence(config.rule2MustContainNonSilence)
-                    .setMinTrailingSilence(config.rule2MinTrailingSilence)
-                    .setMinUtteranceLength(config.rule2MinUtteranceLength)
-                    .build()
-            )
-            .setRule3(
-                EndpointRule.builder()
-                    .setMustContainNonSilence(config.rule3MustContainNonSilence)
-                    .setMinTrailingSilence(config.rule3MinTrailingSilence)
-                    .setMinUtteranceLength(config.rule3MinUtteranceLength)
-                    .build()
-            )
-            .build()
+            val recognizerConfig = OfflineRecognizerConfig.builder()
+                .setOfflineModelConfig(modelConfig)
+                .setDecodingMethod("greedy_search")
+                .build()
 
-        val recognizerConfig = OnlineRecognizerConfig.builder()
-            .setFeatureConfig(featureConfig)
-            .setOnlineModelConfig(modelConfig)
-            .setEndpointConfig(endpointConfig)
-            .setEnableEndpoint(true)
-            .setDecodingMethod("greedy_search")
-            .build()
+            offlineRecognizer = OfflineRecognizer(recognizerConfig)
+            logger.info("SenseVoice STT engine successfully initialized on CPU with {} threads", config.numThreads)
+        } else {
+            isSenseVoice = false
+            offlineRecognizer = null
+            logger.info("Initializing Zipformer Online Transducer STT engine...")
 
-        recognizer = OnlineRecognizer(recognizerConfig)
+            val encoder = findModel(resolvedModelDir, "encoder", ".int8.onnx", ".onnx")
+                ?: throw IllegalArgumentException("encoder .onnx not found in ${resolvedModelDir.absolutePath}")
+            val decoder = findModel(resolvedModelDir, "decoder", ".onnx", ".int8.onnx")
+                ?: throw IllegalArgumentException("decoder .onnx not found in ${resolvedModelDir.absolutePath}")
+            val joiner = findModel(resolvedModelDir, "joiner", ".int8.onnx", ".onnx")
+                ?: throw IllegalArgumentException("joiner .onnx not found in ${resolvedModelDir.absolutePath}")
+
+            val transducer = OnlineTransducerModelConfig.builder()
+                .setEncoder(encoder)
+                .setDecoder(decoder)
+                .setJoiner(joiner)
+                .build()
+
+            val modelConfig = OnlineModelConfig.builder()
+                .setTransducer(transducer)
+                .setTokens(tokensFile.absolutePath)
+                .setNumThreads(config.numThreads)
+                .setDebug(true)
+                .setProvider("cpu")
+                .build()
+
+            val featureConfig = FeatureConfig.builder()
+                .setSampleRate(config.sampleRate)
+                .build()
+
+            val endpointConfig = EndpointConfig.builder()
+                .setRule1(
+                    EndpointRule.builder()
+                        .setMustContainNonSilence(config.rule1MustContainNonSilence)
+                        .setMinTrailingSilence(config.rule1MinTrailingSilence)
+                        .setMinUtteranceLength(config.rule1MinUtteranceLength)
+                        .build()
+                )
+                .setRule2(
+                    EndpointRule.builder()
+                        .setMustContainNonSilence(config.rule2MustContainNonSilence)
+                        .setMinTrailingSilence(config.rule2MinTrailingSilence)
+                        .setMinUtteranceLength(config.rule2MinUtteranceLength)
+                        .build()
+                )
+                .setRule3(
+                    EndpointRule.builder()
+                        .setMustContainNonSilence(config.rule3MustContainNonSilence)
+                        .setMinTrailingSilence(config.rule3MinTrailingSilence)
+                        .setMinUtteranceLength(config.rule3MinUtteranceLength)
+                        .build()
+                )
+                .build()
+
+            val recognizerConfig = OnlineRecognizerConfig.builder()
+                .setFeatureConfig(featureConfig)
+                .setOnlineModelConfig(modelConfig)
+                .setEndpointConfig(endpointConfig)
+                .setEnableEndpoint(true)
+                .setDecodingMethod("greedy_search")
+                .build()
+
+            onlineRecognizer = OnlineRecognizer(recognizerConfig)
+            logger.info("Zipformer Online STT engine successfully initialized")
+        }
     }
 
     /**
-     * Attempts to acquire a semaphore permit and create a new [OnlineStream].
-     * Returns `null` if the server is at capacity (all permits taken); the
-     * caller should then send a `server_busy` error and close the WebSocket.
+     * Attempts to acquire a concurrency permit and create a unified [SttStreamSession].
+     * Returns null if max concurrent streams limit is reached.
      */
-    fun tryAcquireStream(): OnlineStream? {
+    fun tryAcquireSession(): SttStreamSession? {
         if (!limiter.tryAcquire()) {
             return null
         }
         return try {
-            val stream = recognizer.createStream()
-            stream
+            if (isSenseVoice) {
+                val recognizer = offlineRecognizer ?: throw IllegalStateException("Offline recognizer not initialized")
+                SenseVoiceStreamSession(
+                    recognizer = recognizer,
+                    sampleRate = config.sampleRate,
+                    minTrailingSilenceSamples = (config.sampleRate * config.rule2MinTrailingSilence).toInt()
+                )
+            } else {
+                val recognizer = onlineRecognizer ?: throw IllegalStateException("Online recognizer not initialized")
+                val stream = recognizer.createStream()
+                ZipformerStreamSession(
+                    recognizer = recognizer,
+                    stream = stream,
+                    sampleRate = config.sampleRate
+                )
+            }
         } catch (e: Throwable) {
             limiter.release()
             throw e
@@ -136,33 +186,116 @@ class SttService(
     }
 
     /**
-     * Releases a previously acquired [OnlineStream]: frees the native
-     * resources and returns the semaphore permit. Safe to call on a null
-     * stream (no-op).
+     * Releases a session and returns its concurrency permit.
      */
-    fun releaseStream(stream: OnlineStream?) {
-        if (stream == null) return
+    fun releaseSession(session: SttStreamSession?) {
+        if (session == null) return
         try {
-            stream.release()
+            session.release()
         } catch (_: Throwable) {
-            // Best-effort cleanup; the native pointer may already be invalid.
         } finally {
             limiter.release()
         }
     }
 
-    /** Feeds PCM float samples into the stream. */
+    /**
+     * Transcribes a complete audio waveform (samples at 16kHz) and returns the recognized text.
+     */
+    fun transcribeWaveform(samples: FloatArray): String? {
+        if (samples.isEmpty()) return ""
+        if (!limiter.tryAcquire()) return null
+
+        return try {
+            if (isSenseVoice) {
+                val recognizer = offlineRecognizer ?: return null
+                val stream = recognizer.createStream()
+                try {
+                    stream.acceptWaveform(samples, config.sampleRate)
+                    recognizer.decode(stream)
+                    val result = recognizer.getResult(stream)
+                    val clean = cleanSenseVoiceText(result.text ?: "")
+                    formatTranscript(clean)
+                } finally {
+                    stream.release()
+                }
+            } else {
+                val recognizer = onlineRecognizer ?: return null
+                val stream = recognizer.createStream()
+                try {
+                    val chunkSize = 3200 // 200ms chunks @ 16kHz
+                    var offset = 0
+                    val fullResult = StringBuilder()
+                    while (offset < samples.size) {
+                        val end = (offset + chunkSize).coerceAtMost(samples.size)
+                        val chunk = samples.copyOfRange(offset, end)
+                        stream.acceptWaveform(chunk, config.sampleRate)
+                        while (recognizer.isReady(stream)) {
+                            recognizer.decode(stream)
+                        }
+                        if (recognizer.isEndpoint(stream)) {
+                            val segmentText = formatTranscript(recognizer.getResult(stream).text.trim())
+                            if (segmentText.isNotBlank()) {
+                                if (fullResult.isNotEmpty()) fullResult.append(" ")
+                                fullResult.append(segmentText)
+                            }
+                            recognizer.reset(stream)
+                        }
+                        offset = end
+                    }
+                    stream.inputFinished()
+                    while (recognizer.isReady(stream)) {
+                        recognizer.decode(stream)
+                    }
+                    val remaining = formatTranscript(recognizer.getResult(stream).text.trim())
+                    if (remaining.isNotBlank()) {
+                        if (fullResult.isNotEmpty()) fullResult.append(" ")
+                        fullResult.append(remaining)
+                    }
+                    formatTranscript(fullResult.toString().trim())
+                } finally {
+                    stream.release()
+                }
+            }
+        } catch (e: Throwable) {
+            logger.error("transcribeWaveform error", e)
+            null
+        } finally {
+            limiter.release()
+        }
+    }
+
+    // --- Backward-compatibility methods for OnlineStream (e.g. tests) ---
+    fun tryAcquireStream(): OnlineStream? {
+        val recognizer = onlineRecognizer ?: return null
+        if (!limiter.tryAcquire()) return null
+        return try {
+            recognizer.createStream()
+        } catch (e: Throwable) {
+            limiter.release()
+            throw e
+        }
+    }
+
+    fun releaseStream(stream: OnlineStream?) {
+        if (stream == null) return
+        try {
+            stream.release()
+        } catch (_: Throwable) {
+        } finally {
+            limiter.release()
+        }
+    }
+
     fun acceptWaveform(stream: OnlineStream, samples: FloatArray) {
         stream.acceptWaveform(samples, config.sampleRate)
     }
 
-    /** Signals the stream that no more audio will arrive. */
     fun inputFinished(stream: OnlineStream) {
         stream.inputFinished()
     }
 
-    /** Runs decode steps while the stream has enough data ready. */
     fun decodeIfReady(stream: OnlineStream): Int {
+        val recognizer = onlineRecognizer ?: return 0
         var count = 0
         while (recognizer.isReady(stream)) {
             recognizer.decode(stream)
@@ -171,71 +304,31 @@ class SttService(
         return count
     }
 
-    fun isReady(stream: OnlineStream): Boolean = recognizer.isReady(stream)
+    fun isReady(stream: OnlineStream): Boolean = onlineRecognizer?.isReady(stream) == true
 
     fun decode(stream: OnlineStream) {
-        recognizer.decode(stream)
+        onlineRecognizer?.decode(stream)
     }
 
-    /** Transcribes a complete audio waveform (samples at 16kHz) and returns the recognized text. */
-    fun transcribeWaveform(samples: FloatArray): String? {
-        val stream = tryAcquireStream() ?: return null
-        return try {
-            val chunkSize = 3200 // 200ms chunks @ 16kHz
-            var offset = 0
-            val fullResult = StringBuilder()
-            var chunkIndex = 0
-            while (offset < samples.size) {
-                val end = (offset + chunkSize).coerceAtMost(samples.size)
-                val chunk = samples.copyOfRange(offset, end)
-                acceptWaveform(stream, chunk)
-                val decodes = decodeIfReady(stream)
-                val raw = recognizer.getResult(stream)
-                val currentT = raw.text?.trim() ?: ""
-                val endp = isEndpoint(stream)
-                logger.debug("transcribeWaveform chunk {}: decodes={}, text='{}', isEndpoint={}", chunkIndex, decodes, currentT, endp)
-                if (endp) {
-                    val segmentText = getText(stream)
-                    if (segmentText.isNotBlank()) {
-                        if (fullResult.isNotEmpty()) fullResult.append(" ")
-                        fullResult.append(segmentText)
-                    }
-                    reset(stream)
-                }
-                offset = end
-                chunkIndex++
-            }
-            inputFinished(stream)
-            decodeIfReady(stream)
-            val remaining = getText(stream)
-            logger.debug("transcribeWaveform inputFinished: remaining='{}'", remaining)
-            if (remaining.isNotBlank()) {
-                if (fullResult.isNotEmpty()) fullResult.append(" ")
-                fullResult.append(remaining)
-            }
-            formatTranscript(fullResult.toString().trim())
-        } catch (e: Throwable) {
-            logger.error("transcribeWaveform error", e)
-            null
-        } finally {
-            releaseStream(stream)
-        }
-    }
-
-    /** Returns the current partial/interim transcription text formatted with natural sentence casing. */
     fun getText(stream: OnlineStream): String =
-        formatTranscript(recognizer.getResult(stream).text.trim())
+        onlineRecognizer?.let { formatTranscript(it.getResult(stream).text.trim()) } ?: ""
 
     fun getRawResult(stream: OnlineStream): com.k2fsa.sherpa.onnx.OnlineRecognizerResult =
-        recognizer.getResult(stream)
+        onlineRecognizer?.getResult(stream) ?: throw IllegalStateException("OnlineRecognizer is null")
 
-    /** Returns true when the endpoint detector fires (utterance boundary). */
     fun isEndpoint(stream: OnlineStream): Boolean =
-        recognizer.isEndpoint(stream)
+        onlineRecognizer?.isEndpoint(stream) == true
 
-    /** Resets the internal state of the stream to start a new utterance. */
     fun reset(stream: OnlineStream) {
-        recognizer.reset(stream)
+        onlineRecognizer?.reset(stream)
+    }
+
+    private fun findSenseVoiceModel(dir: File): String? {
+        val int8 = File(dir, "model.int8.onnx")
+        if (int8.isFile && int8.length() > 50_000_000L) return int8.absolutePath
+        val fp32 = File(dir, "model.onnx")
+        if (fp32.isFile && fp32.length() > 50_000_000L) return fp32.absolutePath
+        return null
     }
 
     private fun findModel(dir: File, prefix: String, vararg suffixes: String): String? {
@@ -256,6 +349,11 @@ class SttService(
     private fun findValidModelDir(): File? {
         val candidates = listOf(
             File(config.modelDir),
+            File("models/${SttConfig.SENSE_VOICE_MODEL_NAME}"),
+            File("../models/${SttConfig.SENSE_VOICE_MODEL_NAME}"),
+            File("server/models/${SttConfig.SENSE_VOICE_MODEL_NAME}"),
+            File(System.getProperty("user.home"), "models/${SttConfig.SENSE_VOICE_MODEL_NAME}"),
+            File("/app/models/${SttConfig.SENSE_VOICE_MODEL_NAME}"),
             File("models/sherpa-onnx-streaming-zipformer-en-2023-06-21"),
             File("models/sherpa-onnx-streaming-zipformer-en-2023-06-26"),
             File("../models/sherpa-onnx-streaming-zipformer-en-2023-06-21"),
@@ -272,14 +370,69 @@ class SttService(
 
     private fun isValidModelDir(dir: File): Boolean {
         if (!dir.exists() || !dir.isDirectory) return false
+        val tokens = File(dir, "tokens.txt")
+        if (!tokens.isFile) return false
+
+        // Check if SenseVoice
+        if (findSenseVoiceModel(dir) != null) return true
+
+        // Check if Zipformer
         val encoder = findModel(dir, "encoder", ".int8.onnx", ".onnx")
         val decoder = findModel(dir, "decoder", ".int8.onnx", ".onnx")
         val joiner = findModel(dir, "joiner", ".int8.onnx", ".onnx")
-        val tokens = File(dir, "tokens.txt")
-        return encoder != null && decoder != null && joiner != null && tokens.isFile
+        return encoder != null && decoder != null && joiner != null
+    }
+
+    private fun downloadSenseVoiceModelIfMissing(targetDir: File): Boolean {
+        return try {
+            targetDir.mkdirs()
+            val tokensFile = File(targetDir, "tokens.txt")
+            val modelFile = File(targetDir, "model.int8.onnx")
+
+            if (!tokensFile.exists() || tokensFile.length() < 100_000L) {
+                logger.info("Downloading SenseVoice tokens.txt to ${tokensFile.absolutePath}...")
+                downloadFile(
+                    "https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/tokens.txt",
+                    tokensFile
+                )
+            }
+            if (!modelFile.exists() || modelFile.length() < 200_000_000L) {
+                logger.info("Downloading SenseVoice model.int8.onnx to ${modelFile.absolutePath}...")
+                downloadFile(
+                    "https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main/model.int8.onnx",
+                    modelFile
+                )
+            }
+            modelFile.exists() && tokensFile.exists()
+        } catch (e: Exception) {
+            logger.error("Failed to auto-download SenseVoice model: {}", e.message)
+            false
+        }
+    }
+
+    private fun downloadFile(urlStr: String, dest: File) {
+        val temp = File(dest.parentFile, dest.name + ".tmp")
+        val url = URI(urlStr).toURL()
+        val connection = url.openConnection() as HttpURLConnection
+        connection.connectTimeout = 30000
+        connection.readTimeout = 60000
+        connection.instanceFollowRedirects = true
+        connection.inputStream.use { input ->
+            temp.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        if (dest.exists()) dest.delete()
+        temp.renameTo(dest)
     }
 
     companion object {
+        fun cleanSenseVoiceText(raw: String): String {
+            return raw.replace(Regex("<\\|.*?\\|>"), "")
+                .replace(Regex("\\s+"), " ")
+                .trim()
+        }
+
         private val PROPER_NOUNS = setOf(
             "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
             "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december",
@@ -291,11 +444,6 @@ class SttService(
             "ok", "ai", "tv", "id", "pc", "cd", "dvd", "usb", "gps", "ceo", "vip", "stt", "tts"
         )
 
-        /**
-         * Converts all-caps raw ASR transcript output into natural English sentence casing,
-         * capitalizing the first word of sentences, pronoun 'I', contractions ('I'm', etc.),
-         * proper nouns, and recognized acronyms.
-         */
         fun formatTranscript(raw: String): String {
             if (raw.isBlank()) return raw
             val tokens = raw.trim().split(Regex("\\s+"))

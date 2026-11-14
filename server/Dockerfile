@@ -16,11 +16,12 @@ COPY build/libs/*-all.jar app.jar
 # Default directories (models and audio are mounted via volumes in docker-compose)
 RUN mkdir -p /app/native /app/models /app/audio_cache /app/logs
 
-# Speech-to-Text settings
-ENV STT_MODEL_DIR=/app/models/sherpa-onnx-streaming-zipformer-en-2023-06-21
-ENV STT_MAX_STREAMS=2
-ENV STT_NUM_THREADS=1
+# Speech-to-Text (SenseVoice-Small) settings
+ENV STT_MODEL_DIR=/app/models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+ENV STT_MAX_STREAMS=6
+ENV STT_NUM_THREADS=2
 ENV STT_SAMPLE_RATE=16000
+ENV STT_AUTO_DOWNLOAD=true
 
 # Text-to-Speech (Kokoro-82M) settings
 ENV TTS_MODEL_DIR=/app/models/kokoro-en-v0_19

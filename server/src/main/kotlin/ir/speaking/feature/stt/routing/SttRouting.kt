@@ -22,6 +22,7 @@ import ir.speaking.feature.admin.auth.AdminPrincipal
 import ir.speaking.feature.stt.dto.SttMessage
 import ir.speaking.feature.stt.dto.SttTranscribeResponse
 import ir.speaking.feature.stt.service.SttService
+import ir.speaking.feature.stt.service.SttStreamSession
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
@@ -126,28 +127,27 @@ private suspend fun DefaultWebSocketServerSession.handleSttSession(sttService: S
     // Signal readiness immediately upon WebSocket connection so client knows socket is live and ready
     sendText(SttMessage.ReadyMessage("Connected to speech service"))
 
-    var stream: com.k2fsa.sherpa.onnx.OnlineStream? = null
+    var session: SttStreamSession? = null
     var lastPartialText = ""
 
     try {
         for (frame in incoming) {
             when (frame) {
                 is Frame.Binary -> {
-                    if (stream == null) {
-                        stream = sttService.tryAcquireStream()
-                        if (stream == null) {
-                            sttLogger.warn("STT server busy ({}/{} streams in use); cannot acquire stream for audio frame",
+                    if (session == null) {
+                        session = sttService.tryAcquireSession()
+                        if (session == null) {
+                            sttLogger.warn("STT server busy ({}/{} sessions in use); cannot acquire session for audio frame",
                                 sttService.activeStreams, sttService.maxConcurrentStreams)
                             sendText(SttMessage.ErrorMessage("server_busy"))
                             continue
                         }
-                        sttLogger.info("STT stream acquired ({}/{} active)",
+                        sttLogger.info("STT session acquired ({}/{} active)",
                             sttService.activeStreams, sttService.maxConcurrentStreams)
                     }
-                    val activeStream = stream
+                    val activeSession = session
                     handleBinaryFrame(
-                        sttService = sttService,
-                        stream = activeStream,
+                        session = activeSession,
                         frame = frame,
                         send = { msg -> sendText(msg) },
                         currentPartial = lastPartialText,
@@ -160,22 +160,22 @@ private suspend fun DefaultWebSocketServerSession.handleSttSession(sttService: S
                     val textContent = frame.readText().trim()
                     if (textContent.contains("stop", ignoreCase = true) || textContent.contains("finish", ignoreCase = true)) {
                         sttLogger.info("Client requested STT stop/finish via text frame")
-                        val activeStream = stream
-                        if (activeStream != null) {
+                        val activeSession = session
+                        if (activeSession != null) {
                             try {
-                                sttService.inputFinished(activeStream)
-                                sttService.decodeIfReady(activeStream)
-                                val finalRemaining = sttService.getText(activeStream)
+                                activeSession.inputFinished()
+                                activeSession.decodeIfReady()
+                                val finalRemaining = activeSession.getText()
                                 if (finalRemaining.isNotBlank()) {
                                     sendText(SttMessage.FinalTranscript(finalRemaining))
                                     lastPartialText = ""
                                 }
                             } catch (e: Throwable) {
-                                sttLogger.warn("Error finalizing stream on stop frame: {}", e.message)
+                                sttLogger.warn("Error finalizing session on stop frame: {}", e.message)
                             } finally {
-                                sttService.releaseStream(activeStream)
-                                stream = null
-                                sttLogger.info("STT stream released after stop frame ({}/{} active)",
+                                sttService.releaseSession(activeSession)
+                                session = null
+                                sttLogger.info("STT session released after stop frame ({}/{} active)",
                                     sttService.activeStreams, sttService.maxConcurrentStreams)
                             }
                         }
@@ -190,12 +190,12 @@ private suspend fun DefaultWebSocketServerSession.handleSttSession(sttService: S
         }
 
         // Flush any remaining decoded text at end of stream
-        val activeStream = stream
-        if (activeStream != null) {
+        val activeSession = session
+        if (activeSession != null) {
             try {
-                sttService.inputFinished(activeStream)
-                sttService.decodeIfReady(activeStream)
-                val finalRemaining = sttService.getText(activeStream)
+                activeSession.inputFinished()
+                activeSession.decodeIfReady()
+                val finalRemaining = activeSession.getText()
                 if (finalRemaining.isNotBlank()) {
                     sttLogger.info("Flushing final text on session end: {}", finalRemaining)
                     sendText(SttMessage.FinalTranscript(finalRemaining))
@@ -205,24 +205,23 @@ private suspend fun DefaultWebSocketServerSession.handleSttSession(sttService: S
     } catch (e: Throwable) {
         sttLogger.error("STT WebSocket error from {}", call.request.local.remoteHost, e)
     } finally {
-        if (stream != null) {
-            sttService.releaseStream(stream)
-            sttLogger.info("STT stream released on session exit ({}/{} active)",
+        if (session != null) {
+            sttService.releaseSession(session)
+            sttLogger.info("STT session released on session exit ({}/{} active)",
                 sttService.activeStreams, sttService.maxConcurrentStreams)
-            stream = null
+            session = null
         }
     }
 }
 
 /**
- * Accepts a single binary audio frame, feeds it into the [OnlineStream], and
+ * Accepts a single binary audio frame, feeds it into the [SttStreamSession], and
  * runs a decode step. When an endpoint is detected the accumulated text is
  * sent as a [SttMessage.FinalTranscript]; otherwise the current interim text
  * is sent as a [SttMessage.PartialTranscript] (only when it changes).
  */
 private suspend fun handleBinaryFrame(
-    sttService: SttService,
-    stream: com.k2fsa.sherpa.onnx.OnlineStream,
+    session: SttStreamSession,
     frame: Frame.Binary,
     send: suspend (SttMessage) -> Unit,
     currentPartial: String,
@@ -230,20 +229,20 @@ private suspend fun handleBinaryFrame(
 ) {
     val samples = frame.data.toShortArraySamples()
     if (samples.isEmpty()) return
-    sttService.acceptWaveform(stream, samples)
+    session.acceptWaveform(samples)
 
     // Decode as far as the model is ready; then read the current hypothesis.
-    sttService.decodeIfReady(stream)
-    val text = sttService.getText(stream)
+    session.decodeIfReady()
+    val text = session.getText()
 
-    if (sttService.isEndpoint(stream)) {
+    if (session.isEndpoint()) {
         // Endpoint fired → emit the final transcript for this utterance,
         // then reset the stream to start a fresh utterance.
         if (text.isNotBlank()) {
             send(SttMessage.FinalTranscript(text))
             onPartial("")
         }
-        sttService.reset(stream)
+        session.reset()
     } else if (text.isNotBlank()) {
         if (text != currentPartial) {
             send(SttMessage.PartialTranscript(text))
