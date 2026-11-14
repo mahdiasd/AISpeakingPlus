@@ -1,6 +1,7 @@
 package ir.aispeaking.subscription.component
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -8,15 +9,20 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,22 +39,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
+import ir.aispeaking.sharedui.ic_alert_circle
+import ir.aispeaking.sharedui.ic_close
 import ir.aispeaking.sharedui.ic_done
-import ir.aispeaking.sharedui.ic_key
-import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ic_gem
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * Minimalist expandable promo code input row to keep the subscription screen clean and uncluttered.
+ * Premium Apple Liquid Glass Promo Code banner designed for the top of the subscription page.
+ * Seamlessly expands when tapped, keeping the view clean, lightweight, and focused.
  */
 @Composable
 fun ModernPromoRow(
@@ -67,70 +76,154 @@ fun ModernPromoRow(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         if (appliedDiscountPercent > 0) {
-            // Success Chip when discount is applied
+            // Applied Discount Success Pill
+            val successShape = RoundedCornerShape(20.dp)
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF10B981).copy(alpha = if (isDark) 0.20f else 0.12f))
-                    .border(1.dp, Color(0xFF10B981).copy(alpha = 0.40f), RoundedCornerShape(14.dp))
-                    .clickable { isExpanded = !isExpanded }
+                    .clip(successShape)
+                    .background(
+                        Brush.horizontalGradient(
+                            if (isDark) listOf(Color(0xFF064E3B).copy(alpha = 0.8f), Color(0xFF047857).copy(alpha = 0.6f))
+                            else listOf(Color(0xFFECFDF5), Color(0xFFD1FAE5))
+                        )
+                    )
+                    .border(1.dp, Color(0xFF10B981).copy(alpha = 0.50f), successShape)
                     .padding(horizontal = 14.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_done),
-                    contentDescription = null,
-                    tint = Color(0xFF10B981),
-                    modifier = Modifier.size(14.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF10B981)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_done),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(12.dp)
+                    )
+                }
+
                 GameText(
                     text = "کد تخفیف اعمال شد (${formatToPersian(appliedDiscountPercent.toLong())}٪ کسر گردید)",
                     size = 12.sp,
-                    color = Color(0xFF10B981),
+                    color = if (isDark) Color(0xFF6EE7B7) else Color(0xFF065F46),
                     bold = true
                 )
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                // Small remove/cancel button
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(CircleShape)
+                        .background(if (isDark) Color(0x33FFFFFF) else Color(0x22000000))
+                        .clickable {
+                            onPromoCodeChanged("")
+                            onApplyClicked()
+                            isExpanded = false
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_close),
+                        contentDescription = "حذف تخفیف",
+                        tint = if (isDark) Color.White else Color(0xFF065F46),
+                        modifier = Modifier.size(11.dp)
+                    )
+                }
             }
         } else if (!isExpanded) {
-            // Compact trigger button to expand
+            // Sleek Collapsed Pill (Prompt to enter promo code)
+            val pillInteraction = remember { MutableInteractionSource() }
+            val isPressed by pillInteraction.collectIsPressedAsState()
+            val pillShape = RoundedCornerShape(50)
+
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(if (isDark) Color(0x1AFFFFFF) else Color(0x0D000000))
-                    .border(1.dp, if (isDark) Color(0x1FFFFFFF) else Color(0x10000000), RoundedCornerShape(12.dp))
-                    .clickable { isExpanded = true }
+                    .graphicsLayer {
+                        scaleX = if (isPressed) 0.96f else 1f
+                        scaleY = if (isPressed) 0.96f else 1f
+                    }
+                    .clip(pillShape)
+                    .background(
+                        if (isDark) Color(0x26FFFFFF) else Color(0x0F000000)
+                    )
+                    .border(
+                        1.dp,
+                        if (isDark) Color(0x28FFFFFF) else Color(0x18000000),
+                        pillShape
+                    )
+                    .clickable(
+                        interactionSource = pillInteraction,
+                        indication = null,
+                        onClick = { isExpanded = true }
+                    )
                     .padding(horizontal = 14.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_key),
+                    painter = painterResource(Res.drawable.ic_gem),
                     contentDescription = null,
-                    tint = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B),
-                    modifier = Modifier.size(13.dp)
+                    tint = Color(0xFFFFC83D),
+                    modifier = Modifier.size(14.dp)
                 )
+
                 GameText(
                     text = "کد تخفیف دارید؟",
                     size = 12.sp,
-                    color = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B),
+                    color = if (isDark) Color(0xFFE2E8F0) else Color(0xFF334155),
                     bold = false
                 )
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isDark) Color(0x33FFFFFF) else Color(0x18000000))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    GameText(
+                        text = "وارد کنید ›",
+                        size = 10.5.sp,
+                        color = Color(0xFFFFC83D),
+                        bold = true
+                    )
+                }
             }
         }
 
-        // Expanded text field and apply button
+        // Expanded Glass Card for Promo Code Input
         AnimatedVisibility(
             visible = isExpanded && appliedDiscountPercent == 0,
-            enter = fadeIn() + expandVertically(),
+            enter = fadeIn() + expandVertically(spring(dampingRatio = 0.8f, stiffness = 400f)),
             exit = fadeOut() + shrinkVertically()
         ) {
+            val cardShape = RoundedCornerShape(18.dp)
+
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(cardShape)
+                    .background(
+                        if (isDark) Color(0x381E2638) else Color(0x80FFFFFF)
+                    )
+                    .border(
+                        1.dp,
+                        if (isError) Color(0xFFEF4444).copy(alpha = 0.5f)
+                        else if (isDark) Color(0x2EFFFFFF) else Color(0x1A000000),
+                        cardShape
+                    )
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Row(
@@ -143,13 +236,13 @@ fun ModernPromoRow(
                         onValueChange = onPromoCodeChanged,
                         placeholder = {
                             GameText(
-                                text = "کد تخفیف را وارد کنید...",
+                                text = "کد تخفیف...",
                                 color = if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8),
                                 size = 12.sp
                             )
                         },
                         singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(onDone = {
                             focusManager.clearFocus()
@@ -158,47 +251,82 @@ fun ModernPromoRow(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = if (isDark) Color.White else Color(0xFF0F172A),
                             unfocusedTextColor = if (isDark) Color.White else Color(0xFF0F172A),
-                            focusedContainerColor = if (isDark) Color(0xFF1E2638) else Color.White,
-                            unfocusedContainerColor = if (isDark) Color(0xFF141A28) else Color(0xFFF8FAFC),
-                            focusedBorderColor = Color(0xFF6366F1),
-                            unfocusedBorderColor = if (isDark) Color(0x33FFFFFF) else Color(0x1F000000),
-                            cursorColor = Color(0xFF6366F1)
+                            focusedContainerColor = if (isDark) Color(0xFF131924) else Color(0xFFF1F5F9),
+                            unfocusedContainerColor = if (isDark) Color(0xFF131924) else Color(0xFFF1F5F9),
+                            focusedBorderColor = Color(0xFF22C55E),
+                            unfocusedBorderColor = if (isDark) Color(0x26FFFFFF) else Color(0x1A000000),
+                            cursorColor = Color(0xFF22C55E)
                         ),
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
+                            .height(42.dp)
                     )
 
+                    // Apply Button
                     Button(
                         onClick = {
                             focusManager.clearFocus()
                             onApplyClicked()
                         },
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF6366F1),
+                            containerColor = Color(0xFF22C55E),
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        modifier = Modifier.height(48.dp)
+                        contentPadding = PaddingValues(horizontal = 14.dp),
+                        modifier = Modifier.height(42.dp)
                     ) {
                         GameText(
                             text = "اعمال",
                             color = Color.White,
-                            size = 13.sp,
+                            size = 12.5.sp,
                             bold = true
+                        )
+                    }
+
+                    // Close/Collapse Button
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(if (isDark) Color(0x22FFFFFF) else Color(0x12000000))
+                            .clickable {
+                                isExpanded = false
+                                focusManager.clearFocus()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_close),
+                            contentDescription = "بستن",
+                            tint = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B),
+                            modifier = Modifier.size(14.dp)
                         )
                     }
                 }
 
+                // Error or Info Feedback Message
                 feedbackMessage?.let { msg ->
-                    GameText(
-                        text = msg,
-                        color = if (isError) Color(0xFFEF4444) else Color(0xFF10B981),
-                        size = 12.sp,
-                        bold = true,
-                        modifier = Modifier.padding(horizontal = 4.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        if (isError) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_alert_circle),
+                                contentDescription = null,
+                                tint = Color(0xFFEF4444),
+                                modifier = Modifier.size(13.dp)
+                            )
+                        }
+                        GameText(
+                            text = msg,
+                            color = if (isError) Color(0xFFEF4444) else Color(0xFF10B981),
+                            size = 11.5.sp,
+                            bold = true
+                        )
+                    }
                 }
             }
         }

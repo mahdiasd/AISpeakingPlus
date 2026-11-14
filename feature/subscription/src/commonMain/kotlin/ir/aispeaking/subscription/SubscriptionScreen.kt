@@ -197,6 +197,21 @@ fun SubscriptionScreen(
                     onNavigateBack = onNavigateBack
                 )
 
+                // Sleek Promo Code Row prominently positioned above the plan cards
+                ModernPromoRow(
+                    promoCode = uiState.promoCodeInput,
+                    appliedDiscountPercent = uiState.appliedDiscountPercent,
+                    feedbackMessage = uiState.promoFeedbackMessage,
+                    isError = uiState.isPromoError,
+                    onPromoCodeChanged = {
+                        viewModel.processIntent(SubscriptionIntent.OnPromoCodeChanged(it))
+                    },
+                    onApplyClicked = {
+                        viewModel.processIntent(SubscriptionIntent.ApplyPromoCode)
+                    },
+                    modifier = Modifier.padding(top = 2.dp, bottom = 4.dp)
+                )
+
                 if (uiState.isLoading && uiState.plans.isEmpty()) {
                     Box(
                         modifier = Modifier
@@ -349,20 +364,6 @@ fun SubscriptionScreen(
                                 )
                             }
                         }
-
-                        // Minimalist Promo Code Row
-                        ModernPromoRow(
-                            promoCode = uiState.promoCodeInput,
-                            appliedDiscountPercent = uiState.appliedDiscountPercent,
-                            feedbackMessage = uiState.promoFeedbackMessage,
-                            isError = uiState.isPromoError,
-                            onPromoCodeChanged = {
-                                viewModel.processIntent(SubscriptionIntent.OnPromoCodeChanged(it))
-                            },
-                            onApplyClicked = {
-                                viewModel.processIntent(SubscriptionIntent.ApplyPromoCode)
-                            }
-                        )
 
                         // Trust Badges Row
                         TrustBadgesRow(
