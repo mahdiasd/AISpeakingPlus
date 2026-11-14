@@ -31,8 +31,13 @@ data class SttConfig(
     val rule3MustContainNonSilence: Boolean,
     val rule3MinTrailingSilence: Float,
     val rule3MinUtteranceLength: Float,
+    val language: String = "en",
+    val useItn: Boolean = true,
+    val autoDownload: Boolean = true,
 ) {
     companion object {
+        const val SENSE_VOICE_MODEL_NAME = "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17"
+
         /**
          * Build a [SttConfig] from environment variables, falling back to the
          * provided defaults when a variable is missing or invalid.
@@ -47,8 +52,16 @@ data class SttConfig(
             fun envFloat(name: String, default: Float): Float =
                 System.getenv(name)?.toFloatOrNull() ?: default
 
+            fun envString(name: String, default: String): String =
+                System.getenv(name)?.takeIf { it.isNotBlank() } ?: default
+
             val candidateModelDirs = listOfNotNull(
                 System.getenv("STT_MODEL_DIR"),
+                java.io.File("models/$SENSE_VOICE_MODEL_NAME").takeIf { it.exists() }?.absolutePath,
+                java.io.File("../models/$SENSE_VOICE_MODEL_NAME").takeIf { it.exists() }?.absolutePath,
+                java.io.File("server/models/$SENSE_VOICE_MODEL_NAME").takeIf { it.exists() }?.absolutePath,
+                java.io.File(System.getProperty("user.home"), "models/$SENSE_VOICE_MODEL_NAME").takeIf { it.exists() }?.absolutePath,
+                "/app/models/$SENSE_VOICE_MODEL_NAME",
                 java.io.File("models/sherpa-onnx-streaming-zipformer-en-2023-06-21").takeIf { it.exists() }?.absolutePath,
                 java.io.File("models/sherpa-onnx-streaming-zipformer-en-2023-06-26").takeIf { it.exists() }?.absolutePath,
                 java.io.File("../models/sherpa-onnx-streaming-zipformer-en-2023-06-21").takeIf { it.exists() }?.absolutePath,
@@ -62,12 +75,12 @@ data class SttConfig(
             )
             val resolvedModelDir = candidateModelDirs.firstOrNull { java.io.File(it).isDirectory }
                 ?: candidateModelDirs.firstOrNull()
-                ?: "models/sherpa-onnx-streaming-zipformer-en-2023-06-21"
+                ?: "models/$SENSE_VOICE_MODEL_NAME"
 
             return SttConfig(
                 modelDir = resolvedModelDir,
-                maxConcurrentStreams = envInt("STT_MAX_STREAMS", 2),
-                numThreads = envInt("STT_NUM_THREADS", 1),
+                maxConcurrentStreams = envInt("STT_MAX_STREAMS", 6),
+                numThreads = envInt("STT_NUM_THREADS", 2),
                 sampleRate = envInt("STT_SAMPLE_RATE", 16000),
                 rule1MustContainNonSilence = envBool("STT_RULE1_NON_SILENCE", true),
                 rule1MinTrailingSilence = envFloat("STT_RULE1_TRAILING", 3.0f),
@@ -78,6 +91,9 @@ data class SttConfig(
                 rule3MustContainNonSilence = envBool("STT_RULE3_NON_SILENCE", false),
                 rule3MinTrailingSilence = envFloat("STT_RULE3_TRAILING", 0.0f),
                 rule3MinUtteranceLength = envFloat("STT_RULE3_UTTERANCE", 30.0f),
+                language = envString("STT_LANGUAGE", "en"),
+                useItn = envBool("STT_USE_ITN", true),
+                autoDownload = envBool("STT_AUTO_DOWNLOAD", true)
             )
         }
     }

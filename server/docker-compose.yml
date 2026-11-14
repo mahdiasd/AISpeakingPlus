@@ -28,11 +28,12 @@ services:
       - MYKET_ACCESS_TOKEN=${MYKET_ACCESS_TOKEN:-myket_access_token}
       - SERVER_PUBLIC_URL=${SERVER_PUBLIC_URL:-https://staging.aispeaking.ir}
       - WEBAPP_BASE_URL=${WEBAPP_BASE_URL:-https://staging.aispeaking.ir/app}
-      # Speech-to-Text (sherpa-onnx) settings
-      - STT_MODEL_DIR=/app/models/sherpa-onnx-streaming-zipformer-en-2023-06-21
-      - STT_MAX_STREAMS=2
-      - STT_NUM_THREADS=1
+      # Speech-to-Text (sherpa-onnx: SenseVoice-Small) settings
+      - STT_MODEL_DIR=/app/models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+      - STT_MAX_STREAMS=6
+      - STT_NUM_THREADS=2
       - STT_SAMPLE_RATE=16000
+      - STT_AUTO_DOWNLOAD=true
       # Text-to-Speech (Kokoro-82M) settings
       - TTS_MODEL_DIR=/app/models/kokoro-multi-lang-v1_0
       - TTS_NUM_THREADS=2

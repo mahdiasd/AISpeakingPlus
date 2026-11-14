@@ -16,13 +16,15 @@ class SttServiceIntegrationTest {
         val config = SttConfig.fromEnv()
         val service = SttService(config)
 
-        val stream = service.tryAcquireStream()
-        assertNotNull(stream, "Stream should be acquired")
+        val session = service.tryAcquireSession()
+        assertNotNull(session, "Session should be acquired")
 
         try {
             val wavFile = listOf(
                 File("models/sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/0.wav"),
                 File("../models/sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/0.wav"),
+                File("models/sherpa-onnx-streaming-zipformer-en-2023-06-21/test_wavs/0.wav"),
+                File("../models/sherpa-onnx-streaming-zipformer-en-2023-06-21/test_wavs/0.wav"),
                 File("models/sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/1.wav"),
                 File("../models/sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/1.wav")
             ).firstOrNull { it.exists() }
@@ -42,28 +44,22 @@ class SttServiceIntegrationTest {
             while (offset < samples.size) {
                 val end = (offset + chunkSize).coerceAtMost(samples.size)
                 val chunk = samples.copyOfRange(offset, end)
-                service.acceptWaveform(stream, chunk)
-                while (service.isReady(stream)) {
-                    service.decode(stream)
-                }
-                val rawResult = service.getRawResult(stream)
-                val currentText = rawResult.text?.trim() ?: ""
-                val isEndpoint = service.isEndpoint(stream)
+                session.acceptWaveform(chunk)
+                session.decodeIfReady()
+                val currentText = session.getText()
                 if (currentText.isNotBlank()) {
                     partialEmitted = true
                 }
-                if (isEndpoint && currentText.isNotBlank()) {
+                if (session.isEndpoint() && currentText.isNotBlank()) {
                     accumulatedText = if (accumulatedText.isEmpty()) currentText else "$accumulatedText $currentText"
-                    service.reset(stream)
+                    session.reset()
                 }
                 offset = end
             }
 
-            service.inputFinished(stream)
-            while (service.isReady(stream)) {
-                service.decode(stream)
-            }
-            val remainingText = service.getText(stream)
+            session.inputFinished()
+            session.decodeIfReady()
+            val remainingText = session.getText()
             if (remainingText.isNotBlank()) {
                 accumulatedText = if (accumulatedText.isEmpty()) remainingText else "$accumulatedText $remainingText"
             }
@@ -74,7 +70,7 @@ class SttServiceIntegrationTest {
             assertTrue(accumulatedText[0].isUpperCase(), "First character should be uppercase")
             assertFalse(accumulatedText.all { !it.isLetter() || it.isUpperCase() }, "Transcript should not be all uppercase: '$accumulatedText'")
         } finally {
-            service.releaseStream(stream)
+            service.releaseSession(session)
         }
     }
 
@@ -102,5 +98,61 @@ class SttServiceIntegrationTest {
         val input5 = "I'M DOING GREAT DON'T WORRY"
         val output5 = SttService.formatTranscript(input5)
         kotlin.test.assertEquals("I'm doing great don't worry", output5)
+    }
+
+    @Test
+    fun testSenseVoiceOfflineRecognizer() {
+        val modelFile = listOf(
+            File("models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx"),
+            File("../models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx")
+        ).firstOrNull { it.exists() }
+        val tokensFile = listOf(
+            File("models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt"),
+            File("../models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt")
+        ).firstOrNull { it.exists() }
+
+        assertNotNull(modelFile, "SenseVoice model file must exist")
+        assertNotNull(tokensFile, "SenseVoice tokens file must exist")
+
+        val senseVoiceConfig = com.k2fsa.sherpa.onnx.OfflineSenseVoiceModelConfig.builder()
+            .setModel(modelFile.absolutePath)
+            .setLanguage("en")
+            .setInverseTextNormalization(true)
+            .build()
+
+        val modelConfig = com.k2fsa.sherpa.onnx.OfflineModelConfig.builder()
+            .setSenseVoice(senseVoiceConfig)
+            .setTokens(tokensFile.absolutePath)
+            .setNumThreads(1)
+            .setDebug(false)
+            .setProvider("cpu")
+            .build()
+
+        val recognizerConfig = com.k2fsa.sherpa.onnx.OfflineRecognizerConfig.builder()
+            .setOfflineModelConfig(modelConfig)
+            .setDecodingMethod("greedy_search")
+            .build()
+
+        val recognizer = com.k2fsa.sherpa.onnx.OfflineRecognizer(recognizerConfig)
+        val wavFile = listOf(
+            File("models/sherpa-onnx-streaming-zipformer-en-2023-06-21/test_wavs/0.wav"),
+            File("../models/sherpa-onnx-streaming-zipformer-en-2023-06-21/test_wavs/0.wav"),
+            File("models/sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/0.wav"),
+            File("../models/sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/0.wav")
+        ).firstOrNull { it.exists() }
+        assertNotNull(wavFile, "Test wav file must exist")
+
+        val waveReader = com.k2fsa.sherpa.onnx.WaveReader(wavFile.absolutePath)
+        val stream = recognizer.createStream()
+        try {
+            stream.acceptWaveform(waveReader.samples, waveReader.sampleRate)
+            recognizer.decode(stream)
+            val result = recognizer.getResult(stream)
+            println("SenseVoice raw text: '${result.text}', lang: '${result.lang}', emotion: '${result.emotion}'")
+            assertTrue(result.text.isNotBlank(), "SenseVoice transcript should not be blank")
+        } finally {
+            stream.release()
+            recognizer.release()
+        }
     }
 }
