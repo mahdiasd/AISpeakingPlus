@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ir.aispeaking.sharedui.ui.core.button.AppBackButton
 import ir.aispeaking.profile.component.AchievementStatsCard
 import ir.aispeaking.profile.component.AvatarPickerDialog
 import ir.aispeaking.profile.component.EditNickNameDialog
@@ -98,63 +99,34 @@ fun ProfileScreen(
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
-                // Top Navigation Bar matching Apple sleek Liquid Glass style
+                // Top Navigation Bar matching unified Apple sleek style
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Right side in RTL: Circular Back Button (chevron right) + Page Title
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        val backInteraction = remember { MutableInteractionSource() }
-                        val backPressed by backInteraction.collectIsPressedAsState()
-                        val backScale by animateFloatAsState(
-                            targetValue = if (backPressed) 0.92f else 1f,
-                            animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
-                            label = "back_btn_press"
-                        )
+                    // Right side in RTL: AppBackButton
+                    AppBackButton(
+                        onClick = onNavigateBack,
+                        containerSize = 38.dp,
+                        iconSize = 18.dp,
+                        backgroundColor = if (isDark) Color(0x33FFFFFF) else Color(0x99FFFFFF),
+                        borderColor = if (isDark) Color(0x38FFFFFF) else Color(0x1F000000)
+                    )
 
-                        val backBg = if (isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF)
-                        val backBorder = Game.Stroke
-                        val backTint = if (isDark) Game.TextPrimary else Color(0xFF111318)
+                    // Centered title
+                    GameText(
+                        text = "پروفایل کاربری",
+                        size = 18.sp,
+                        bold = true,
+                        color = if (isDark) Game.TextPrimary else Color(0xFF111318),
+                        align = TextAlign.Center
+                    )
 
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .graphicsLayer {
-                                    scaleX = backScale
-                                    scaleY = backScale
-                                }
-                                .clip(CircleShape)
-                                .background(backBg)
-                                .border(1.dp, backBorder, CircleShape)
-                                .clickable(
-                                    interactionSource = backInteraction,
-                                    indication = null,
-                                    onClick = onNavigateBack
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                painter = painterResource(Res.drawable.ic_back),
-                                contentDescription = "بازگشت",
-                                tint = backTint,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-
-                        GameText(
-                            text = "پروفایل کاربری",
-                            size = 18.sp,
-                            bold = true,
-                            color = if (isDark) Game.TextPrimary else Color(0xFF111318)
-                        )
-                    }
+                    // Symmetrical balance spacer
+                    Spacer(modifier = Modifier.size(38.dp))
                 }
 
                 // Main Content

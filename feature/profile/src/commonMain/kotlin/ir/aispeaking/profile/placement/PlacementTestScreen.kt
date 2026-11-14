@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ir.aispeaking.sharedui.ui.core.button.AppBackButton
 import ir.aispeaking.profile.placement.component.OptionSelectableCard
 import ir.aispeaking.profile.placement.component.PlacementExitConfirmDialog
 import ir.aispeaking.profile.placement.component.PlacementProgressBar
@@ -108,57 +109,28 @@ fun PlacementTestScreen(
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
-                // Top Navigation Bar matching Apple sleek Liquid Glass style
+                // Top Navigation Bar matching unified Apple sleek style
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Right in RTL: Back button (chevron points right > per Constitution)
-                    val backInteraction = remember { MutableInteractionSource() }
-                    val backPressed by backInteraction.collectIsPressedAsState()
-                    val backScale by animateFloatAsState(
-                        targetValue = if (backPressed) 0.92f else 1f,
-                        animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
-                        label = "placement_back_btn_press"
-                    )
-
-                    val backBg = if (isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF)
-                    val backBorder = Game.Stroke
-                    val backTint = if (isDark) Game.TextPrimary else Color(0xFF111318)
-
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .graphicsLayer {
-                                scaleX = backScale
-                                scaleY = backScale
+                    // Right in RTL: AppBackButton
+                    AppBackButton(
+                        onClick = {
+                            if (uiState.evaluationResult != null || uiState.questions.isEmpty()) {
+                                onNavigateBack()
+                            } else {
+                                viewModel.onEvent(PlacementTestUiEvent.ShowExitConfirm)
                             }
-                            .clip(CircleShape)
-                            .background(backBg)
-                            .border(1.dp, backBorder, CircleShape)
-                            .clickable(
-                                interactionSource = backInteraction,
-                                indication = null,
-                                onClick = {
-                                    if (uiState.evaluationResult != null || uiState.questions.isEmpty()) {
-                                        onNavigateBack()
-                                    } else {
-                                        viewModel.onEvent(PlacementTestUiEvent.ShowExitConfirm)
-                                    }
-                                }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_back),
-                            contentDescription = "بازگشت",
-                            tint = backTint,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
+                        },
+                        containerSize = 38.dp,
+                        iconSize = 18.dp,
+                        backgroundColor = if (isDark) Color(0x33FFFFFF) else Color(0x99FFFFFF),
+                        borderColor = if (isDark) Color(0x38FFFFFF) else Color(0x1F000000)
+                    )
 
                     // Symmetrical Center-Aligned Title
                     GameText(
@@ -169,8 +141,8 @@ fun PlacementTestScreen(
                         align = TextAlign.Center
                     )
 
-                    // Balance spacer on left opposite the back button for symmetrical symmetry
-                    Spacer(modifier = Modifier.size(44.dp))
+                    // Symmetrical balance spacer
+                    Spacer(modifier = Modifier.size(38.dp))
                 }
 
                 // Main Content Body

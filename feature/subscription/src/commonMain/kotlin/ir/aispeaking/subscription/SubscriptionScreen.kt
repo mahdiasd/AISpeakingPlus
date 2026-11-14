@@ -192,9 +192,8 @@ fun SubscriptionScreen(
             )
 
             Column(modifier = Modifier.fillMaxSize()) {
-                // Top Header Section with Back Button & 3 Feature Pills
+                // Top Header Section with Back Button & Centered Title
                 ModernSubscriptionHeader(
-                    currentStatus = uiState.currentStatus,
                     onNavigateBack = onNavigateBack
                 )
 
@@ -246,28 +245,53 @@ fun SubscriptionScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        // Horizontal 3D Coverflow Pager with tilted side cards
+                        // Horizontal 3D Coverflow Pager with enhanced side card visibility
                         HorizontalPager(
                             state = pagerState,
-                            contentPadding = PaddingValues(horizontal = 42.dp),
-                            pageSpacing = 16.dp,
+                            contentPadding = PaddingValues(horizontal = 54.dp),
+                            pageSpacing = 12.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(560.dp)
+                                .height(500.dp)
                         ) { page ->
                             val plan = effectivePlans[page]
                             val isSelected = plan.id == uiState.selectedPlanId ||
                                     (uiState.selectedPlanId.isEmpty() && page == pagerState.currentPage)
                             val finalPrice = uiState.calculateFinalPrice(plan)
 
-                            // 3D coverflow calculation
+                            // Check whether this plan is currently active for the subscriber
+                            val isCurrentActivePlan = remember(plan, uiState.currentStatus, effectivePlans) {
+                                val status = uiState.currentStatus
+                                if (status?.isSubscriber != true) false
+                                else {
+                                    val st = status.planType?.uppercase()?.trim().orEmpty()
+                                    when {
+                                        st.isNotEmpty() && (plan.type.equals(st, ignoreCase = true) || plan.id.equals(st, ignoreCase = true)) -> true
+                                        st.contains("1") && (plan.type.contains("1") || plan.id.contains("1")) -> true
+                                        st.contains("3") && (plan.type.contains("3") || plan.id.contains("3")) -> true
+                                        st.contains("6") && (plan.type.contains("6") || plan.id.contains("6")) -> true
+                                        else -> {
+                                            val anyMatched = effectivePlans.any { p ->
+                                                val pt = p.type.uppercase()
+                                                val pid = p.id.uppercase()
+                                                st.isNotEmpty() && (pt == st || pid == st || (st.contains("1") && pt.contains("1")) || (st.contains("3") && pt.contains("3")) || (st.contains("6") && pt.contains("6")))
+                                            }
+                                            if (!anyMatched) {
+                                                plan.id.contains("3m") || plan.durationDays == 90
+                                            } else false
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 3D coverflow calculation with enhanced side peek visibility
                             val pageOffset = ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction)
                             val absOffset = pageOffset.absoluteValue.coerceIn(0f, 1.5f)
 
-                            val scale = 1f - (absOffset * 0.10f)
-                            val alpha = 1f - (absOffset * 0.28f).coerceIn(0f, 0.35f)
-                            val rotationZ = -pageOffset * 4.5f
-                            val rotationY = pageOffset * 10f
+                            val scale = 1f - (absOffset * 0.08f)
+                            val alpha = 1f - (absOffset * 0.18f).coerceIn(0f, 0.28f)
+                            val rotationZ = -pageOffset * 3.5f
+                            val rotationY = pageOffset * 7.5f
 
                             ModernPlanCard(
                                 plan = plan,
@@ -275,6 +299,8 @@ fun SubscriptionScreen(
                                 isSelected = isSelected,
                                 isPurchasing = uiState.isPurchasing,
                                 purchaseProgressMessage = uiState.purchaseProgressMessage,
+                                isCurrentActivePlan = isCurrentActivePlan,
+                                remainingDays = uiState.currentStatus?.remainingDays ?: 0,
                                 onPurchaseClick = {
                                     if (plan.id != uiState.selectedPlanId) {
                                         viewModel.processIntent(SubscriptionIntent.SelectPlan(plan.id))
@@ -293,7 +319,7 @@ fun SubscriptionScreen(
                                         this.rotationZ = rotationZ
                                         this.rotationY = rotationY
                                         cameraDistance = 16f * density
-                                        translationY = absOffset * 6.dp.toPx()
+                                        translationY = absOffset * 4.dp.toPx()
                                     }
                             )
                         }

@@ -47,9 +47,10 @@ import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_back
 import ir.aispeaking.sharedui.ic_star
 import ir.aispeaking.sharedui.ui.component.AsyncStageBackground
+import ir.aispeaking.sharedui.ui.core.button.AppBackButton
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
-import ir.aispeaking.sharedui.ui.game.GameIconButton
+import ir.aispeaking.sharedui.ui.game.GameStatPill
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.GlassPanel
 import ir.aispeaking.sharedui.ui.game.fa
@@ -122,79 +123,42 @@ fun StagesListScreen(
             )
 
             Column(modifier = Modifier.fillMaxSize()) {
-                // Floating Translucent Apple Navigation Bar
-                Box(
+                // Unified Apple Top Navigation Bar (matching all screens)
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            if (isDark) Color(0xCC0E101A) else Color(0xD9FFFFFF)
-                        )
-                        .border(
-                            1.dp,
-                            if (isDark) Color(0x28FFFFFF) else Color(0x1F000000)
-                        )
                         .statusBarsPadding()
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        // RTL Start anchor (Right): Back Button
-                        GameIconButton(
-                            icon = Res.drawable.ic_back,
-                            onClick = onNavigateBack,
-                            contentDescription = "بازگشت"
+                    // RTL Start anchor (Right): Standard AppBackButton
+                    AppBackButton(
+                        onClick = onNavigateBack,
+                        containerSize = 38.dp,
+                        iconSize = 18.dp,
+                        backgroundColor = if (isDark) Color(0x33FFFFFF) else Color(0x99FFFFFF),
+                        borderColor = if (isDark) Color(0x38FFFFFF) else Color(0x1F000000)
+                    )
+
+                    // Center: Symmetrical centered title
+                    GameText(
+                        text = "همه مراحل",
+                        size = 18.sp,
+                        bold = true,
+                        color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
+                        align = TextAlign.Center
+                    )
+
+                    // RTL End anchor (Left): Stars HUD Pill or symmetrical spacer
+                    if (uiState.stages.isNotEmpty()) {
+                        GameStatPill(
+                            text = uiState.totalStarsEarned.fa(),
+                            icon = Res.drawable.ic_star,
+                            accent = Game.Gold
                         )
-
-                        // Center: Title & Subtitle
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(1.dp)
-                        ) {
-                            GameText(
-                                text = "مرحله‌های ماجراجویی",
-                                size = 17.sp,
-                                bold = true,
-                                align = TextAlign.Center
-                            )
-                            GameText(
-                                text = "مسیر مکالمه زبان انگلیسی",
-                                size = 11.sp,
-                                color = Game.TextSecondary,
-                                align = TextAlign.Center
-                            )
-                        }
-
-                        // RTL End anchor (Left): Stars HUD Pill
-                        if (uiState.stages.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(50))
-                                    .background(Game.Gold.copy(alpha = if (isDark) 0.18f else 0.12f))
-                                    .border(1.dp, Game.Gold.copy(alpha = 0.45f), RoundedCornerShape(50))
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.ic_star),
-                                    contentDescription = null,
-                                    tint = Game.Gold,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                GameText(
-                                    text = uiState.totalStarsEarned.fa(),
-                                    size = 12.sp,
-                                    bold = true,
-                                    color = Game.Gold
-                                )
-                            }
-                        } else {
-                            Spacer(modifier = Modifier.size(44.dp))
-                        }
+                    } else {
+                        Spacer(modifier = Modifier.size(38.dp))
                     }
                 }
 

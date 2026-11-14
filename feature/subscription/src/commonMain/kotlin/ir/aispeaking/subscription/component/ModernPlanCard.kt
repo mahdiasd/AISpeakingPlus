@@ -1,10 +1,7 @@
 package ir.aispeaking.subscription.component
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,7 +28,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -41,7 +37,6 @@ import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_crown
 import ir.aispeaking.sharedui.ic_done
 import ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator
-import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import org.jetbrains.compose.resources.painterResource
@@ -49,7 +44,16 @@ import org.jetbrains.compose.resources.painterResource
 private data class PlanVisualMeta(
     val accentColor: Color,
     val subtitle: String,
-    val features: List<Pair<String, Boolean>>
+    val features: List<String>
+)
+
+// Common feature list derived from landing page:
+// All plans offer identical features with zero differentiation and NO accent (لهجه) evaluation
+private val COMMON_PLAN_FEATURES = listOf(
+    "دسترسی به تمام مراحل داستانی",
+    "تمرین مکالمه صوتی نامحدود با AI",
+    "تصحیح در لحظه گرامر و ساختار جملات",
+    "پیشنهاد هوشمند جملات حین گفتگو"
 )
 
 private fun getPlanVisualMeta(plan: SubscriptionPlan): PlanVisualMeta {
@@ -57,37 +61,22 @@ private fun getPlanVisualMeta(plan: SubscriptionPlan): PlanVisualMeta {
         plan.durationDays <= 30 || plan.id.contains("1m") -> {
             PlanVisualMeta(
                 accentColor = Color(0xFFFF7A45), // Warm Peach / Orange
-                subtitle = "شروع سریع یادگیری و سنجش مکالمه روزمره",
-                features = listOf(
-                    "دسترسی به تمام مراحل داستانی" to true,
-                    "تمرین مکالمه صوتی نامحدود با AI" to true,
-                    "تحلیل هوشمند لهجه و گرامر" to false,
-                    "اولویت در دریافت امکانات جدید" to false
-                )
+                subtitle = "شروع سریع یادگیری و تقویت مکالمه روزمره",
+                features = COMMON_PLAN_FEATURES
             )
         }
         plan.durationDays <= 90 || plan.id.contains("3m") -> {
             PlanVisualMeta(
                 accentColor = Color(0xFF22C55E), // Fresh Mint / Lime Green
-                subtitle = "مسیر کامل تثبیت لهجه و تقویت روان‌گویی",
-                features = listOf(
-                    "دسترسی به تمام مراحل داستانی" to true,
-                    "تمرین مکالمه صوتی نامحدود با AI" to true,
-                    "تحلیل هوشمند لهجه و گرامر" to true,
-                    "اولویت در دریافت امکانات جدید" to false
-                )
+                subtitle = "مسیر کامل تقویت مهارت گفتاری و روان‌گویی",
+                features = COMMON_PLAN_FEATURES
             )
         }
         else -> {
             PlanVisualMeta(
                 accentColor = Color(0xFF0EA5E9), // Sky Blue / Cyan
                 subtitle = "تسلط جامع و دسترسی نامحدود به تمامی امکانات",
-                features = listOf(
-                    "دسترسی به تمام مراحل داستانی" to true,
-                    "تمرین مکالمه صوتی نامحدود با AI" to true,
-                    "تحلیل هوشمند لهجه و گرامر" to true,
-                    "اولویت در مراحل جدید و پشتیبانی VIP" to true
-                )
+                features = COMMON_PLAN_FEATURES
             )
         }
     }
@@ -102,7 +91,9 @@ fun ModernPlanCard(
     purchaseProgressMessage: String?,
     onPurchaseClick: () -> Unit,
     onCardClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isCurrentActivePlan: Boolean = false,
+    remainingDays: Int = 0
 ) {
     val isDark = AppTheme.isDark
     val meta = getPlanVisualMeta(plan)
@@ -118,7 +109,7 @@ fun ModernPlanCard(
         finalPriceTomans / (plan.durationDays / 30).coerceAtLeast(1)
     } else null
 
-    val cardShape = RoundedCornerShape(32.dp)
+    val cardShape = RoundedCornerShape(28.dp)
 
     val cardBg = if (isDark) {
         Brush.verticalGradient(
@@ -148,7 +139,7 @@ fun ModernPlanCard(
             .then(
                 if (isSelected) {
                     Modifier.shadow(
-                        elevation = 16.dp,
+                        elevation = 14.dp,
                         shape = cardShape,
                         spotColor = accentColor.copy(alpha = if (isDark) 0.50f else 0.35f),
                         ambientColor = accentColor.copy(alpha = 0.20f)
@@ -169,26 +160,29 @@ fun ModernPlanCard(
                 shape = cardShape
             )
             .clickable(onClick = onCardClick)
-            .padding(horizontal = 20.dp, vertical = 22.dp)
+            .padding(horizontal = 18.dp, vertical = 16.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. Top 3D Hero Flower Icon
-            PlanHeroIcon(accentColor = accentColor)
+            // 1. Top 3D Hero Flower Icon (compact for optimal vertical fit)
+            PlanHeroIcon(
+                accentColor = accentColor,
+                modifier = Modifier.size(46.dp)
+            )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // 2. Plan Badge (e.g. محبوب‌ترین or بهترین ارزش)
             val badge = plan.badge
             if (!badge.isNullOrBlank()) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(10.dp))
                         .background(accentColor.copy(alpha = if (isDark) 0.25f else 0.14f))
-                        .border(1.dp, accentColor.copy(alpha = 0.40f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 10.dp, vertical = 3.dp)
+                        .border(1.dp, accentColor.copy(alpha = 0.40f), RoundedCornerShape(10.dp))
+                        .padding(horizontal = 10.dp, vertical = 2.dp)
                 ) {
                     GameText(
                         text = badge,
@@ -197,33 +191,33 @@ fun ModernPlanCard(
                         color = accentColor
                     )
                 }
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
             }
 
             // 3. Plan Title
             GameText(
                 text = plan.titleFa,
-                size = 20.sp,
+                size = 19.sp,
                 bold = true,
                 color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
                 align = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(3.dp))
 
-            // 4. Plan Summary Subtitle
+            // 4. Plan Summary Subtitle (NO accent / لهجه mentions)
             GameText(
                 text = meta.subtitle,
-                size = 12.sp,
+                size = 11.sp,
                 color = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B),
                 align = TextAlign.Center,
-                lineHeight = 17.sp,
-                modifier = Modifier.padding(horizontal = 8.dp)
+                lineHeight = 16.sp,
+                modifier = Modifier.padding(horizontal = 6.dp)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // 5. Ornamental Divider with center star/gem
+            // 5. Ornamental Divider with center glowing dot
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -243,7 +237,7 @@ fun ModernPlanCard(
                 )
                 Box(
                     modifier = Modifier
-                        .size(8.dp)
+                        .size(7.dp)
                         .clip(CircleShape)
                         .background(accentColor)
                 )
@@ -259,7 +253,7 @@ fun ModernPlanCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // 6. Pricing Section
             Column(
@@ -273,7 +267,7 @@ fun ModernPlanCard(
                     ) {
                         androidx.compose.material3.Text(
                             text = "${formatToPersian(baseOriginalPrice)} تومان",
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             color = if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8),
                             textDecoration = TextDecoration.LineThrough,
                             fontFamily = AppTheme.typography.persianRegular
@@ -283,11 +277,11 @@ fun ModernPlanCard(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(accentColor.copy(alpha = 0.16f))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    .padding(horizontal = 6.dp, vertical = 1.dp)
                             ) {
                                 GameText(
                                     text = "${formatToPersian(discountPercent.toLong())}٪ تخفیف",
-                                    size = 11.sp,
+                                    size = 10.sp,
                                     bold = true,
                                     color = accentColor
                                 )
@@ -302,15 +296,15 @@ fun ModernPlanCard(
                 ) {
                     GameText(
                         text = formatToPersian(finalPriceTomans),
-                        size = 24.sp,
+                        size = 23.sp,
                         bold = true,
                         color = if (isDark) Color.White else Color(0xFF0F172A)
                     )
                     GameText(
                         text = "تومان",
-                        size = 13.sp,
+                        size = 12.sp,
                         color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569),
-                        modifier = Modifier.padding(bottom = 3.dp)
+                        modifier = Modifier.padding(bottom = 2.dp)
                     )
                 }
 
@@ -324,111 +318,68 @@ fun ModernPlanCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // 7. Feature Checklist
+            // 7. Feature Checklist: All plans offer identical features
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(9.dp)
+                verticalArrangement = Arrangement.spacedBy(7.dp)
             ) {
-                meta.features.forEach { (featureText, isActive) ->
+                meta.features.forEach { featureText ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(9.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(18.dp)
+                                .size(17.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    if (isActive) accentColor
-                                    else if (isDark) Color(0xFF334155)
-                                    else Color(0xFFE2E8F0)
-                                ),
+                                .background(accentColor),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (isActive) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.ic_done),
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(11.dp)
-                                )
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .clip(CircleShape)
-                                        .background(if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8))
-                                )
-                            }
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_done),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(11.dp)
+                            )
                         }
 
                         GameText(
                             text = featureText,
-                            size = 12.sp,
-                            color = if (isActive) {
-                                if (isDark) Color(0xFFE2E8F0) else Color(0xFF1E293B)
-                            } else {
-                                if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8)
-                            },
-                            bold = isActive,
+                            size = 11.5.sp,
+                            color = if (isDark) Color(0xFFE2E8F0) else Color(0xFF1E293B),
+                            bold = true,
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // 8. Purchase CTA Button (inside the card)
+            // 8. Purchase CTA Button OR Active Subscription Days Badge
             val buttonShape = RoundedCornerShape(24.dp)
-            val buttonBg = if (isDark) {
-                Brush.horizontalGradient(
-                    listOf(Color(0xFF0F172A), Color(0xFF1E293B))
-                )
-            } else {
-                Brush.horizontalGradient(
-                    listOf(Color(0xFF181C24), Color(0xFF282C36))
-                )
-            }
 
-            Button(
-                onClick = onPurchaseClick,
-                enabled = !isPurchasing,
-                shape = buttonShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent
-                ),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .clip(buttonShape)
-                    .background(buttonBg)
-                    .border(1.dp, accentColor.copy(alpha = 0.40f), buttonShape)
-            ) {
-                if (isPurchasing && isSelected) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        AppLoadingIndicator(
-                            color = accentColor,
-                            size = 18.dp
+            if (isCurrentActivePlan) {
+                // If user currently owns this subscription, show remaining days instead of purchase button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp)
+                        .clip(buttonShape)
+                        .background(
+                            Brush.horizontalGradient(
+                                if (isDark) listOf(Color(0xFF132F23), Color(0xFF193D2E))
+                                else listOf(Color(0xFFE8F5E9), Color(0xFFC8E6C9))
+                            )
                         )
-                        GameText(
-                            text = purchaseProgressMessage ?: "در حال اتصال به درگاه...",
-                            color = Color.White,
-                            size = 13.sp,
-                            bold = true
-                        )
-                    }
-                } else {
+                        .border(1.dp, accentColor.copy(alpha = 0.60f), buttonShape),
+                    contentAlignment = Alignment.Center
+                ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -436,15 +387,82 @@ fun ModernPlanCard(
                         Icon(
                             painter = painterResource(Res.drawable.ic_crown),
                             contentDescription = null,
-                            tint = accentColor,
-                            modifier = Modifier.size(16.dp)
+                            tint = Color(0xFFFFC83D),
+                            modifier = Modifier.size(18.dp)
                         )
                         GameText(
-                            text = "خرید ${plan.titleFa}",
-                            color = Color.White,
-                            size = 14.sp,
+                            text = if (remainingDays > 0) {
+                                "اشتراک فعال (${formatToPersian(remainingDays.toLong())} روز باقی‌مانده)"
+                            } else {
+                                "اشتراک فعال"
+                            },
+                            color = if (isDark) Color(0xFF4ADE80) else Color(0xFF1B5E20),
+                            size = 13.sp,
                             bold = true
                         )
+                    }
+                }
+            } else {
+                val buttonBg = if (isDark) {
+                    Brush.horizontalGradient(
+                        listOf(Color(0xFF0F172A), Color(0xFF1E293B))
+                    )
+                } else {
+                    Brush.horizontalGradient(
+                        listOf(Color(0xFF181C24), Color(0xFF282C36))
+                    )
+                }
+
+                Button(
+                    onClick = onPurchaseClick,
+                    enabled = !isPurchasing,
+                    shape = buttonShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    ),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp)
+                        .clip(buttonShape)
+                        .background(buttonBg)
+                        .border(1.dp, accentColor.copy(alpha = 0.40f), buttonShape)
+                ) {
+                    if (isPurchasing && isSelected) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            AppLoadingIndicator(
+                                color = accentColor,
+                                size = 18.dp
+                            )
+                            GameText(
+                                text = purchaseProgressMessage ?: "در حال اتصال به درگاه...",
+                                color = Color.White,
+                                size = 13.sp,
+                                bold = true
+                            )
+                        }
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_crown),
+                                contentDescription = null,
+                                tint = accentColor,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            GameText(
+                                text = "خرید ${plan.titleFa}",
+                                color = Color.White,
+                                size = 13.5.sp,
+                                bold = true
+                            )
+                        }
                     }
                 }
             }
