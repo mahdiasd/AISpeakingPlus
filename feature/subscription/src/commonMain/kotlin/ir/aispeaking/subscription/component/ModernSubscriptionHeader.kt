@@ -60,14 +60,5 @@ fun ModernSubscriptionHeader(
             // Symmetrical balance spacer matching back button size
             Spacer(modifier = Modifier.size(38.dp))
         }
-
-        GameText(
-            text = "دسترسی نامحدود با هر اشتراک",
-            size = 13.sp,
-            color = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B),
-            align = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(2.dp))
     }
 }

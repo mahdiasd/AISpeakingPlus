@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,14 +25,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,11 +40,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.Res
@@ -57,7 +66,7 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * Premium Apple Liquid Glass Promo Code banner designed for the top of the subscription page.
- * Seamlessly expands when tapped, keeping the view clean, lightweight, and focused.
+ * Seamlessly expands when tapped, keeping the view clean, lightweight, and focused without text clipping.
  */
 @Composable
 fun ModernPromoRow(
@@ -88,7 +97,7 @@ fun ModernPromoRow(
                     .clip(successShape)
                     .background(
                         Brush.horizontalGradient(
-                            if (isDark) listOf(Color(0xFF064E3B).copy(alpha = 0.8f), Color(0xFF047857).copy(alpha = 0.6f))
+                            if (isDark) listOf(Color(0xFF064E3B).copy(alpha = 0.85f), Color(0xFF047857).copy(alpha = 0.65f))
                             else listOf(Color(0xFFECFDF5), Color(0xFFD1FAE5))
                         )
                     )
@@ -124,7 +133,7 @@ fun ModernPromoRow(
                 // Small remove/cancel button
                 Box(
                     modifier = Modifier
-                        .size(20.dp)
+                        .size(22.dp)
                         .clip(CircleShape)
                         .background(if (isDark) Color(0x33FFFFFF) else Color(0x22000000))
                         .clickable {
@@ -208,7 +217,7 @@ fun ModernPromoRow(
             enter = fadeIn() + expandVertically(spring(dampingRatio = 0.8f, stiffness = 400f)),
             exit = fadeOut() + shrinkVertically()
         ) {
-            val cardShape = RoundedCornerShape(18.dp)
+            val cardShape = RoundedCornerShape(16.dp)
 
             Column(
                 modifier = Modifier
@@ -231,36 +240,61 @@ fun ModernPromoRow(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    OutlinedTextField(
-                        value = promoCode,
-                        onValueChange = onPromoCodeChanged,
-                        placeholder = {
-                            GameText(
-                                text = "کد تخفیف...",
-                                color = if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8),
-                                size = 12.sp
-                            )
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = {
-                            focusManager.clearFocus()
-                            onApplyClicked()
-                        }),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = if (isDark) Color.White else Color(0xFF0F172A),
-                            unfocusedTextColor = if (isDark) Color.White else Color(0xFF0F172A),
-                            focusedContainerColor = if (isDark) Color(0xFF131924) else Color(0xFFF1F5F9),
-                            unfocusedContainerColor = if (isDark) Color(0xFF131924) else Color(0xFFF1F5F9),
-                            focusedBorderColor = Color(0xFF22C55E),
-                            unfocusedBorderColor = if (isDark) Color(0x26FFFFFF) else Color(0x1A000000),
-                            cursorColor = Color(0xFF22C55E)
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(42.dp)
-                    )
+                    // BasicTextField with precise vertical centering and no font-clipping
+                    val inputShape = RoundedCornerShape(12.dp)
+                    var isFocused by remember { mutableStateOf(false) }
+
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                        BasicTextField(
+                            value = promoCode,
+                            onValueChange = onPromoCodeChanged,
+                            singleLine = true,
+                            textStyle = TextStyle(
+                                color = if (isDark) Color.White else Color(0xFF0F172A),
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Start,
+                                textDirection = TextDirection.Rtl
+                            ),
+                            cursorBrush = SolidColor(Color(0xFF22C55E)),
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = {
+                                focusManager.clearFocus()
+                                if (promoCode.isNotBlank()) onApplyClicked()
+                            }),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .clip(inputShape)
+                                .background(if (isDark) Color(0xFF131924) else Color(0xFFF1F5F9))
+                                .border(
+                                    1.dp,
+                                    when {
+                                        isError -> Color(0xFFEF4444).copy(alpha = 0.7f)
+                                        isFocused -> Color(0xFF22C55E)
+                                        else -> if (isDark) Color(0x26FFFFFF) else Color(0x1A000000)
+                                    },
+                                    inputShape
+                                )
+                                .onFocusChanged { isFocused = it.isFocused }
+                                .padding(horizontal = 12.dp),
+                            decorationBox = { innerTextField ->
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    if (promoCode.isEmpty()) {
+                                        GameText(
+                                            text = "کد تخفیف را وارد کنید",
+                                            color = if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8),
+                                            size = 12.5.sp
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
+                        )
+                    }
 
                     // Apply Button
                     Button(
@@ -268,17 +302,20 @@ fun ModernPromoRow(
                             focusManager.clearFocus()
                             onApplyClicked()
                         },
+                        enabled = promoCode.isNotBlank(),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF22C55E),
-                            contentColor = Color.White
+                            contentColor = Color.White,
+                            disabledContainerColor = if (isDark) Color(0x22FFFFFF) else Color(0x15000000),
+                            disabledContentColor = if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8)
                         ),
                         contentPadding = PaddingValues(horizontal = 14.dp),
-                        modifier = Modifier.height(42.dp)
+                        modifier = Modifier.height(44.dp)
                     ) {
                         GameText(
                             text = "اعمال",
-                            color = Color.White,
+                            color = if (promoCode.isNotBlank()) Color.White else (if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8)),
                             size = 12.5.sp,
                             bold = true
                         )
@@ -287,7 +324,7 @@ fun ModernPromoRow(
                     // Close/Collapse Button
                     Box(
                         modifier = Modifier
-                            .size(34.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
                             .background(if (isDark) Color(0x22FFFFFF) else Color(0x12000000))
                             .clickable {
@@ -300,7 +337,7 @@ fun ModernPromoRow(
                             painter = painterResource(Res.drawable.ic_close),
                             contentDescription = "بستن",
                             tint = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B),
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                     }
                 }
@@ -309,7 +346,7 @@ fun ModernPromoRow(
                 feedbackMessage?.let { msg ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         if (isError) {

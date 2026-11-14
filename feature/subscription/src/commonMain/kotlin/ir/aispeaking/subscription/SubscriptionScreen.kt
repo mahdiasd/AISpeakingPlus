@@ -57,7 +57,6 @@ import ir.aispeaking.sharedui.ui.them.AppTheme
 import ir.aispeaking.subscription.component.ModernPlanCard
 import ir.aispeaking.subscription.component.ModernPromoRow
 import ir.aispeaking.subscription.component.ModernSubscriptionHeader
-import ir.aispeaking.subscription.component.TrustBadgesRow
 import kotlinx.coroutines.delay
 import kotlin.math.absoluteValue
 
@@ -364,11 +363,6 @@ fun SubscriptionScreen(
                                 )
                             }
                         }
-
-                        // Trust Badges Row
-                        TrustBadgesRow(
-                            modifier = Modifier.padding(horizontal = 24.dp)
-                        )
 
                         Spacer(modifier = Modifier.height(16.dp))
                     }
