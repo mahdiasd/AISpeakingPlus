@@ -67,6 +67,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 import ir.aispeaking.domain.model.stt.SttConnectionStatus
 import ir.aispeaking.domain.model.stt.SttEngine
 import ir.aispeaking.sharedui.Res
@@ -220,9 +221,9 @@ private fun CompactVoiceRow(
     enabled: Boolean,
     hintsUsedCount: Int,
     isRequestingHint: Boolean,
-    sttEngine: SttEngine,
-    sttConnectionStatus: SttConnectionStatus,
-    onReconnectStt: () -> Unit,
+    sttEngine: SttEngine = SttEngine.APP,
+    sttConnectionStatus: SttConnectionStatus = SttConnectionStatus.CONNECTED,
+    onReconnectStt: () -> Unit = {},
     onSwitchToText: () -> Unit,
     onVoiceToggle: (Boolean) -> Unit,
     onSendClick: () -> Unit,
@@ -255,18 +256,24 @@ private fun CompactVoiceRow(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                if (isRecording) {
-                    if (isRecordingPreparing) {
-                        AppleRecordingPreparingPill(onStop = { onVoiceToggle(false) })
-                    } else {
-                        AppleRecordingActivePill(onStop = { onVoiceToggle(false) })
+                when {
+                    isRecording -> {
+                        if (isRecordingPreparing) {
+                            AppleRecordingPreparingPill(onStop = { onVoiceToggle(false) })
+                        } else {
+                            AppleRecordingActivePill(onStop = { onVoiceToggle(false) })
+                        }
                     }
-                } else {
-                    if (sttEngine == SttEngine.APP && (sttConnectionStatus == SttConnectionStatus.DISCONNECTED || sttConnectionStatus == SttConnectionStatus.ERROR)) {
-                        AppleDisconnectedPill(onReconnect = onReconnectStt)
-                    } else if (sttEngine == SttEngine.APP && sttConnectionStatus == SttConnectionStatus.CONNECTING) {
-                        AppleConnectingPill()
-                    } else {
+                    sttEngine == SttEngine.APP && (sttConnectionStatus == SttConnectionStatus.DISCONNECTED || sttConnectionStatus == SttConnectionStatus.ERROR) -> {
+                        AppleDisconnectedPill(
+                            onReconnect = onReconnectStt,
+                            modifier = micModifier
+                        )
+                    }
+                    sttEngine == SttEngine.APP && sttConnectionStatus == SttConnectionStatus.CONNECTING -> {
+                        AppleConnectingPill(modifier = micModifier)
+                    }
+                    else -> {
                         AppleRecordPill(
                             hasText = text.isNotBlank(),
                             enabled = enabled,
@@ -429,10 +436,11 @@ private fun CompactTextRow(
 /** Floating warning capsule above dock when speech service connection is dropped */
 @Composable
 private fun CompactConnectionWarningCapsule(
-    onReconnect: () -> Unit
+    onReconnect: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp, vertical = 4.dp)
     ) {
@@ -706,13 +714,14 @@ private fun AppleRecordingActivePill(onStop: () -> Unit) {
 /** Apple pill shown in place of record button when speech service is disconnected */
 @Composable
 private fun AppleDisconnectedPill(
-    onReconnect: () -> Unit
+    onReconnect: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val shape = RoundedCornerShape(22.dp)
     val color = AppleChatTheme.Coral
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .applePressEffect(targetScale = 0.95f, onClick = onReconnect)
             .clip(shape)
             .background(color.copy(alpha = 0.16f))
@@ -738,12 +747,14 @@ private fun AppleDisconnectedPill(
 
 /** Apple pill shown while connecting to speech service */
 @Composable
-private fun AppleConnectingPill() {
+private fun AppleConnectingPill(
+    modifier: Modifier = Modifier
+) {
     val shape = RoundedCornerShape(22.dp)
     val azure = AppleChatTheme.PrimaryAzure
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clip(shape)
             .background(azure.copy(alpha = 0.14f))
             .border(1.dp, azure.copy(alpha = 0.45f), shape)

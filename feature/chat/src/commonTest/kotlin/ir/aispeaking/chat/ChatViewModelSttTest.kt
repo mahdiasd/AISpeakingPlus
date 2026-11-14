@@ -9,6 +9,8 @@ import ir.aispeaking.domain.model.stage.GrammarErrorDetail
 import ir.aispeaking.domain.model.stage.HintSuggestion
 import ir.aispeaking.domain.model.stage.LocalGuestProgress
 import ir.aispeaking.domain.model.stage.Stage
+import ir.aispeaking.domain.model.stt.SttConnectionStatus
+import ir.aispeaking.domain.model.stt.SttEngine
 import ir.aispeaking.domain.model.stt.SttStreamEvent
 import ir.aispeaking.domain.model.user.UpdateProfileInput
 import ir.aispeaking.domain.model.user.User
@@ -288,7 +290,8 @@ class ChatViewModelSttTest {
 
         assertFalse(viewModel.uiState.value.isRecording)
         assertNull(audioController.onAudioChunkCaptured)
-        assertTrue(sttRepo.closed)
+        // Session stays alive across utterances for fast response; closed on disconnectSttSocket / onCleared
+        assertFalse(sttRepo.closed)
     }
 
     @Test
@@ -389,6 +392,7 @@ class ChatViewModelSttTest {
     @Test
     fun testWhenNativeSpeechRecognitionAvailableDoesNotStreamToBackend() = runTest {
         audioController.onPlatformHasNativeSpeechRecognition = { true }
+        viewModel.setSttEngine(SttEngine.BROWSER)
         var speechCallback: ((String) -> Unit)? = null
         audioController.onPlatformStartRecording = { onSpeech, _ ->
             speechCallback = onSpeech
@@ -499,6 +503,7 @@ class ChatViewModelSttTest {
     @Test
     fun testSttRecordingStartedLogsNativeWhenHasNativeSpeechRecognition() = runTest {
         audioController.onPlatformHasNativeSpeechRecognition = { true }
+        viewModel.setSttEngine(SttEngine.BROWSER)
 
         viewModel.toggleRecording(true)
         runCurrent()
@@ -514,6 +519,7 @@ class ChatViewModelSttTest {
     @Test
     fun testSendMessageIncludesSttEngineInAnalytics() = runTest {
         audioController.onPlatformHasNativeSpeechRecognition = { true }
+        viewModel.setSttEngine(SttEngine.BROWSER)
         viewModel.onMessageTextChanged("Hello there")
 
         viewModel.sendMessage()
@@ -525,6 +531,57 @@ class ChatViewModelSttTest {
             ir.aispeaking.utils.analytics.AnalyticsEvents.STT_ENGINE_NATIVE,
             event.second[ir.aispeaking.utils.analytics.AnalyticsEvents.PARAM_STT_ENGINE]
         )
+    }
+
+    @Test
+    fun testSttSocketLifecycleAndStatusUpdates() = runTest {
+        viewModel.connectSttSocket()
+        runCurrent()
+        assertEquals(SttConnectionStatus.CONNECTING, viewModel.uiState.value.sttConnectionStatus)
+
+        // Backend sends Ready
+        sttRepo.streamFlow.emit(SttStreamEvent.Ready("Ready"))
+        runCurrent()
+        assertEquals(SttConnectionStatus.CONNECTED, viewModel.uiState.value.sttConnectionStatus)
+
+        // Backend disconnects
+        sttRepo.streamFlow.emit(SttStreamEvent.Disconnected)
+        runCurrent()
+        assertEquals(SttConnectionStatus.DISCONNECTED, viewModel.uiState.value.sttConnectionStatus)
+
+        // User taps reconnect
+        viewModel.reconnectSttSocket()
+        runCurrent()
+        assertEquals(SttConnectionStatus.CONNECTING, viewModel.uiState.value.sttConnectionStatus)
+
+        sttRepo.streamFlow.emit(SttStreamEvent.Ready("Ready"))
+        runCurrent()
+        assertEquals(SttConnectionStatus.CONNECTED, viewModel.uiState.value.sttConnectionStatus)
+    }
+
+    @Test
+    fun testSttEngineSwitching() = runTest {
+        // Default is APP
+        assertEquals(SttEngine.APP, viewModel.uiState.value.sttEngine)
+
+        // Switch to BROWSER
+        viewModel.setSttEngine(SttEngine.BROWSER)
+        assertEquals(SttEngine.BROWSER, viewModel.uiState.value.sttEngine)
+        assertEquals(SttConnectionStatus.CONNECTED, viewModel.uiState.value.sttConnectionStatus)
+
+        // Switch back to APP
+        viewModel.setSttEngine(SttEngine.APP)
+        assertEquals(SttEngine.APP, viewModel.uiState.value.sttEngine)
+        assertEquals(SttConnectionStatus.CONNECTING, viewModel.uiState.value.sttConnectionStatus)
+    }
+
+    @Test
+    fun testSettingsSheetVisibility() = runTest {
+        assertFalse(viewModel.uiState.value.showSettingsSheet)
+        viewModel.setSettingsSheetVisible(true)
+        assertTrue(viewModel.uiState.value.showSettingsSheet)
+        viewModel.setSettingsSheetVisible(false)
+        assertFalse(viewModel.uiState.value.showSettingsSheet)
     }
 
     @Test

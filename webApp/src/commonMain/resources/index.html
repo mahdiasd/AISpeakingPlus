@@ -743,6 +743,13 @@
             _isMobile: false,
             _isIOS: false,
             _usingFallback: false,
+            _selectedEngine: "app",
+
+            setEngine: function(engine) {
+                if (engine) {
+                    this._selectedEngine = engine;
+                }
+            },
 
             _initDevice: function() {
                 var ua = navigator.userAgent || '';
@@ -830,9 +837,13 @@
                 return new Blob([buffer], { type: 'audio/wav' });
             },
 
-            start: function() {
+            start: function(mode) {
                 this._initDevice();
                 this._checkSecureContext();
+
+                if (mode) {
+                    this._selectedEngine = mode;
+                }
 
                 if (this._restartTimeout) {
                     clearTimeout(this._restartTimeout);
@@ -850,6 +861,12 @@
                 this._hasVoiceActivity = false;
                 this._consecutiveErrors = 0;
                 this._usingFallback = false;
+
+                // When user selects or defaults to 'app' engine, stream PCM buffers to backend STT
+                if (this._selectedEngine === 'app') {
+                    this._startAudioRecordingFallback('app_engine');
+                    return;
+                }
 
                 // On iOS WebKit, SpeechRecognition is frequently unavailable, blocked, or hangs on cloud dictation.
                 // Fall back directly to real-time Web Audio API capture, streaming PCM to server-side STT.
@@ -1251,7 +1268,7 @@
                 this._currentSessionTranscript = "";
                 this.transcript = this._accumulatedTranscript.trim();
 
-                if (wasFallback) {
+                if (wasFallback && this._selectedEngine !== 'app') {
                     this._sendFallbackAudioToTranscribe();
                 }
             },

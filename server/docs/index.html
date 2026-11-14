@@ -1219,6 +1219,76 @@
     "page" : { }
   }
 };
+            defs["PlacementEvaluationResponseServerDto"] = {
+  "title" : "PlacementEvaluationResponseServerDto",
+  "required" : [ "assignedLevel", "correctCount", "descriptionFa", "levelTitleFa", "reviewItems", "scorePercent", "sessionId", "wrongCount" ],
+  "properties" : {
+    "sessionId" : { },
+    "assignedLevel" : { },
+    "scorePercent" : { },
+    "correctCount" : { },
+    "wrongCount" : { },
+    "totalCount" : { },
+    "levelTitleFa" : { },
+    "descriptionFa" : { },
+    "reviewItems" : {
+      "items" : {
+        "$ref" : "#/components/schemas/QuestionReviewServerDto"
+      }
+    }
+  }
+};
+            defs["PlacementQuestionServerDto"] = {
+  "title" : "PlacementQuestionServerDto",
+  "required" : [ "id", "level", "options", "questionText" ],
+  "properties" : {
+    "id" : { },
+    "questionText" : { },
+    "options" : {
+      "items" : { }
+    },
+    "level" : { },
+    "category" : { }
+  }
+};
+            defs["PlacementQuestionsResponseServerDto"] = {
+  "title" : "PlacementQuestionsResponseServerDto",
+  "required" : [ "questions", "sessionId", "totalQuestions" ],
+  "properties" : {
+    "sessionId" : { },
+    "totalQuestions" : { },
+    "questions" : {
+      "items" : {
+        "$ref" : "#/components/schemas/PlacementQuestionServerDto"
+      }
+    }
+  }
+};
+            defs["PlacementSubmitRequestServerDto"] = {
+  "title" : "PlacementSubmitRequestServerDto",
+  "required" : [ "answers", "sessionId" ],
+  "properties" : {
+    "sessionId" : { },
+    "answers" : {
+      "additionalProperties" : { }
+    }
+  }
+};
+            defs["QuestionReviewServerDto"] = {
+  "title" : "QuestionReviewServerDto",
+  "required" : [ "correctOption", "isCorrect", "level", "options", "questionId", "questionText" ],
+  "properties" : {
+    "questionId" : { },
+    "questionText" : { },
+    "options" : {
+      "items" : { }
+    },
+    "selectedOption" : { },
+    "correctOption" : { },
+    "isCorrect" : { },
+    "level" : { }
+  }
+};
             defs["SendOtpRequest"] = {
   "title" : "SendOtpRequest",
   "properties" : {
@@ -1738,6 +1808,12 @@
                     <li data-group="Default" data-name="apiV2TtsSpeakHead" class="">
                       <a href="#api-Default-apiV2TtsSpeakHead">apiV2TtsSpeakHead</a>
                     </li>
+                    <li data-group="Default" data-name="privacyGet" class="">
+                      <a href="#api-Default-privacyGet">privacyGet</a>
+                    </li>
+                    <li data-group="Default" data-name="privacyHtmlGet" class="">
+                      <a href="#api-Default-privacyHtmlGet">privacyHtmlGet</a>
+                    </li>
                   <li class="nav-header" data-group="Leaderboard"><a href="#api-Leaderboard">API Methods - Leaderboard</a></li>
                     <li data-group="Leaderboard" data-name="apiV2LeaderboardJourneyGet" class="">
                       <a href="#api-Leaderboard-apiV2LeaderboardJourneyGet">apiV2LeaderboardJourneyGet</a>
@@ -1754,6 +1830,13 @@
                     </li>
                     <li data-group="LegacyV1" data-name="apiV1TtsVoicesGet" class="">
                       <a href="#api-LegacyV1-apiV1TtsVoicesGet">apiV1TtsVoicesGet</a>
+                    </li>
+                  <li class="nav-header" data-group="Placement"><a href="#api-Placement">API Methods - Placement</a></li>
+                    <li data-group="Placement" data-name="apiV2PlacementEvaluatePost" class="">
+                      <a href="#api-Placement-apiV2PlacementEvaluatePost">apiV2PlacementEvaluatePost</a>
+                    </li>
+                    <li data-group="Placement" data-name="apiV2PlacementQuestionsGet" class="">
+                      <a href="#api-Placement-apiV2PlacementQuestionsGet">apiV2PlacementQuestionsGet</a>
                     </li>
                   <li class="nav-header" data-group="Progress"><a href="#api-Progress">API Methods - Progress</a></li>
                     <li data-group="Progress" data-name="apiV2ProgressSyncPost" class="">
@@ -14960,6 +15043,400 @@ except ApiException as e:
                         </article>
                       </div>
                       <hr>
+                    <div id="api-Default-privacyGet">
+                      <article id="api-Default-privacyGet-0" data-group="User" data-name="privacyGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>privacyGet</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/privacy</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Default-privacyGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Default-privacyGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Default-privacyGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Default-privacyGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Default-privacyGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Default-privacyGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Default-privacyGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Default-privacyGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Default-privacyGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Default-privacyGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Default-privacyGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Default-privacyGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+"//privacy"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Default-privacyGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.DefaultApi;
+
+import java.io.File;
+import java.util.*;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        
+        DefaultApi apiInstance = new DefaultApi();
+        try {
+            apiInstance.privacyGet();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#privacyGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Default-privacyGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        DefaultApi apiInstance = new DefaultApi();
+        try {
+            apiInstance.privacyGet();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#privacyGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Default-privacyGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Default-privacyGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+DefaultApi *apiInstance = [[DefaultApi alloc] init];
+
+[apiInstance privacyGetWithCompletionHandler: 
+              ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-privacyGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+
+var api = new AiSpeakingPlusApi.DefaultApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.privacyGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Default-privacyGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Default-privacyGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class privacyGetExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new DefaultApi();
+
+            try
+            {
+                apiInstance.privacyGet();
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling DefaultApi.privacyGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-privacyGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiDefaultApi();
+
+try {
+    $api_instance->privacyGet();
+} catch (Exception $e) {
+    echo 'Exception when calling DefaultApi->privacyGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-privacyGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::DefaultApi;
+
+my $api_instance = WWW::SwaggerClient::DefaultApi->new();
+
+eval { 
+    $api_instance->privacyGet();
+};
+if ($@) {
+    warn "Exception when calling DefaultApi->privacyGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-privacyGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.DefaultApi()
+
+try: 
+    api_instance.privacy_get()
+except ApiException as e:
+    print("Exception when calling DefaultApi->privacyGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Default-privacyHtmlGet">
+                      <article id="api-Default-privacyHtmlGet-0" data-group="User" data-name="privacyHtmlGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>privacyHtmlGet</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/privacy.html</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Default-privacyHtmlGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Default-privacyHtmlGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Default-privacyHtmlGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Default-privacyHtmlGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Default-privacyHtmlGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Default-privacyHtmlGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Default-privacyHtmlGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Default-privacyHtmlGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Default-privacyHtmlGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Default-privacyHtmlGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Default-privacyHtmlGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Default-privacyHtmlGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+"//privacy.html"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Default-privacyHtmlGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.DefaultApi;
+
+import java.io.File;
+import java.util.*;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        
+        DefaultApi apiInstance = new DefaultApi();
+        try {
+            apiInstance.privacyHtmlGet();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#privacyHtmlGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Default-privacyHtmlGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        DefaultApi apiInstance = new DefaultApi();
+        try {
+            apiInstance.privacyHtmlGet();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#privacyHtmlGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Default-privacyHtmlGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Default-privacyHtmlGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+DefaultApi *apiInstance = [[DefaultApi alloc] init];
+
+[apiInstance privacyHtmlGetWithCompletionHandler: 
+              ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-privacyHtmlGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+
+var api = new AiSpeakingPlusApi.DefaultApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.privacyHtmlGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Default-privacyHtmlGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Default-privacyHtmlGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class privacyHtmlGetExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new DefaultApi();
+
+            try
+            {
+                apiInstance.privacyHtmlGet();
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling DefaultApi.privacyHtmlGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-privacyHtmlGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiDefaultApi();
+
+try {
+    $api_instance->privacyHtmlGet();
+} catch (Exception $e) {
+    echo 'Exception when calling DefaultApi->privacyHtmlGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-privacyHtmlGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::DefaultApi;
+
+my $api_instance = WWW::SwaggerClient::DefaultApi->new();
+
+eval { 
+    $api_instance->privacyHtmlGet();
+};
+if ($@) {
+    warn "Exception when calling DefaultApi->privacyHtmlGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-privacyHtmlGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.DefaultApi()
+
+try: 
+    api_instance.privacy_html_get()
+except ApiException as e:
+    print("Exception when calling DefaultApi->privacyHtmlGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                        </article>
+                      </div>
+                      <hr>
                   </section>
                 <section id="api-Leaderboard">
                   <h1>Leaderboard</h1>
@@ -16884,6 +17361,769 @@ except ApiException as e:
                                     </script>
                                   </div>
                                   <input id='responses-apiV1TtsVoicesGet-500-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                  </section>
+                <section id="api-Placement">
+                  <h1>Placement</h1>
+                    <div id="api-Placement-apiV2PlacementEvaluatePost">
+                      <article id="api-Placement-apiV2PlacementEvaluatePost-0" data-group="User" data-name="apiV2PlacementEvaluatePost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2PlacementEvaluatePost</h1>
+                          <p>Evaluate Placement Test</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Evaluates user submitted answers, computes CEFR level, updates user profile, and returns an itemized review report.</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v2/placement/evaluate</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Placement-apiV2PlacementEvaluatePost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Placement-apiV2PlacementEvaluatePost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Placement-apiV2PlacementEvaluatePost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Placement-apiV2PlacementEvaluatePost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Placement-apiV2PlacementEvaluatePost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Placement-apiV2PlacementEvaluatePost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Placement-apiV2PlacementEvaluatePost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Placement-apiV2PlacementEvaluatePost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Placement-apiV2PlacementEvaluatePost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Placement-apiV2PlacementEvaluatePost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Placement-apiV2PlacementEvaluatePost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Placement-apiV2PlacementEvaluatePost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/v2/placement/evaluate"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Placement-apiV2PlacementEvaluatePost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.PlacementApi;
+
+import java.io.File;
+import java.util.*;
+
+public class PlacementApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        PlacementApi apiInstance = new PlacementApi();
+        PlacementSubmitRequestServerDto body = ; // PlacementSubmitRequestServerDto | Answers payload with session ID and question-to-option mappings
+        try {
+            Object result = apiInstance.apiV2PlacementEvaluatePost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling PlacementApi#apiV2PlacementEvaluatePost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Placement-apiV2PlacementEvaluatePost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.PlacementApi;
+
+public class PlacementApiExample {
+
+    public static void main(String[] args) {
+        PlacementApi apiInstance = new PlacementApi();
+        PlacementSubmitRequestServerDto body = ; // PlacementSubmitRequestServerDto | Answers payload with session ID and question-to-option mappings
+        try {
+            Object result = apiInstance.apiV2PlacementEvaluatePost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling PlacementApi#apiV2PlacementEvaluatePost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Placement-apiV2PlacementEvaluatePost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Placement-apiV2PlacementEvaluatePost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+PlacementSubmitRequestServerDto *body = ; // Answers payload with session ID and question-to-option mappings
+
+PlacementApi *apiInstance = [[PlacementApi alloc] init];
+
+// Evaluate Placement Test
+[apiInstance apiV2PlacementEvaluatePostWith:body
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Placement-apiV2PlacementEvaluatePost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.PlacementApi()
+var body = ; // {{PlacementSubmitRequestServerDto}} Answers payload with session ID and question-to-option mappings
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiV2PlacementEvaluatePost(body, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Placement-apiV2PlacementEvaluatePost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Placement-apiV2PlacementEvaluatePost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2PlacementEvaluatePostExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new PlacementApi();
+            var body = new PlacementSubmitRequestServerDto(); // PlacementSubmitRequestServerDto | Answers payload with session ID and question-to-option mappings
+
+            try
+            {
+                // Evaluate Placement Test
+                Object result = apiInstance.apiV2PlacementEvaluatePost(body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling PlacementApi.apiV2PlacementEvaluatePost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Placement-apiV2PlacementEvaluatePost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiPlacementApi();
+$body = ; // PlacementSubmitRequestServerDto | Answers payload with session ID and question-to-option mappings
+
+try {
+    $result = $api_instance->apiV2PlacementEvaluatePost($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling PlacementApi->apiV2PlacementEvaluatePost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Placement-apiV2PlacementEvaluatePost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::PlacementApi;
+
+
+my $api_instance = WWW::SwaggerClient::PlacementApi->new();
+my $body = WWW::SwaggerClient::Object::PlacementSubmitRequestServerDto->new(); # PlacementSubmitRequestServerDto | Answers payload with session ID and question-to-option mappings
+
+eval { 
+    my $result = $api_instance->apiV2PlacementEvaluatePost(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling PlacementApi->apiV2PlacementEvaluatePost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Placement-apiV2PlacementEvaluatePost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.PlacementApi()
+body =  # PlacementSubmitRequestServerDto | Answers payload with session ID and question-to-option mappings
+
+try: 
+    # Evaluate Placement Test
+    api_response = api_instance.api_v2_placement_evaluate_post(body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling PlacementApi->apiV2PlacementEvaluatePost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Answers payload with session ID and question-to-option mappings",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/PlacementSubmitRequestServerDto"
+      }
+    }
+  },
+  "required" : true
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiV2PlacementEvaluatePost_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiV2PlacementEvaluatePost_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Placement test evaluation result with score, CEFR level, and question review list </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2PlacementEvaluatePost-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2PlacementEvaluatePost-200-schema">
+                                  <div id='responses-apiV2PlacementEvaluatePost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Placement test evaluation result with score, CEFR level, and question review list",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PlacementEvaluationResponseServerDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2PlacementEvaluatePost-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2PlacementEvaluatePost-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2PlacementEvaluatePost-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 400 - Invalid request payload or missing sessionId </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2PlacementEvaluatePost-400-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2PlacementEvaluatePost-400-schema">
+                                  <div id='responses-apiV2PlacementEvaluatePost-400-schema-400' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Invalid request payload or missing sessionId",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2PlacementEvaluatePost-400-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2PlacementEvaluatePost-400-schema-400');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2PlacementEvaluatePost-400-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 500 - Internal server error during evaluation </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2PlacementEvaluatePost-500-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2PlacementEvaluatePost-500-schema">
+                                  <div id='responses-apiV2PlacementEvaluatePost-500-schema-500' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Internal server error during evaluation",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2PlacementEvaluatePost-500-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2PlacementEvaluatePost-500-schema-500');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2PlacementEvaluatePost-500-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Placement-apiV2PlacementQuestionsGet">
+                      <article id="api-Placement-apiV2PlacementQuestionsGet-0" data-group="User" data-name="apiV2PlacementQuestionsGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2PlacementQuestionsGet</h1>
+                          <p>Get Placement Test Questions</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Generates a 20-question stratified adaptive English placement test session (4 questions per CEFR band from A1 to C1).</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v2/placement/questions</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Placement-apiV2PlacementQuestionsGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Placement-apiV2PlacementQuestionsGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Placement-apiV2PlacementQuestionsGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Placement-apiV2PlacementQuestionsGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Placement-apiV2PlacementQuestionsGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Placement-apiV2PlacementQuestionsGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Placement-apiV2PlacementQuestionsGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Placement-apiV2PlacementQuestionsGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Placement-apiV2PlacementQuestionsGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Placement-apiV2PlacementQuestionsGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Placement-apiV2PlacementQuestionsGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Placement-apiV2PlacementQuestionsGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+"//api/v2/placement/questions"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Placement-apiV2PlacementQuestionsGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.PlacementApi;
+
+import java.io.File;
+import java.util.*;
+
+public class PlacementApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        PlacementApi apiInstance = new PlacementApi();
+        try {
+            Object result = apiInstance.apiV2PlacementQuestionsGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling PlacementApi#apiV2PlacementQuestionsGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Placement-apiV2PlacementQuestionsGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.PlacementApi;
+
+public class PlacementApiExample {
+
+    public static void main(String[] args) {
+        PlacementApi apiInstance = new PlacementApi();
+        try {
+            Object result = apiInstance.apiV2PlacementQuestionsGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling PlacementApi#apiV2PlacementQuestionsGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Placement-apiV2PlacementQuestionsGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Placement-apiV2PlacementQuestionsGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+
+PlacementApi *apiInstance = [[PlacementApi alloc] init];
+
+// Get Placement Test Questions
+[apiInstance apiV2PlacementQuestionsGetWithCompletionHandler: 
+              ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Placement-apiV2PlacementQuestionsGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+var defaultClient = AiSpeakingPlusApi.ApiClient.instance;
+
+
+var api = new AiSpeakingPlusApi.PlacementApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiV2PlacementQuestionsGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Placement-apiV2PlacementQuestionsGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Placement-apiV2PlacementQuestionsGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2PlacementQuestionsGetExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new PlacementApi();
+
+            try
+            {
+                // Get Placement Test Questions
+                Object result = apiInstance.apiV2PlacementQuestionsGet();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling PlacementApi.apiV2PlacementQuestionsGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Placement-apiV2PlacementQuestionsGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiPlacementApi();
+
+try {
+    $result = $api_instance->apiV2PlacementQuestionsGet();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling PlacementApi->apiV2PlacementQuestionsGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Placement-apiV2PlacementQuestionsGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::PlacementApi;
+
+
+my $api_instance = WWW::SwaggerClient::PlacementApi->new();
+
+eval { 
+    my $result = $api_instance->apiV2PlacementQuestionsGet();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling PlacementApi->apiV2PlacementQuestionsGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Placement-apiV2PlacementQuestionsGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.PlacementApi()
+
+try: 
+    # Get Placement Test Questions
+    api_response = api_instance.api_v2_placement_questions_get()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling PlacementApi->apiV2PlacementQuestionsGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Randomized placement test questions without correct answer keys </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2PlacementQuestionsGet-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2PlacementQuestionsGet-200-schema">
+                                  <div id='responses-apiV2PlacementQuestionsGet-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Randomized placement test questions without correct answer keys",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PlacementQuestionsResponseServerDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2PlacementQuestionsGet-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2PlacementQuestionsGet-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2PlacementQuestionsGet-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 500 - Server error while generating placement test questions </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV2PlacementQuestionsGet-500-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV2PlacementQuestionsGet-500-schema">
+                                  <div id='responses-apiV2PlacementQuestionsGet-500-schema-500' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Server error while generating placement test questions",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/FailureResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV2PlacementQuestionsGet-500-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV2PlacementQuestionsGet-500-schema-500');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV2PlacementQuestionsGet-500-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 

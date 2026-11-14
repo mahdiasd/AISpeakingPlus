@@ -40,6 +40,7 @@ object AppleChatTheme {
     // Primary Accents (Electric Indigo & Royal Azure)
     val PrimaryAzure = Color(0xFF0A84FF)
     val PrimaryIndigo = Color(0xFF5E5CE6)
+    val ElectricIndigo get() = PrimaryIndigo
     val AzureDeep = Color(0xFF0066CC)
     val IndigoDeep = Color(0xFF4845D2)
 

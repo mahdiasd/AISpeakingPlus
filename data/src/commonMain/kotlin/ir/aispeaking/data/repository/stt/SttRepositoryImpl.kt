@@ -10,7 +10,8 @@ import org.koin.core.annotation.Single
 
 @Single
 class SttRepositoryImpl(
-    private val sttWebSocketClient: SttWebSocketClient
+    private val sttWebSocketClient: SttWebSocketClient,
+    private val sttPreferences: ir.aispeaking.storage.preferences.stt.SttPreferences? = null
 ) : SttRepository {
 
     override fun connectSttStream(): Flow<SttStreamEvent> {
@@ -31,5 +32,13 @@ class SttRepositoryImpl(
 
     override fun isSessionActive(): Boolean {
         return sttWebSocketClient.isConnected
+    }
+
+    override fun getSttEngine(): String {
+        return sttPreferences?.getSttEngine() ?: "app"
+    }
+
+    override fun saveSttEngine(engine: String) {
+        sttPreferences?.saveSttEngine(engine)
     }
 }

@@ -34,6 +34,7 @@ import ir.aispeaking.domain.model.stage.Stage
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_back
 import ir.aispeaking.sharedui.ic_lamp
+import ir.aispeaking.sharedui.ic_setting
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
@@ -60,6 +61,7 @@ fun ChatToolbar(
     showProgress: Boolean = false,
     onBackClick: () -> Unit = {},
     onObjectiveClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
     onHeaderClick: () -> Unit = {},
     onFinishConversationClick: () -> Unit,
     objectiveModifier: Modifier = Modifier
@@ -77,13 +79,18 @@ fun ChatToolbar(
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Objective Glass Chip (Serene Cyan glow) - at Start anchor (replaces back button)
+            // Objective Glass Chip (icon removed per product direction to save space)
             AppleObjectiveChip(
                 text = "هدف مرحله",
                 onClick = onObjectiveClick,
                 modifier = objectiveModifier
+            )
+
+            // Settings Glass Button
+            AppleSettingsButton(
+                onClick = onSettingsClick
             )
 
             // Liquid Glass Stage Info Capsule
@@ -199,7 +206,7 @@ fun ChatToolbar(
 }
 
 /**
- * Apple translucent Objective chip with Serene Cyan luminous glow.
+ * Apple translucent Objective chip without icon to preserve horizontal room.
  */
 @Composable
 private fun AppleObjectiveChip(
@@ -210,7 +217,7 @@ private fun AppleObjectiveChip(
     val isDark = AppTheme.isDark
     val shape = RoundedCornerShape(14.dp)
     val accent = if (isDark) AppleChatTheme.SuccessCyan else AppleChatTheme.PrimaryAzure
-    Row(
+    Box(
         modifier = modifier
             .height(36.dp)
             .applePressEffect(targetScale = 0.94f, onClick = onClick)
@@ -222,21 +229,47 @@ private fun AppleObjectiveChip(
                 shape
             )
             .padding(horizontal = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_lamp),
-            contentDescription = null,
-            tint = accent,
-            modifier = Modifier.size(15.dp)
-        )
         GameText(
             text = text,
             size = 12.sp,
             bold = true,
             color = accent,
             maxLines = 1
+        )
+    }
+}
+
+/**
+ * Apple translucent Settings button for quick voice/speech configuration.
+ */
+@Composable
+private fun AppleSettingsButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isDark = AppTheme.isDark
+    val shape = RoundedCornerShape(14.dp)
+    val accent = if (isDark) AppleChatTheme.SuccessCyan else AppleChatTheme.PrimaryAzure
+    Box(
+        modifier = modifier
+            .size(36.dp)
+            .applePressEffect(targetScale = 0.92f, onClick = onClick)
+            .clip(shape)
+            .background(if (isDark) Color(0xD9181A28) else Color(0xD9EBF5FF))
+            .border(
+                1.dp,
+                accent.copy(alpha = if (isDark) 0.45f else 0.5f),
+                shape
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_setting),
+            contentDescription = "تنظیمات صوتی",
+            tint = accent,
+            modifier = Modifier.size(17.dp)
         )
     }
 }

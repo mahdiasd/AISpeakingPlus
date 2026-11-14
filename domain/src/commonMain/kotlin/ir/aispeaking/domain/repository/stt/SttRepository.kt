@@ -9,4 +9,6 @@ interface SttRepository {
     suspend fun sendStop()
     suspend fun closeSession()
     fun isSessionActive(): Boolean
+    fun getSttEngine(): String = "app"
+    fun saveSttEngine(engine: String) {}
 }

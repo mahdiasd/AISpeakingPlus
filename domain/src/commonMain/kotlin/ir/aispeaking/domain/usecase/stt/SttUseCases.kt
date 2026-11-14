@@ -40,3 +40,19 @@ class CloseSttSessionUseCase(
         sttRepository.closeSession()
     }
 }
+
+@Factory
+class GetSttEngineUseCase(
+    private val sttRepository: SttRepository
+) {
+    operator fun invoke(): String = sttRepository.getSttEngine()
+}
+
+@Factory
+class SaveSttEngineUseCase(
+    private val sttRepository: SttRepository
+) {
+    operator fun invoke(engine: String) {
+        sttRepository.saveSttEngine(engine)
+    }
+}

@@ -22,8 +22,8 @@ private external fun jsUnlockAudio()
 @JsFun("() => !!(window.aiSpeakingAudio && window.aiSpeakingAudio.isPlaying())")
 private external fun jsIsAudioPlaying(): Boolean
 
-@JsFun("() => window.aiSpeakingSpeech ? window.aiSpeakingSpeech.start() : null")
-private external fun jsStartSpeech()
+@JsFun("(mode) => window.aiSpeakingSpeech ? window.aiSpeakingSpeech.start(mode) : null")
+private external fun jsStartSpeech(mode: String)
 
 @JsFun("() => window.aiSpeakingSpeech ? window.aiSpeakingSpeech.stop() : null")
 private external fun jsStopSpeech()
@@ -118,10 +118,10 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
         var recordJob: Job? = null
         var currentOnSpeech: ((String) -> Unit)? = null
 
-        controller.onPlatformStartRecording = { onSpeech, onSilence ->
+        controller.onPlatformStartRecordingWithEngine = { engine, onSpeech, onSilence ->
             recordJob?.cancel()
             currentOnSpeech = onSpeech
-            jsStartSpeech()
+            jsStartSpeech(engine)
             recordJob = bridgeScope.launch {
                 var lastText = ""
 
