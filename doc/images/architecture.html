@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  body { background: #0B0E14; color: #E2E8F0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+  .canvas { width: 1200px; height: 780px; background: #0F131C; border: 1px solid #1E293B; border-radius: 16px; padding: 32px; display: flex; flex-direction: column; gap: 24px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+  
+  .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1E293B; padding-bottom: 16px; }
+  .title-group { display: flex; align-items: center; gap: 12px; }
+  .badge { background: #0A84FF20; color: #38BDF8; border: 1px solid #0A84FF40; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .title { font-size: 22px; font-weight: 700; color: #F8FAFC; }
+  .subtitle { font-size: 13px; color: #94A3B8; }
+  .tagline { font-size: 12px; color: #64748B; font-family: monospace; }
+
+  .grid { display: grid; grid-template-columns: 280px 1fr 280px; gap: 20px; flex: 1; }
+  
+  .column { display: flex; flex-direction: column; gap: 16px; }
+  
+  .card { background: #151B28; border: 1px solid #243045; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; position: relative; }
+  .card.highlight { border-color: #0A84FF60; background: linear-gradient(180deg, #162032 0%, #131926 100%); }
+  .card.success { border-color: #10B98160; background: linear-gradient(180deg, #132421 0%, #111B1B 100%); }
+  .card.purple { border-color: #8B5CF660; background: linear-gradient(180deg, #1F1932 0%, #151324 100%); }
+  .card.amber { border-color: #F59E0B60; background: linear-gradient(180deg, #261E14 0%, #1A1612 100%); }
+
+  .card-title { font-size: 13px; font-weight: 700; color: #F1F5F9; display: flex; align-items: center; gap: 8px; }
+  .card-title .icon { font-size: 14px; }
+  .card-subtitle { font-size: 11px; color: #94A3B8; line-height: 1.4; }
+
+  .pill-container { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill { background: #1E293B; border: 1px solid #334155; font-size: 10.5px; padding: 4px 8px; border-radius: 6px; color: #CBD5E1; font-weight: 500; }
+  .pill.blue { background: #0A84FF20; border-color: #0A84FF40; color: #60A5FA; }
+  .pill.green { background: #10B98120; border-color: #10B98140; color: #34D399; }
+  .pill.purple { background: #8B5CF620; border-color: #8B5CF640; color: #A78BFA; }
+  .pill.amber { background: #F59E0B20; border-color: #F59E0B40; color: #FBBF24; }
+
+  .center-column { display: flex; flex-direction: column; gap: 16px; }
+  .kmp-container { background: #121722; border: 1px dashed #334155; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .kmp-header { display: flex; justify-content: space-between; align-items: center; }
+  .kmp-title { font-size: 13px; font-weight: 700; color: #38BDF8; letter-spacing: 0.3px; }
+
+  .layer-stack { display: flex; flex-direction: column; gap: 8px; }
+  .layer { background: #182030; border: 1px solid #223049; border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; }
+  .layer-name { font-size: 11.5px; font-weight: 600; color: #F1F5F9; }
+  .layer-desc { font-size: 10.5px; color: #94A3B8; }
+
+  .footer-bar { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #1E293B; padding-top: 14px; font-size: 11px; color: #64748B; }
+  .footer-links { display: flex; gap: 16px; }
+  .footer-link { color: #94A3B8; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="header">
+    <div class="title-group">
+      <div class="badge">System Architecture</div>
+      <div>
+        <div class="title">AiSpeaking Plus Architecture Topology</div>
+        <div class="subtitle">Full-Stack Reactive Ecosystem: KMP Client, Ktor 3 Backend, Sherpa-ONNX, Kokoro TTS, & Redis/PostgreSQL</div>
+      </div>
+    </div>
+    <div class="tagline">Clean Architecture &bull; Kotlin 2.4.0 &bull; Ktor 3.5.0</div>
+  </div>
+
+  <div class="grid">
+    <!-- Left Column: Clients & Targets -->
+    <div class="column">
+      <div class="card highlight">
+        <div class="card-title"><span class="icon">📱</span> Client Applications</div>
+        <div class="card-subtitle">Multiplatform client layer covering mobile, web, and desktop.</div>
+        <div class="pill-container">
+          <span class="pill blue">Android (Compose UI)</span>
+          <span class="pill blue">Desktop (JVM Swing)</span>
+          <span class="pill blue">iOS (Kotlin Framework)</span>
+          <span class="pill blue">webApp (Wasm + JS)</span>
+        </div>
+      </div>
+
+      <div class="card purple">
+        <div class="card-title"><span class="icon">💻</span> Standalone Web Apps</div>
+        <div class="card-subtitle">Dedicated React frontends with modern UI engineering.</div>
+        <div class="pill-container">
+          <span class="pill purple">admin-web (React 19 + Vite)</span>
+          <span class="pill purple">client-web (React 18 + Cupertino)</span>
+          <span class="pill purple">Tailwind CSS 3.4</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">💳</span> Monetization & Billing</div>
+        <div class="card-subtitle">Multi-channel in-app purchases & online payments.</div>
+        <div class="pill-container">
+          <span class="pill">CafeBazaar (Poolakey 2.2)</span>
+          <span class="pill">Myket In-App API</span>
+          <span class="pill">Zarinpal Payment Gateway</span>
+          <span class="pill">Dynamic Promo Codes</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Column: Shared KMP Architecture & Core Engine -->
+    <div class="center-column">
+      <div class="kmp-container">
+        <div class="kmp-header">
+          <span class="kmp-title">KMP Shared Core Architecture</span>
+          <span class="pill blue">Clean Architecture Pattern</span>
+        </div>
+        <div class="layer-stack">
+          <div class="layer">
+            <div>
+              <div class="layer-name">Presentation & Features (:feature:*)</div>
+              <div class="layer-desc">MVI Pattern &bull; splash, auth, stages_list, chat, profile, subscription</div>
+            </div>
+            <span class="pill blue">Compose 1.11</span>
+          </div>
+          <div class="layer">
+            <div>
+              <div class="layer-name">Design System & UI Components (:sharedUI)</div>
+              <div class="layer-desc">Atoms, Molecules, Cupertino Polish, RTL &gt; BackButton, Vazirmatn Font</div>
+            </div>
+            <span class="pill">Design Tokens</span>
+          </div>
+          <div class="layer">
+            <div>
+              <div class="layer-name">Type-Safe Navigation (:navigation)</div>
+              <div class="layer-desc">Navigation 3 (androidx-nav3 + nav3-browser) type-safe NavKey routing</div>
+            </div>
+            <span class="pill">NavKey</span>
+          </div>
+          <div class="layer">
+            <div>
+              <div class="layer-name">Business Domain Layer (:domain)</div>
+              <div class="layer-desc">Pure Kotlin &bull; Interactors, Entities, UseCases, Repositories</div>
+            </div>
+            <span class="pill green">Zero Deps</span>
+          </div>
+          <div class="layer">
+            <div>
+              <div class="layer-name">Data & Infrastructure (:data, :network, :storage)</div>
+              <div class="layer-desc">Ktor Client 3.5, WebSockets, Multiplatform Settings, Coil 3</div>
+            </div>
+            <span class="pill">Koin 4.2.2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card success">
+        <div class="card-title"><span class="icon">🚀</span> Ktor 3.5 Async Server Core</div>
+        <div class="card-subtitle">High-throughput Netty non-blocking coroutine engine with living OpenAPI 3.0.3.</div>
+        <div class="pill-container">
+          <span class="pill green">/api/v2 REST Routes</span>
+          <span class="pill green">WebSocket /live STT</span>
+          <span class="pill green">SSE Chat Streaming</span>
+          <span class="pill green">JWT Security & Rate Limiting</span>
+          <span class="pill green">OpenAPI Live Sync</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: AI/Speech Engines & Data Stores -->
+    <div class="column">
+      <div class="card highlight">
+        <div class="card-title"><span class="icon">🎙️</span> Speech & AI Processing</div>
+        <div class="card-subtitle">Zero-latency native offline engines + Cloud LLM.</div>
+        <div class="pill-container">
+          <span class="pill blue">Sherpa-ONNX (SenseVoice Small)</span>
+          <span class="pill blue">Sherpa-ONNX (Zipformer Streaming)</span>
+          <span class="pill blue">Kokoro-82M TTS (Voice Synthesis)</span>
+          <span class="pill blue">OpenAI SDK / Gemini / AvalAI</span>
+          <span class="pill blue">Pure AI Grammar Evaluator</span>
+        </div>
+      </div>
+
+      <div class="card amber">
+        <div class="card-title"><span class="icon">🗄️</span> Data Persistence & Cache</div>
+        <div class="card-subtitle">Relational transactional storage + ultra-fast caching.</div>
+        <div class="pill-container">
+          <span class="pill amber">PostgreSQL 15 (Exposed ORM)</span>
+          <span class="pill amber">HikariCP 6.2 Connection Pool</span>
+          <span class="pill amber">Redis 7 (Redisson Client 3.41)</span>
+          <span class="pill amber">OTP Lifecycle & 5sms/15min Limit</span>
+          <span class="pill amber">Real-time Leaderboard Cache</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">🚢</span> Deployment & Infra</div>
+        <div class="card-subtitle">Containerized production on Ubuntu VPS.</div>
+        <div class="pill-container">
+          <span class="pill">Docker & Compose</span>
+          <span class="pill">Nginx SSL Reverse Proxy</span>
+          <span class="pill">FatJar JVM Runtime</span>
+          <span class="pill">193.93.169.198 Staging</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <div>AiSpeaking Plus &bull; Complete System Overview &bull; Strict Clean Architecture</div>
+    <div class="footer-links">
+      <span>staging.aispeaking.ir/app</span>
+      <span>staging.aispeaking.ir/api</span>
+      <span>Apidog Live Sync Ready</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

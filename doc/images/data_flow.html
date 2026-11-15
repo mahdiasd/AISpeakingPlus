@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  body { background: #0B0E14; color: #E2E8F0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+  .canvas { width: 1200px; height: 780px; background: #0F131C; border: 1px solid #1E293B; border-radius: 16px; padding: 32px; display: flex; flex-direction: column; gap: 24px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+  
+  .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1E293B; padding-bottom: 16px; }
+  .title-group { display: flex; align-items: center; gap: 12px; }
+  .badge { background: #10B98120; color: #34D399; border: 1px solid #10B98140; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .title { font-size: 22px; font-weight: 700; color: #F8FAFC; }
+  .subtitle { font-size: 13px; color: #94A3B8; }
+  .tagline { font-size: 12px; color: #64748B; font-family: monospace; }
+
+  .pipeline { display: flex; flex-direction: column; gap: 16px; flex: 1; justify-content: space-around; }
+
+  .stages-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  .step-card { background: #151B28; border: 1px solid #243045; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; position: relative; }
+  .step-card.active { border-color: #0A84FF60; background: linear-gradient(180deg, #162032 0%, #131926 100%); }
+  .step-card.green { border-color: #10B98160; background: linear-gradient(180deg, #132421 0%, #111B1B 100%); }
+  .step-card.purple { border-color: #8B5CF660; background: linear-gradient(180deg, #1F1932 0%, #151324 100%); }
+  .step-card.amber { border-color: #F59E0B60; background: linear-gradient(180deg, #261E14 0%, #1A1612 100%); }
+
+  .step-num { font-size: 10px; font-weight: 800; color: #38BDF8; letter-spacing: 1px; text-transform: uppercase; }
+  .step-title { font-size: 13.5px; font-weight: 700; color: #F8FAFC; }
+  .step-desc { font-size: 11px; color: #94A3B8; line-height: 1.45; }
+  
+  .flow-indicator { display: flex; justify-content: center; align-items: center; color: #64748B; font-size: 18px; margin: -4px 0; }
+  
+  .highlight-box { background: #101622; border: 1px dashed #334155; border-radius: 12px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .highlight-item { display: flex; align-items: center; gap: 10px; }
+  .highlight-icon { font-size: 18px; }
+  .highlight-text { font-size: 11.5px; color: #CBD5E1; }
+  .highlight-text strong { color: #F8FAFC; display: block; font-size: 12px; }
+
+  .pill { background: #1E293B; border: 1px solid #334155; font-size: 10px; padding: 3px 7px; border-radius: 5px; color: #CBD5E1; }
+  .pill.blue { background: #0A84FF20; border-color: #0A84FF40; color: #60A5FA; }
+  .pill.green { background: #10B98120; border-color: #10B98140; color: #34D399; }
+  .pill.purple { background: #8B5CF620; border-color: #8B5CF640; color: #A78BFA; }
+
+  .footer-bar { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #1E293B; padding-top: 14px; font-size: 11px; color: #64748B; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="header">
+    <div class="title-group">
+      <div class="badge">Pipeline Architecture</div>
+      <div>
+        <div class="title">Real-Time Conversational Speech & AI Pipeline</div>
+        <div class="subtitle">End-to-End Latency Optimized Data Flow: Mic &rarr; WebSocket STT &rarr; LLM &bull; Grammar &bull; Kokoro TTS &rarr; Client</div>
+      </div>
+    </div>
+    <div class="tagline">Sub-second Latency &bull; 16kHz PCM16 Mono &bull; Zero Hallucination Evaluator</div>
+  </div>
+
+  <div class="pipeline">
+    <!-- Top Row: Input Phase -->
+    <div class="stages-row">
+      <div class="step-card active">
+        <div class="step-num">Step 01 &bull; Capture</div>
+        <div class="step-title">🎙️ Audio Recording</div>
+        <div class="step-desc">User taps mic. Instant capture mono 16kHz PCM16 audio. Barge-in interrupts previous AI speech.</div>
+        <div style="margin-top:4px;"><span class="pill blue">Client Microphone</span></div>
+      </div>
+
+      <div class="step-card active">
+        <div class="step-num">Step 02 &bull; Stream</div>
+        <div class="step-title">⚡ WebSocket Ingestion</div>
+        <div class="step-desc">Continuous binary frames sent over <code>/api/v2/stt/live</code> with endpointing and trailing silence checks.</div>
+        <div style="margin-top:4px;"><span class="pill blue">Bidirectional WS</span></div>
+      </div>
+
+      <div class="step-card green">
+        <div class="step-num">Step 03 &bull; Transcribe</div>
+        <div class="step-title">🧠 Offline STT Engine</div>
+        <div class="step-desc">Sherpa-ONNX (SenseVoice Small / Zipformer) decodes speech to English text in real time with partial/final events.</div>
+        <div style="margin-top:4px;"><span class="pill green">Sherpa-ONNX JNI</span></div>
+      </div>
+
+      <div class="step-card green">
+        <div class="step-num">Step 04 &bull; Edit & Review</div>
+        <div class="step-title">📝 User Review</div>
+        <div class="step-desc">Client displays real-time transcript. User can review, edit text if desired, and confirms message dispatch.</div>
+        <div style="margin-top:4px;"><span class="pill green">Interactive UI</span></div>
+      </div>
+    </div>
+
+    <!-- Middle Connector -->
+    <div class="flow-indicator">&darr; Dispatch to Ktor Backend &amp; Orchestrator &darr;</div>
+
+    <!-- Bottom Row: Processing & Response Phase -->
+    <div class="stages-row">
+      <div class="step-card purple">
+        <div class="step-num">Step 05 &bull; Prompting</div>
+        <div class="step-title">🎭 Context Assembly</div>
+        <div class="step-desc">Backend builds prompt with Stage briefing, character persona, CEFR level (A1-C2), and previous conversation history.</div>
+        <div style="margin-top:4px;"><span class="pill purple">StageChatService</span></div>
+      </div>
+
+      <div class="step-card purple">
+        <div class="step-num">Step 06 &bull; LLM Inference</div>
+        <div class="step-title">🤖 AI Brain & Analysis</div>
+        <div class="step-desc">OpenAI SDK streams roleplay dialogue, evaluates grammar errors (has_error, feedback_fa), and verifies goal completion.</div>
+        <div style="margin-top:4px;"><span class="pill purple">OpenAI / Gemini</span></div>
+      </div>
+
+      <div class="step-card amber">
+        <div class="step-num">Step 07 &bull; Synthesis</div>
+        <div class="step-title">🔊 Kokoro-82M TTS</div>
+        <div class="step-desc">Synthesizes character reply matching NPC gender (Male/Female voice profile) to 24kHz WAV, stored in audio_cache.</div>
+        <div style="margin-top:4px;"><span class="pill amber">Offline Kokoro TTS</span></div>
+      </div>
+
+      <div class="step-card amber">
+        <div class="step-num">Step 08 &bull; Delivery</div>
+        <div class="step-title">✨ Playback & Stars</div>
+        <div class="step-desc">Client streams text, auto-plays audio, displays grammar hints, checks 3-star rubric, and updates progress.</div>
+        <div style="margin-top:4px;"><span class="pill amber">Auto-Play &amp; Scoring</span></div>
+      </div>
+    </div>
+
+    <!-- Bottom Highlight Banner -->
+    <div class="highlight-box">
+      <div class="highlight-item">
+        <span class="highlight-icon">⭐</span>
+        <div class="highlight-text">
+          <strong>3-Star Evaluation Rubric</strong>
+          Completion + 0 Errors &amp; 0 Hints = ⭐⭐⭐ &bull; 1 Error/Hint = ⭐⭐ &bull; 2 Errors/Hints = ⭐ &bull; 0 Stars if abandoned
+        </div>
+      </div>
+      <div class="highlight-item">
+        <span class="highlight-icon">💡</span>
+        <div class="highlight-text">
+          <strong>Smart Hint Assistance</strong>
+          Contextual AI hint generation upon request with explicit star scoring penalty notification
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <div>AiSpeaking Plus &bull; Ultra-Low Latency Conversational Engine &bull; Pure Coroutine Concurrency</div>
+    <div><span>Endpointing: 1.4s speech silence &bull; Max 20s utterance &bull; 1400MB JVM Cap</span></div>
+  </div>
+</div>
+</body>
+</html>

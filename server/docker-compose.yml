@@ -30,7 +30,7 @@ services:
       - WEBAPP_BASE_URL=${WEBAPP_BASE_URL:-https://staging.aispeaking.ir/app}
       # Speech-to-Text (sherpa-onnx: SenseVoice-Small) settings
       - STT_MODEL_DIR=/app/models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
-      - STT_MAX_STREAMS=6
+      - STT_MAX_STREAMS=${STT_MAX_STREAMS:-25}
       - STT_NUM_THREADS=2
       - STT_SAMPLE_RATE=16000
       - STT_AUTO_DOWNLOAD=true
