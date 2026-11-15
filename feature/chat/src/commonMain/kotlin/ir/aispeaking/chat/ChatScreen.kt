@@ -248,7 +248,6 @@ fun ChatScreen(
                         showExitConfirmDialog = true
                     },
                     onObjectiveClick = { showObjectiveSheet = true },
-                    onSettingsClick = { viewModel.setSettingsSheetVisible(true) },
                     onHeaderClick = { showLanguageLevelSheet = true },
                     onFinishConversationClick = {
                         isFinishTriggeredByFinishButton = true
@@ -381,17 +380,6 @@ fun ChatScreen(
                 visible = showObjectiveSheet,
                 stage = stage,
                 onDismiss = { showObjectiveSheet = false }
-            )
-
-            // Speech-to-Text Settings Sheet
-            ChatSettingsSheet(
-                visible = uiState.showSettingsSheet,
-                currentEngine = uiState.sttEngine,
-                connectionStatus = uiState.sttConnectionStatus,
-                hasBrowserSupport = uiState.hasBrowserSupport,
-                onSelectEngine = { viewModel.setSttEngine(it) },
-                onReconnect = { viewModel.reconnectSttSocket() },
-                onDismiss = { viewModel.setSettingsSheetVisible(false) }
             )
 
             // Language Level Explanation Bottom Sheet

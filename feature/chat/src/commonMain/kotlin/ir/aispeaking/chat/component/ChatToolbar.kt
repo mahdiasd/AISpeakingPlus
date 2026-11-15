@@ -61,7 +61,6 @@ fun ChatToolbar(
     showProgress: Boolean = false,
     onBackClick: () -> Unit = {},
     onObjectiveClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {},
     onHeaderClick: () -> Unit = {},
     onFinishConversationClick: () -> Unit,
     objectiveModifier: Modifier = Modifier
@@ -86,11 +85,6 @@ fun ChatToolbar(
                 text = "هدف مرحله",
                 onClick = onObjectiveClick,
                 modifier = objectiveModifier
-            )
-
-            // Settings Glass Button
-            AppleSettingsButton(
-                onClick = onSettingsClick
             )
 
             // Liquid Glass Stage Info Capsule
@@ -241,38 +235,6 @@ private fun AppleObjectiveChip(
     }
 }
 
-/**
- * Apple translucent Settings button for quick voice/speech configuration.
- */
-@Composable
-private fun AppleSettingsButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val isDark = AppTheme.isDark
-    val shape = RoundedCornerShape(14.dp)
-    val accent = if (isDark) AppleChatTheme.SuccessCyan else AppleChatTheme.PrimaryAzure
-    Box(
-        modifier = modifier
-            .size(36.dp)
-            .applePressEffect(targetScale = 0.92f, onClick = onClick)
-            .clip(shape)
-            .background(if (isDark) Color(0xD9181A28) else Color(0xD9EBF5FF))
-            .border(
-                1.dp,
-                accent.copy(alpha = if (isDark) 0.45f else 0.5f),
-                shape
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_setting),
-            contentDescription = "تنظیمات صوتی",
-            tint = accent,
-            modifier = Modifier.size(17.dp)
-        )
-    }
-}
 
 /* --------------------------------- Previews --------------------------------- */
 

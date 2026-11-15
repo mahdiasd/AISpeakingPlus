@@ -826,6 +826,14 @@
                 }
             },
 
+            isAudioReady: function() {
+                if (!this.isRecording) return false;
+                if (this._selectedEngine === 'app' || this._usingFallback) {
+                    return !!(this.audioProcessor && this.mediaStream && this.mediaStream.active);
+                }
+                return !!(this.recognition && this.isRecording);
+            },
+
             _initDevice: function() {
                 var ua = navigator.userAgent || '';
                 this._isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
@@ -1360,6 +1368,16 @@
                 return this.transcript || "";
             }
         };
+
+        window.addEventListener('offline', function() {
+            console.warn("[Network] Device offline detected.");
+            if (window.aiSpeakingSpeech && window.aiSpeakingSpeech.isRecording) {
+                window.aiSpeakingSpeech.stop();
+            }
+            if (typeof window.onAiSpeakingNetworkOffline === 'function') {
+                try { window.onAiSpeakingNetworkOffline(); } catch(e) {}
+            }
+        });
 
         window.aiSpeakingPermission = {
             _state: "unknown",

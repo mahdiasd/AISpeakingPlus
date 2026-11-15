@@ -19,6 +19,11 @@ interface StageAudioController {
         set(_) {}
     fun notifyRecordingReady() {}
 
+    var onNetworkOffline: (() -> Unit)?
+        get() = null
+        set(_) {}
+    fun notifyNetworkOffline() {}
+
     fun startRecording(
         engine: String = "app",
         onSpeechRecognized: (String) -> Unit,
@@ -41,9 +46,14 @@ interface StageAudioController {
 class DefaultStageAudioController : StageAudioController {
     override var onAudioChunkCaptured: ((ByteArray) -> Unit)? = null
     override var onRecordingReady: (() -> Unit)? = null
+    override var onNetworkOffline: (() -> Unit)? = null
 
     override fun notifyRecordingReady() {
         onRecordingReady?.invoke()
+    }
+
+    override fun notifyNetworkOffline() {
+        onNetworkOffline?.invoke()
     }
 
     private var isPlayingState = false
