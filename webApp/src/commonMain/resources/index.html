@@ -1369,6 +1369,16 @@
             }
         };
 
+        window.addEventListener('offline', function() {
+            console.warn("[Network] Device offline detected.");
+            if (window.aiSpeakingSpeech && window.aiSpeakingSpeech.isRecording) {
+                window.aiSpeakingSpeech.stop();
+            }
+            if (typeof window.onAiSpeakingNetworkOffline === 'function') {
+                try { window.onAiSpeakingNetworkOffline(); } catch(e) {}
+            }
+        });
+
         window.aiSpeakingPermission = {
             _state: "unknown",
             _isRequesting: false,

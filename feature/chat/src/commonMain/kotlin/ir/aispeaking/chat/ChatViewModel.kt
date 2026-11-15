@@ -207,8 +207,16 @@ class ChatViewModel(
                             }
                         }
                         is SttStreamEvent.Disconnected -> {
+                            if (_uiState.value.isRecording) {
+                                stopRecordingSession()
+                            }
                             _uiState.update {
-                                it.copy(sttConnectionStatus = SttConnectionStatus.DISCONNECTED)
+                                it.copy(
+                                    sttConnectionStatus = SttConnectionStatus.DISCONNECTED,
+                                    sttError = "ارتباط با سرور صوتی قطع شد.",
+                                    isRecording = false,
+                                    isRecordingPreparing = false
+                                )
                             }
                         }
                     }
@@ -216,10 +224,15 @@ class ChatViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                if (_uiState.value.isRecording) {
+                    stopRecordingSession()
+                }
                 _uiState.update {
                     it.copy(
                         sttConnectionStatus = SttConnectionStatus.DISCONNECTED,
-                        sttError = e.message
+                        sttError = e.message ?: "ارتباط با سرور صوتی قطع شد.",
+                        isRecording = false,
+                        isRecordingPreparing = false
                     )
                 }
             }
@@ -237,6 +250,20 @@ class ChatViewModel(
     }
 
     fun initStage(stageId: String, tier: AccessTier? = null) {
+        audioController.onNetworkOffline = {
+            if (_uiState.value.isRecording) {
+                stopRecordingSession()
+            }
+            _uiState.update {
+                it.copy(
+                    isRecording = false,
+                    isRecordingPreparing = false,
+                    sttConnectionStatus = SttConnectionStatus.DISCONNECTED,
+                    sttError = "ارتباط با اینترنت قطع شد."
+                )
+            }
+        }
+
         val hasNative = audioController.hasNativeSpeechRecognition()
         val persistedEngine = getSttEngineUseCase?.invoke() ?: "app"
         val engine = if (persistedEngine.equals("browser", ignoreCase = true) && hasNative) {
@@ -608,7 +635,17 @@ class ChatViewModel(
                         sendAudioChunkUseCase(chunk)
                     } catch (e: CancellationException) {
                         throw e
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
+                        stopRecordingSession()
+                        _uiState.update {
+                            it.copy(
+                                isRecording = false,
+                                isRecordingPreparing = false,
+                                sttConnectionStatus = SttConnectionStatus.DISCONNECTED,
+                                sttError = "ارتباط با سرور صوتی قطع شد."
+                            )
+                        }
+                        break
                     }
                 }
             }

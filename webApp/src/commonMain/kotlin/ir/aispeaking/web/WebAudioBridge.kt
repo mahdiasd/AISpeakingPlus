@@ -64,10 +64,17 @@ private external fun jsGetSpeechPermissionLastResult(): String
 @JsFun("() => !!(window.aiSpeakingPermission && window.aiSpeakingPermission.isRequesting())")
 private external fun jsIsSpeechPermissionRequesting(): Boolean
 
+@JsFun("(cb) => { window.onAiSpeakingNetworkOffline = cb; }")
+private external fun jsRegisterOfflineHandler(cb: () -> Unit)
+
 private val bridgeScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
 fun setupWebAudioBridge(controller: DefaultStageAudioController) {
     try {
+        jsRegisterOfflineHandler {
+            controller.notifyNetworkOffline()
+        }
+
         controller.onPlatformPrimeAudioPlayback = {
             try {
                 jsUnlockAudio()

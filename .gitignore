@@ -67,3 +67,7 @@ audio_cache/
 # Video generation working files
 AiSpeaking_Intro_Video_Master.mp4
 generated_scenes/
+
+# Load testing & benchmark artifacts
+scripts/benchmark_results/
+
