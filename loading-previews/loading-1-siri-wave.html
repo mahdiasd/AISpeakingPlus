@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طرح ۱: امواج صوتی هوش مصنوعی (Siri Wave) | AI Speaking Plus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;800&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #080A10;
+            background: radial-gradient(circle at 50% 38%, #181c2e 0%, #0d1120 55%, #06080e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #ffffff;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .loader-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            max-width: 420px;
+            padding: 24px;
+            z-index: 2;
+        }
+
+        .logo-wrap {
+            position: relative;
+            width: 92px;
+            height: 92px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: floatLogo 3.6s ease-in-out infinite;
+        }
+
+        .logo-glow {
+            position: absolute;
+            inset: -18px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.45) 0%, rgba(99, 102, 241, 0.25) 50%, transparent 72%);
+            border-radius: 50%;
+            animation: pulseGlow 2.8s ease-in-out infinite;
+            filter: blur(10px);
+            pointer-events: none;
+        }
+
+        .logo-img {
+            position: relative;
+            width: 86px;
+            height: 86px;
+            border-radius: 26px;
+            box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.75), 0 0 0 1.5px rgba(255, 255, 255, 0.16);
+            display: block;
+            object-fit: cover;
+            background: #0f172a;
+        }
+
+        .app-title {
+            margin-top: 24px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+        }
+
+        .app-subtitle {
+            margin-top: 6px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        /* Waveform Canvas Container */
+        .wave-stage {
+            position: relative;
+            width: 280px;
+            height: 70px;
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wave-ambient {
+            position: absolute;
+            width: 140px;
+            height: 40px;
+            background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.4) 0%, rgba(129, 140, 248, 0.15) 55%, transparent 75%);
+            filter: blur(14px);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: pulseAmbient 2.2s ease-in-out infinite;
+        }
+
+        canvas#siriWaveCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .status-badge {
+            margin-top: 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #38bdf8;
+            box-shadow: 0 0 10px #38bdf8;
+            animation: blinkDot 1.4s infinite alternate;
+        }
+
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-7px); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(0.94); opacity: 0.35; }
+            50% { transform: scale(1.25); opacity: 0.75; }
+        }
+
+        @keyframes pulseAmbient {
+            0%, 100% { transform: scale(0.9); opacity: 0.4; }
+            50% { transform: scale(1.3); opacity: 0.85; }
+        }
+
+        @keyframes blinkDot {
+            0% { opacity: 0.35; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader-card">
+        <div class="logo-wrap">
+            <div class="logo-glow"></div>
+            <img src="./apple-touch-icon.png" class="logo-img" alt="AI Speaking Plus">
+        </div>
+        <div class="app-title">AI Speaking Plus</div>
+        <div class="app-subtitle">ماجراجویی مکالمه انگلیسی با هوش مصنوعی</div>
+        
+        <div class="wave-stage">
+            <div class="wave-ambient"></div>
+            <canvas id="siriWaveCanvas" width="280" height="70"></canvas>
+        </div>
+
+        <div class="status-badge">
+            <span class="status-dot"></span>
+            <span id="statusText">در حال اتصال به هسته هوش مصنوعی...</span>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("siriWaveCanvas");
+        const ctx = canvas.getContext("2d");
+        let step = 0;
+
+        const lines = [
+            { color: "rgba(56, 189, 248, 0.85)", speed: 0.045, freq: 0.022, amp: 16, width: 2.8 },
+            { color: "rgba(129, 140, 248, 0.7)", speed: -0.038, freq: 0.028, amp: 20, width: 2.2 },
+            { color: "rgba(225, 29, 72, 0.4)", speed: 0.025, freq: 0.018, amp: 12, width: 1.8 },
+            { color: "rgba(56, 189, 248, 0.35)", speed: -0.05, freq: 0.035, amp: 8, width: 1.5 }
+        ];
+
+        function renderWave() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            step++;
+
+            const midY = canvas.height / 2;
+            const w = canvas.width;
+
+            lines.forEach((line) => {
+                ctx.beginPath();
+                ctx.lineWidth = line.width;
+                ctx.strokeStyle = line.color;
+                ctx.shadowColor = line.color;
+                ctx.shadowBlur = 8;
+
+                for (let x = 0; x < w; x++) {
+                    // Envelope window function so amplitude is 0 at edges and max at center
+                    const norm = (x / w) * 2 - 1; // -1 to +1
+                    const envelope = Math.pow(1 - Math.abs(norm), 2);
+
+                    const y = midY + Math.sin(x * line.freq + step * line.speed) * line.amp * envelope;
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            });
+
+            requestAnimationFrame(renderWave);
+        }
+        renderWave();
+
+        // Optional status cycling
+        const statuses = [
+            "در حال اتصال به هسته هوش مصنوعی...",
+            "بارگذاری بسته‌های مکالمه صوتی...",
+            "آماده‌سازی محیط یادگیری..."
+        ];
+        let statusIdx = 0;
+        setInterval(() => {
+            statusIdx = (statusIdx + 1) % statuses.length;
+            const el = document.getElementById("statusText");
+            el.style.opacity = "0.2";
+            setTimeout(() => {
+                el.innerText = statuses[statusIdx];
+                el.style.opacity = "1";
+            }, 300);
+        }, 2600);
+    </script>
+</body>
+</html>

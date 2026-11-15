@@ -44,10 +44,11 @@ import org.koin.compose.viewmodel.koinViewModel
  */
 @Composable
 fun AppNavigation(
+    initialRoute: NavKey = SplashRoute,
     onBackStackCreated: @Composable (NavBackStack<NavKey>) -> Unit = {},
     onExitApp: (() -> Unit)? = null
 ) {
-    val backStack = rememberNavBackStack(navigationConfig, SplashRoute)
+    val backStack = rememberNavBackStack(navigationConfig, initialRoute)
     onBackStackCreated(backStack)
 
     val analyticsTracker = koinInject<AnalyticsTracker>()

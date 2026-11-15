@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,12 +54,15 @@ import ir.aispeaking.web.WebBrowserNavigation
 import ir.aispeaking.web.dismissIosA2hsBanner
 import ir.aispeaking.web.dismissIosChromeBanner
 import ir.aispeaking.web.exitWebApp
+import ir.aispeaking.web.hideWebLoader
 import ir.aispeaking.web.isUserInAppBrowser
+import ir.aispeaking.web.resolveInitialWebRoute
 import ir.aispeaking.web.setupWebAnalyticsBridge
 import ir.aispeaking.web.setupWebAudioBridge
 import ir.aispeaking.web.setupWebVideoBridge
 import ir.aispeaking.web.shouldShowIosA2hsBanner
 import ir.aispeaking.web.shouldShowIosChromeBanner
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.context.GlobalContext
 
@@ -84,6 +88,14 @@ fun main() {
     ComposeViewport {
         AppTheme {
             val isDark = AppTheme.isDark
+            val initialRoute = remember { resolveInitialWebRoute() }
+
+            LaunchedEffect(Unit) {
+                // Allow the first frame and text shapes to settle before fading out the HTML loader
+                delay(150)
+                hideWebLoader()
+            }
+
             var showA2hsBanner by remember { mutableStateOf(shouldShowIosA2hsBanner()) }
             var showChromeBanner by remember { mutableStateOf(shouldShowIosChromeBanner()) }
             var showIosTutorialModal by remember { mutableStateOf(false) }
@@ -158,6 +170,7 @@ fun main() {
                                     )
                                     Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                                         AppNavigation(
+                                            initialRoute = initialRoute,
                                             onBackStackCreated = { WebBrowserNavigation(it) },
                                             onExitApp = { exitWebApp() }
                                         )
@@ -193,6 +206,7 @@ fun main() {
                                 )
                                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                                     AppNavigation(
+                                        initialRoute = initialRoute,
                                         onBackStackCreated = { WebBrowserNavigation(it) },
                                         onExitApp = { exitWebApp() }
                                     )

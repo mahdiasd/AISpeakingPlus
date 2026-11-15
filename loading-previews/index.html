@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>گالری و مقایسه لودینگ‌های پیشنهادی | AI Speaking Plus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #06080E;
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Modern Navigation Bar */
+        header {
+            height: 70px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+        }
+
+        .brand-text h1 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        .brand-text p {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 12.5px;
+            font-weight: 600;
+            font-family: 'Vazirmatn', sans-serif;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            background: #0284c7;
+            color: #ffffff;
+            box-shadow: 0 2px 10px rgba(2, 132, 199, 0.4);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .action-link {
+            text-decoration: none;
+            color: #38bdf8;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 14px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .action-link:hover {
+            background: rgba(56, 189, 248, 0.2);
+            color: #fff;
+        }
+
+        /* Main Preview Stage */
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 50% 50%, #0d1222 0%, #06080e 100%);
+            padding: 20px;
+        }
+
+        /* Phone Mockup Frame */
+        .preview-frame-wrap {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        iframe#previewFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            border-radius: 12px;
+        }
+
+        /* Floating Mode Toggle */
+        .view-mode-bar {
+            position: absolute;
+            bottom: 24px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 6px 16px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: #94a3b8;
+            z-index: 100;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+        }
+
+        .view-mode-btn {
+            background: transparent;
+            border: none;
+            color: #cbd5e1;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .view-mode-btn.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: #38bdf8;
+            font-weight: 700;
+        }
+
+        /* Mobile Container Mode */
+        .frame-mobile {
+            width: 390px !important;
+            height: 780px !important;
+            max-height: 90vh !important;
+            border-radius: 44px !important;
+            border: 8px solid #1e293b !important;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand-title">
+            <img src="./apple-touch-icon.png" class="brand-logo" alt="Logo">
+            <div class="brand-text">
+                <h1>گالری لودینگ‌های AI Speaking Plus</h1>
+                <p>انتخاب بهترین لودینگ قبل از ورود به کامپوز</p>
+            </div>
+        </div>
+
+        <nav class="tabs-container">
+            <button class="tab-btn active" onclick="switchDesign('loading-1-siri-wave.html', this)">
+                🌊 ۱. امواج هوش مصنوعی (Siri)
+            </button>
+            <button class="tab-btn" onclick="switchDesign('loading-2-micro-tips.html', this)">
+                💡 ۲. اصطلاحات روز (Tips)
+            </button>
+            <button class="tab-btn" onclick="switchDesign('loading-3-apple-progress.html', this)">
+                📊 ۳. درصد اپل (Progress)
+            </button>
+            <button class="tab-btn" onclick="switchDesign('loading-4-frosted-glass.html', this)">
+                ✨ ۴. شیشه‌ای نئونی (Glass)
+            </button>
+            <button class="tab-btn" onclick="switchDesign('loading-5-uiverse-dash.html', this)">
+                🌀 ۵. میله‌های چرخان (Uiverse)
+            </button>
+        </nav>
+
+        <div class="header-actions">
+            <a id="openSingleLink" href="loading-1-siri-wave.html" target="_blank" class="action-link">
+                ↗ باز کردن مجزا در تب جدید
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <div class="preview-frame-wrap">
+            <iframe id="previewFrame" src="loading-1-siri-wave.html"></iframe>
+        </div>
+
+        <div class="view-mode-bar">
+            <span>حالت نمایش:</span>
+            <button class="view-mode-btn active" id="btnFull" onclick="setMode('full')">🖥 تمام صفحه (Full)</button>
+            <button class="view-mode-btn" id="btnPhone" onclick="setMode('phone')">📱 قاب موبایل (Phone)</button>
+        </div>
+    </main>
+
+    <script>
+        const iframe = document.getElementById("previewFrame");
+        const singleLink = document.getElementById("openSingleLink");
+
+        function switchDesign(url, btn) {
+            iframe.src = url;
+            singleLink.href = url;
+
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+        }
+
+        function setMode(mode) {
+            if (mode === 'phone') {
+                iframe.classList.add("frame-mobile");
+                document.getElementById("btnPhone").classList.add("active");
+                document.getElementById("btnFull").classList.remove("active");
+            } else {
+                iframe.classList.remove("frame-mobile");
+                document.getElementById("btnFull").classList.add("active");
+                document.getElementById("btnPhone").classList.remove("active");
+            }
+        }
+    </script>
+</body>
+</html>

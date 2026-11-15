@@ -42,10 +42,31 @@ private external fun jsGetPopCounter(): Int
 @JsFun("() => { try { window.close(); } catch(e){} window.location.href = '/'; }")
 private external fun jsExitApp()
 
+@JsFun("() => { if (window.hideAppLoader) window.hideAppLoader(); }")
+private external fun jsHideAppLoader()
+
 fun exitWebApp() {
     try {
         jsExitApp()
     } catch (_: Throwable) {}
+}
+
+fun hideWebLoader() {
+    try {
+        jsHideAppLoader()
+    } catch (_: Throwable) {}
+}
+
+fun resolveInitialWebRoute(): AppRoute {
+    val initialHash = jsGetHash()
+    if (initialHash.isNotBlank()) {
+        val parsed = parseLegacyHash(initialHash)
+        if (parsed != null && parsed !is SplashRoute) return parsed
+    }
+    val path = jsGetCurrentPath()
+    val search = jsGetCurrentSearch()
+    val route = urlToRoute(path, search)
+    return if (route != null && route !is SplashRoute) route else MainRoute
 }
 
 /**
@@ -159,8 +180,8 @@ private fun urlToRoute(path: String, search: String): AppRoute? {
     val params = parseQueryParameters(search)
 
     return when {
+        cleanPath.isEmpty() || cleanPath == "main" || cleanPath == "roadmap" -> MainRoute
         cleanPath == "intro" || cleanPath == "video" || cleanPath == "prologue" -> IntroVideoRoute
-        cleanPath == "main" || cleanPath == "roadmap" -> MainRoute
         cleanPath == "profile" -> ProfileRoute
         cleanPath == "leaderboard" || cleanPath == "ranking" || cleanPath == "podium" -> LeaderboardRoute
         cleanPath == "subscription" || cleanPath == "sub" -> SubscriptionRoute

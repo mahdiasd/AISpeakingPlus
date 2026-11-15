@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طرح ۲: اصطلاحات روز و نکات آموزشی (Micro-Tips) | AI Speaking Plus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #080A10;
+            background: radial-gradient(circle at 50% 30%, #151a2d 0%, #0b0f1e 55%, #05070d 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #ffffff;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .loader-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            max-width: 440px;
+            padding: 24px;
+        }
+
+        .logo-wrap {
+            position: relative;
+            width: 76px;
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: floatLogo 3.2s ease-in-out infinite;
+        }
+
+        .logo-glow {
+            position: absolute;
+            inset: -14px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.4) 0%, rgba(99, 102, 241, 0.2) 50%, transparent 70%);
+            border-radius: 50%;
+            animation: pulseGlow 2.4s ease-in-out infinite;
+            filter: blur(8px);
+        }
+
+        .logo-img {
+            position: relative;
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.65), 0 0 0 1.5px rgba(255, 255, 255, 0.15);
+            display: block;
+            object-fit: cover;
+            background: #0f172a;
+        }
+
+        .app-title {
+            margin-top: 16px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Micro-Tip Glass Card */
+        .tip-card {
+            margin-top: 26px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px 22px;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .tip-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .tip-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            padding: 3px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+        }
+
+        .tip-timer-pill {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .tip-body {
+            min-height: 85px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .tip-phrase {
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #f8fafc;
+            direction: ltr;
+            text-align: center;
+            letter-spacing: -0.2px;
+        }
+
+        .tip-meaning {
+            margin-top: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #38bdf8;
+            line-height: 1.5;
+        }
+
+        .tip-desc {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+
+        /* Continuous Progress Line */
+        .tip-progress-track {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .tip-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            box-shadow: 0 0 8px #38bdf8;
+            transition: width 0.05s linear;
+        }
+
+        /* Equalizer Wave Indicator */
+        .loader-wave-container {
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            height: 20px;
+        }
+
+        .wave-bar {
+            width: 3px;
+            height: 6px;
+            background: linear-gradient(180deg, #38bdf8 0%, #818cf8 100%);
+            border-radius: 999px;
+            animation: waveBounce 1.1s ease-in-out infinite alternate;
+        }
+
+        .wave-bar:nth-child(1) { animation-delay: 0.0s; height: 8px; }
+        .wave-bar:nth-child(2) { animation-delay: 0.18s; height: 16px; }
+        .wave-bar:nth-child(3) { animation-delay: 0.36s; height: 22px; }
+        .wave-bar:nth-child(4) { animation-delay: 0.54s; height: 14px; }
+        .wave-bar:nth-child(5) { animation-delay: 0.72s; height: 8px; }
+
+        .loader-status {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(0.95); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.65; }
+        }
+
+        @keyframes waveBounce {
+            0% { transform: scaleY(0.4); opacity: 0.45; }
+            100% { transform: scaleY(1.4); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader-card">
+        <div class="logo-wrap">
+            <div class="logo-glow"></div>
+            <img src="./apple-touch-icon.png" class="logo-img" alt="AI Speaking Plus">
+        </div>
+        <div class="app-title">AI Speaking Plus</div>
+
+        <div class="tip-card">
+            <div class="tip-header">
+                <span class="tip-tag">💡 اصطلاح کاربردی روز</span>
+                <span class="tip-timer-pill" id="tipTimerPill">نکته بعدی ۳ث</span>
+            </div>
+            <div class="tip-body" id="tipBody">
+                <div class="tip-phrase" id="tipPhrase">Piece of cake!</div>
+                <div class="tip-meaning" id="tipMeaning">مثل آب خوردن!</div>
+                <div class="tip-desc" id="tipDesc">وقتی کاری فوق‌العاده ساده و بی‌دردسر است استفاده می‌شود.</div>
+            </div>
+            <div class="tip-progress-track">
+                <div class="tip-progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <div class="loader-wave-container">
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+        </div>
+
+        <div class="loader-status">آماده‌سازی ماجراجویی مکالمه...</div>
+    </div>
+
+    <script>
+        const tips = [
+            {
+                phrase: "Piece of cake!",
+                meaning: "مثل آب خوردن!",
+                desc: "وقتی کاری فوق‌العاده ساده و بی‌دردسر است استفاده می‌شود."
+            },
+            {
+                phrase: "Break a leg!",
+                meaning: "موفق باشی! (ترکوندی)",
+                desc: "در تئاتر و موقعیت‌های چالش‌برانگیز برای آرزوی موفقیت می‌گویند."
+            },
+            {
+                phrase: "Under the weather",
+                meaning: "کمی ناخوش‌احوال یا کسل",
+                desc: "وقتی احساس بیماری یا خستگی خفیف داری: I feel a bit under the weather."
+            },
+            {
+                phrase: "Hit the nail on the head!",
+                meaning: "دقیقاً زدی به هدف!",
+                desc: "وقتی کسی اصل مطلب یا تحلیل کاملاً درستی ارائه می‌دهد."
+            },
+            {
+                phrase: "Cost an arm and a leg!",
+                meaning: "بسیار گران‌قیمت!",
+                desc: "اشاره به هزینه‌های سرسام‌آور یا اجناس بیش‌از‌حد لوکس."
+            }
+        ];
+
+        let currentIdx = 0;
+        const DURATION = 3200; // ms per tip
+        let startTime = Date.now();
+
+        const tipBody = document.getElementById("tipBody");
+        const tipPhrase = document.getElementById("tipPhrase");
+        const tipMeaning = document.getElementById("tipMeaning");
+        const tipDesc = document.getElementById("tipDesc");
+        const progressFill = document.getElementById("progressFill");
+
+        function updateProgress() {
+            const elapsed = Date.now() - startTime;
+            const pct = Math.min((elapsed / DURATION) * 100, 100);
+            progressFill.style.width = pct + "%";
+
+            if (elapsed >= DURATION) {
+                switchTip();
+                startTime = Date.now();
+            }
+            requestAnimationFrame(updateProgress);
+        }
+
+        function switchTip() {
+            tipBody.style.opacity = "0";
+            tipBody.style.transform = "translateY(8px)";
+            
+            setTimeout(() => {
+                currentIdx = (currentIdx + 1) % tips.length;
+                const t = tips[currentIdx];
+                tipPhrase.innerText = t.phrase;
+                tipMeaning.innerText = t.meaning;
+                tipDesc.innerText = t.desc;
+
+                tipBody.style.opacity = "1";
+                tipBody.style.transform = "translateY(0)";
+            }, 250);
+        }
+
+        requestAnimationFrame(updateProgress);
+    </script>
+</body>
+</html>

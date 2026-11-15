@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طرح ۳: لودینگ مدرن با درصد پیشرفت (Apple Progress) | AI Speaking Plus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #080A10;
+            background: radial-gradient(circle at 50% 36%, #171b2c 0%, #0c101e 55%, #05070d 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #ffffff;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .loader-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            max-width: 380px;
+            padding: 24px;
+        }
+
+        .logo-wrap {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: floatLogo 3.4s ease-in-out infinite;
+        }
+
+        .logo-glow {
+            position: absolute;
+            inset: -16px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.45) 0%, rgba(99, 102, 241, 0.25) 50%, transparent 72%);
+            border-radius: 50%;
+            animation: pulseGlow 2.5s ease-in-out infinite;
+            filter: blur(10px);
+        }
+
+        .logo-img {
+            position: relative;
+            width: 86px;
+            height: 86px;
+            border-radius: 25px;
+            box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.75), 0 0 0 1.5px rgba(255, 255, 255, 0.16);
+            display: block;
+            object-fit: cover;
+            background: #0f172a;
+        }
+
+        .app-title {
+            margin-top: 22px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .app-subtitle {
+            margin-top: 6px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: #94a3b8;
+        }
+
+        /* Apple Progress Bar Section */
+        .progress-box {
+            width: 100%;
+            margin-top: 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .progress-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        .progress-pct {
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: #38bdf8;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-track {
+            position: relative;
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #818cf8 100%);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+            transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .progress-shimmer {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 1.8s infinite;
+        }
+
+        .stage-indicator {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+            min-height: 18px;
+        }
+
+        .restart-btn {
+            margin-top: 26px;
+            padding: 8px 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            color: #94a3b8;
+            font-size: 12px;
+            font-family: 'Vazirmatn', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .restart-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            transform: scale(1.03);
+        }
+
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(0.95); opacity: 0.35; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader-card">
+        <div class="logo-wrap">
+            <div class="logo-glow"></div>
+            <img src="./apple-touch-icon.png" class="logo-img" alt="AI Speaking Plus">
+        </div>
+        <div class="app-title">AI Speaking Plus</div>
+        <div class="app-subtitle">ماجراجویی مکالمه انگلیسی با هوش مصنوعی</div>
+
+        <div class="progress-box">
+            <div class="progress-meta">
+                <span id="stageLabel">در حال مقداردهی اولیه...</span>
+                <span class="progress-pct" id="progressPct">0%</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-shimmer"></div>
+                </div>
+            </div>
+            <div class="stage-indicator" id="stageIndicator">اتصال امن برقرار شد</div>
+        </div>
+
+        <button class="restart-btn" onclick="startSimulatedProgress()">↻ تست مجدد لودینگ</button>
+    </div>
+
+    <script>
+        const progressBar = document.getElementById("progressBar");
+        const progressPct = document.getElementById("progressPct");
+        const stageLabel = document.getElementById("stageLabel");
+        const stageIndicator = document.getElementById("stageIndicator");
+
+        let currentProgress = 0;
+        let timer = null;
+
+        function startSimulatedProgress() {
+            if (timer) clearInterval(timer);
+            currentProgress = 0;
+            updateUI(0);
+
+            // Realistic multi-stage asset loading simulation
+            timer = setInterval(() => {
+                if (currentProgress < 30) {
+                    currentProgress += Math.random() * 4 + 2;
+                    stageLabel.innerText = "بارگذاری موتور Skiko...";
+                    stageIndicator.innerText = "آماده‌سازی بوم گرافیکی Canvas";
+                } else if (currentProgress < 75) {
+                    currentProgress += Math.random() * 3 + 1.2;
+                    stageLabel.innerText = "دانلود فونت‌های وزیر و پاپینز...";
+                    stageIndicator.innerText = "فونت‌های متن بدون مربع آماده می‌شوند";
+                } else if (currentProgress < 98) {
+                    currentProgress += Math.random() * 2 + 0.8;
+                    stageLabel.innerText = "اتصال به موتور صوتی...";
+                    stageIndicator.innerText = "در حال ایجاد محیط گفتگو";
+                } else {
+                    currentProgress = 100;
+                    stageLabel.innerText = "آماده ورود!";
+                    stageIndicator.innerText = "خوش آمدید!";
+                    clearInterval(timer);
+                }
+
+                updateUI(Math.min(Math.round(currentProgress), 100));
+            }, 60);
+        }
+
+        function updateUI(val) {
+            progressBar.style.width = val + "%";
+            progressPct.innerText = val + "%";
+        }
+
+        startSimulatedProgress();
+    </script>
+</body>
+</html>
