@@ -574,11 +574,13 @@ class ChatViewModel(
         }
 
         audioController.onRecordingReady = {
-            _uiState.update { it.copy(isRecordingPreparing = false) }
+            if (_uiState.value.isRecording) {
+                _uiState.update { it.copy(isRecordingPreparing = false) }
+            }
         }
 
         viewModelScope.launch {
-            delay(1500)
+            delay(1800)
             if (_uiState.value.isRecording && _uiState.value.isRecordingPreparing) {
                 _uiState.update { it.copy(isRecordingPreparing = false) }
             }

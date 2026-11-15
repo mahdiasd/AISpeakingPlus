@@ -40,6 +40,9 @@ private external fun jsHasSpeechRecognition(): Boolean
 @JsFun("() => !!(window.aiSpeakingSpeech && window.aiSpeakingSpeech.isRecording)")
 private external fun jsIsSpeechRecording(): Boolean
 
+@JsFun("() => !!(window.aiSpeakingSpeech && typeof window.aiSpeakingSpeech.isAudioReady === 'function' && window.aiSpeakingSpeech.isAudioReady())")
+private external fun jsIsAudioReady(): Boolean
+
 @JsFun("() => window.aiSpeakingSpeech ? window.aiSpeakingSpeech.drainPcmChunks() : ''")
 private external fun jsDrainPcmChunks(): String
 
@@ -125,10 +128,10 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
             recordJob = bridgeScope.launch {
                 var lastText = ""
 
-                // 1. Initialization grace period: wait for recording to start (e.g. during mic permission prompt or initialization)
+                // 1. Initialization grace period: wait for audio hardware/buffers to be genuinely ready
                 var graceElapsedMs = 0
                 val maxGraceMs = 15000
-                while (!jsIsSpeechRecording() && graceElapsedMs < maxGraceMs && isActive) {
+                while ((!jsIsSpeechRecording() || !jsIsAudioReady()) && graceElapsedMs < maxGraceMs && isActive) {
                     delay(50)
                     graceElapsedMs += 50
                 }
@@ -138,6 +141,9 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
                     onSilence()
                     return@launch
                 }
+
+                // Small preparation safety buffer so audio context stream has fully stabilized
+                delay(350)
 
                 // Microphone is actively streaming audio buffers
                 controller.notifyRecordingReady()
