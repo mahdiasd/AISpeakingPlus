@@ -208,13 +208,21 @@ class SttService(
         return try {
             if (isSenseVoice) {
                 val recognizer = offlineRecognizer ?: return null
+                val bounds = findSpeechBounds(samples, config.sampleRate) ?: return ""
+                val (start, end) = bounds
+                val length = end - start
+                if (length < (config.sampleRate * 0.1f).toInt()) return ""
+
+                val trimmedSamples = FloatArray(length)
+                System.arraycopy(samples, start, trimmedSamples, 0, length)
+
                 val stream = recognizer.createStream()
                 try {
-                    stream.acceptWaveform(samples, config.sampleRate)
+                    stream.acceptWaveform(trimmedSamples, config.sampleRate)
                     recognizer.decode(stream)
                     val result = recognizer.getResult(stream)
                     val clean = cleanSenseVoiceText(result.text ?: "")
-                    formatTranscript(clean)
+                    if (isSilenceHallucination(clean)) "" else formatTranscript(clean)
                 } finally {
                     stream.release()
                 }
@@ -431,6 +439,77 @@ class SttService(
             return raw.replace(Regex("<\\|.*?\\|>"), "")
                 .replace(Regex("\\s+"), " ")
                 .trim()
+        }
+
+        private val PHANTOM_SILENCE_WORDS = setOf(
+            "i", "yeah", "yes", "okay", "ok", "uh", "um", "ah", "oh", "you", "the", "bye", "byebye"
+        )
+
+        /**
+         * Checks whether the decoded SenseVoice text is an acoustic silence/noise hallucination.
+         * SenseVoice often hallucinates "I.", "Yeah.", "Okay.", or repetitive sequences when fed
+         * dead silence or background noise.
+         */
+        fun isSilenceHallucination(raw: String): Boolean {
+            val clean = raw.trim()
+            if (clean.isBlank()) return true
+
+            val words = clean.lowercase()
+                .replace(Regex("[^a-z0-9\\s]"), " ")
+                .split(Regex("\\s+"))
+                .filter { it.isNotBlank() }
+
+            if (words.isEmpty()) return true
+
+            // SenseVoice notoriously outputs "I." on complete silence
+            if (words.size == 1 && words[0] == "i") {
+                return true
+            }
+
+            // Repetitive filler phantom sequences like "I. Yeah. Yeah. Okay." or "Yeah. Okay."
+            if (words.size >= 2 && words.all { it in PHANTOM_SILENCE_WORDS }) {
+                return true
+            }
+
+            return false
+        }
+
+        /**
+         * Scans waveform using short RMS energy windows (20ms) to detect active speech boundaries.
+         * Returns null if no frames cross [speechThresholdRms], indicating pure silence or ambient noise.
+         */
+        fun findSpeechBounds(
+            samples: FloatArray,
+            sampleRate: Int = 16000,
+            speechThresholdRms: Float = 0.010f
+        ): Pair<Int, Int>? {
+            if (samples.isEmpty()) return null
+            val frameSize = (sampleRate * 0.02f).toInt() // 20ms frames
+            var firstSpeechSample = -1
+            var lastSpeechSample = -1
+
+            var offset = 0
+            while (offset < samples.size) {
+                val len = minOf(frameSize, samples.size - offset)
+                val rms = SenseVoiceStreamSession.computeRms(samples, offset, len)
+                if (rms >= speechThresholdRms) {
+                    if (firstSpeechSample < 0) {
+                        firstSpeechSample = offset
+                    }
+                    lastSpeechSample = offset + len
+                }
+                offset += len
+            }
+
+            if (firstSpeechSample < 0 || lastSpeechSample <= firstSpeechSample) {
+                return null
+            }
+
+            val leadIn = (sampleRate * 0.10f).toInt()
+            val trailing = (sampleRate * 0.20f).toInt()
+            val start = maxOf(0, firstSpeechSample - leadIn)
+            val end = minOf(samples.size, lastSpeechSample + trailing)
+            return Pair(start, end)
         }
 
         private val PROPER_NOUNS = setOf(

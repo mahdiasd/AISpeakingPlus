@@ -24,15 +24,15 @@ interface SttStreamSession {
 /**
  * High-performance streaming session adapter for SenseVoice.
  *
- * Buffers audio chunks, runs fast interim decodes on CPU (~50-100ms),
- * performs trailing silence energy checks for endpointing, and emits
- * clean transcripts without raw metadata tags.
+ * Buffers audio chunks, detects speech activity (VAD) via RMS energy,
+ * trims trailing dead silence to prevent phantom hallucination words ("I. Yeah. Okay."),
+ * and emits clean transcripts.
  */
 class SenseVoiceStreamSession(
     private val recognizer: OfflineRecognizer,
     private val sampleRate: Int = 16000,
     private val minTrailingSilenceSamples: Int = 24000, // 1.5s @ 16kHz
-    private val silenceThresholdRms: Float = 0.012f
+    private val speechThresholdRms: Float = 0.010f
 ) : SttStreamSession {
 
     private val audioBuffer = PrimitiveFloatBuffer(32768)
@@ -40,37 +40,41 @@ class SenseVoiceStreamSession(
     private var lastTranscript = ""
     private var isFinished = false
     private var trailingSilenceSampleCount = 0
+    private var firstSpeechSampleIndex = -1
+    private var lastSpeechSampleIndex = -1
 
     @Synchronized
     override fun acceptWaveform(samples: FloatArray) {
         if (isFinished || samples.isEmpty()) return
+        val startOffset = audioBuffer.size
         audioBuffer.addAll(samples)
 
-        val chunkRms = computeRms(samples)
-        if (chunkRms < silenceThresholdRms) {
-            trailingSilenceSampleCount += samples.size
-        } else {
+        val chunkRms = computeRms(samples, 0, samples.size)
+        if (chunkRms >= speechThresholdRms) {
+            if (firstSpeechSampleIndex < 0) {
+                // Include 100ms of lead-in context before the first speech onset
+                firstSpeechSampleIndex = maxOf(0, startOffset - (sampleRate * 0.1f).toInt())
+            }
+            lastSpeechSampleIndex = audioBuffer.size
             trailingSilenceSampleCount = 0
+        } else {
+            trailingSilenceSampleCount += samples.size
         }
-    }
-
-    private fun computeRms(samples: FloatArray): Float {
-        if (samples.isEmpty()) return 0f
-        var sumSquares = 0.0
-        for (s in samples) {
-            sumSquares += s * s
-        }
-        return sqrt(sumSquares / samples.size).toFloat()
     }
 
     @Synchronized
     override fun decodeIfReady(): Int {
-        val currentSize = audioBuffer.size
-        val newSamples = currentSize - lastDecodedSampleCount
-        val minSamplesForFirstDecode = (sampleRate * 0.5f).toInt() // 500ms
-        val minNewSamples = (sampleRate * 0.35f).toInt()           // 350ms between decodes
+        // If no genuine speech has been detected yet, do not waste inference on silence
+        if (firstSpeechSampleIndex < 0 || lastSpeechSampleIndex < 0) {
+            return 0
+        }
 
-        if (currentSize >= minSamplesForFirstDecode && newSamples >= minNewSamples) {
+        val speechLength = lastSpeechSampleIndex - firstSpeechSampleIndex
+        val minSpeechSamples = (sampleRate * 0.35f).toInt() // At least 350ms of speech
+        val newSamples = audioBuffer.size - lastDecodedSampleCount
+        val minNewSamples = (sampleRate * 0.30f).toInt()
+
+        if (speechLength >= minSpeechSamples && newSamples >= minNewSamples) {
             decodeInternal()
             return 1
         }
@@ -79,16 +83,27 @@ class SenseVoiceStreamSession(
 
     @Synchronized
     private fun decodeInternal() {
-        if (audioBuffer.size == 0) return
-        val samplesArray = audioBuffer.toArray()
+        if (firstSpeechSampleIndex < 0 || lastSpeechSampleIndex <= firstSpeechSampleIndex) {
+            return
+        }
+
+        // Strictly trim trailing silence! Include at most 200ms comfort padding after speech ends.
+        val speechEnd = minOf(audioBuffer.size, lastSpeechSampleIndex + (sampleRate * 0.20f).toInt())
+        val speechStart = maxOf(0, firstSpeechSampleIndex)
+        val length = speechEnd - speechStart
+        if (length < (sampleRate * 0.1f).toInt()) return
+
+        val trimmedSamples = FloatArray(length)
+        System.arraycopy(audioBuffer.dataRef, speechStart, trimmedSamples, 0, length)
+
         val stream = recognizer.createStream()
         try {
-            stream.acceptWaveform(samplesArray, sampleRate)
+            stream.acceptWaveform(trimmedSamples, sampleRate)
             recognizer.decode(stream)
             val result = recognizer.getResult(stream)
             val raw = result.text ?: ""
             val clean = SttService.cleanSenseVoiceText(raw)
-            if (clean.isNotBlank()) {
+            if (clean.isNotBlank() && !SttService.isSilenceHallucination(clean)) {
                 lastTranscript = SttService.formatTranscript(clean)
             }
             lastDecodedSampleCount = audioBuffer.size
@@ -101,8 +116,10 @@ class SenseVoiceStreamSession(
 
     @Synchronized
     override fun isEndpoint(): Boolean {
-        // Trigger endpoint only if we have at least 1s of accumulated audio and trailing silence exceeds threshold
-        return audioBuffer.size >= sampleRate && trailingSilenceSampleCount >= minTrailingSilenceSamples
+        // Trigger endpoint only if real speech occurred and trailing silence exceeds threshold
+        return firstSpeechSampleIndex >= 0 &&
+                (lastSpeechSampleIndex - firstSpeechSampleIndex) >= (sampleRate * 0.8f).toInt() &&
+                trailingSilenceSampleCount >= minTrailingSilenceSamples
     }
 
     @Synchronized
@@ -112,7 +129,9 @@ class SenseVoiceStreamSession(
     override fun inputFinished() {
         if (isFinished) return
         isFinished = true
-        decodeInternal()
+        if (firstSpeechSampleIndex >= 0 && lastSpeechSampleIndex > firstSpeechSampleIndex) {
+            decodeInternal()
+        }
     }
 
     @Synchronized
@@ -122,10 +141,25 @@ class SenseVoiceStreamSession(
         lastTranscript = ""
         isFinished = false
         trailingSilenceSampleCount = 0
+        firstSpeechSampleIndex = -1
+        lastSpeechSampleIndex = -1
     }
 
     override fun release() {
         // In offline mode, per-session native stream pointers are ephemeral and released in decodeInternal
+    }
+
+    companion object {
+        fun computeRms(samples: FloatArray, start: Int = 0, length: Int = samples.size): Float {
+            if (length <= 0) return 0f
+            var sumSquares = 0.0
+            val end = (start + length).coerceAtMost(samples.size)
+            for (i in start until end) {
+                val s = samples[i]
+                sumSquares += s * s
+            }
+            return sqrt(sumSquares / length).toFloat()
+        }
     }
 }
 
@@ -180,6 +214,8 @@ class PrimitiveFloatBuffer(initialCapacity: Int = 32768) {
     private var data = FloatArray(initialCapacity)
     var size: Int = 0
         private set
+
+    val dataRef: FloatArray get() = data
 
     fun addAll(samples: FloatArray) {
         ensureCapacity(size + samples.size)

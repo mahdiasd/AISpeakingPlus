@@ -155,4 +155,34 @@ class SttServiceIntegrationTest {
             recognizer.release()
         }
     }
+
+    @Test
+    fun testSenseVoiceSilence() {
+        val config = SttConfig.fromEnv()
+        val service = SttService(config)
+
+        // 3 seconds of dead silence
+        val silence = FloatArray(48000)
+        val result = service.transcribeWaveform(silence)
+        println("SenseVoice dead silence result: '$result'")
+        assertEquals("", result, "Silence should not transcribe any text")
+
+        // 3 seconds of low background noise
+        val lowNoise = FloatArray(48000) { (kotlin.random.Random.nextFloat() - 0.5f) * 0.01f }
+        val noiseResult = service.transcribeWaveform(lowNoise)
+        println("SenseVoice low noise result: '$noiseResult'")
+        assertEquals("", noiseResult, "Low background noise should not transcribe any text")
+
+        // Streaming session test with silence
+        val session = service.tryAcquireSession()!!
+        try {
+            session.acceptWaveform(silence)
+            session.decodeIfReady()
+            assertEquals("", session.getText(), "Session text on silence should be empty")
+            session.inputFinished()
+            assertEquals("", session.getText(), "Session text on inputFinished with silence should be empty")
+        } finally {
+            service.releaseSession(session)
+        }
+    }
 }
