@@ -42,11 +42,19 @@ export interface ChatBottomBarProps {
 /**
  * 2026 Apple Liquid Glass Floating Dockless Footer for conversation.
  * 100% matching Compose Multiplatform `ChatBottomBar.kt`:
- * - Dockless / Containerless: No outer container pill background.
- * - In Voice Mode: 3 floating buttons grouped closely in center (Hint, 58px Mic with concentric rings, Keyboard/Send).
- * - In Text Mode: Side icons smoothly slide to edges, STT-styled Input Box expands in the middle.
- * - When input is empty, right action button displays Voice (mic); tapping it switches back to voice mode.
- * - When text is entered, right action button smoothly morphs into Send.
+ * - Completely dockless / containerless floating layout.
+ * - Solid, defined bubble-like glass backgrounds for side buttons.
+ * - Entire footer smoothly slides down & hides while AI is speaking.
+ * - In idle Voice Mode: 3 floating buttons clustered closely in center.
+ * - In Recording Mode:
+ *     - In preparation: Voice icon is replaced by glowing text "در حال آماده‌سازی…".
+ *     - In active recording: Mic swells to 74px with FILLED blooming liquid waves.
+ *     - Side buttons glide slowly and gently to corners.
+ *     - When recording ends: Side buttons smoothly glide back to center and mic returns to 58px.
+ * - In Text Mode:
+ *     - Side buttons slide to corners, STT-styled Input Box expands in center.
+ *     - When input is empty, right action button displays Voice (mic); tapping it switches back to voice mode.
+ *     - When text is entered, right action button smoothly morphs into Send.
  * - Real-time Voice Transcription Capsule without quotation marks.
  */
 export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
@@ -95,6 +103,7 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
   const isInteractive = !isBusy && !isModelSpeaking;
   const hasVoiceTranscript = Boolean(recordingTranscript && recordingTranscript.trim().length > 0);
   const hasInputText = Boolean(textInput && textInput.trim().length > 0);
+  const isClustered = inputMode === 'voice' && !isRecording;
 
   return (
     <div className="w-full select-none" dir="ltr">
@@ -106,7 +115,7 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 450, damping: 28 }}
-            className="mb-2.5 p-3 rounded-2xl bg-[#161a29]/90 backdrop-blur-md border border-white/20 shadow-[0_8px_24px_rgba(0,0,0,0.35)] flex flex-col gap-2"
+            className="mb-2.5 p-3 rounded-2xl bg-[#202438]/95 backdrop-blur-md border border-white/20 shadow-[0_8px_24px_rgba(0,0,0,0.35)] flex flex-col gap-2"
           >
             {/* Header Row: RTL format (Right = Status Title with Green Dot, Left = Action Pills) */}
             <div className="flex items-center justify-between w-full" dir="rtl">
@@ -155,222 +164,187 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
         )}
       </AnimatePresence>
 
-      {/* 2. Floating Dockless Controls (No outer container background, fully floating) */}
-      <div className="relative w-full flex flex-col items-center pb-2">
-        <motion.div
-          layout
-          transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-          className={`w-full flex items-center justify-between transition-all duration-300 ${
-            inputMode === 'voice'
-              ? 'max-w-[214px] mx-auto gap-4'
-              : 'max-w-full px-3 gap-2.5'
-          }`}
-        >
-          {/* 1. Physically LEFT: Suggest / Hint Lamp Button */}
-          <div className="relative shrink-0">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.92 }}
-              onClick={onRequestHint}
-              disabled={!isInteractive || isLoadingHint}
-              aria-label="دریافت راهنمایی"
-              className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all ${
-                isLoadingHint
-                  ? 'bg-amber-400/25 border-amber-400/80 text-amber-300 shadow-[0_0_16px_rgba(255,178,54,0.55)] animate-pulse'
-                  : hintsUsedCount > 0
-                  ? 'bg-gradient-to-b from-amber-400/25 to-amber-500/15 border-amber-400/60 text-amber-300 shadow-[0_0_10px_rgba(255,204,0,0.2)]'
-                  : 'bg-white/10 hover:bg-white/15 border-white/20 text-slate-300 shadow-[0_4px_16px_rgba(0,0,0,0.25)]'
+      {/* 2. Floating Dockless Controls: Smoothly hidden when AI is responding */}
+      <AnimatePresence>
+        {!isModelSpeaking && (
+          <motion.div
+            initial={{ opacity: 0, y: 36 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 36 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-full flex flex-col items-center pb-2"
+          >
+            <motion.div
+              layout
+              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+              className={`w-full flex items-center justify-between transition-all duration-500 ${
+                isClustered
+                  ? 'max-w-[214px] mx-auto gap-4'
+                  : 'max-w-full px-4 gap-3'
               }`}
-              title="راهنمای جمله بعدی"
             >
-              <LampIcon className="w-5 h-5" />
-            </motion.button>
+              {/* 1. Physically LEFT: Suggest / Hint Lamp Button with Solid Bubble Glass Background */}
+              <div className="relative shrink-0">
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.92 }}
+                  onClick={onRequestHint}
+                  disabled={!isInteractive || isLoadingHint}
+                  aria-label="دریافت راهنمایی"
+                  className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all ${
+                    isLoadingHint
+                      ? 'bg-amber-400/25 border-amber-400/80 text-amber-300 shadow-[0_0_16px_rgba(255,178,54,0.55)] animate-pulse'
+                      : hintsUsedCount > 0
+                      ? 'bg-gradient-to-b from-amber-400/25 to-amber-500/15 border-amber-400/60 text-amber-300 shadow-[0_0_10px_rgba(255,204,0,0.2)]'
+                      : 'bg-[#202438]/95 hover:bg-[#282d46] border-white/25 text-slate-300 shadow-[0_4px_16px_rgba(0,0,0,0.35)]'
+                  }`}
+                  title="راهنمای جمله بعدی"
+                >
+                  <LampIcon className="w-5 h-5" />
+                </motion.button>
 
-            {hintsUsedCount > 0 && !isLoadingHint && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-slate-900 text-[9px] font-bold flex items-center justify-center border border-white/30">
-                {hintsUsedCount}
-              </span>
-            )}
-          </div>
-
-          {/* 2. Physically CENTER: Large Voice Button OR STT-styled Input Box */}
-          <div className="flex-1 flex items-center justify-center">
-            {inputMode === 'voice' ? (
-              <div className="relative flex items-center justify-center">
-                {isModelSpeaking ? (
-                  /* Modern Living Siri Voice Waveform in Subscription Colors */
-                  <div className="relative flex items-center justify-center h-12 px-4">
-                    <div className="absolute inset-x-0 -inset-y-2 bg-gradient-to-r from-sky-400/30 via-indigo-500/25 to-emerald-400/25 blur-lg rounded-full animate-pulse pointer-events-none" />
-                    <div className="relative z-10 flex items-center gap-1.5 h-8">
-                      <span className="w-1 rounded-full bg-[#ff7a45] animate-[pulse_0.9s_ease-in-out_infinite] h-3.5" />
-                      <span className="w-1 rounded-full bg-[#0ea5e9] animate-[pulse_1.2s_ease-in-out_0.2s_infinite] h-6" />
-                      <span className="w-1 rounded-full bg-[#818cf8] animate-[pulse_1.0s_ease-in-out_0.4s_infinite] h-7" />
-                      <span className="w-1 rounded-full bg-[#22c55e] animate-[pulse_1.3s_ease-in-out_0.1s_infinite] h-5" />
-                      <span className="w-1 rounded-full bg-[#ffb236] animate-[pulse_1.1s_ease-in-out_0.3s_infinite] h-3" />
-                    </div>
-                  </div>
-                ) : isRecording ? (
-                  isProcessingRecording ? (
-                    /* Preparing State: Unconstrained Expanding Radar Waves in Warm Peach / Amber */
-                    <div className="relative w-14 h-14 flex items-center justify-center">
-                      <span className="absolute -inset-4 rounded-full border border-orange-400/40 animate-ping pointer-events-none" />
-                      <span className="absolute -inset-2 rounded-full border border-amber-400/50 animate-pulse pointer-events-none" />
-                      <div className="relative z-10 w-14 h-14 rounded-full bg-gradient-to-tr from-[#ff7a45]/30 to-[#ffb236]/20 border border-amber-400/70 flex items-center justify-center text-amber-300 shadow-[0_0_20px_rgba(255,178,54,0.4)]">
-                        <Mic className="w-6 h-6 animate-pulse" />
-                      </div>
-                    </div>
-                  ) : (
-                    /* Active Recording: Tri-Color Concentric Waves Overflowing */
-                    <div className="relative w-14 h-14 flex items-center justify-center">
-                      <span className="absolute -inset-5 rounded-full border border-emerald-400/35 animate-ping pointer-events-none" />
-                      <span className="absolute -inset-3 rounded-full border border-sky-400/40 animate-pulse pointer-events-none" />
-
-                      <motion.button
-                        type="button"
-                        whileTap={{ scale: 0.94 }}
-                        onClick={onStopRecording}
-                        className="relative z-10 w-14 h-14 rounded-full bg-gradient-to-tr from-[#0ea5e9] via-[#6366f1] to-[#22c55e] text-white flex items-center justify-center border-2 border-sky-300 shadow-[0_0_24px_rgba(14,165,233,0.55)] cursor-pointer"
-                        title="لمس برای توقف ضبط"
-                      >
-                        <Mic className="w-6 h-6 text-white animate-pulse" />
-                      </motion.button>
-                    </div>
-                  )
-                ) : (
-                  /* Idle State: Prominent 58px Mic Button with Subtle Concentric Glass Rings */
-                  <div className="relative flex items-center justify-center">
-                    {/* Concentric rings fading into dark background */}
-                    <span className="absolute -inset-4 rounded-full border border-sky-400/15 pointer-events-none" />
-                    <span className="absolute -inset-2 rounded-full border border-sky-400/25 pointer-events-none" />
-
-                    <motion.button
-                      type="button"
-                      whileTap={{ scale: 0.94 }}
-                      onClick={onStartRecording}
-                      disabled={!isInteractive}
-                      className="relative z-10 w-14 h-14 rounded-full bg-gradient-to-tr from-[#0ea5e9]/30 via-[#101c2e]/90 to-[#0b111f]/90 hover:brightness-110 active:brightness-95 text-white border border-sky-400/60 shadow-[0_4px_20px_rgba(14,165,233,0.3)] flex items-center justify-center cursor-pointer"
-                      title="لمس برای صحبت"
-                    >
-                      <Mic className="w-6 h-6 text-sky-300" />
-                    </motion.button>
-                  </div>
+                {hintsUsedCount > 0 && !isLoadingHint && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-slate-900 text-[9px] font-bold flex items-center justify-center border border-white/30">
+                    {hintsUsedCount}
+                  </span>
                 )}
               </div>
-            ) : (
-              /* Text Mode STT-styled Input Box */
-              <form onSubmit={handleSendText} className="w-full h-12 flex items-center" dir="ltr">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={textInput}
-                  onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="Type in English..."
-                  disabled={!isInteractive}
-                  className="w-full h-12 px-4 rounded-2xl bg-[#161a29]/90 text-white placeholder-slate-400 text-[14px] border border-white/20 focus:outline-none focus:border-[#0a84ff]/70 focus:bg-[#1a2035]/95 shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition-all text-left font-sans"
-                />
-              </form>
-            )}
-          </div>
 
-          {/* 3. Physically RIGHT: Action Button (Send / Keyboard / Voice) */}
-          <div className="relative shrink-0">
-            {inputMode === 'voice' ? (
-              hasVoiceTranscript ? (
-                /* Send Button when voice transcript is ready */
-                <motion.button
-                  type="button"
-                  whileTap={{ scale: 0.92 }}
-                  onClick={handleSendTranscript}
-                  disabled={!isInteractive}
-                  aria-label="ارسال پیام"
-                  className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#0a84ff] to-[#0066cc] hover:brightness-110 text-white border border-white/30 flex items-center justify-center shadow-[0_4px_16px_rgba(10,132,255,0.45)] transition-all cursor-pointer"
-                  title="ارسال"
-                >
-                  <Send className="w-5 h-5 ml-0.5" />
-                </motion.button>
-              ) : (
-                /* Keyboard Toggle when idle in Voice mode */
-                <motion.button
-                  type="button"
-                  whileTap={{ scale: 0.92 }}
-                  onClick={() => {
-                    setInputMode('text');
-                    setTimeout(() => inputRef.current?.focus(), 120);
-                  }}
-                  disabled={!isInteractive}
-                  aria-label="تغییر به تایپ متنی"
-                  className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/20 flex items-center justify-center text-white shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition-all cursor-pointer"
-                  title="تایپ با کیبورد"
-                >
-                  <Keyboard className="w-5 h-5" />
-                </motion.button>
-              )
-            ) : hasInputText ? (
-              /* Send Button in Text Mode when user typed text */
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.92 }}
-                onClick={handleSendText}
-                disabled={!isInteractive}
-                aria-label="ارسال پیام"
-                className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#0a84ff] to-[#0066cc] hover:brightness-110 text-white border border-white/30 flex items-center justify-center shadow-[0_4px_16px_rgba(10,132,255,0.45)] transition-all cursor-pointer"
-                title="ارسال"
-              >
-                <Send className="w-5 h-5 ml-0.5" />
-              </motion.button>
-            ) : (
-              /* Voice Button in Text Mode when input is empty (tapping switches back to voice mode!) */
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.92 }}
-                onClick={() => setInputMode('voice')}
-                disabled={!isInteractive}
-                aria-label="تغییر به مکالمه صوتی"
-                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/20 flex items-center justify-center text-[#38bdf8] shadow-[0_4px_16px_rgba(0,0,0,0.25)] transition-all cursor-pointer"
-                title="مکالمه صوتی"
-              >
-                <Mic className="w-5 h-5" />
-              </motion.button>
-            )}
-          </div>
-        </motion.div>
+              {/* 2. Physically CENTER: Voice Button OR STT-styled Input Box */}
+              <div className="flex-1 flex items-center justify-center">
+                {inputMode === 'voice' ? (
+                  <div className="relative flex items-center justify-center">
+                    {isRecording ? (
+                      isProcessingRecording ? (
+                        /* Preparing State: Voice Icon replaced with Glowing Text "در حال آماده‌سازی…" */
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="px-5 py-2.5 rounded-full bg-[#202438]/95 border border-orange-400/80 flex items-center gap-2 text-amber-300 font-bold text-xs shadow-[0_0_16px_rgba(255,178,54,0.35)] cursor-pointer"
+                          onClick={onStopRecording}
+                        >
+                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                          <span>در حال آماده‌سازی…</span>
+                        </motion.div>
+                      ) : (
+                        /* Active Recording: Swelled to 74px with FILLED Concentric Liquid Blooming Waves */
+                        <div className="relative w-28 h-28 flex items-center justify-center">
+                          {/* Filled Blooming Waves decaying into transparency */}
+                          <span className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500/25 via-emerald-400/15 to-transparent animate-ping pointer-events-none" />
+                          <span className="absolute inset-2 rounded-full bg-gradient-to-r from-sky-500/25 via-sky-400/15 to-transparent animate-pulse pointer-events-none" />
+                          <span className="absolute inset-4 rounded-full bg-gradient-to-r from-orange-500/20 via-orange-400/10 to-transparent pointer-events-none" />
 
-        {/* Layer C: Attached Live Badges (Floats directly under the center Voice button in Voice mode) */}
-        {inputMode === 'voice' && isModelSpeaking && (
-          <div className="mt-1">
-            <div className="px-2.5 py-0.5 rounded-full bg-[#0a1726]/95 border border-sky-400/70 flex items-center gap-1 text-[10px] font-bold text-sky-400 shadow-[0_0_8px_rgba(14,165,233,0.35)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-              <span>دستیار در حال صحبت…</span>
-            </div>
-          </div>
+                          <motion.button
+                            type="button"
+                            whileTap={{ scale: 0.94 }}
+                            onClick={onStopRecording}
+                            className="relative z-10 w-[74px] h-[74px] rounded-full bg-gradient-to-tr from-[#0ea5e9] via-[#6366f1] to-[#1e1b4b] text-white flex items-center justify-center border-2 border-white/55 shadow-[0_0_28px_rgba(14,165,233,0.6)] cursor-pointer"
+                            title="لمس برای توقف ضبط"
+                          >
+                            <Mic className="w-8 h-8 text-white animate-pulse" />
+                          </motion.button>
+                        </div>
+                      )
+                    ) : (
+                      /* Idle State: 58px Mic Button with Subtle Concentric Glass Rings */
+                      <div className="relative flex items-center justify-center">
+                        <span className="absolute -inset-4 rounded-full border border-sky-400/15 pointer-events-none" />
+                        <span className="absolute -inset-2 rounded-full border border-sky-400/25 pointer-events-none" />
+
+                        <motion.button
+                          type="button"
+                          whileTap={{ scale: 0.94 }}
+                          onClick={onStartRecording}
+                          disabled={!isInteractive}
+                          className="relative z-10 w-[58px] h-[58px] rounded-full bg-gradient-to-tr from-[#0ea5e9]/30 via-[#101c2e]/90 to-[#0b111f]/90 hover:brightness-110 active:brightness-95 text-white border border-sky-400/60 shadow-[0_4px_20px_rgba(14,165,233,0.3)] flex items-center justify-center cursor-pointer"
+                          title="لمس برای صحبت"
+                        >
+                          <Mic className="w-6 h-6 text-sky-300" />
+                        </motion.button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Text Mode STT-styled Input Box */
+                  <form onSubmit={handleSendText} className="w-full h-12 flex items-center" dir="ltr">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={textInput}
+                      onChange={(e) => setTextInput(e.target.value)}
+                      placeholder="Type in English..."
+                      disabled={!isInteractive}
+                      className="w-full h-12 px-4 rounded-2xl bg-[#202438]/95 text-white placeholder-slate-400 text-[14px] border border-white/20 focus:outline-none focus:border-[#0a84ff]/70 focus:bg-[#282d46] shadow-[0_4px_16px_rgba(0,0,0,0.3)] transition-all text-left font-sans"
+                    />
+                  </form>
+                )}
+              </div>
+
+              {/* 3. Physically RIGHT: Action Button (Send / Keyboard / Voice) with Solid Bubble Glass Background */}
+              <div className="relative shrink-0">
+                {inputMode === 'voice' ? (
+                  hasVoiceTranscript ? (
+                    /* Send Button when voice transcript is ready */
+                    <motion.button
+                      type="button"
+                      whileTap={{ scale: 0.92 }}
+                      onClick={handleSendTranscript}
+                      disabled={!isInteractive}
+                      aria-label="ارسال پیام"
+                      className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#0a84ff] to-[#0066cc] hover:brightness-110 text-white border border-white/35 flex items-center justify-center shadow-[0_4px_16px_rgba(10,132,255,0.45)] transition-all cursor-pointer"
+                      title="ارسال"
+                    >
+                      <Send className="w-5 h-5 ml-0.5" />
+                    </motion.button>
+                  ) : (
+                    /* Keyboard Toggle when idle in Voice mode */
+                    <motion.button
+                      type="button"
+                      whileTap={{ scale: 0.92 }}
+                      onClick={() => {
+                        setInputMode('text');
+                        setTimeout(() => inputRef.current?.focus(), 120);
+                      }}
+                      disabled={!isInteractive}
+                      aria-label="تغییر به تایپ متنی"
+                      className="w-12 h-12 rounded-full bg-[#202438]/95 hover:bg-[#282d46] active:bg-[#303754] border border-white/25 flex items-center justify-center text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition-all cursor-pointer"
+                      title="تایپ با کیبورد"
+                    >
+                      <Keyboard className="w-5 h-5" />
+                    </motion.button>
+                  )
+                ) : hasInputText ? (
+                  /* Send Button in Text Mode when user typed text */
+                  <motion.button
+                    type="button"
+                    whileTap={{ scale: 0.92 }}
+                    onClick={handleSendText}
+                    disabled={!isInteractive}
+                    aria-label="ارسال پیام"
+                    className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#0a84ff] to-[#0066cc] hover:brightness-110 text-white border border-white/35 flex items-center justify-center shadow-[0_4px_16px_rgba(10,132,255,0.45)] transition-all cursor-pointer"
+                    title="ارسال"
+                  >
+                    <Send className="w-5 h-5 ml-0.5" />
+                  </motion.button>
+                ) : (
+                  /* Voice Button in Text Mode when input is empty (tapping switches back to voice mode!) */
+                  <motion.button
+                    type="button"
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => setInputMode('voice')}
+                    disabled={!isInteractive}
+                    aria-label="تغییر به مکالمه صوتی"
+                    className="w-12 h-12 rounded-full bg-[#202438]/95 hover:bg-[#282d46] active:bg-[#303754] border border-white/25 flex items-center justify-center text-[#38bdf8] shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition-all cursor-pointer"
+                    title="مکالمه صوتی"
+                  >
+                    <Mic className="w-5 h-5" />
+                  </motion.button>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
         )}
-
-        {inputMode === 'voice' && isRecording && !isProcessingRecording && (
-          <div className="mt-1">
-            <button
-              type="button"
-              onClick={onStopRecording}
-              className="px-2 py-0.5 rounded-full bg-[#0d1f17]/95 border border-emerald-400/70 flex items-center gap-1 text-[10px] font-bold text-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.35)] cursor-pointer"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>در حال شنیدن</span>
-            </button>
-          </div>
-        )}
-
-        {inputMode === 'voice' && isRecording && isProcessingRecording && (
-          <div className="mt-1">
-            <button
-              type="button"
-              onClick={onStopRecording}
-              className="px-2 py-0.5 rounded-full bg-[#26150d]/95 border border-orange-400/70 flex items-center gap-1 text-[10px] font-bold text-orange-300 shadow-[0_0_8px_rgba(255,122,69,0.35)] cursor-pointer"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-              <span>آماده‌سازی میکروفون…</span>
-            </button>
-          </div>
-        )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 };
