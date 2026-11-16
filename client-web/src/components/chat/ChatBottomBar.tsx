@@ -20,6 +20,12 @@ const LampIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) =
   </svg>
 );
 
+const AUDIO_BASE_FACTORS = [
+  0.14, 0.24, 0.62, 0.96, 0.82,
+  0.22, 0.18, 0.22,
+  0.82, 0.96, 0.62, 0.24, 0.14,
+];
+
 export interface ChatBottomBarProps {
   onSendMessage: (text: string) => void;
   onRequestHint: () => void;
@@ -45,11 +51,10 @@ export interface ChatBottomBarProps {
  * - Completely dockless / containerless floating layout.
  * - Solid, defined bubble-like glass backgrounds for side buttons.
  * - Entire footer smoothly slides down & hides while AI is speaking.
- * - In idle Voice Mode: 3 floating buttons clustered closely in center.
- * - In Recording Mode:
- *     - In preparation: Voice icon is replaced by glowing text "در حال آماده‌سازی…".
- *     - In active recording: Mic swells to 74px with FILLED blooming liquid waves.
- *     - Side buttons glide slowly and gently to corners.
+ * - In idle Voice Mode OR during preparation: 3 floating buttons clustered closely in center.
+ * - In active Recording Mode:
+ *     - Mic morphs into the Audio Voice Waveform animation (`audio-voice-a-001`).
+ *     - Side buttons glide slowly and gently to corners strictly AFTER preparation finishes.
  *     - When recording ends: Side buttons smoothly glide back to center and mic returns to 58px.
  * - In Text Mode:
  *     - Side buttons slide to corners, STT-styled Input Box expands in center.
@@ -103,7 +108,10 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
   const isInteractive = !isBusy && !isModelSpeaking;
   const hasVoiceTranscript = Boolean(recordingTranscript && recordingTranscript.trim().length > 0);
   const hasInputText = Boolean(textInput && textInput.trim().length > 0);
-  const isClustered = inputMode === 'voice' && !isRecording;
+
+  // In idle Voice mode OR during microphone preparation: icons stay clustered in center!
+  // Side buttons slide to corners ONLY AFTER preparation is done (during active recording) or in Text mode!
+  const isClustered = inputMode === 'voice' && (!isRecording || isProcessingRecording);
 
   return (
     <div className="w-full select-none" dir="ltr">
@@ -227,23 +235,41 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
                           <span>در حال آماده‌سازی…</span>
                         </motion.div>
                       ) : (
-                        /* Active Recording: Swelled to 74px with FILLED Concentric Liquid Blooming Waves */
-                        <div className="relative w-28 h-28 flex items-center justify-center">
-                          {/* Filled Blooming Waves decaying into transparency */}
-                          <span className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500/25 via-emerald-400/15 to-transparent animate-ping pointer-events-none" />
-                          <span className="absolute inset-2 rounded-full bg-gradient-to-r from-sky-500/25 via-sky-400/15 to-transparent animate-pulse pointer-events-none" />
-                          <span className="absolute inset-4 rounded-full bg-gradient-to-r from-orange-500/20 via-orange-400/10 to-transparent pointer-events-none" />
-
-                          <motion.button
-                            type="button"
-                            whileTap={{ scale: 0.94 }}
-                            onClick={onStopRecording}
-                            className="relative z-10 w-[74px] h-[74px] rounded-full bg-gradient-to-tr from-[#0ea5e9] via-[#6366f1] to-[#1e1b4b] text-white flex items-center justify-center border-2 border-white/55 shadow-[0_0_28px_rgba(14,165,233,0.6)] cursor-pointer"
-                            title="لمس برای توقف ضبط"
-                          >
-                            <Mic className="w-8 h-8 text-white animate-pulse" />
-                          </motion.button>
-                        </div>
+                        /* Active Recording: Audio Voice Waveform (audio-voice-a-001) */
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.92 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={onStopRecording}
+                          className="h-12 px-4 rounded-full bg-[#202438]/95 border border-[#0066ff]/80 flex items-center gap-1.5 shadow-[0_0_24px_rgba(0,102,255,0.45)] cursor-pointer select-none"
+                          title="لمس برای توقف ضبط"
+                        >
+                          {AUDIO_BASE_FACTORS.map((factor, idx) => {
+                            const minHeight = 4;
+                            const maxHeight = 30;
+                            const dynamicH = Math.round(minHeight + factor * (maxHeight - minHeight));
+                            return (
+                              <motion.span
+                                key={idx}
+                                animate={{
+                                  height: [
+                                    `${Math.max(4, dynamicH * 0.4)}px`,
+                                    `${Math.min(32, dynamicH * 1.15)}px`,
+                                    `${Math.max(4, dynamicH * 0.4)}px`,
+                                  ],
+                                }}
+                                transition={{
+                                  duration: 1.1,
+                                  repeat: Infinity,
+                                  ease: 'easeInOut',
+                                  delay: idx * 0.08,
+                                }}
+                                className="w-1 rounded-full bg-[#0066ff] shadow-[0_0_6px_rgba(0,102,255,0.6)] shrink-0 inline-block"
+                                style={{ minHeight: '4px' }}
+                              />
+                            );
+                          })}
+                        </motion.div>
                       )
                     ) : (
                       /* Idle State: 58px Mic Button with Subtle Concentric Glass Rings */

@@ -428,7 +428,7 @@ private fun AiTranslateChip(
 }
 
 /**
- * Siri / Apple Intelligence Iridescent Typing Dots.
+ * Siri / Apple Intelligence Iridescent Typing Dots (5 enlarged dots).
  */
 @Composable
 private fun IridescentTypingDots(
@@ -438,33 +438,53 @@ private fun IridescentTypingDots(
     val dotColors = listOf(
         AppleChatTheme.SiriViolet,
         AppleChatTheme.SiriCyan,
-        AppleChatTheme.SiriAzure
+        AppleChatTheme.SiriAzure,
+        Color(0xFF22C55E), // Fresh Mint
+        Color(0xFFFFB236)  // Amber Gold
     )
 
     Row(
-        modifier = modifier.padding(vertical = 4.dp, horizontal = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = modifier.padding(vertical = 4.dp, horizontal = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        repeat(3) { index ->
+        repeat(5) { index ->
             val alpha by transition.animateFloat(
-                initialValue = 0.3f,
-                targetValue = 0.3f,
+                initialValue = 0.25f,
+                targetValue = 0.25f,
                 animationSpec = infiniteRepeatable(
                     animation = keyframes {
-                        durationMillis = 1200
-                        0.3f at index * 160 using LinearEasing
-                        1f at index * 160 + 260 using LinearEasing
-                        0.3f at index * 160 + 520 using LinearEasing
+                        durationMillis = 1400
+                        0.25f at index * 140 using LinearEasing
+                        1f at index * 140 + 260 using LinearEasing
+                        0.25f at index * 140 + 520 using LinearEasing
                     },
                     repeatMode = RepeatMode.Restart
                 ),
                 label = "ai_dot_$index"
             )
+            val scale by transition.animateFloat(
+                initialValue = 0.90f,
+                targetValue = 0.90f,
+                animationSpec = infiniteRepeatable(
+                    animation = keyframes {
+                        durationMillis = 1400
+                        0.90f at index * 140 using LinearEasing
+                        1.15f at index * 140 + 260 using LinearEasing
+                        0.90f at index * 140 + 520 using LinearEasing
+                    },
+                    repeatMode = RepeatMode.Restart
+                ),
+                label = "ai_dot_scale_$index"
+            )
             Box(
                 modifier = Modifier
-                    .size(8.dp)
-                    .alpha(alpha)
+                    .size(11.dp)
+                    .graphicsLayer {
+                        this.alpha = alpha
+                        this.scaleX = scale
+                        this.scaleY = scale
+                    }
                     .background(dotColors[index % dotColors.size], CircleShape)
             )
         }

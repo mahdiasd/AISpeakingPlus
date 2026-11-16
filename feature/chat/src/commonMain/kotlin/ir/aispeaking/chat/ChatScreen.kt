@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
@@ -624,7 +625,7 @@ private fun YourTurnState(
 }
 
 /**
- * AI Typing Bubble with Siri Iridescent Pulsing Dots.
+ * AI Typing Bubble with Siri Iridescent Pulsing Dots (5 enlarged dots).
  */
 @Composable
 private fun TypingBubble(
@@ -636,7 +637,9 @@ private fun TypingBubble(
     val dotColors = listOf(
         AppleChatTheme.SiriViolet,
         AppleChatTheme.SiriCyan,
-        AppleChatTheme.SiriAzure
+        AppleChatTheme.SiriAzure,
+        Color(0xFF22C55E), // Fresh Mint
+        Color(0xFFFFB236)  // Amber Gold
     )
 
     Row(
@@ -661,29 +664,47 @@ private fun TypingBubble(
                 .clip(shape)
                 .background(AppleChatTheme.BubbleAi)
                 .border(1.dp, AppleChatTheme.SpecularStrokeBrush, shape)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                .padding(horizontal = 18.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            repeat(3) { index ->
+            repeat(5) { index ->
                 val alpha by transition.animateFloat(
-                    initialValue = 0.3f,
-                    targetValue = 0.3f,
+                    initialValue = 0.25f,
+                    targetValue = 0.25f,
                     animationSpec = infiniteRepeatable(
                         animation = keyframes {
-                            durationMillis = 1200
-                            0.3f at index * 160 using LinearEasing
-                            1f at index * 160 + 260 using LinearEasing
-                            0.3f at index * 160 + 520 using LinearEasing
+                            durationMillis = 1400
+                            0.25f at index * 140 using LinearEasing
+                            1f at index * 140 + 260 using LinearEasing
+                            0.25f at index * 140 + 520 using LinearEasing
                         },
                         repeatMode = RepeatMode.Restart
                     ),
                     label = "bubble_dot_$index"
                 )
+                val scale by transition.animateFloat(
+                    initialValue = 0.90f,
+                    targetValue = 0.90f,
+                    animationSpec = infiniteRepeatable(
+                        animation = keyframes {
+                            durationMillis = 1400
+                            0.90f at index * 140 using LinearEasing
+                            1.15f at index * 140 + 260 using LinearEasing
+                            0.90f at index * 140 + 520 using LinearEasing
+                        },
+                        repeatMode = RepeatMode.Restart
+                    ),
+                    label = "bubble_dot_scale_$index"
+                )
                 Box(
                     modifier = Modifier
-                        .size(8.dp)
-                        .alpha(alpha)
+                        .size(11.dp)
+                        .graphicsLayer {
+                            this.alpha = alpha
+                            this.scaleX = scale
+                            this.scaleY = scale
+                        }
                         .background(dotColors[index % dotColors.size], CircleShape)
                 )
             }
