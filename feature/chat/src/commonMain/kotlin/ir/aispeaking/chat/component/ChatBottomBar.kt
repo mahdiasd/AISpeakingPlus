@@ -5,9 +5,11 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -21,6 +23,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -89,8 +92,6 @@ import ir.aispeaking.sharedui.ic_lamp
 import ir.aispeaking.sharedui.ic_microphone
 import ir.aispeaking.sharedui.ic_refresh
 import ir.aispeaking.sharedui.ic_send
-import ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator
-import ir.aispeaking.sharedui.ui.extension.animatedBorder
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameIconButton
 import ir.aispeaking.sharedui.ui.game.GameText
@@ -103,18 +104,22 @@ enum class ChatInputMode {
 }
 
 /**
- * 2026 Apple Liquid Glass Floating Dock for conversation.
+ * 2026 Apple Liquid Glass Floating Dockless Footer for conversation.
  *
  * Implements:
- * - Floating visionOS translucent glass capsule dock with compact height (~52dp).
- * - During active recording: Gentle floating animated rotating border colors while maintaining translucent glass.
- * - Center Glowing Mic button with expanding concentric rings radiating outside container boundaries.
- * - Attached live badge ("در حال شنیدن") floating at the bottom center.
- * - Send button is ALWAYS on the physical RIGHT side.
- * - No text under mic icon in idle state to keep dock clean and aligned with icons.
- * - No quotation marks in displayed transcript.
- * - Brief loading / preparation state before recording pulse begins to guarantee audio pipeline priming.
- * - Clear socket disconnection warning banner and reconnect triggers in dock.
+ * - Completely dockless / containerless floating layout: No outer container pill background.
+ * - In VOICE mode: 3 floating circular buttons grouped in center:
+ *     - Left: Suggest / Hint (Lamp icon, 48dp).
+ *     - Center: Large Voice button (58dp button with subtle concentric glass rings up to 106dp).
+ *     - Right: Action button (48dp): Send if voice transcript is ready, or Keyboard toggle if idle.
+ * - In TEXT mode:
+ *     - Side icons animate outward to the screen edges with padding.
+ *     - Between Suggest and Action button, the STT-styled Input Box expands in the middle.
+ *     - When input is empty, right action button displays Voice (mic); clicking toggles back to voice mode.
+ *     - When text is typed, right action button smoothly morphs into Send.
+ * - Real-time Voice Transcription Capsule (رونویسی همزمان صدا) without quotation marks.
+ * - Disconnection warning capsule when speech socket drops.
+ * - Fluid Apple spring animation during mode switching.
  */
 @Composable
 fun ChatBottomBar(
@@ -174,19 +179,6 @@ fun ChatBottomBar(
             )
         }
 
-        // Main Floating Liquid Glass Capsule Dock
-        val dockShape = RoundedCornerShape(26.dp)
-        // Shifting color palette inspired by the subscription screen (Sky Blue, Mint, Warm Peach, Indigo)
-        val recordingBorderColors = remember {
-            listOf(
-                Color(0x990EA5E9), // 6-Month Sky Blue
-                Color(0x9922C55E), // 3-Month Fresh Mint
-                Color(0x99FF7A45), // 1-Month Warm Peach
-                Color(0x99818CF8), // Lavender / Electric Indigo
-                Color(0x990EA5E9)  // Seamless loop
-            )
-        }
-
         // Transition for live dot pulse in badge
         val infiniteTransition = rememberInfiniteTransition(label = "dock_live_indicator")
         val liveDotAlpha by infiniteTransition.animateFloat(
@@ -199,430 +191,389 @@ fun ChatBottomBar(
             label = "live_dot_alpha"
         )
 
-        Box(
+        // Main Floating Controls (No outer container background, fully floating)
+        BoxWithConstraints(
             modifier = Modifier
-                .padding(start = 14.dp, end = 14.dp, bottom = 10.dp, top = 4.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(bottom = 10.dp, top = 4.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Layer A: Dock Capsule Background with Specular / Animated Border (Height: 52.dp, Clipped)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .clip(dockShape)
-                    .background(AppleChatTheme.GlassPanel)
-                    .then(
-                        if (isRecording) {
-                            Modifier.animatedBorder(
-                                borderColors = recordingBorderColors,
-                                shape = dockShape,
-                                borderWidth = 1.5.dp,
-                                animationDurationInMillis = 3200
-                            )
-                        } else {
-                            Modifier.border(1.dp, AppleChatTheme.SpecularStrokeBrush, dockShape)
-                        }
-                    )
+            val totalWidth = maxWidth
+            // In Voice mode: compact cluster: Left (48dp) + Gap (18dp) + Center (68dp) + Gap (18dp) + Right (48dp) = 202dp
+            val clusterWidth = 202.dp
+            val voicePadding = ((totalWidth - clusterWidth) / 2).coerceAtLeast(16.dp)
+            val textPadding = 16.dp
+
+            val animatedPadding by animateDpAsState(
+                targetValue = if (inputMode == ChatInputMode.VOICE) voicePadding else textPadding,
+                animationSpec = spring(
+                    dampingRatio = 0.82f,
+                    stiffness = 380f
+                ),
+                label = "floating_dock_padding"
             )
 
-            // Layer B: Dock Interactive Controls (NOT clipped by dock capsule, so pulse rings overflow)
-            AnimatedContent(
-                targetState = inputMode,
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
-                        scaleIn(initialScale = 0.94f, animationSpec = tween(220, easing = FastOutSlowInEasing)) togetherWith
-                    fadeOut(animationSpec = tween(180, easing = FastOutSlowInEasing)) +
-                        scaleOut(targetScale = 0.94f, animationSpec = tween(180, easing = FastOutSlowInEasing))
-                },
-                label = "dock_mode_morph",
-                modifier = Modifier.fillMaxWidth().height(52.dp)
-            ) { mode ->
-                when (mode) {
-                    ChatInputMode.VOICE -> CompactVoiceRow(
-                        text = text,
-                        isRecording = isRecording,
-                        isRecordingPreparing = isRecordingPreparing,
-                        isModelSpeaking = isModelSpeaking,
-                        enabled = enabled,
-                        hintsUsedCount = hintsUsedCount,
-                        isRequestingHint = isRequestingHint,
-                        sttEngine = sttEngine,
-                        sttConnectionStatus = sttConnectionStatus,
-                        onReconnectStt = onReconnectStt,
-                        onSwitchToText = { onInputModeChange(ChatInputMode.TEXT) },
-                        onVoiceToggle = onVoiceToggle,
-                        onSendClick = onSendClick,
-                        onHintClick = onHintClick,
-                        micModifier = micModifier,
-                        hintModifier = hintModifier
-                    )
-
-                    ChatInputMode.TEXT -> CompactTextRow(
-                        text = text,
-                        isModelSpeaking = isModelSpeaking,
-                        enabled = enabled,
-                        hintsUsedCount = hintsUsedCount,
-                        isRequestingHint = isRequestingHint,
-                        onTextChange = onTextChange,
-                        onSwitchToVoice = { onInputModeChange(ChatInputMode.VOICE) },
-                        onSendClick = onSendClick,
-                        onHintClick = onHintClick
-                    )
-                }
-            }
-
-            // Layer C: Attached Live Badges (Floats at bottom center, overflowing dock edge)
-            if (isModelSpeaking) {
-                // Attached AI Speaking Live Badge (Sky Blue from subscription screen)
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .offset(y = 10.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xE60A1726))
-                        .border(0.8.dp, Color(0xFF0EA5E9).copy(alpha = 0.65f), RoundedCornerShape(10.dp))
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .graphicsLayer { this.alpha = liveDotAlpha }
-                            .background(Color(0xFF0EA5E9), CircleShape)
-                    )
-                    GameText(
-                        text = "دستیار در حال صحبت…",
-                        size = 10.5.sp,
-                        bold = true,
-                        color = Color(0xFF0EA5E9)
-                    )
-                }
-            } else if (isRecording && !isRecordingPreparing) {
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .offset(y = 10.dp)
-                        .applePressEffect(targetScale = 0.94f, onClick = { onVoiceToggle(false) })
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xE60D1F17))
-                        .border(0.8.dp, Color(0xFF22C55E).copy(alpha = 0.70f), RoundedCornerShape(10.dp))
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .graphicsLayer { this.alpha = liveDotAlpha }
-                            .background(Color(0xFF22C55E), CircleShape)
-                    )
-                    GameText(
-                        text = "در حال شنیدن",
-                        size = 10.5.sp,
-                        bold = true,
-                        color = Color(0xFF22C55E)
-                    )
-                }
-            } else if (isRecording && isRecordingPreparing) {
-                // Attached preparation badge (Warm Peach / Amber from subscription screen)
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .offset(y = 10.dp)
-                        .applePressEffect(targetScale = 0.94f, onClick = { onVoiceToggle(false) })
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xE626150D))
-                        .border(0.8.dp, Color(0xFFFF7A45).copy(alpha = 0.70f), RoundedCornerShape(10.dp))
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(5.dp)
-                            .background(Color(0xFFFF7A45), CircleShape)
-                    )
-                    GameText(
-                        text = "آماده‌سازی میکروفون…",
-                        size = 10.5.sp,
-                        bold = true,
-                        color = Color(0xFFFF7A45)
-                    )
-                }
-            } else if (sttEngine == SttEngine.APP && (sttConnectionStatus == SttConnectionStatus.DISCONNECTED || sttConnectionStatus == SttConnectionStatus.ERROR)) {
-                // Attached disconnected badge
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .offset(y = 10.dp)
-                        .applePressEffect(targetScale = 0.94f, onClick = onReconnectStt)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xE6260F0F))
-                        .border(0.8.dp, AppleChatTheme.Coral.copy(alpha = 0.65f), RoundedCornerShape(10.dp))
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(5.dp)
-                            .background(AppleChatTheme.Coral, CircleShape)
-                    )
-                    GameText(
-                        text = "قطع ارتباط • لمس مجدد",
-                        size = 10.5.sp,
-                        bold = true,
-                        color = AppleChatTheme.Coral
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * Compact voice controls row:
- * LEFT (Visually Left): [Hint Button]
- * CENTER: [Overflowing Siri-Style Mic]
- * RIGHT (Visually Right): [Send Button OR Keyboard Toggle] - "دکمه ی ارسال باید سمت راست باشه"
- */
-@Composable
-private fun CompactVoiceRow(
-    text: String,
-    isRecording: Boolean,
-    isRecordingPreparing: Boolean = false,
-    isModelSpeaking: Boolean,
-    enabled: Boolean,
-    hintsUsedCount: Int,
-    isRequestingHint: Boolean,
-    sttEngine: SttEngine = SttEngine.APP,
-    sttConnectionStatus: SttConnectionStatus = SttConnectionStatus.CONNECTED,
-    onReconnectStt: () -> Unit = {},
-    onSwitchToText: () -> Unit,
-    onVoiceToggle: (Boolean) -> Unit,
-    onSendClick: () -> Unit,
-    onHintClick: () -> Unit,
-    micModifier: Modifier = Modifier,
-    hintModifier: Modifier = Modifier
-) {
-    val isInteractive = enabled && !isModelSpeaking
-
-    // LTR positioning guarantees exact physical placement:
-    // First item is physically LEFT, Middle is CENTER, Last item is physically RIGHT
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // 1. Physically LEFT: Hint Button
-            AppleHintButton(
-                hintsUsedCount = hintsUsedCount,
-                isRequesting = isRequestingHint,
-                size = 42.dp,
-                enabled = isInteractive,
-                onClick = { if (isInteractive) onHintClick() },
-                modifier = hintModifier
-            )
-
-            // 2. Physically CENTER: Voice Recording Button & Modern Living Waveform
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(52.dp),
-                contentAlignment = Alignment.Center
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                when {
-                    isModelSpeaking -> {
-                        // Modern Siri / Apple Intelligence Voice Waveform with Subscription Color Accents
-                        AppleAiSpeakingWaveform()
-                    }
-
-                    isRecording -> {
-                        if (isRecordingPreparing) {
-                            AppleRecordingPreparingButton(
-                                onStop = { onVoiceToggle(false) },
-                                modifier = micModifier
-                            )
-                        } else {
-                            AppleRecordingActiveButton(
-                                onStop = { onVoiceToggle(false) },
-                                modifier = micModifier
-                            )
-                        }
-                    }
-
-                    sttEngine == SttEngine.APP && (sttConnectionStatus == SttConnectionStatus.DISCONNECTED || sttConnectionStatus == SttConnectionStatus.ERROR) -> {
-                        AppleDisconnectedButton(
-                            onReconnect = onReconnectStt,
-                            modifier = micModifier
+                // Physical LTR arrangement guarantees: Left = Suggest, Center = Voice/Input, Right = Action
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = animatedPadding),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // 1. Physically LEFT: Suggest / Hint Lamp Button
+                        AppleHintButton(
+                            hintsUsedCount = hintsUsedCount,
+                            isRequesting = isRequestingHint,
+                            size = 48.dp,
+                            iconSize = 22.dp,
+                            enabled = isInteractive,
+                            onClick = { if (isInteractive) onHintClick() },
+                            modifier = hintModifier
                         )
-                    }
 
-                    sttEngine == SttEngine.APP && sttConnectionStatus == SttConnectionStatus.CONNECTING -> {
-                        AppleConnectingButton(modifier = micModifier)
-                    }
-
-                    else -> {
-                        AppleRecordIdleButton(
-                            hasText = text.isNotBlank(),
-                            enabled = enabled,
-                            onClick = { if (isInteractive) onVoiceToggle(true) },
-                            modifier = micModifier
-                        )
-                    }
-                }
-            }
-
-            // 3. Physically RIGHT: Send Button (when text ready) OR Keyboard Toggle
-            // "دکمه ی ارسال باید سمت راست باشه."
-            if (text.isNotBlank()) {
-                AppleSendButton(
-                    onClick = { if (isInteractive) onSendClick() },
-                    size = 42.dp,
-                    enabled = isInteractive
-                )
-            } else {
-                GameIconButton(
-                    icon = Res.drawable.ic_keyboard,
-                    onClick = { if (isInteractive) onSwitchToText() },
-                    contentDescription = "تایپ متنی",
-                    size = 42.dp,
-                    iconSize = 20.dp,
-                    container = if (AppTheme.isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF),
-                    border = AppleChatTheme.SubtleBorderColor,
-                    modifier = Modifier.graphicsLayer { alpha = if (isInteractive) 1f else 0.38f }
-                )
-            }
-        }
-    }
-}
-
-/**
- * Compact text input row:
- * LEFT (Visually Left): [Mic Toggle Button]
- * CENTER: [Apple Input Field ("Type in English...")]
- * RIGHT (Visually Right): [Send Button] - "دکمه ی ارسال باید سمت راست باشه"
- */
-@Composable
-private fun CompactTextRow(
-    text: String,
-    isModelSpeaking: Boolean,
-    enabled: Boolean,
-    hintsUsedCount: Int,
-    isRequestingHint: Boolean,
-    onTextChange: (String) -> Unit,
-    onSwitchToVoice: () -> Unit,
-    onSendClick: () -> Unit,
-    onHintClick: () -> Unit
-) {
-    val isInteractive = enabled && !isModelSpeaking
-    val canSend = text.isNotBlank() && isInteractive
-    val focusRequester = remember { FocusRequester() }
-
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // 1. Physically LEFT: Mode toggle to Voice
-            GameIconButton(
-                icon = Res.drawable.ic_microphone,
-                onClick = { if (isInteractive) onSwitchToVoice() },
-                contentDescription = "مکالمه صوتی",
-                size = 42.dp,
-                iconSize = 20.dp,
-                container = if (AppTheme.isDark) Color(0x1AFFFFFF) else Color(0xB8FFFFFF),
-                border = AppleChatTheme.SubtleBorderColor,
-                modifier = Modifier.graphicsLayer { alpha = if (isInteractive) 1f else 0.38f }
-            )
-
-            // 2. Physically CENTER: Apple Compact Input Pill
-            val fieldShape = RoundedCornerShape(22.dp)
-            val isDark = AppTheme.isDark
-            val textStyle = TextStyle(
-                color = if (isInteractive) Game.TextPrimary else Game.TextMuted,
-                fontSize = 14.5.sp,
-                lineHeight = 22.sp,
-                fontFamily = AppTheme.typography.bodyLarge.fontFamily,
-                textDirection = TextDirection.Ltr,
-                textAlign = TextAlign.Start
-            )
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                BasicTextField(
-                    value = text,
-                    onValueChange = { if (isInteractive) onTextChange(it) },
-                    enabled = isInteractive,
-                    readOnly = !isInteractive,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(focusRequester)
-                        .semantics {
-                            contentDescription = "پیام انگلیسی شما"
-                        }
-                        .onPreviewKeyEvent { event ->
-                            if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && !event.isShiftPressed) {
-                                if (canSend) onSendClick()
-                                true
-                            } else false
-                        },
-                    textStyle = textStyle,
-                    cursorBrush = SolidColor(AppleChatTheme.PrimaryAzure),
-                    maxLines = 4,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = { if (canSend) onSendClick() }),
-                    decorationBox = { inner ->
+                        // 2. Physically CENTER: Voice Cluster OR STT-styled Input Box
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 40.dp, max = 110.dp)
-                                .background(
-                                    if (isInteractive) AppleChatTheme.GlassPanelRaised else (if (isDark) Color(0x14FFFFFF) else Color(0x40FFFFFF)),
-                                    fieldShape
-                                )
-                                .border(
-                                    1.dp,
-                                    if (canSend) AppleChatTheme.PrimaryAzure.copy(alpha = 0.7f) else AppleChatTheme.SubtleBorderColor.copy(alpha = if (isInteractive) 1f else 0.4f),
-                                    fieldShape
-                                )
-                                .padding(horizontal = 14.dp, vertical = 8.dp),
-                            contentAlignment = Alignment.CenterStart
+                                .weight(1f)
+                                .padding(horizontal = if (inputMode == ChatInputMode.TEXT) 8.dp else 0.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            if (text.isEmpty()) {
-                                GameText(
-                                    text = if (isModelSpeaking) "Waiting for response…" else "Type in English…",
-                                    size = 13.5.sp,
-                                    latin = true,
-                                    color = Game.TextMuted
-                                )
+                            AnimatedContent(
+                                targetState = inputMode,
+                                transitionSpec = {
+                                    (fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
+                                        scaleIn(initialScale = 0.90f, animationSpec = tween(220, easing = FastOutSlowInEasing))) togetherWith
+                                        (fadeOut(animationSpec = tween(170, easing = FastOutSlowInEasing)) +
+                                            scaleOut(targetScale = 0.90f, animationSpec = tween(170, easing = FastOutSlowInEasing)))
+                                },
+                                label = "center_control_morph",
+                                contentAlignment = Alignment.Center
+                            ) { mode ->
+                                when (mode) {
+                                    ChatInputMode.VOICE -> {
+                                        // Large Floating Voice Button & Living Waveform / Rings (overflowing freely)
+                                        Box(
+                                            modifier = Modifier.size(width = 106.dp, height = 72.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            when {
+                                                isModelSpeaking -> {
+                                                    AppleAiSpeakingWaveform()
+                                                }
+
+                                                isRecording -> {
+                                                    if (isRecordingPreparing) {
+                                                        AppleRecordingPreparingButton(
+                                                            onStop = { onVoiceToggle(false) },
+                                                            modifier = micModifier
+                                                        )
+                                                    } else {
+                                                        AppleRecordingActiveButton(
+                                                            onStop = { onVoiceToggle(false) },
+                                                            modifier = micModifier
+                                                        )
+                                                    }
+                                                }
+
+                                                sttEngine == SttEngine.APP && (sttConnectionStatus == SttConnectionStatus.DISCONNECTED || sttConnectionStatus == SttConnectionStatus.ERROR) -> {
+                                                    AppleDisconnectedButton(
+                                                        onReconnect = onReconnectStt,
+                                                        size = 58.dp,
+                                                        modifier = micModifier
+                                                    )
+                                                }
+
+                                                sttEngine == SttEngine.APP && sttConnectionStatus == SttConnectionStatus.CONNECTING -> {
+                                                    AppleConnectingButton(
+                                                        size = 64.dp,
+                                                        modifier = micModifier
+                                                    )
+                                                }
+
+                                                else -> {
+                                                    AppleRecordIdleFloatingButton(
+                                                        hasText = text.isNotBlank(),
+                                                        enabled = enabled,
+                                                        onClick = { if (isInteractive) onVoiceToggle(true) },
+                                                        modifier = micModifier
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    ChatInputMode.TEXT -> {
+                                        // STT-styled Input Box loading between Suggest and Send/Voice
+                                        AppleCompactInputField(
+                                            text = text,
+                                            isInteractive = isInteractive,
+                                            isModelSpeaking = isModelSpeaking,
+                                            onTextChange = onTextChange,
+                                            onSendClick = onSendClick
+                                        )
+                                    }
+                                }
                             }
-                            inner()
+                        }
+
+                        // 3. Physically RIGHT: Action Button (Send / Keyboard / Voice)
+                        // In Voice Mode: Send (if text ready) or Keyboard toggle
+                        // In Text Mode: Send (if text entered) or Voice toggle (if empty)
+                        val actionTarget = if (inputMode == ChatInputMode.VOICE) {
+                            if (text.isNotBlank()) "SEND" else "KEYBOARD"
+                        } else {
+                            if (text.isNotBlank()) "SEND" else "VOICE"
+                        }
+
+                        AnimatedContent(
+                            targetState = actionTarget,
+                            transitionSpec = {
+                                (fadeIn(animationSpec = tween(180)) + scaleIn(initialScale = 0.85f)) togetherWith
+                                    (fadeOut(animationSpec = tween(150)) + scaleOut(targetScale = 0.85f))
+                            },
+                            label = "action_btn_morph"
+                        ) { target ->
+                            when (target) {
+                                "SEND" -> {
+                                    AppleSendButton(
+                                        onClick = { if (isInteractive && text.isNotBlank()) onSendClick() },
+                                        size = 48.dp,
+                                        enabled = isInteractive && text.isNotBlank()
+                                    )
+                                }
+
+                                "KEYBOARD" -> {
+                                    GameIconButton(
+                                        icon = Res.drawable.ic_keyboard,
+                                        onClick = { if (isInteractive) onInputModeChange(ChatInputMode.TEXT) },
+                                        contentDescription = "تایپ متنی",
+                                        size = 48.dp,
+                                        iconSize = 22.dp,
+                                        container = if (AppTheme.isDark) Color(0x24182236) else Color(0xB8FFFFFF),
+                                        border = AppleChatTheme.SubtleBorderColor,
+                                        modifier = Modifier.graphicsLayer { alpha = if (isInteractive) 1f else 0.38f }
+                                    )
+                                }
+
+                                "VOICE" -> {
+                                    GameIconButton(
+                                        icon = Res.drawable.ic_microphone,
+                                        onClick = { if (isInteractive) onInputModeChange(ChatInputMode.VOICE) },
+                                        contentDescription = "مکالمه صوتی",
+                                        size = 48.dp,
+                                        iconSize = 22.dp,
+                                        tint = Color(0xFF38BDF8),
+                                        container = if (AppTheme.isDark) Color(0x24182236) else Color(0xB8FFFFFF),
+                                        border = AppleChatTheme.SubtleBorderColor,
+                                        modifier = Modifier.graphicsLayer { alpha = if (isInteractive) 1f else 0.38f }
+                                    )
+                                }
+                            }
                         }
                     }
-                )
-            }
+                }
 
-            // 3. Physically RIGHT: Send Button
-            // "دکمه ی ارسال باید سمت راست باشه."
-            AppleSendButton(
-                onClick = { if (canSend) onSendClick() },
-                size = 42.dp,
-                enabled = canSend
+                // Attached Live Badges (Floats directly below the center Voice button in Voice mode)
+                if (inputMode == ChatInputMode.VOICE) {
+                    when {
+                        isModelSpeaking -> {
+                            Row(
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xE60A1726))
+                                    .border(0.8.dp, Color(0xFF0EA5E9).copy(alpha = 0.65f), RoundedCornerShape(10.dp))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .graphicsLayer { this.alpha = liveDotAlpha }
+                                        .background(Color(0xFF0EA5E9), CircleShape)
+                                )
+                                GameText(
+                                    text = "دستیار در حال صحبت…",
+                                    size = 10.5.sp,
+                                    bold = true,
+                                    color = Color(0xFF0EA5E9)
+                                )
+                            }
+                        }
+
+                        isRecording && !isRecordingPreparing -> {
+                            Row(
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .applePressEffect(targetScale = 0.94f, onClick = { onVoiceToggle(false) })
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xE60D1F17))
+                                    .border(0.8.dp, Color(0xFF22C55E).copy(alpha = 0.70f), RoundedCornerShape(10.dp))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .graphicsLayer { this.alpha = liveDotAlpha }
+                                        .background(Color(0xFF22C55E), CircleShape)
+                                )
+                                GameText(
+                                    text = "در حال شنیدن",
+                                    size = 10.5.sp,
+                                    bold = true,
+                                    color = Color(0xFF22C55E)
+                                )
+                            }
+                        }
+
+                        isRecording && isRecordingPreparing -> {
+                            Row(
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .applePressEffect(targetScale = 0.94f, onClick = { onVoiceToggle(false) })
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xE626150D))
+                                    .border(0.8.dp, Color(0xFFFF7A45).copy(alpha = 0.70f), RoundedCornerShape(10.dp))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(5.dp)
+                                        .background(Color(0xFFFF7A45), CircleShape)
+                                )
+                                GameText(
+                                    text = "آماده‌سازی میکروفون…",
+                                    size = 10.5.sp,
+                                    bold = true,
+                                    color = Color(0xFFFF7A45)
+                                )
+                            }
+                        }
+
+                        sttEngine == SttEngine.APP && (sttConnectionStatus == SttConnectionStatus.DISCONNECTED || sttConnectionStatus == SttConnectionStatus.ERROR) -> {
+                            Row(
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .applePressEffect(targetScale = 0.94f, onClick = onReconnectStt)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xE6260F0F))
+                                    .border(0.8.dp, AppleChatTheme.Coral.copy(alpha = 0.65f), RoundedCornerShape(10.dp))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(5.dp)
+                                        .background(AppleChatTheme.Coral, CircleShape)
+                                )
+                                GameText(
+                                    text = "قطع ارتباط • لمس مجدد",
+                                    size = 10.5.sp,
+                                    bold = true,
+                                    color = AppleChatTheme.Coral
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * STT-styled compact input box that smoothly loads between Suggest and Send/Voice buttons in Text mode.
+ * Styled matching the STT transcript capsule (`AppleChatTheme.GlassPanelRaised`, specular border, 22dp shape).
+ */
+@Composable
+private fun AppleCompactInputField(
+    text: String,
+    isInteractive: Boolean,
+    isModelSpeaking: Boolean,
+    onTextChange: (String) -> Unit,
+    onSendClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val canSend = text.isNotBlank() && isInteractive
+    val focusRequester = remember { FocusRequester() }
+    val fieldShape = RoundedCornerShape(22.dp)
+    val isDark = AppTheme.isDark
+
+    val textStyle = TextStyle(
+        color = if (isInteractive) Game.TextPrimary else Game.TextMuted,
+        fontSize = 14.5.sp,
+        lineHeight = 22.sp,
+        fontFamily = AppTheme.typography.bodyLarge.fontFamily,
+        textDirection = TextDirection.Ltr,
+        textAlign = TextAlign.Start
+    )
+
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Box(
+            modifier = modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            BasicTextField(
+                value = text,
+                onValueChange = { if (isInteractive) onTextChange(it) },
+                enabled = isInteractive,
+                readOnly = !isInteractive,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .semantics {
+                        contentDescription = "پیام انگلیسی شما"
+                    }
+                    .onPreviewKeyEvent { event ->
+                        if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && !event.isShiftPressed) {
+                            if (canSend) onSendClick()
+                            true
+                        } else false
+                    },
+                textStyle = textStyle,
+                cursorBrush = SolidColor(AppleChatTheme.PrimaryAzure),
+                maxLines = 4,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                keyboardActions = KeyboardActions(onSend = { if (canSend) onSendClick() }),
+                decorationBox = { inner ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp, max = 110.dp)
+                            .background(
+                                if (isInteractive) AppleChatTheme.GlassPanelRaised else (if (isDark) Color(0x14FFFFFF) else Color(0x40FFFFFF)),
+                                fieldShape
+                            )
+                            .border(
+                                1.dp,
+                                if (canSend) SolidColor(AppleChatTheme.PrimaryAzure.copy(alpha = 0.7f)) else AppleChatTheme.SpecularStrokeBrush,
+                                fieldShape
+                            )
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        if (text.isEmpty()) {
+                            GameText(
+                                text = if (isModelSpeaking) "Waiting for response…" else "Type in English…",
+                                size = 13.5.sp,
+                                latin = true,
+                                color = Game.TextMuted
+                            )
+                        }
+                        inner()
+                    }
+                }
             )
         }
     }
@@ -671,8 +622,8 @@ private fun CompactConnectionWarningCapsule(
                     .clip(RoundedCornerShape(10.dp))
                     .background(AppleChatTheme.Coral.copy(alpha = 0.18f))
                     .border(0.8.dp, AppleChatTheme.Coral.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
-                .applePressEffect(targetScale = 0.94f, onClick = onReconnect)
-                .padding(horizontal = 10.dp, vertical = 5.dp),
+                    .applePressEffect(targetScale = 0.94f, onClick = onReconnect)
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -854,8 +805,7 @@ private fun CompactTranscriptCapsule(
 
 /**
  * Modern Siri / Apple Intelligence Voice Waveform displayed in center slot while AI is speaking.
- * Unconstrained by any circle container, radiating soft chromatic aura and dancing equalizer bars
- * in the subscription screen color harmonies (Warm Peach, Sky Blue, Electric Indigo, Mint, Amber Gold).
+ * Radiates soft chromatic aura and dancing equalizer bars in subscription screen color harmonies.
  */
 @Composable
 private fun AppleAiSpeakingWaveform(
@@ -882,29 +832,22 @@ private fun AppleAiSpeakingWaveform(
         label = "aura_pulse"
     )
 
-    // Palette from Subscription screen:
-    // Bar 1: Warm Peach (Color(0xFFFF7A45) - 1 Month)
-    // Bar 2: Sky Blue (Color(0xFF0EA5E9) - 6 Month)
-    // Bar 3: Electric Indigo (Color(0xFF818CF8))
-    // Bar 4: Fresh Mint (Color(0xFF22C55E) - 3 Month)
-    // Bar 5: Amber Gold (Color(0xFFFFB236) - VIP)
     val barColors = remember {
         listOf(
-            Color(0xFFFF7A45),
-            Color(0xFF0EA5E9),
-            Color(0xFF818CF8),
-            Color(0xFF22C55E),
-            Color(0xFFFFB236)
+            Color(0xFFFF7A45), // Warm Peach
+            Color(0xFF0EA5E9), // Sky Blue
+            Color(0xFF818CF8), // Electric Indigo
+            Color(0xFF22C55E), // Fresh Mint
+            Color(0xFFFFB236)  // Amber Gold
         )
     }
 
     Box(
-        modifier = modifier
-            .size(width = 110.dp, height = 52.dp),
+        modifier = modifier.size(width = 106.dp, height = 64.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Unconstrained Soft Chromatic Radial Aura behind waveform (overflows dock vertically!)
-        Canvas(modifier = Modifier.size(width = 120.dp, height = 76.dp)) {
+        // Soft Chromatic Radial Aura behind waveform
+        Canvas(modifier = Modifier.size(width = 110.dp, height = 70.dp)) {
             val centerOffset = center
             drawCircle(
                 brush = Brush.radialGradient(
@@ -922,7 +865,7 @@ private fun AppleAiSpeakingWaveform(
         }
 
         // 5 Dynamic Equalizer Soundwave Bars
-        Canvas(modifier = Modifier.size(width = 72.dp, height = 34.dp)) {
+        Canvas(modifier = Modifier.size(width = 68.dp, height = 32.dp)) {
             val barCount = 5
             val barWidthPx = 4.2.dp.toPx()
             val cornerRadius = CornerRadius(barWidthPx / 2f, barWidthPx / 2f)
@@ -932,7 +875,6 @@ private fun AppleAiSpeakingWaveform(
             val minBarHeight = 8.dp.toPx()
 
             for (i in 0 until barCount) {
-                // Organic height oscillation using sine wave with phase offset
                 val barPhase = phase + (i * 0.95f)
                 val normalizedHeight = ((kotlin.math.sin(barPhase) + 1.0) / 2.0).toFloat()
                 val currentHeight = minBarHeight + normalizedHeight * (maxBarHeight - minBarHeight)
@@ -952,8 +894,8 @@ private fun AppleAiSpeakingWaveform(
 
 /**
  * Microphone button in Preparation / Priming state.
- * Replaces trapped circular spinner with an unconstrained expanding dual-ring harmonic radar shimmer
- * using the warm Peach / Amber colors from the subscription screen.
+ * Features an unconstrained expanding dual-ring harmonic radar shimmer
+ * using warm Peach / Amber colors from the subscription screen.
  */
 @Composable
 private fun AppleRecordingPreparingButton(
@@ -972,8 +914,8 @@ private fun AppleRecordingPreparingButton(
     )
 
     val micScale by transition.animateFloat(
-        initialValue = 0.94f,
-        targetValue = 1.06f,
+        initialValue = 0.95f,
+        targetValue = 1.05f,
         animationSpec = infiniteRepeatable(
             animation = tween(550, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -981,18 +923,18 @@ private fun AppleRecordingPreparingButton(
         label = "mic_pulse"
     )
 
-    val orangeColor = Color(0xFFFF7A45) // 1-Month Plan Warm Peach / Orange
+    val orangeColor = Color(0xFFFF7A45) // Warm Peach / Orange
     val amberColor = Color(0xFFFFB236)  // Radiant Gold Amber
 
     Box(
-        modifier = modifier.size(96.dp),
+        modifier = modifier.size(106.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Expanding Harmonic Radar Aura (Overflowing outside 52dp dock!)
-        Canvas(modifier = Modifier.size(96.dp)) {
+        // Expanding Harmonic Radar Aura
+        Canvas(modifier = Modifier.size(106.dp)) {
             val centerOffset = center
-            val baseRadius = 22.dp.toPx()
-            val maxExpansion = 22.dp.toPx()
+            val baseRadius = 26.dp.toPx()
+            val maxExpansion = 24.dp.toPx()
 
             val r = baseRadius + pulseProgress * maxExpansion
             val alpha = (1f - pulseProgress).coerceIn(0f, 1f) * 0.70f
@@ -1019,10 +961,10 @@ private fun AppleRecordingPreparingButton(
             }
         }
 
-        // Center Glass Mic Button with warm Amber/Peach glow
+        // Center Glass Mic Button with warm Amber/Peach glow (58dp)
         Box(
             modifier = Modifier
-                .size(46.dp)
+                .size(58.dp)
                 .graphicsLayer {
                     scaleX = micScale
                     scaleY = micScale
@@ -1033,7 +975,8 @@ private fun AppleRecordingPreparingButton(
                     Brush.radialGradient(
                         listOf(
                             orangeColor.copy(alpha = 0.35f),
-                            amberColor.copy(alpha = 0.18f)
+                            amberColor.copy(alpha = 0.18f),
+                            Color(0x1F0B111F)
                         )
                     )
                 )
@@ -1044,7 +987,7 @@ private fun AppleRecordingPreparingButton(
                 painter = painterResource(Res.drawable.ic_microphone),
                 contentDescription = "در حال آماده‌سازی میکروفون",
                 tint = amberColor,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(26.dp)
             )
         }
     }
@@ -1052,8 +995,7 @@ private fun AppleRecordingPreparingButton(
 
 /**
  * Active recording button with multi-color concentric expanding acoustic pulse rings
- * radiating OUTSIDE the dock container boundaries (overflowing vertically),
- * tuned with the vibrant subscription screen harmonies (Mint, Sky Blue, Warm Peach).
+ * radiating outward up to 106dp, tuned with vibrant subscription screen harmonies (Mint, Sky Blue, Warm Peach).
  */
 @Composable
 private fun AppleRecordingActiveButton(
@@ -1091,7 +1033,7 @@ private fun AppleRecordingActiveButton(
 
     val micPulseScale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = 1.08f,
+        targetValue = 1.07f,
         animationSpec = infiniteRepeatable(
             animation = tween(650, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -1099,20 +1041,19 @@ private fun AppleRecordingActiveButton(
         label = "mic_scale"
     )
 
-    // Palette from Subscription screen:
-    val colorMint = Color(0xFF22C55E)   // 3-Month Fresh Mint
-    val colorSky = Color(0xFF0EA5E9)    // 6-Month Sky Blue
-    val colorPeach = Color(0xFFFF7A45)  // 1-Month Warm Peach
+    val colorMint = Color(0xFF22C55E)   // Fresh Mint
+    val colorSky = Color(0xFF0EA5E9)    // Sky Blue
+    val colorPeach = Color(0xFFFF7A45)  // Warm Peach
 
     Box(
-        modifier = modifier.size(104.dp),
+        modifier = modifier.size(106.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Multi-Color Concentric Rings: Size 104.dp, radiating far beyond the 52.dp dock capsule!
-        Canvas(modifier = Modifier.size(104.dp)) {
+        // Multi-Color Concentric Rings expanding outward to 106dp
+        Canvas(modifier = Modifier.size(106.dp)) {
             val centerOffset = center
-            val baseRadius = 24.dp.toPx()
-            val maxExpansion = 26.dp.toPx() // Expands up to 50.dp radius (100.dp diameter!)
+            val baseRadius = 28.dp.toPx()
+            val maxExpansion = 24.dp.toPx()
 
             // Ring 1 (Fresh Mint)
             val r1 = baseRadius + ring1Progress * maxExpansion
@@ -1151,10 +1092,10 @@ private fun AppleRecordingActiveButton(
             }
         }
 
-        // Center Circular Record Button (Size 46.dp) with rich subscription gradient
+        // Center Circular Record Button (Size 58dp) with rich subscription gradient
         Box(
             modifier = Modifier
-                .size(46.dp)
+                .size(58.dp)
                 .graphicsLayer {
                     scaleX = micPulseScale
                     scaleY = micPulseScale
@@ -1164,9 +1105,9 @@ private fun AppleRecordingActiveButton(
                 .background(
                     Brush.radialGradient(
                         listOf(
-                            Color(0x990EA5E9),
-                            Color(0x666366F1),
-                            Color(0x3322C55E)
+                            Color(0xCC0EA5E9),
+                            Color(0x996366F1),
+                            Color(0x4D22C55E)
                         )
                     )
                 )
@@ -1177,73 +1118,101 @@ private fun AppleRecordingActiveButton(
                 painter = painterResource(Res.drawable.ic_microphone),
                 contentDescription = "در حال ضبط صدا - لمس برای توقف",
                 tint = Color.White,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(26.dp)
             )
         }
     }
 }
 
 /**
- * Center microphone button in Idle State.
- * Displays glowing Sky Blue / Azure glass circle.
- * Note: Under-text removed per user requirement to keep height compact and match icons.
+ * Center microphone button in Idle Floating State.
+ * Displays prominent 58dp circular mic button with subtle concentric glass rings
+ * fading into background, exactly as seen in reference design.
  */
 @Composable
-private fun AppleRecordIdleButton(
+private fun AppleRecordIdleFloatingButton(
     hasText: Boolean,
     enabled: Boolean = true,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val transition = rememberInfiniteTransition(label = "idle_breathing")
+    val transition = rememberInfiniteTransition(label = "idle_floating_breathing")
     val breathGlow by transition.animateFloat(
         initialValue = 0.20f,
         targetValue = 0.45f,
-        animationSpec = infiniteRepeatable(tween(1400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        animationSpec = infiniteRepeatable(tween(1600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "breath_glow"
     )
+    val ringPulse by transition.animateFloat(
+        initialValue = 0.10f,
+        targetValue = 0.22f,
+        animationSpec = infiniteRepeatable(tween(2200, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "ring_pulse"
+    )
 
-    val isDark = AppTheme.isDark
-    val btnBg = if (!enabled) {
-        if (isDark) Color(0x14FFFFFF) else Color(0x40FFFFFF)
-    } else if (hasText) {
-        if (isDark) Color(0x22FFFFFF) else Color(0xB8FFFFFF)
-    } else {
-        // Sky Blue from Subscription
-        Color(0xFF0EA5E9).copy(alpha = breathGlow)
-    }
-
-    val btnBorder = if (!enabled) {
-        AppleChatTheme.SubtleBorderColor.copy(alpha = 0.35f)
-    } else if (hasText) {
-        AppleChatTheme.SpecularBorderColor
-    } else {
-        Color(0xFF0EA5E9).copy(alpha = 0.65f)
-    }
-
-    val iconTint = if (!enabled) {
-        Game.TextMuted
-    } else if (hasText) {
-        Game.TextPrimary
-    } else {
-        Color(0xFF38BDF8)
-    }
+    val skyBlue = Color(0xFF0EA5E9)
 
     Box(
-        modifier = modifier
-            .size(46.dp)
-            .applePressEffect(enabled = enabled, targetScale = 0.94f, onClick = onClick)
-            .clip(CircleShape)
-            .background(btnBg)
-            .border(1.2.dp, btnBorder, CircleShape),
+        modifier = modifier.size(106.dp),
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_microphone),
-            contentDescription = "ضبط صدا",
-            tint = iconTint,
-            modifier = Modifier.size(21.dp)
-        )
+        // Concentric Subtle Glass Rings fading into background (matching user reference image)
+        Canvas(modifier = Modifier.size(106.dp)) {
+            val centerOffset = center
+            // Ring 2 (outermost, ~96dp diameter)
+            drawCircle(
+                color = skyBlue.copy(alpha = ringPulse * 0.5f),
+                radius = 48.dp.toPx(),
+                center = centerOffset,
+                style = Stroke(width = 1.dp.toPx())
+            )
+            // Ring 1 (inner ring, ~76dp diameter)
+            drawCircle(
+                color = skyBlue.copy(alpha = ringPulse),
+                radius = 38.dp.toPx(),
+                center = centerOffset,
+                style = Stroke(width = 1.2.dp.toPx())
+            )
+            // Soft ambient radial aura
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        skyBlue.copy(alpha = breathGlow * 0.25f),
+                        Color.Transparent
+                    ),
+                    center = centerOffset,
+                    radius = 38.dp.toPx()
+                ),
+                radius = 38.dp.toPx(),
+                center = centerOffset
+            )
+        }
+
+        // Center Button (58dp diameter)
+        Box(
+            modifier = Modifier
+                .size(58.dp)
+                .applePressEffect(enabled = enabled, targetScale = 0.94f, onClick = onClick)
+                .clip(CircleShape)
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            skyBlue.copy(alpha = breathGlow * 0.8f + 0.12f),
+                            Color(0x33101C2E),
+                            Color(0x1F0B111F)
+                        )
+                    )
+                )
+                .border(1.4.dp, skyBlue.copy(alpha = breathGlow * 0.7f + 0.35f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_microphone),
+                contentDescription = "ضبط صدا",
+                tint = if (enabled) Color(0xFF38BDF8) else Game.TextMuted,
+                modifier = Modifier.size(26.dp)
+            )
+        }
     }
 }
 
@@ -1253,13 +1222,14 @@ private fun AppleRecordIdleButton(
 @Composable
 private fun AppleDisconnectedButton(
     onReconnect: () -> Unit,
+    size: Dp = 58.dp,
     modifier: Modifier = Modifier
 ) {
     val color = AppleChatTheme.Coral
 
     Box(
         modifier = modifier
-            .size(46.dp)
+            .size(size)
             .applePressEffect(targetScale = 0.94f, onClick = onReconnect)
             .clip(CircleShape)
             .background(color.copy(alpha = 0.16f))
@@ -1270,17 +1240,18 @@ private fun AppleDisconnectedButton(
             painter = painterResource(Res.drawable.ic_refresh),
             contentDescription = "اتصال مجدد به سرویس صوتی",
             tint = color,
-            modifier = Modifier.size(19.dp)
+            modifier = Modifier.size(24.dp)
         )
     }
 }
 
 /**
  * Modern orbital dual-gradient ring shimmer for connecting state.
- * Replaces the trapped spinner with an unconstrained rotating orbital halo around the mic.
+ * Rotating orbital halo around the 58dp mic.
  */
 @Composable
 private fun AppleConnectingButton(
+    size: Dp = 64.dp,
     modifier: Modifier = Modifier
 ) {
     val transition = rememberInfiniteTransition(label = "connecting_orbital")
@@ -1307,13 +1278,13 @@ private fun AppleConnectingButton(
     val mintGreen = Color(0xFF22C55E)
 
     Box(
-        modifier = modifier.size(56.dp),
+        modifier = modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
-        // Rotating Orbital Shimmer Halo around the button (unconstrained outside 46dp)
+        // Rotating Orbital Shimmer Halo around the button
         Canvas(
             modifier = Modifier
-                .size(54.dp)
+                .size(size)
                 .graphicsLayer { rotationZ = rotation }
         ) {
             val sweepBrush = Brush.sweepGradient(
@@ -1326,16 +1297,16 @@ private fun AppleConnectingButton(
             )
             drawCircle(
                 brush = sweepBrush,
-                radius = 25.dp.toPx(),
+                radius = (size.toPx() / 2f) - 2.dp.toPx(),
                 center = center,
                 style = Stroke(width = 1.6.dp.toPx())
             )
         }
 
-        // Center mic button
+        // Center mic button (54dp)
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(54.dp)
                 .clip(CircleShape)
                 .background(Color(0x1A0EA5E9))
                 .border(1.dp, skyBlue.copy(alpha = 0.45f), CircleShape),
@@ -1345,7 +1316,7 @@ private fun AppleConnectingButton(
                 painter = painterResource(Res.drawable.ic_microphone),
                 contentDescription = "در حال اتصال به سرور صوتی",
                 tint = skyBlue.copy(alpha = pulseAlpha),
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
     }
@@ -1355,7 +1326,7 @@ private fun AppleConnectingButton(
 @Composable
 private fun AppleSendButton(
     onClick: () -> Unit,
-    size: Dp,
+    size: Dp = 48.dp,
     enabled: Boolean = true
 ) {
     Box(
@@ -1376,22 +1347,22 @@ private fun AppleSendButton(
             painter = painterResource(Res.drawable.ic_send),
             contentDescription = "ارسال پیام",
             tint = Color.White,
-            modifier = Modifier.size(19.dp)
+            modifier = Modifier.size(22.dp)
         )
     }
 }
 
 /**
- * Apple compact circular Hint / Suggest button using the new downloaded `lamp.svg` icon.
+ * Apple compact circular Hint / Suggest button using `lamp.svg` icon.
  * Features warm Champagne Gold / Amber gradient styling matching the subscription screen.
- * When requesting hint, the lightbulb itself glows and breathes with an ambient radial golden halo,
- * completely replacing trapped circular spinners.
+ * When requesting hint, the lightbulb breathes with an ambient radial golden halo.
  */
 @Composable
 private fun AppleHintButton(
     hintsUsedCount: Int,
     isRequesting: Boolean,
-    size: Dp = 42.dp,
+    size: Dp = 48.dp,
+    iconSize: Dp = 22.dp,
     enabled: Boolean = true,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -1425,7 +1396,7 @@ private fun AppleHintButton(
                 } else if (hintsUsedCount > 0) {
                     goldColor.copy(alpha = 0.22f)
                 } else if (isDark) {
-                    Color(0x1AFFFFFF)
+                    Color(0x24182236)
                 } else {
                     Color(0xB8FFFFFF)
                 }
@@ -1448,7 +1419,7 @@ private fun AppleHintButton(
             painter = painterResource(Res.drawable.ic_lamp),
             contentDescription = "راهنما",
             tint = if (isRequesting) peachColor else if (hintsUsedCount > 0) goldColor else Game.TextSecondary,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(iconSize)
         )
 
         // Hints count badge
@@ -1456,7 +1427,7 @@ private fun AppleHintButton(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(2.dp)
+                    .padding(3.dp)
                     .size(8.dp)
                     .background(goldColor, CircleShape)
             )
