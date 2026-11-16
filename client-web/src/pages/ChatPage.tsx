@@ -552,6 +552,46 @@ export const ChatPage: React.FC = () => {
                     )
                   )}
 
+                  {/* 5-Dot AI Response Typing Bubble matching Compose TypingBubble */}
+                  {isSending && (
+                    <div className="w-full flex justify-start my-2" dir="ltr">
+                      <div className="flex items-start gap-2 justify-start max-w-[85%] mr-auto self-start select-none">
+                        <div className="w-[34px] h-[34px] rounded-full overflow-hidden shrink-0 mt-0.5 border border-white/30 bg-[#161826] flex items-center justify-center">
+                          {stage.characterAvatarUrl ? (
+                            <img
+                              src={stage.characterAvatarUrl}
+                              alt={stage.characterName}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-xs font-bold text-cyan-300">
+                              {stage.characterName.charAt(0)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="rounded-[20px] rounded-tl-[6px] px-4 py-3 bg-[#1D2030]/90 backdrop-blur-md border border-white/20 shadow-lg flex items-center gap-2">
+                          {['#818CF8', '#38BDF8', '#0EA5E9', '#22C55E', '#FFB236'].map((color, idx) => (
+                            <motion.span
+                              key={idx}
+                              animate={{
+                                opacity: [0.25, 1, 0.25],
+                                scale: [0.9, 1.15, 0.9],
+                              }}
+                              transition={{
+                                duration: 1.4,
+                                repeat: Infinity,
+                                delay: idx * 0.14,
+                                ease: 'easeInOut',
+                              }}
+                              className="w-[11px] h-[11px] rounded-full shrink-0 inline-block"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div ref={messagesEndRef} />
                 </div>
               )}
