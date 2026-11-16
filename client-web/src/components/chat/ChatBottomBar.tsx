@@ -3,11 +3,22 @@ import {
   Mic,
   Send,
   Keyboard,
-  Lightbulb,
   Edit2,
   Trash2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+/** Downloaded lamp.svg converted to React component for Hint / Suggest */
+const LampIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg
+    viewBox="0 0 32 32"
+    fill="currentColor"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M16.6099854 2.0199585c-5.1699829-.4599609-9.9899902 3.9700317-9.8800049 9.1600342 0 2.8399658 1.3300171 5.4400024 3.6400146 7.1199951.9000244.6500244 1.5100098 1.6199951 1.75 2.6900024h-.0299683c-.5599976 0-1 .4400024-1 1 0 .5499878.4400024 1 1 1h7.7399902c.5499878 0 1-.4500122 1-1 0-.539978-.4299927-.9700317-.960022-.9899902.2399902-1.0800171.8400269-2.0400391 1.7299805-2.6799927C24 16.5899658 25.3400269 13.8999634 25.2700195 10.9500122 25.1500244 6.25 21.3499756 2.3200073 16.6099854 2.0199585zM19.5999756 9.8299561l-3.6799927 3.6800537c-.1900024.1999512-.4500122.2999878-.7099609.2999878-.25 0-.5100098-.1000366-.7000122-.2999878l-2.1000366-2.0900269c-.3899536-.3900146-.3899536-1.0299683 0-1.4199829.3900146-.3900146 1.0200195-.3900146 1.4200439 0l1.3800049 1.3900146 2.9799805-2.9700317c.3900146-.3900146 1.0200195-.3900146 1.4099731 0C19.9899902 8.8099976 19.9899902 9.4400024 19.5999756 9.8299561zM18.3486328 24.5742188h-4.7792969c-.5527344 0-1 .4472656-1 1s.4472656 1 1 1h4.7792969c.5527344 0 1-.4472656 1-1S18.9013672 24.5742188 18.3486328 24.5742188zM15.9785156 28H15.96875c-.5517578 0-.9951172.4472656-.9951172 1s.453125 1 1.0048828 1c.5527344 0 1-.4472656 1-1S16.53125 28 15.9785156 28z" />
+  </svg>
+);
 
 export interface ChatBottomBarProps {
   onSendMessage: (text: string) => void;
@@ -161,7 +172,7 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
         <div className="absolute inset-0 w-full h-[52px] px-2.5 flex items-center justify-between">
           {/* 1. Physically LEFT */}
           {inputMode === 'voice' ? (
-            /* Left: Hint Lamp Button */
+            /* Left: Hint Lamp Button using downloaded lamp.svg */
             <div className="relative shrink-0">
               <motion.button
                 type="button"
@@ -169,14 +180,20 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
                 onClick={onRequestHint}
                 disabled={!isInteractive || isLoadingHint}
                 aria-label="دریافت راهنمایی"
-                className="w-10 h-10 rounded-full bg-gradient-to-b from-amber-400/20 to-amber-500/10 hover:bg-amber-400/25 border border-amber-400/50 flex items-center justify-center text-amber-300 shadow-[0_0_10px_rgba(255,204,0,0.18)] transition-all"
+                className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
+                  isLoadingHint
+                    ? 'bg-amber-400/25 border-amber-400/80 text-amber-300 shadow-[0_0_16px_rgba(255,178,54,0.55)] animate-pulse'
+                    : hintsUsedCount > 0
+                    ? 'bg-gradient-to-b from-amber-400/25 to-amber-500/15 border-amber-400/60 text-amber-300 shadow-[0_0_10px_rgba(255,204,0,0.2)]'
+                    : 'bg-white/10 hover:bg-white/15 border-white/20 text-slate-300'
+                }`}
                 title="راهنمای جمله بعدی"
               >
-                <Lightbulb className="w-4 h-4 text-amber-300" />
+                <LampIcon className="w-5 h-5" />
               </motion.button>
 
-              {hintsUsedCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center border border-white/30">
+              {hintsUsedCount > 0 && !isLoadingHint && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-slate-900 text-[9px] font-bold flex items-center justify-center border border-white/30">
                   {hintsUsedCount}
                 </span>
               )}
@@ -196,45 +213,63 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
             </motion.button>
           )}
 
-          {/* 2. Physically CENTER */}
+          {/* 2. Physically CENTER: Voice Recording Button or Siri Waveform or Input Field */}
           <div className="flex-1 min-w-0 h-full flex items-center justify-center px-2">
             {inputMode === 'voice' ? (
-              /* Voice Mode Center Control with Concentric Expanding Rings Overflowing Dock */
               <div className="relative flex items-center justify-center">
-                {isRecording ? (
+                {isModelSpeaking ? (
+                  /* Modern Living Siri Voice Waveform in Subscription Colors */
+                  <div className="relative flex items-center justify-center h-10 px-4">
+                    {/* Chromatic ambient glow behind bars */}
+                    <div className="absolute inset-x-0 -inset-y-2 bg-gradient-to-r from-sky-400/30 via-indigo-500/25 to-emerald-400/25 blur-lg rounded-full animate-pulse pointer-events-none" />
+
+                    {/* 5 Equalizer Soundwave Bars in Subscription Colors */}
+                    <div className="relative z-10 flex items-center gap-1.5 h-7">
+                      <span className="w-1 rounded-full bg-[#ff7a45] animate-[pulse_0.9s_ease-in-out_infinite] h-3.5" />
+                      <span className="w-1 rounded-full bg-[#0ea5e9] animate-[pulse_1.2s_ease-in-out_0.2s_infinite] h-6" />
+                      <span className="w-1 rounded-full bg-[#818cf8] animate-[pulse_1.0s_ease-in-out_0.4s_infinite] h-7" />
+                      <span className="w-1 rounded-full bg-[#22c55e] animate-[pulse_1.3s_ease-in-out_0.1s_infinite] h-5" />
+                      <span className="w-1 rounded-full bg-[#ffb236] animate-[pulse_1.1s_ease-in-out_0.3s_infinite] h-3" />
+                    </div>
+                  </div>
+                ) : isRecording ? (
                   isProcessingRecording ? (
-                    /* Preparing / Loading state */
-                    <div className="w-11 h-11 rounded-full bg-amber-400/15 border border-amber-400/50 flex items-center justify-center">
-                      <span className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                    /* Preparing State: Unconstrained Expanding Radar Waves in Warm Peach / Amber */
+                    <div className="relative w-11 h-11 flex items-center justify-center">
+                      <span className="absolute -inset-4 rounded-full border border-orange-400/40 animate-ping pointer-events-none" />
+                      <span className="absolute -inset-2 rounded-full border border-amber-400/50 animate-pulse pointer-events-none" />
+                      <div className="relative z-10 w-11 h-11 rounded-full bg-gradient-to-tr from-[#ff7a45]/30 to-[#ffb236]/20 border border-amber-400/70 flex items-center justify-center text-amber-300">
+                        <Mic className="w-5 h-5 animate-pulse" />
+                      </div>
                     </div>
                   ) : (
-                    /* Active Recording: Overflowing Concentric Waves (diameter 96px) */
+                    /* Active Recording: Tri-Color Concentric Waves Overflowing Dock */
                     <div className="relative w-11 h-11 flex items-center justify-center">
-                      <span className="absolute -inset-6 rounded-full border border-cyan-400/35 animate-ping pointer-events-none" />
-                      <span className="absolute -inset-3.5 rounded-full border border-cyan-300/40 animate-pulse pointer-events-none" />
+                      <span className="absolute -inset-6 rounded-full border border-emerald-400/35 animate-ping pointer-events-none" />
+                      <span className="absolute -inset-3.5 rounded-full border border-sky-400/40 animate-pulse pointer-events-none" />
 
                       <motion.button
                         type="button"
                         whileTap={{ scale: 0.94 }}
                         onClick={onStopRecording}
-                        className="relative z-10 w-11 h-11 rounded-full bg-gradient-to-tr from-[#0a84ff] to-[#0055b3] text-white flex items-center justify-center border-2 border-cyan-300 shadow-[0_0_18px_rgba(56,189,248,0.5)] cursor-pointer"
+                        className="relative z-10 w-11 h-11 rounded-full bg-gradient-to-tr from-[#0ea5e9] via-[#6366f1] to-[#22c55e] text-white flex items-center justify-center border-2 border-sky-300 shadow-[0_0_20px_rgba(14,165,233,0.5)] cursor-pointer"
                         title="لمس برای توقف ضبط"
                       >
-                        <Mic className="w-5 h-5 text-cyan-200 animate-pulse" />
+                        <Mic className="w-5 h-5 text-white animate-pulse" />
                       </motion.button>
                     </div>
                   )
                 ) : (
-                  /* Idle State: Clean 44px Mic Button without under-text */
+                  /* Idle State: Clean 44px Mic Button in VisionOS Sky Glass */
                   <motion.button
                     type="button"
                     whileTap={{ scale: 0.94 }}
                     onClick={onStartRecording}
                     disabled={!isInteractive}
-                    className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#0a84ff]/35 via-[#0052cc]/30 to-[#5856d6]/35 hover:brightness-110 active:brightness-95 text-white border border-cyan-400/45 shadow-[0_2px_14px_rgba(0,122,255,0.25)] flex items-center justify-center"
+                    className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#0ea5e9]/30 via-[#6366f1]/25 to-[#22c55e]/20 hover:brightness-110 active:brightness-95 text-white border border-sky-400/50 shadow-[0_2px_14px_rgba(14,165,233,0.25)] flex items-center justify-center"
                     title="لمس برای صحبت"
                   >
-                    <Mic className="w-5 h-5 text-cyan-300" />
+                    <Mic className="w-5 h-5 text-sky-300" />
                   </motion.button>
                 )}
               </div>
@@ -254,7 +289,7 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
             )}
           </div>
 
-          {/* 3. Physically RIGHT: Send Button (Always on Right per user requirement) OR Keyboard Toggle */}
+          {/* 3. Physically RIGHT: Send Button (Always on Right) OR Keyboard Toggle */}
           {inputMode === 'voice' ? (
             hasVoiceTranscript ? (
               /* Send Button when voice transcript is ready */
@@ -304,7 +339,16 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
           )}
         </div>
 
-        {/* Layer C: Attached Live Badge "در حال شنیدن" (Floats below the center dock edge) */}
+        {/* Layer C: Attached Live Badges (Floats below the center dock edge) */}
+        {isModelSpeaking && (
+          <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-20">
+            <div className="px-2.5 py-0.5 rounded-full bg-[#0a1726]/95 border border-sky-400/70 flex items-center gap-1 text-[10px] font-bold text-sky-400 shadow-[0_0_8px_rgba(14,165,233,0.35)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+              <span>دستیار در حال صحبت…</span>
+            </div>
+          </div>
+        )}
+
         {isRecording && !isProcessingRecording && (
           <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-20">
             <button
@@ -323,10 +367,10 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
             <button
               type="button"
               onClick={onStopRecording}
-              className="px-2 py-0.5 rounded-full bg-[#1f1a0d]/95 border border-amber-400/70 flex items-center gap-1 text-[10px] font-bold text-amber-300 shadow-[0_0_8px_rgba(255,178,54,0.35)] cursor-pointer"
+              className="px-2 py-0.5 rounded-full bg-[#26150d]/95 border border-orange-400/70 flex items-center gap-1 text-[10px] font-bold text-orange-300 shadow-[0_0_8px_rgba(255,122,69,0.35)] cursor-pointer"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span>در حال آماده‌سازی…</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+              <span>آماده‌سازی میکروفون…</span>
             </button>
           </div>
         )}
