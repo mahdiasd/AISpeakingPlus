@@ -187,7 +187,7 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
               transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
               className={`w-full flex items-center justify-between transition-all duration-500 ${
                 isClustered
-                  ? 'max-w-[214px] mx-auto gap-4'
+                  ? 'max-w-[280px] mx-auto gap-5'
                   : 'max-w-full px-4 gap-3'
               }`}
             >
@@ -228,11 +228,11 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
                         <motion.div
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="px-5 py-2.5 rounded-full bg-[#202438]/95 border border-orange-400/80 flex items-center gap-2 text-amber-300 font-bold text-xs shadow-[0_0_16px_rgba(255,178,54,0.35)] cursor-pointer"
+                          className="px-5 py-2.5 rounded-full bg-[#202438]/95 border border-orange-400/80 flex items-center gap-2 text-amber-300 font-bold text-xs shadow-[0_0_16px_rgba(255,178,54,0.35)] cursor-pointer whitespace-nowrap shrink-0"
                           onClick={onStopRecording}
                         >
-                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                          <span>در حال آماده‌سازی…</span>
+                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                          <span className="whitespace-nowrap">در حال آماده‌سازی…</span>
                         </motion.div>
                       ) : (
                         /* Active Recording: Audio Voice Waveform (audio-voice-a-001) */
@@ -272,20 +272,20 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
                         </motion.div>
                       )
                     ) : (
-                      /* Idle State: 58px Mic Button with Subtle Concentric Glass Rings */
+                      /* Idle State: 68px Mic Button with Subtle Concentric Glass Rings (Prominent Hero Action) */
                       <div className="relative flex items-center justify-center">
-                        <span className="absolute -inset-4 rounded-full border border-sky-400/15 pointer-events-none" />
-                        <span className="absolute -inset-2 rounded-full border border-sky-400/25 pointer-events-none" />
+                        <span className="absolute -inset-5 rounded-full border border-sky-400/15 pointer-events-none" />
+                        <span className="absolute -inset-2.5 rounded-full border border-sky-400/25 pointer-events-none" />
 
                         <motion.button
                           type="button"
                           whileTap={{ scale: 0.94 }}
                           onClick={onStartRecording}
                           disabled={!isInteractive}
-                          className="relative z-10 w-[58px] h-[58px] rounded-full bg-gradient-to-tr from-[#0ea5e9]/30 via-[#101c2e]/90 to-[#0b111f]/90 hover:brightness-110 active:brightness-95 text-white border border-sky-400/60 shadow-[0_4px_20px_rgba(14,165,233,0.3)] flex items-center justify-center cursor-pointer"
+                          className="relative z-10 w-[68px] h-[68px] rounded-full bg-gradient-to-tr from-[#0ea5e9]/30 via-[#101c2e]/90 to-[#0b111f]/90 hover:brightness-110 active:brightness-95 text-white border border-sky-400/60 shadow-[0_4px_20px_rgba(14,165,233,0.3)] flex items-center justify-center cursor-pointer"
                           title="لمس برای صحبت"
                         >
-                          <Mic className="w-6 h-6 text-sky-300" />
+                          <Mic className="w-7 h-7 text-sky-300" />
                         </motion.button>
                       </div>
                     )}

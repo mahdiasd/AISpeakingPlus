@@ -599,7 +599,7 @@ export const ChatPage: React.FC = () => {
 
             {/* Floating Apple Liquid Glass Bottom Dock (Anchored, guaranteed visible) */}
             {!isLoadingStage && stage && (
-              <footer className="shrink-0 z-30 px-2.5 pb-[max(env(safe-area-inset-bottom),10px)] pt-1">
+              <footer className="shrink-0 z-30 px-3 pb-[calc(max(env(safe-area-inset-bottom,0px),8px)+24px)] pt-1">
                 <ChatBottomBar
                   onSendMessage={handleSendMessage}
                   onRequestHint={handleRequestHint}

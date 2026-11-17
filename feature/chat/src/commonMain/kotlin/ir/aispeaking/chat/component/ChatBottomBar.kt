@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -192,13 +193,13 @@ fun ChatBottomBar(
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 10.dp, top = 4.dp),
+                    .padding(bottom = 28.dp, top = 6.dp),
                 contentAlignment = Alignment.Center
             ) {
                 val totalWidth = maxWidth
-                // In idle Voice mode OR during preparation: icons stay clustered in center (~202dp).
+                // In idle Voice mode OR during preparation: icons stay clustered in center (~280dp).
                 // Side buttons slide to corners ONLY AFTER preparation is done (during active recording) or in Text mode!
-                val clusterWidth = 202.dp
+                val clusterWidth = 280.dp
                 val voicePadding = ((totalWidth - clusterWidth) / 2).coerceAtLeast(16.dp)
 
                 val isClustered = inputMode == ChatInputMode.VOICE && (!isRecording || isRecordingPreparing)
@@ -254,10 +255,7 @@ fun ChatBottomBar(
                                     ChatInputMode.VOICE -> {
                                         // Voice Button / Preparation Capsule / Active Audio-Voice Waveform
                                         Box(
-                                            modifier = Modifier.size(
-                                                width = if (isRecording) 160.dp else 106.dp,
-                                                height = 54.dp
-                                            ),
+                                            modifier = Modifier.wrapContentSize(),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             when {
@@ -280,14 +278,14 @@ fun ChatBottomBar(
                                                 sttEngine == SttEngine.APP && (sttConnectionStatus == SttConnectionStatus.DISCONNECTED || sttConnectionStatus == SttConnectionStatus.ERROR) -> {
                                                     AppleDisconnectedButton(
                                                         onReconnect = onReconnectStt,
-                                                        size = 58.dp,
+                                                        size = 68.dp,
                                                         modifier = micModifier
                                                     )
                                                 }
 
                                                 sttEngine == SttEngine.APP && sttConnectionStatus == SttConnectionStatus.CONNECTING -> {
                                                     AppleConnectingButton(
-                                                        size = 64.dp,
+                                                        size = 74.dp,
                                                         modifier = micModifier
                                                     )
                                                 }
@@ -711,9 +709,9 @@ private fun AppleRecordingPreparingButton(
 
     Box(
         modifier = modifier
-            .height(48.dp)
+            .height(50.dp)
             .applePressEffect(targetScale = 0.95f, onClick = onStop)
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(25.dp))
             .background(AppleChatTheme.GlassPanelRaised)
             .border(
                 1.4.dp,
@@ -724,9 +722,9 @@ private fun AppleRecordingPreparingButton(
                         peachColor.copy(alpha = pulseAlpha)
                     )
                 ),
-                RoundedCornerShape(24.dp)
+                RoundedCornerShape(25.dp)
             )
-            .padding(horizontal = 18.dp, vertical = 8.dp),
+            .padding(horizontal = 20.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -735,7 +733,7 @@ private fun AppleRecordingPreparingButton(
         ) {
             Box(
                 modifier = Modifier
-                    .size(7.dp)
+                    .size(8.dp)
                     .graphicsLayer { alpha = pulseAlpha }
                     .background(amberColor, CircleShape)
             )
@@ -743,6 +741,8 @@ private fun AppleRecordingPreparingButton(
                 text = "در حال آماده‌سازی…",
                 size = 12.5.sp,
                 bold = true,
+                maxLines = 1,
+                overflow = TextOverflow.Clip,
                 color = amberColor
             )
         }
@@ -855,8 +855,8 @@ private fun AppleRecordingActiveWaveformButton(
 }
 
 /**
- * Center microphone button in Idle Floating State (58dp).
- * Displays prominent circular mic button with subtle concentric glass rings
+ * Center microphone button in Idle Floating State (68dp).
+ * Prominently sized compared to 48dp side buttons, with subtle concentric glass rings
  * fading into background.
  */
 @Composable
@@ -883,23 +883,23 @@ private fun AppleRecordIdleFloatingButton(
     val skyBlue = Color(0xFF0EA5E9)
 
     Box(
-        modifier = modifier.size(106.dp),
+        modifier = modifier.size(120.dp),
         contentAlignment = Alignment.Center
     ) {
         // Concentric Subtle Glass Rings fading into background (matching user reference image)
-        Canvas(modifier = Modifier.size(106.dp)) {
+        Canvas(modifier = Modifier.size(120.dp)) {
             val centerOffset = center
-            // Ring 2 (outermost, ~96dp diameter)
+            // Ring 2 (outermost, ~112dp diameter)
             drawCircle(
                 color = skyBlue.copy(alpha = ringPulse * 0.5f),
-                radius = 48.dp.toPx(),
+                radius = 56.dp.toPx(),
                 center = centerOffset,
                 style = Stroke(width = 1.dp.toPx())
             )
-            // Ring 1 (inner ring, ~76dp diameter)
+            // Ring 1 (inner ring, ~88dp diameter)
             drawCircle(
                 color = skyBlue.copy(alpha = ringPulse),
-                radius = 38.dp.toPx(),
+                radius = 44.dp.toPx(),
                 center = centerOffset,
                 style = Stroke(width = 1.2.dp.toPx())
             )
@@ -911,17 +911,17 @@ private fun AppleRecordIdleFloatingButton(
                         Color.Transparent
                     ),
                     center = centerOffset,
-                    radius = 38.dp.toPx()
+                    radius = 44.dp.toPx()
                 ),
-                radius = 38.dp.toPx(),
+                radius = 44.dp.toPx(),
                 center = centerOffset
             )
         }
 
-        // Center Button (58dp diameter)
+        // Center Button (68dp diameter - prominently larger than 48dp side buttons)
         Box(
             modifier = Modifier
-                .size(58.dp)
+                .size(68.dp)
                 .applePressEffect(enabled = enabled, targetScale = 0.94f, onClick = onClick)
                 .clip(CircleShape)
                 .background(
@@ -940,7 +940,7 @@ private fun AppleRecordIdleFloatingButton(
                 painter = painterResource(Res.drawable.ic_microphone),
                 contentDescription = "ضبط صدا",
                 tint = if (enabled) Color(0xFF38BDF8) else Game.TextMuted,
-                modifier = Modifier.size(26.dp)
+                modifier = Modifier.size(30.dp)
             )
         }
     }
@@ -952,7 +952,7 @@ private fun AppleRecordIdleFloatingButton(
 @Composable
 private fun AppleDisconnectedButton(
     onReconnect: () -> Unit,
-    size: Dp = 58.dp,
+    size: Dp = 68.dp,
     modifier: Modifier = Modifier
 ) {
     val color = AppleChatTheme.Coral
@@ -970,18 +970,18 @@ private fun AppleDisconnectedButton(
             painter = painterResource(Res.drawable.ic_refresh),
             contentDescription = "اتصال مجدد به سرویس صوتی",
             tint = color,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(28.dp)
         )
     }
 }
 
 /**
  * Modern orbital dual-gradient ring shimmer for connecting state.
- * Rotating orbital halo around the 58dp mic.
+ * Rotating orbital halo around the mic.
  */
 @Composable
 private fun AppleConnectingButton(
-    size: Dp = 64.dp,
+    size: Dp = 74.dp,
     modifier: Modifier = Modifier
 ) {
     val transition = rememberInfiniteTransition(label = "connecting_orbital")
@@ -1033,10 +1033,10 @@ private fun AppleConnectingButton(
             )
         }
 
-        // Center mic button (54dp)
+        // Center mic button (62dp)
         Box(
             modifier = Modifier
-                .size(54.dp)
+                .size(62.dp)
                 .clip(CircleShape)
                 .background(Color(0x1A0EA5E9))
                 .border(1.dp, skyBlue.copy(alpha = 0.45f), CircleShape),
@@ -1046,7 +1046,7 @@ private fun AppleConnectingButton(
                 painter = painterResource(Res.drawable.ic_microphone),
                 contentDescription = "در حال اتصال به سرور صوتی",
                 tint = skyBlue.copy(alpha = pulseAlpha),
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(28.dp)
             )
         }
     }
