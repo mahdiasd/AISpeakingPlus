@@ -176,16 +176,36 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
       <AnimatePresence>
         {!isModelSpeaking && (
           <motion.div
-            initial={{ opacity: 0, y: 36 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 36 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full flex flex-col items-center pb-2"
+            initial={{ opacity: 0, y: 44, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 26, mass: 0.8 }}
+            className="relative w-full flex flex-col items-center pb-0"
           >
+            {/* Very Light Ambient Aura under Voice Recording Box */}
+            {isRecording && !isProcessingRecording && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: [0.08, 0.16, 0.06, 0.14, 0.08],
+                  scaleX: [1, 1.28, 0.94, 1.2, 1],
+                  scaleY: [1, 1.45, 0.86, 1.3, 1],
+                  y: [0, -10, 4, -8, 0],
+                }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{
+                  duration: 2.8,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                className="pointer-events-none absolute -bottom-5 left-1/2 -translate-x-1/2 w-80 h-24 rounded-full bg-gradient-to-t from-[#0066ff]/45 via-[#0066ff]/18 to-transparent blur-2xl z-0"
+              />
+            )}
+
             <motion.div
               layout
               transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-              className={`w-full flex items-center justify-between transition-all duration-500 ${
+              className={`w-full flex items-center justify-between transition-all duration-500 relative z-10 ${
                 isClustered
                   ? 'max-w-[280px] mx-auto gap-5'
                   : 'max-w-full px-4 gap-3'
@@ -272,20 +292,17 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
                         </motion.div>
                       )
                     ) : (
-                      /* Idle State: 68px Mic Button with Subtle Concentric Glass Rings (Prominent Hero Action) */
+                      /* Idle State: Clean 68px Floating Voice Button (No colored borders) */
                       <div className="relative flex items-center justify-center">
-                        <span className="absolute -inset-5 rounded-full border border-sky-400/15 pointer-events-none" />
-                        <span className="absolute -inset-2.5 rounded-full border border-sky-400/25 pointer-events-none" />
-
                         <motion.button
                           type="button"
                           whileTap={{ scale: 0.94 }}
                           onClick={onStartRecording}
                           disabled={!isInteractive}
-                          className="relative z-10 w-[68px] h-[68px] rounded-full bg-gradient-to-tr from-[#0ea5e9]/30 via-[#101c2e]/90 to-[#0b111f]/90 hover:brightness-110 active:brightness-95 text-white border border-sky-400/60 shadow-[0_4px_20px_rgba(14,165,233,0.3)] flex items-center justify-center cursor-pointer"
+                          className="relative z-10 w-[68px] h-[68px] rounded-full bg-[#202438]/95 hover:bg-[#282d46] active:bg-[#1a1d2e] text-white border border-white/25 shadow-[0_4px_20px_rgba(0,0,0,0.4)] flex items-center justify-center cursor-pointer"
                           title="لمس برای صحبت"
                         >
-                          <Mic className="w-7 h-7 text-sky-300" />
+                          <Mic className="w-8 h-8 text-white" />
                         </motion.button>
                       </div>
                     )}

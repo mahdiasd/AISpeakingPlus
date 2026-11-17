@@ -283,6 +283,23 @@ fun Application.stageRouting() {
                                     val chunkJson = sseJson.encodeToString(chunkObj)
                                     write("data: $chunkJson\n\n")
                                     flush()
+                                },
+                                onTextDone = { textResp ->
+                                    val textDoneObj = ir.speaking.feature.stage.dto.StageChatStreamServerEvent(
+                                        type = "text_done",
+                                        payload = ir.speaking.feature.stage.dto.StageChatStreamDonePayload(
+                                            message = textResp.message,
+                                            translatedMessage = textResp.translatedMessage,
+                                            hasGrammarError = textResp.hasGrammarError,
+                                            correctedSentence = textResp.correctedSentence,
+                                            grammarFeedbackFa = textResp.grammarFeedbackFa,
+                                            objectiveCompleted = textResp.objectiveCompleted,
+                                            audioUrl = null
+                                        )
+                                    )
+                                    val textDoneJson = sseJson.encodeToString(textDoneObj)
+                                    write("data: $textDoneJson\n\n")
+                                    flush()
                                 }
                             )
 

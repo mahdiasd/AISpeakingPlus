@@ -231,7 +231,7 @@ export const ChatPage: React.FC = () => {
               }
             });
           },
-          onDone: (turnResult: StageChatTurnResult) => {
+          onTextDone: (turnResult: StageChatTurnResult) => {
             const finalAiText = turnResult.message || accumulatedDelta;
             setChats((prev) => {
               const updated = prev.map((c) =>
@@ -290,7 +290,42 @@ export const ChatPage: React.FC = () => {
               showToast('هدف ماموریت مرحله با موفقیت تکمیل شد!');
             }
 
-            if (finalAiText) {
+            // Text is completely returned -> bring footer up immediately without waiting for voice audio!
+            setIsSending(false);
+            setIsModelSpeaking(false);
+          },
+          onDone: (turnResult: StageChatTurnResult) => {
+            const finalAiText = turnResult.message || accumulatedDelta;
+            setChats((prev) =>
+              prev.map((c) =>
+                c.id === aiMessageId
+                  ? {
+                      ...c,
+                      text: finalAiText,
+                      translatedMessage: turnResult.translatedMessage || c.translatedMessage,
+                      audioUrl: turnResult.audioUrl || c.audioUrl,
+                      isStreaming: false,
+                    }
+                  : c
+              )
+            );
+
+            if (turnResult.hasGrammarError) {
+              setGrammarErrorsCollected((prev) => [
+                ...prev,
+                {
+                  original: userText,
+                  correction: turnResult.correctedSentence || userText,
+                  explanationFa: turnResult.grammarFeedbackFa || 'نکته گرامری در ساختار جمله',
+                },
+              ]);
+            }
+
+            if (turnResult.objectiveCompleted) {
+              setIsObjectiveCompleted(true);
+            }
+
+            if (finalAiText && turnResult.audioUrl) {
               audioPlayer.play(aiMessageId, finalAiText, turnResult.audioUrl);
             }
 
@@ -552,7 +587,7 @@ export const ChatPage: React.FC = () => {
                     )
                   )}
 
-                  {/* 5-Dot AI Response Typing Bubble matching Compose TypingBubble */}
+                  {/* 4-Dot AI Response Bouncing Bubble matching Compose TypingBubble */}
                   {isSending && (
                     <div className="w-full flex justify-start my-2" dir="ltr">
                       <div className="flex items-start gap-2 justify-start max-w-[85%] mr-auto self-start select-none">
@@ -570,21 +605,21 @@ export const ChatPage: React.FC = () => {
                           )}
                         </div>
                         <div className="rounded-[20px] rounded-tl-[6px] px-4 py-3 bg-[#1D2030]/90 backdrop-blur-md border border-white/20 shadow-lg flex items-center gap-2">
-                          {['#818CF8', '#38BDF8', '#0EA5E9', '#22C55E', '#FFB236'].map((color, idx) => (
+                          {[0, 1, 2, 3].map((idx) => (
                             <motion.span
                               key={idx}
                               animate={{
-                                opacity: [0.25, 1, 0.25],
+                                y: [0, -7, 0],
+                                opacity: [0.3, 1, 0.3],
                                 scale: [0.9, 1.15, 0.9],
                               }}
                               transition={{
-                                duration: 1.4,
+                                duration: 1.1,
                                 repeat: Infinity,
                                 delay: idx * 0.14,
                                 ease: 'easeInOut',
                               }}
-                              className="w-[11px] h-[11px] rounded-full shrink-0 inline-block"
-                              style={{ backgroundColor: color }}
+                              className="w-[10px] h-[10px] rounded-full shrink-0 inline-block bg-[#38bdf8]"
                             />
                           ))}
                         </div>
@@ -599,7 +634,7 @@ export const ChatPage: React.FC = () => {
 
             {/* Floating Apple Liquid Glass Bottom Dock (Anchored, guaranteed visible) */}
             {!isLoadingStage && stage && (
-              <footer className="shrink-0 z-30 px-3 pb-[calc(max(env(safe-area-inset-bottom,0px),8px)+24px)] pt-1">
+              <footer className="shrink-0 z-30 px-3 pb-[calc(max(env(safe-area-inset-bottom,0px),0px)+16px)] pt-1">
                 <ChatBottomBar
                   onSendMessage={handleSendMessage}
                   onRequestHint={handleRequestHint}

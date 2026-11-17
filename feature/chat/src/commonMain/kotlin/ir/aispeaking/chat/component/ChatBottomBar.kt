@@ -2,13 +2,16 @@ package ir.aispeaking.chat.component
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -185,18 +188,64 @@ fun ChatBottomBar(
         // Main Floating Controls: Hidden with fluid slide-down & fade-out while AI is responding
         AnimatedVisibility(
             visible = !isModelSpeaking,
-            enter = fadeIn(tween(300, easing = FastOutSlowInEasing)) +
-                slideInVertically(tween(340, easing = FastOutSlowInEasing)) { it },
-            exit = fadeOut(tween(240, easing = FastOutSlowInEasing)) +
-                slideOutVertically(tween(280, easing = FastOutSlowInEasing)) { it }
+            enter = fadeIn(
+                animationSpec = tween(360, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+            ) + slideInVertically(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            ) { fullHeight -> (fullHeight * 1.2f).toInt() },
+            exit = fadeOut(
+                animationSpec = tween(240, easing = FastOutSlowInEasing)
+            ) + slideOutVertically(
+                animationSpec = tween(280, easing = CubicBezierEasing(0.4f, 0f, 0.2f, 1f))
+            ) { fullHeight -> (fullHeight * 1.2f).toInt() }
         ) {
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 28.dp, top = 6.dp),
+                    .padding(bottom = 16.dp, top = 4.dp),
                 contentAlignment = Alignment.Center
             ) {
                 val totalWidth = maxWidth
+                val isLiveRecordingActive = isRecording && !isRecordingPreparing
+
+                // Dynamic light ambient colored glow underneath active sound recording
+                if (isLiveRecordingActive) {
+                    val auraTransition = rememberInfiniteTransition(label = "recording_bottom_aura")
+                    val wave1 by auraTransition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 6.28318f,
+                        animationSpec = infiniteRepeatable(tween(2400, easing = LinearEasing), RepeatMode.Restart),
+                        label = "wave1"
+                    )
+                    val wave2 by auraTransition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 6.28318f,
+                        animationSpec = infiniteRepeatable(tween(1600, easing = LinearEasing), RepeatMode.Restart),
+                        label = "wave2"
+                    )
+
+                    val asymmetricHeight = 36.dp + (10.dp * kotlin.math.sin(wave1).toFloat() + 6.dp * kotlin.math.cos(wave2).toFloat())
+                    val dynamicAlpha = 0.12f + (kotlin.math.sin(wave2).toFloat() * 0.04f + kotlin.math.cos(wave1).toFloat() * 0.03f)
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .height(asymmetricHeight.coerceAtLeast(20.dp))
+                            .align(Alignment.BottomCenter)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color(0xFF0066FF).copy(alpha = dynamicAlpha.coerceIn(0.05f, 0.20f))
+                                    )
+                                )
+                            )
+                    )
+                }
+
                 // In idle Voice mode OR during preparation: icons stay clustered in center (~280dp).
                 // Side buttons slide to corners ONLY AFTER preparation is done (during active recording) or in Text mode!
                 val clusterWidth = 280.dp
@@ -855,9 +904,8 @@ private fun AppleRecordingActiveWaveformButton(
 }
 
 /**
- * Center microphone button in Idle Floating State (68dp).
- * Prominently sized compared to 48dp side buttons, with subtle concentric glass rings
- * fading into background.
+ * Center microphone button in Clean Idle Floating State (68dp).
+ * Pure floating glass bubble without colored borders or rings as requested.
  */
 @Composable
 private fun AppleRecordIdleFloatingButton(
@@ -866,83 +914,25 @@ private fun AppleRecordIdleFloatingButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val transition = rememberInfiniteTransition(label = "idle_floating_breathing")
-    val breathGlow by transition.animateFloat(
-        initialValue = 0.20f,
-        targetValue = 0.45f,
-        animationSpec = infiniteRepeatable(tween(1600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "breath_glow"
-    )
-    val ringPulse by transition.animateFloat(
-        initialValue = 0.10f,
-        targetValue = 0.22f,
-        animationSpec = infiniteRepeatable(tween(2200, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "ring_pulse"
-    )
-
-    val skyBlue = Color(0xFF0EA5E9)
+    val isDark = AppTheme.isDark
+    val containerColor = if (isDark) AppleChatTheme.GlassPanelRaised else Color(0xF0FFFFFF)
+    val borderColor = if (isDark) Color(0x38FFFFFF) else Color(0x28000000)
 
     Box(
-        modifier = modifier.size(120.dp),
+        modifier = modifier
+            .size(68.dp)
+            .applePressEffect(enabled = enabled, targetScale = 0.94f, onClick = onClick)
+            .clip(CircleShape)
+            .background(containerColor)
+            .border(1.2.dp, borderColor, CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        // Concentric Subtle Glass Rings fading into background (matching user reference image)
-        Canvas(modifier = Modifier.size(120.dp)) {
-            val centerOffset = center
-            // Ring 2 (outermost, ~112dp diameter)
-            drawCircle(
-                color = skyBlue.copy(alpha = ringPulse * 0.5f),
-                radius = 56.dp.toPx(),
-                center = centerOffset,
-                style = Stroke(width = 1.dp.toPx())
-            )
-            // Ring 1 (inner ring, ~88dp diameter)
-            drawCircle(
-                color = skyBlue.copy(alpha = ringPulse),
-                radius = 44.dp.toPx(),
-                center = centerOffset,
-                style = Stroke(width = 1.2.dp.toPx())
-            )
-            // Soft ambient radial aura
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        skyBlue.copy(alpha = breathGlow * 0.25f),
-                        Color.Transparent
-                    ),
-                    center = centerOffset,
-                    radius = 44.dp.toPx()
-                ),
-                radius = 44.dp.toPx(),
-                center = centerOffset
-            )
-        }
-
-        // Center Button (68dp diameter - prominently larger than 48dp side buttons)
-        Box(
-            modifier = Modifier
-                .size(68.dp)
-                .applePressEffect(enabled = enabled, targetScale = 0.94f, onClick = onClick)
-                .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        listOf(
-                            skyBlue.copy(alpha = breathGlow * 0.8f + 0.12f),
-                            Color(0x33101C2E),
-                            Color(0x1F0B111F)
-                        )
-                    )
-                )
-                .border(1.4.dp, skyBlue.copy(alpha = breathGlow * 0.7f + 0.35f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_microphone),
-                contentDescription = "ضبط صدا",
-                tint = if (enabled) Color(0xFF38BDF8) else Game.TextMuted,
-                modifier = Modifier.size(30.dp)
-            )
-        }
+        Icon(
+            painter = painterResource(Res.drawable.ic_microphone),
+            contentDescription = "ضبط صدا",
+            tint = if (enabled) (if (isDark) Color.White else Color(0xFF111318)) else Game.TextMuted,
+            modifier = Modifier.size(32.dp)
+        )
     }
 }
 
