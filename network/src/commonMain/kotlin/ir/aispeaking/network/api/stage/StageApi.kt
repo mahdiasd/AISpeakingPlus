@@ -81,6 +81,11 @@ class StageApi(
                                     emit(StageChatStreamEvent.Chunk(delta))
                                 }
                             }
+                            "text_done" -> {
+                                eventDto.payload?.let { payload ->
+                                    emit(StageChatStreamEvent.TextDone(payload))
+                                }
+                            }
                             "done" -> {
                                 eventDto.payload?.let { payload ->
                                     emit(StageChatStreamEvent.Done(payload))

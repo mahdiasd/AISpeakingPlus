@@ -95,7 +95,8 @@ class StageChatService(
         stageId: String,
         userId: UUID?,
         request: StageChatRequest,
-        onChunk: suspend (String) -> Unit
+        onChunk: suspend (String) -> Unit,
+        onTextDone: (suspend (StageChatResponse) -> Unit)? = null
     ): StageChatResponse {
         val stage = stageRepository.getStageDetail(stageId, userId)
         val userMessage = request.message?.trim().orEmpty()
@@ -111,17 +112,20 @@ class StageChatService(
         // If userMessage is empty, this is the AI starter greeting turn
         if (userMessage.isEmpty()) {
             val (initialGreeting, initialTranslation) = generateAiStarterTurnStream(stage, normalizedLevel, onChunk)
-            val audioUrl = trySynthesize(initialGreeting, voiceSid)
-
-            return StageChatResponse(
+            val textOnlyResponse = StageChatResponse(
                 message = initialGreeting,
                 translatedMessage = initialTranslation,
-                audioUrl = audioUrl,
+                audioUrl = null,
                 hasGrammarError = false,
                 correctedSentence = null,
                 grammarFeedbackFa = "",
                 objectiveCompleted = false
             )
+            onTextDone?.invoke(textOnlyResponse)
+
+            val audioUrl = trySynthesize(initialGreeting, voiceSid)
+
+            return textOnlyResponse.copy(audioUrl = audioUrl)
         }
 
         // Generate response and evaluate grammar via AI stream
@@ -133,17 +137,20 @@ class StageChatService(
             onChunk = onChunk
         )
 
-        val audioUrl = trySynthesize(turnResult.reply, voiceSid)
-
-        return StageChatResponse(
+        val textOnlyResponse = StageChatResponse(
             message = turnResult.reply,
             translatedMessage = turnResult.translation,
-            audioUrl = audioUrl,
+            audioUrl = null,
             hasGrammarError = turnResult.hasGrammarError,
             correctedSentence = turnResult.correctedSentence,
             grammarFeedbackFa = turnResult.grammarFeedback,
             objectiveCompleted = turnResult.isObjectiveDone
         )
+        onTextDone?.invoke(textOnlyResponse)
+
+        val audioUrl = trySynthesize(turnResult.reply, voiceSid)
+
+        return textOnlyResponse.copy(audioUrl = audioUrl)
     }
 
     private fun resolveVoiceSid(stage: StageDetailResponse?): Int {

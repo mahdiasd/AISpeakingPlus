@@ -207,6 +207,22 @@ class StageRepositoryImpl(
                 is ir.aispeaking.network.model.stage.dto.StageChatStreamEvent.Chunk -> {
                     emit(ir.aispeaking.domain.model.chat.StageChatStreamEvent.Chunk(event.delta))
                 }
+                is ir.aispeaking.network.model.stage.dto.StageChatStreamEvent.TextDone -> {
+                    val p = event.payload
+                    emit(
+                        ir.aispeaking.domain.model.chat.StageChatStreamEvent.TextDone(
+                            ir.aispeaking.domain.model.chat.StageChatTurnResult(
+                                message = p.message,
+                                translatedMessage = p.translatedMessage,
+                                audioUrl = p.audioUrl,
+                                hasGrammarError = p.hasGrammarError,
+                                correctedSentence = p.correctedSentence,
+                                grammarFeedbackFa = p.grammarFeedbackFa,
+                                objectiveCompleted = p.objectiveCompleted
+                            )
+                        )
+                    )
+                }
                 is ir.aispeaking.network.model.stage.dto.StageChatStreamEvent.Done -> {
                     val p = event.payload
                     emit(

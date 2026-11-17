@@ -131,6 +131,7 @@ export const chatApi = {
     request: StageChatTurnRequest,
     callbacks: {
       onChunk: (delta: string) => void;
+      onTextDone?: (result: StageChatTurnResult) => void;
       onDone: (result: StageChatTurnResult) => void;
       onError: (error: Error) => void;
     }
@@ -182,6 +183,8 @@ export const chatApi = {
                 const parsed = JSON.parse(dataContent);
                 if (parsed.type === 'chunk' && typeof parsed.delta === 'string') {
                   callbacks.onChunk(parsed.delta);
+                } else if (parsed.type === 'text_done' && parsed.payload) {
+                  callbacks.onTextDone?.(parsed.payload as StageChatTurnResult);
                 } else if (parsed.type === 'done' && parsed.payload) {
                   callbacks.onDone(parsed.payload as StageChatTurnResult);
                   return;

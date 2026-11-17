@@ -1,5 +1,6 @@
 package ir.aispeaking.chat
 
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -634,13 +635,7 @@ private fun TypingBubble(
     modifier: Modifier = Modifier
 ) {
     val transition = rememberInfiniteTransition(label = "typing_bubble")
-    val dotColors = listOf(
-        AppleChatTheme.SiriViolet,
-        AppleChatTheme.SiriCyan,
-        AppleChatTheme.SiriAzure,
-        Color(0xFF22C55E), // Fresh Mint
-        Color(0xFFFFB236)  // Amber Gold
-    )
+    val dotColor = Color(0xFF38BDF8)
 
     Row(
         modifier = modifier,
@@ -668,16 +663,16 @@ private fun TypingBubble(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            repeat(5) { index ->
+            repeat(4) { index ->
                 val alpha by transition.animateFloat(
-                    initialValue = 0.25f,
-                    targetValue = 0.25f,
+                    initialValue = 0.30f,
+                    targetValue = 0.30f,
                     animationSpec = infiniteRepeatable(
                         animation = keyframes {
-                            durationMillis = 1400
-                            0.25f at index * 140 using LinearEasing
-                            1f at index * 140 + 260 using LinearEasing
-                            0.25f at index * 140 + 520 using LinearEasing
+                            durationMillis = 1200
+                            0.30f at index * 130 using FastOutSlowInEasing
+                            1f at index * 130 + 220 using FastOutSlowInEasing
+                            0.30f at index * 130 + 440 using FastOutSlowInEasing
                         },
                         repeatMode = RepeatMode.Restart
                     ),
@@ -688,24 +683,39 @@ private fun TypingBubble(
                     targetValue = 0.90f,
                     animationSpec = infiniteRepeatable(
                         animation = keyframes {
-                            durationMillis = 1400
-                            0.90f at index * 140 using LinearEasing
-                            1.15f at index * 140 + 260 using LinearEasing
-                            0.90f at index * 140 + 520 using LinearEasing
+                            durationMillis = 1200
+                            0.90f at index * 130 using FastOutSlowInEasing
+                            1.15f at index * 130 + 220 using FastOutSlowInEasing
+                            0.90f at index * 130 + 440 using FastOutSlowInEasing
                         },
                         repeatMode = RepeatMode.Restart
                     ),
                     label = "bubble_dot_scale_$index"
                 )
+                val bounceY by transition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 0f,
+                    animationSpec = infiniteRepeatable(
+                        animation = keyframes {
+                            durationMillis = 1200
+                            0f at index * 130 using FastOutSlowInEasing
+                            -7f at index * 130 + 220 using FastOutSlowInEasing
+                            0f at index * 130 + 440 using FastOutSlowInEasing
+                        },
+                        repeatMode = RepeatMode.Restart
+                    ),
+                    label = "bubble_dot_bounce_$index"
+                )
                 Box(
                     modifier = Modifier
-                        .size(11.dp)
+                        .size(10.dp)
                         .graphicsLayer {
                             this.alpha = alpha
                             this.scaleX = scale
                             this.scaleY = scale
+                            this.translationY = bounceY.dp.toPx()
                         }
-                        .background(dotColors[index % dotColors.size], CircleShape)
+                        .background(dotColor, CircleShape)
                 )
             }
         }

@@ -416,6 +416,30 @@ class ChatViewModel(
                                 )
                             }
                         }
+                        is StageChatStreamEvent.TextDone -> {
+                            val d = event.payload
+                            val textDoneAiChat = Chat.Ai(
+                                uid = aiUid,
+                                message = if (d.message.isNotBlank()) d.message else accumulatedText,
+                                translatedMessage = d.translatedMessage,
+                                voiceState = AiVoiceState.Stopped,
+                                audioUrl = null,
+                                objectiveCompleted = d.objectiveCompleted
+                            )
+                            _uiState.update { state ->
+                                val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi }
+                                val existingIndex = withoutWaiting.indexOfFirst { it.uid == aiUid }
+                                val updatedChats = if (existingIndex != -1) {
+                                    withoutWaiting.map { if (it.uid == aiUid) textDoneAiChat else it }
+                                } else {
+                                    withoutWaiting + textDoneAiChat
+                                }
+                                state.copy(
+                                    chats = updatedChats.toImmutableList(),
+                                    isModelSpeaking = false // Text is complete -> immediately bring footer up!
+                                )
+                            }
+                        }
                         is StageChatStreamEvent.Done -> {
                             isDone = true
                             val d = event.payload
@@ -814,6 +838,30 @@ class ChatViewModel(
                                 state.copy(
                                     chats = updatedChats.toImmutableList(),
                                     isModelSpeaking = true
+                                )
+                            }
+                        }
+                        is StageChatStreamEvent.TextDone -> {
+                            val d = event.payload
+                            val textDoneAiChat = Chat.Ai(
+                                uid = aiUid,
+                                message = if (d.message.isNotBlank()) d.message else accumulatedText,
+                                translatedMessage = d.translatedMessage,
+                                voiceState = AiVoiceState.Stopped,
+                                audioUrl = null,
+                                objectiveCompleted = d.objectiveCompleted
+                            )
+                            _uiState.update { state ->
+                                val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi }
+                                val existingIndex = withoutWaiting.indexOfFirst { it.uid == aiUid }
+                                val updatedChats = if (existingIndex != -1) {
+                                    withoutWaiting.map { if (it.uid == aiUid) textDoneAiChat else it }
+                                } else {
+                                    withoutWaiting + textDoneAiChat
+                                }
+                                state.copy(
+                                    chats = updatedChats.toImmutableList(),
+                                    isModelSpeaking = false // Text is complete -> immediately bring footer up!
                                 )
                             }
                         }
