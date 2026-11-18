@@ -22,6 +22,7 @@ import ir.aispeaking.domain.repository.stage.StageRepository
 import ir.aispeaking.domain.usecase.auth.GetCurrentAccessTierUseCase
 import ir.aispeaking.domain.usecase.guide.IsGuideCompletedUseCase
 import ir.aispeaking.domain.usecase.guide.MarkGuideCompletedUseCase
+import ir.aispeaking.domain.usecase.guide.ResetGuideUseCase
 import ir.aispeaking.domain.usecase.stage.GetStageDetailUseCase
 import ir.aispeaking.domain.usecase.stage.RequestStageHintUseCase
 import ir.aispeaking.domain.usecase.stage.SubmitStageEvaluationUseCase
@@ -107,12 +108,16 @@ class ChatViewModel(
     private val analyticsTracker: AnalyticsTracker,
     private val crashReporter: CrashReporter,
     private val isGuideCompletedUseCase: IsGuideCompletedUseCase? = null,
-    private val markGuideCompletedUseCase: MarkGuideCompletedUseCase? = null
+    private val markGuideCompletedUseCase: MarkGuideCompletedUseCase? = null,
+    private val resetGuideUseCase: ResetGuideUseCase? = null
 ) : ViewModel() {
 
     fun isGuideCompleted(key: String): Boolean = isGuideCompletedUseCase?.invoke(key) ?: true
     fun markGuideCompleted(key: String) {
         markGuideCompletedUseCase?.invoke(key)
+    }
+    fun resetGuide(key: String) {
+        resetGuideUseCase?.invoke(key)
     }
 
     private val _uiState = MutableStateFlow(ChatUiState())
