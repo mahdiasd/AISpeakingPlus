@@ -182,23 +182,21 @@ export const ChatBottomBar: React.FC<ChatBottomBarProps> = ({
             transition={{ type: 'spring', stiffness: 320, damping: 26, mass: 0.8 }}
             className="relative w-full flex flex-col items-center pb-0"
           >
-            {/* Very Light Ambient Aura under Voice Recording Box */}
+            {/* Very Light Ambient Aura under Voice Recording Box: Anchored to lowest edge, fading at middle of footer */}
             {isRecording && !isProcessingRecording && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0 }}
                 animate={{
-                  opacity: [0.08, 0.16, 0.06, 0.14, 0.08],
-                  scaleX: [1, 1.28, 0.94, 1.2, 1],
-                  scaleY: [1, 1.45, 0.86, 1.3, 1],
-                  y: [0, -10, 4, -8, 0],
+                  opacity: [0.12, 0.22, 0.10, 0.20, 0.12],
+                  height: ['48px', '60px', '44px', '58px', '48px'],
                 }}
-                exit={{ opacity: 0, scale: 0.8 }}
+                exit={{ opacity: 0 }}
                 transition={{
-                  duration: 2.8,
+                  duration: 2.6,
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
-                className="pointer-events-none absolute -bottom-5 left-1/2 -translate-x-1/2 w-80 h-24 rounded-full bg-gradient-to-t from-[#0066ff]/45 via-[#0066ff]/18 to-transparent blur-2xl z-0"
+                className="pointer-events-none absolute -bottom-[calc(max(env(safe-area-inset-bottom,0px),0px)+16px)] left-0 right-0 bg-gradient-to-t from-[#0066ff]/35 via-[#007aff]/15 to-transparent z-0"
               />
             )}
 

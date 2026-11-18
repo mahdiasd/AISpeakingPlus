@@ -9,6 +9,7 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +59,7 @@ import ir.aispeaking.chat.component.ChatInputMode
 import ir.aispeaking.chat.component.ChatToolbar
 import ir.aispeaking.chat.component.UserChatItem
 import ir.aispeaking.domain.model.chat.Chat
+import ir.aispeaking.domain.model.chat.ChatStatus
 import ir.aispeaking.domain.model.stage.EvaluationSession
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_done
@@ -140,16 +142,96 @@ fun ChatScreen(
 
     val bottomAnchorIndex = uiState.chats.size
 
-    LaunchedEffect(uiState.chats.size, lastChatUid) {
-        if (uiState.chats.isNotEmpty()) {
-            listState.animateScrollToItem(bottomAnchorIndex)
+    // Track active conversation turn by latest User message UID
+    val latestUserChat = remember(uiState.chats) {
+        uiState.chats.filterIsInstance<Chat.User>().lastOrNull()
+    }
+    val currentTurnUid = latestUserChat?.uid
+    var activeTurnUid by remember { mutableStateOf<String?>(null) }
+    var userScrolledAwayThisTurn by remember { mutableStateOf(false) }
+
+    // User manual drag detection on LazyColumn
+    val isDragged by listState.interactionSource.collectIsDraggedAsState()
+
+    // Determine if the conversation list is currently scrolled to the very bottom
+    val isAtBottom by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val visibleItems = layoutInfo.visibleItemsInfo
+            if (visibleItems.isEmpty()) true
+            else {
+                val lastVisible = visibleItems.last()
+                lastVisible.index >= layoutInfo.totalItemsCount - 1
+            }
         }
     }
 
+    // 1. When a new turn starts (user sent a message):
+    // Reset userScrolledAwayThisTurn to false and scroll to the newly added message
+    LaunchedEffect(currentTurnUid) {
+        if (currentTurnUid != null && currentTurnUid != activeTurnUid) {
+            activeTurnUid = currentTurnUid
+            userScrolledAwayThisTurn = false
+            delay(50)
+            listState.animateScrollToItem(bottomAnchorIndex)
+            delay(40)
+            listState.scrollToItem(bottomAnchorIndex, scrollOffset = 10000)
+        }
+    }
+
+    // 2. Track if user actively drags away from the bottom during this turn
+    LaunchedEffect(isDragged) {
+        if (isDragged && !isAtBottom) {
+            userScrolledAwayThisTurn = true
+        }
+    }
+
+    // 3. If user manually scrolled back to bottom, restore auto-scroll capability
+    LaunchedEffect(isAtBottom) {
+        if (isAtBottom && !isDragged) {
+            userScrolledAwayThisTurn = false
+        }
+    }
+
+    // 4. Grammar error resolution on user's chat:
+    // When grammar evaluation completes (with error or tip), GrammarTipCard expands the item downwards.
+    // If the user hasn't scrolled away, smoothly scroll completely to the bottom!
+    val latestUserStatus = latestUserChat?.status
+    val hasGrammarError = (latestUserStatus as? ChatStatus.Answered)?.hasGrammarError == true
+    val grammarFeedback = (latestUserStatus as? ChatStatus.Answered)?.grammar.orEmpty()
+    LaunchedEffect(hasGrammarError, grammarFeedback) {
+        if (!userScrolledAwayThisTurn && (hasGrammarError || grammarFeedback.isNotBlank())) {
+            delay(80)
+            listState.animateScrollToItem(bottomAnchorIndex)
+            delay(60)
+            listState.scrollToItem(bottomAnchorIndex, scrollOffset = 10000)
+        }
+    }
+
+    // 5. New chat items appended (WaitingForAi, Ai chat item)
+    LaunchedEffect(uiState.chats.size, lastChatUid) {
+        if (!userScrolledAwayThisTurn && uiState.chats.isNotEmpty()) {
+            listState.animateScrollToItem(bottomAnchorIndex)
+            delay(50)
+            listState.scrollToItem(bottomAnchorIndex, scrollOffset = 10000)
+        }
+    }
+
+    // 6. Streaming chunk updates from AI (throttled)
     LaunchedEffect(lastChatMessageLength) {
-        if (uiState.chats.isNotEmpty() && lastChatMessageLength > 0) {
-            // Throttle scroll updates during streaming so Skiko Canvas maintains a smooth 60fps on mobile
+        if (!userScrolledAwayThisTurn && uiState.chats.isNotEmpty() && lastChatMessageLength > 0) {
             delay(120)
+            listState.scrollToItem(bottomAnchorIndex, scrollOffset = 10000)
+        }
+    }
+
+    // 7. When AI finishes answering (isModelSpeaking goes from true to false):
+    // Ensure the entire response and bottom anchor are scrolled into full view if user didn't scroll away
+    LaunchedEffect(uiState.isModelSpeaking) {
+        if (!uiState.isModelSpeaking && !userScrolledAwayThisTurn && uiState.chats.isNotEmpty()) {
+            delay(60)
+            listState.animateScrollToItem(bottomAnchorIndex)
+            delay(50)
             listState.scrollToItem(bottomAnchorIndex, scrollOffset = 10000)
         }
     }

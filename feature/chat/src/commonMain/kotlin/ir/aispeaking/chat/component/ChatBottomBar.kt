@@ -202,16 +202,14 @@ fun ChatBottomBar(
                 animationSpec = tween(280, easing = CubicBezierEasing(0.4f, 0f, 0.2f, 1f))
             ) { fullHeight -> (fullHeight * 1.2f).toInt() }
         ) {
-            BoxWithConstraints(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp, top = 4.dp),
-                contentAlignment = Alignment.Center
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.BottomCenter
             ) {
-                val totalWidth = maxWidth
                 val isLiveRecordingActive = isRecording && !isRecordingPreparing
 
                 // Dynamic light ambient colored glow underneath active sound recording
+                // Anchored to the lowest state (0 bottom padding) and fading out as it reaches the middle of the footer height (~52dp).
                 if (isLiveRecordingActive) {
                     val auraTransition = rememberInfiniteTransition(label = "recording_bottom_aura")
                     val wave1 by auraTransition.animateFloat(
@@ -227,24 +225,35 @@ fun ChatBottomBar(
                         label = "wave2"
                     )
 
-                    val asymmetricHeight = 36.dp + (10.dp * kotlin.math.sin(wave1).toFloat() + 6.dp * kotlin.math.cos(wave2).toFloat())
-                    val dynamicAlpha = 0.12f + (kotlin.math.sin(wave2).toFloat() * 0.04f + kotlin.math.cos(wave1).toFloat() * 0.03f)
+                    // Dock buttons sit at padding(bottom = 16.dp) with 68dp button height -> center of buttons is at 16 + 34 = 50dp.
+                    // The aura rises from the absolute bottom (0dp) up to the middle of the footer height (~52dp), fading out smoothly.
+                    val dynamicAuraHeight = 52.dp + (10.dp * kotlin.math.sin(wave1) + 5.dp * kotlin.math.cos(wave2))
+                    val dynamicAlpha = 0.16f + (kotlin.math.sin(wave2) * 0.04f + kotlin.math.cos(wave1) * 0.03f)
 
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.85f)
-                            .height(asymmetricHeight.coerceAtLeast(20.dp))
+                            .fillMaxWidth()
+                            .height(dynamicAuraHeight.coerceAtLeast(36.dp))
                             .align(Alignment.BottomCenter)
                             .background(
                                 Brush.verticalGradient(
                                     colors = listOf(
                                         Color.Transparent,
-                                        Color(0xFF0066FF).copy(alpha = dynamicAlpha.coerceIn(0.05f, 0.20f))
+                                        Color(0xFF007AFF).copy(alpha = (dynamicAlpha * 0.45f).coerceIn(0.03f, 0.12f)),
+                                        Color(0xFF0066FF).copy(alpha = dynamicAlpha.coerceIn(0.08f, 0.22f))
                                     )
                                 )
                             )
                     )
                 }
+
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp, top = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val totalWidth = maxWidth
 
                 // In idle Voice mode OR during preparation: icons stay clustered in center (~280dp).
                 // Side buttons slide to corners ONLY AFTER preparation is done (during active recording) or in Text mode!
@@ -424,6 +433,7 @@ fun ChatBottomBar(
             }
         }
     }
+}
 }
 
 /**
