@@ -17,6 +17,7 @@ import ir.aispeaking.navigation.SplashRoute
 import ir.aispeaking.navigation.StageChatRoute
 import ir.aispeaking.navigation.StagesListRoute
 import ir.aispeaking.navigation.SubscriptionRoute
+import ir.aispeaking.sharedui.ui.navigation.BackNavigationManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -133,6 +134,18 @@ fun WebBrowserNavigation(backStack: NavBackStack<NavKey>) {
                 val currentPop = jsGetPopCounter()
                 if (currentPop != lastPopCounter) {
                     lastPopCounter = currentPop
+
+                    // If an active screen (e.g. ChatScreen) intercepts the back action:
+                    val currentTop = backStack.lastOrNull()
+                    if (BackNavigationManager.handleBack()) {
+                        // Restore current active URL into browser history so URL doesn't revert
+                        if (currentTop != null) {
+                            val currentUrl = routeToUrl(currentTop)
+                            jsPushUrl(currentUrl)
+                        }
+                        continue
+                    }
+
                     val path = jsGetCurrentPath()
                     val search = jsGetCurrentSearch()
                     val route = urlToRoute(path, search) ?: MainRoute
