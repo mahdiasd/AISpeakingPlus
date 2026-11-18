@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -77,6 +78,7 @@ import ir.aispeaking.sharedui.ui.guide.GuideAlignment
 import ir.aispeaking.sharedui.ui.guide.GuideStep
 import ir.aispeaking.sharedui.ui.guide.guideTarget
 import ir.aispeaking.sharedui.ui.guide.rememberGuideState
+import ir.aispeaking.sharedui.ui.navigation.BackNavigationManager
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
@@ -111,9 +113,67 @@ fun ChatScreen(
     var isFinishTriggeredByFinishButton by remember { mutableStateOf(false) }
     var toastMessage by remember { mutableStateOf<String?>(null) }
 
+    var isFooterForcedUpForGuide by remember { mutableStateOf(false) }
+
+    val guideState = rememberGuideState(screenKey = "chat") { key ->
+        isFooterForcedUpForGuide = false
+        viewModel.markGuideCompleted(key)
+    }
+
+    LaunchedEffect(guideState.isVisible) {
+        if (!guideState.isVisible) {
+            isFooterForcedUpForGuide = false
+        }
+    }
+
+    val handleBackPress: () -> Boolean = {
+        when {
+            showExitConfirmDialog -> {
+                showExitConfirmDialog = false
+                true
+            }
+            showObjectiveSheet -> {
+                showObjectiveSheet = false
+                true
+            }
+            showLanguageLevelSheet -> {
+                showLanguageLevelSheet = false
+                true
+            }
+            showHintConfirmDialog -> {
+                showHintConfirmDialog = false
+                true
+            }
+            guideState.isVisible -> {
+                guideState.dismiss()
+                true
+            }
+            uiState.showFinishConfirmDialog -> {
+                viewModel.dismissFinishConfirmDialog()
+                true
+            }
+            uiState.isSubmittingEvaluation -> {
+                true
+            }
+            else -> {
+                isFinishTriggeredByFinishButton = true
+                showExitConfirmDialog = true
+                true
+            }
+        }
+    }
+
+    // Hardware back gesture / button on Android
     BackHandler(enabled = !uiState.isSubmittingEvaluation) {
-        isFinishTriggeredByFinishButton = false
-        showExitConfirmDialog = true
+        handleBackPress()
+    }
+
+    // Cross-platform & Web browser back button interceptor
+    DisposableEffect(handleBackPress) {
+        BackNavigationManager.registerInterceptor(handleBackPress)
+        onDispose {
+            BackNavigationManager.unregisterInterceptor(handleBackPress)
+        }
     }
 
     LaunchedEffect(toastMessage) {
@@ -256,19 +316,6 @@ fun ChatScreen(
     }
 
     val stage = uiState.stage
-
-    var isFooterForcedUpForGuide by remember { mutableStateOf(false) }
-
-    val guideState = rememberGuideState(screenKey = "chat") { key ->
-        isFooterForcedUpForGuide = false
-        viewModel.markGuideCompleted(key)
-    }
-
-    LaunchedEffect(guideState.isVisible) {
-        if (!guideState.isVisible) {
-            isFooterForcedUpForGuide = false
-        }
-    }
 
     LaunchedEffect(stage) {
         if (stage != null && !viewModel.isGuideCompleted("chat")) {

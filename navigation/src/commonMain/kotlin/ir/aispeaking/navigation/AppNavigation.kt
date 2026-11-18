@@ -30,6 +30,7 @@ import ir.aispeaking.main.leaderboard.LeaderboardScreen
 import ir.aispeaking.profile.ProfileScreen
 import ir.aispeaking.profile.placement.PlacementTestScreen
 import ir.aispeaking.sharedui.ui.dialog.AnnouncementDialog
+import ir.aispeaking.sharedui.ui.navigation.BackNavigationManager
 import ir.aispeaking.splash.SplashRoute
 import ir.aispeaking.stageslist.StagesListScreen
 import ir.aispeaking.subscription.SubscriptionScreen
@@ -171,7 +172,11 @@ fun AppNavigation(
     Box(modifier = Modifier.fillMaxSize()) {
         NavDisplay(
             backStack = backStack,
-            onBack = { backStack.removeLastOrNull() },
+            onBack = {
+                if (!BackNavigationManager.handleBack()) {
+                    backStack.removeLastOrNull()
+                }
+            },
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator(),
