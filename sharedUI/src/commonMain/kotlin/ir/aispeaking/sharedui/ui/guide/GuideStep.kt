@@ -1,5 +1,6 @@
 package ir.aispeaking.sharedui.ui.guide
 
+import androidx.compose.ui.unit.Dp
 import org.jetbrains.compose.resources.DrawableResource
 
 enum class GuideAlignment {
@@ -16,5 +17,8 @@ data class GuideStep(
     val title: String,
     val description: String,
     val icon: DrawableResource? = null,
-    val alignment: GuideAlignment = GuideAlignment.Auto
+    val alignment: GuideAlignment = GuideAlignment.Auto,
+    val isCircle: Boolean = false,
+    val cornerRadius: Dp? = null
 )
+

@@ -63,6 +63,7 @@ import ir.aispeaking.domain.model.chat.ChatStatus
 import ir.aispeaking.domain.model.stage.EvaluationSession
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_done
+import ir.aispeaking.sharedui.ic_guide
 import ir.aispeaking.sharedui.ic_lamp
 import ir.aispeaking.sharedui.ic_microphone
 import ir.aispeaking.sharedui.ic_spell_check
@@ -256,13 +257,26 @@ fun ChatScreen(
 
     val stage = uiState.stage
 
+    var isFooterForcedUpForGuide by remember { mutableStateOf(false) }
+
     val guideState = rememberGuideState(screenKey = "chat") { key ->
+        isFooterForcedUpForGuide = false
         viewModel.markGuideCompleted(key)
+    }
+
+    LaunchedEffect(guideState.isVisible) {
+        if (!guideState.isVisible) {
+            isFooterForcedUpForGuide = false
+        }
     }
 
     LaunchedEffect(stage) {
         if (stage != null && !viewModel.isGuideCompleted("chat")) {
-            delay(800)
+            delay(500)
+            // 1. Fluidly bring the floating footer up into view before showing spotlight
+            isFooterForcedUpForGuide = true
+            delay(380)
+            // 2. Start the spotlight guide tour
             guideState.start(
                 listOf(
                     GuideStep(
@@ -270,21 +284,24 @@ fun ChatScreen(
                         title = "صحبت با هوش مصنوعی",
                         description = "برای اینکه انگلیسی صحبت کنی، این دکمه رو بزن. صدات رو می‌شنویم و باهم گپ می‌زنیم!",
                         icon = Res.drawable.ic_microphone,
-                        alignment = GuideAlignment.Top
+                        alignment = GuideAlignment.Top,
+                        isCircle = true
                     ),
                     GuideStep(
                         key = "chat_objective",
                         title = "هدف این مرحله",
                         description = "از اینجا می‌تونی ببینی ماجرا چیه و قراره در مورد چه موضوعی باهم صحبت کنیم.",
-                        icon = Res.drawable.ic_lamp,
-                        alignment = GuideAlignment.Bottom
+                        icon = Res.drawable.ic_guide,
+                        alignment = GuideAlignment.Bottom,
+                        cornerRadius = 14.dp
                     ),
                     GuideStep(
                         key = "chat_hint",
                         title = "راهنمایی گرفتن",
                         description = "هر جا احساس کردی کلمه یا جمله کم آوردی، این دکمه رو بزن تا یه پیشنهاد عالی بهت بدیم!",
-                        icon = Res.drawable.ic_spell_check,
-                        alignment = GuideAlignment.Top
+                        icon = Res.drawable.ic_lamp,
+                        alignment = GuideAlignment.Top,
+                        isCircle = true
                     )
                 )
             )
@@ -453,6 +470,7 @@ fun ChatScreen(
                         onVoiceToggle = { start -> viewModel.toggleRecording(start) },
                         onSendClick = { viewModel.sendMessage() },
                         onHintClick = { showHintConfirmDialog = true },
+                        isGuideActive = isFooterForcedUpForGuide || guideState.isVisible,
                         micModifier = Modifier.guideTarget("chat_mic", guideState),
                         hintModifier = Modifier.guideTarget("chat_hint", guideState)
                     )

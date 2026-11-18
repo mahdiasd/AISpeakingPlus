@@ -1,7 +1,10 @@
 package ir.aispeaking.sharedui.ui.guide
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector4D
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.TwoWayConverter
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -12,8 +15,8 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,7 +42,13 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.them.AppTheme
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+
+private val RectVectorConverter = TwoWayConverter<Rect, AnimationVector4D>(
+    convertToVector = { AnimationVector4D(it.left, it.top, it.right, it.bottom) },
+    convertFromVector = { Rect(it.v1, it.v2, it.v3, it.v4) }
+)
 
 /**
  * Full-screen host for displaying minimal spotlight tours with curved dashed connectors.
@@ -75,6 +84,89 @@ fun AppGuideHost(
         }
     }
 
+    // Animated spotlight target bounds for smooth morphing transitions between steps
+    val animRect = remember { Animatable(Rect.Zero, RectVectorConverter) }
+    var hasInitializedTarget by remember { mutableStateOf(false) }
+
+    LaunchedEffect(relativeTargetRect) {
+        if (relativeTargetRect != null && relativeTargetRect.width > 0f) {
+            if (!hasInitializedTarget) {
+                animRect.snapTo(relativeTargetRect)
+                hasInitializedTarget = true
+            } else {
+                animRect.animateTo(
+                    targetValue = relativeTargetRect,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioLowBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                )
+            }
+        }
+    }
+
+    val screenWidth = hostSize.width.toFloat()
+    val screenHeight = hostSize.height.toFloat()
+
+    val effectiveTargetRect = if (hasInitializedTarget) animRect.value else relativeTargetRect
+
+    val isTargetInBottomHalf = (effectiveTargetRect?.center?.y ?: (screenHeight / 2f)) > screenHeight * 0.5f
+    val placeAbove = when (currentStep.alignment) {
+        GuideAlignment.Top -> true
+        GuideAlignment.Bottom -> false
+        GuideAlignment.Auto -> isTargetInBottomHalf
+    }
+
+    val marginPx = with(density) { 16.dp.toPx() }
+    val targetCenterX = effectiveTargetRect?.center?.x ?: (screenWidth / 2f)
+    val desiredCardLeft = targetCenterX - (cardSize.width / 2f)
+    val cardLeft = if (screenWidth > 0) {
+        desiredCardLeft.coerceIn(marginPx, (screenWidth - cardSize.width - marginPx).coerceAtLeast(marginPx))
+    } else marginPx
+
+    val padPx = with(density) { 8.dp.toPx() }
+    val cardTop = if (screenHeight > 0 && effectiveTargetRect != null && effectiveTargetRect.width > 0f) {
+        if (placeAbove) {
+            (effectiveTargetRect.top - padPx - cardSize.height - with(density) { 32.dp.toPx() })
+                .coerceAtLeast(marginPx)
+        } else {
+            (effectiveTargetRect.bottom + padPx + with(density) { 32.dp.toPx() })
+                .coerceAtMost((screenHeight - cardSize.height - marginPx).coerceAtLeast(marginPx))
+        }
+    } else {
+        if (screenHeight > 0) (screenHeight / 2f) - (cardSize.height / 2f) else marginPx
+    }
+
+    var hasInitializedCardPos by remember { mutableStateOf(false) }
+    val animCardLeft = remember { Animatable(0f) }
+    val animCardTop = remember { Animatable(0f) }
+
+    LaunchedEffect(cardLeft, cardTop, cardSize) {
+        if (cardSize.width > 0 && cardSize.height > 0) {
+            if (!hasInitializedCardPos) {
+                animCardLeft.snapTo(cardLeft)
+                animCardTop.snapTo(cardTop)
+                hasInitializedCardPos = true
+            } else {
+                launch {
+                    animCardLeft.animateTo(
+                        cardLeft,
+                        spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)
+                    )
+                }
+                launch {
+                    animCardTop.animateTo(
+                        cardTop,
+                        spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMediumLow)
+                    )
+                }
+            }
+        }
+    }
+
+    val curCardLeft = if (hasInitializedCardPos) animCardLeft.value else cardLeft
+    val curCardTop = if (hasInitializedCardPos) animCardTop.value else cardTop
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -89,15 +181,18 @@ fun AppGuideHost(
     ) {
         // Spotlight Canvas: Scrim + Cutout + Curved Dashed Line
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val padPx = 8.dp.toPx()
-            val cornerRadiusPx = 14.dp.toPx()
+            val cornerRadiusPx = if (currentStep.isCircle) {
+                ((effectiveTargetRect?.width ?: 0f) + padPx * 2f) / 2f
+            } else {
+                currentStep.cornerRadius?.toPx() ?: 14.dp.toPx()
+            }
 
             // 1. Draw scrim with cutout using EvenOdd fill
             val scrimPath = Path().apply {
                 fillType = PathFillType.EvenOdd
                 addRect(Rect(0f, 0f, size.width, size.height))
-                if (relativeTargetRect != null) {
-                    val paddedRect = relativeTargetRect.inflate(padPx)
+                if (effectiveTargetRect != null && effectiveTargetRect.width > 0f) {
+                    val paddedRect = effectiveTargetRect.inflate(padPx)
                     addRoundRect(RoundRect(paddedRect, CornerRadius(cornerRadiusPx, cornerRadiusPx)))
                 }
             }
@@ -108,8 +203,8 @@ fun AppGuideHost(
             )
 
             // 2. Glowing accent rim around target
-            if (relativeTargetRect != null) {
-                val paddedRect = relativeTargetRect.inflate(padPx)
+            if (effectiveTargetRect != null && effectiveTargetRect.width > 0f) {
+                val paddedRect = effectiveTargetRect.inflate(padPx)
                 drawRoundRect(
                     color = accent.copy(alpha = 0.85f),
                     topLeft = Offset(paddedRect.left, paddedRect.top),
@@ -120,46 +215,30 @@ fun AppGuideHost(
 
                 // 3. Curved dashed line connecting card to target
                 if (cardSize.width > 0 && cardSize.height > 0) {
-                    val isTargetInBottomHalf = relativeTargetRect.center.y > size.height * 0.5f
-                    val placeAbove = when (currentStep.alignment) {
-                        GuideAlignment.Top -> true
-                        GuideAlignment.Bottom -> false
-                        GuideAlignment.Auto -> isTargetInBottomHalf
-                    }
-
-                    val marginPx = 16.dp.toPx()
-                    val targetCenterX = relativeTargetRect.center.x
-                    val desiredCardLeft = targetCenterX - (cardSize.width / 2f)
-                    val cardLeft = desiredCardLeft.coerceIn(marginPx, size.width - cardSize.width - marginPx)
-
-                    val cardTop = if (placeAbove) {
-                        (relativeTargetRect.top - padPx - cardSize.height - 32.dp.toPx())
-                            .coerceAtLeast(marginPx)
-                    } else {
-                        (relativeTargetRect.bottom + padPx + 32.dp.toPx())
-                            .coerceAtMost(size.height - cardSize.height - marginPx)
-                    }
-
                     val lineStart: Offset
                     val lineEnd: Offset
 
+                    val cardMinX = curCardLeft + 20.dp.toPx()
+                    val cardMaxX = curCardLeft + cardSize.width - 20.dp.toPx()
+                    val anchorX = if (cardMaxX >= cardMinX) targetCenterX.coerceIn(cardMinX, cardMaxX) else curCardLeft + cardSize.width / 2f
+
                     if (placeAbove) {
                         lineStart = Offset(
-                            x = (cardLeft + cardSize.width * 0.5f).coerceIn(cardLeft + 20f, cardLeft + cardSize.width - 20f),
-                            y = cardTop + cardSize.height
+                            x = anchorX,
+                            y = curCardTop + cardSize.height
                         )
                         lineEnd = Offset(
                             x = targetCenterX,
-                            y = relativeTargetRect.top - padPx
+                            y = effectiveTargetRect.top - padPx
                         )
                     } else {
                         lineStart = Offset(
-                            x = (cardLeft + cardSize.width * 0.5f).coerceIn(cardLeft + 20f, cardLeft + cardSize.width - 20f),
-                            y = cardTop
+                            x = anchorX,
+                            y = curCardTop
                         )
                         lineEnd = Offset(
                             x = targetCenterX,
-                            y = relativeTargetRect.bottom + padPx
+                            y = effectiveTargetRect.bottom + padPx
                         )
                     }
 
@@ -191,35 +270,7 @@ fun AppGuideHost(
         }
 
         // Guide Card Placement
-        val screenWidth = hostSize.width.toFloat()
-        val screenHeight = hostSize.height.toFloat()
-
         if (screenWidth > 0 && screenHeight > 0) {
-            val isTargetInBottomHalf = (relativeTargetRect?.center?.y ?: (screenHeight / 2f)) > screenHeight * 0.5f
-            val placeAbove = when (currentStep.alignment) {
-                GuideAlignment.Top -> true
-                GuideAlignment.Bottom -> false
-                GuideAlignment.Auto -> isTargetInBottomHalf
-            }
-
-            val marginPx = with(density) { 16.dp.toPx() }
-            val targetCenterX = relativeTargetRect?.center?.x ?: (screenWidth / 2f)
-            val desiredCardLeft = targetCenterX - (cardSize.width / 2f)
-            val cardLeft = desiredCardLeft.coerceIn(marginPx, (screenWidth - cardSize.width - marginPx).coerceAtLeast(marginPx))
-
-            val padPx = with(density) { 8.dp.toPx() }
-            val cardTop = if (relativeTargetRect != null) {
-                if (placeAbove) {
-                    (relativeTargetRect.top - padPx - cardSize.height - with(density) { 32.dp.toPx() })
-                        .coerceAtLeast(marginPx)
-                } else {
-                    (relativeTargetRect.bottom + padPx + with(density) { 32.dp.toPx() })
-                        .coerceAtMost((screenHeight - cardSize.height - marginPx).coerceAtLeast(marginPx))
-                }
-            } else {
-                (screenHeight / 2f) - (cardSize.height / 2f)
-            }
-
             AnimatedVisibility(
                 visible = state.isVisible,
                 enter = fadeIn() + scaleIn(
@@ -228,7 +279,7 @@ fun AppGuideHost(
                 ),
                 exit = fadeOut() + scaleOut(targetScale = 0.92f),
                 modifier = Modifier.offset {
-                    IntOffset(cardLeft.roundToInt(), cardTop.roundToInt())
+                    IntOffset(curCardLeft.roundToInt(), curCardTop.roundToInt())
                 }
             ) {
                 AppGuideCard(

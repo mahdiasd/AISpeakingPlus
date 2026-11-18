@@ -145,6 +145,7 @@ fun ChatBottomBar(
     onVoiceToggle: (Boolean) -> Unit,
     onSendClick: () -> Unit,
     onHintClick: () -> Unit = {},
+    isGuideActive: Boolean = false,
     micModifier: Modifier = Modifier,
     hintModifier: Modifier = Modifier
 ) {
@@ -185,9 +186,10 @@ fun ChatBottomBar(
             )
         }
 
-        // Main Floating Controls: Hidden with fluid slide-down & fade-out while AI is responding
+        // Main Floating Controls: Hidden with fluid slide-down & fade-out while AI is responding,
+        // but kept/brought up gracefully whenever the spotlight guide tour is active
         AnimatedVisibility(
-            visible = !isModelSpeaking,
+            visible = !isModelSpeaking || isGuideActive,
             enter = fadeIn(
                 animationSpec = tween(360, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
             ) + slideInVertically(
