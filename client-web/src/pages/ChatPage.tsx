@@ -113,13 +113,36 @@ export const ChatPage: React.FC = () => {
     };
   }, [stageId]);
 
+  const mainRef = useRef<HTMLElement>(null);
+  const userScrolledAwayThisTurnRef = useRef(false);
+
   // Auto-scroll to bottom of conversation
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (force = false) => {
+    if (force || !userScrolledAwayThisTurnRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleScroll = () => {
+    const el = mainRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distanceFromBottom > 72) {
+      // User scrolled up away from bottom to read history
+      userScrolledAwayThisTurnRef.current = true;
+    } else if (distanceFromBottom < 28) {
+      // User scrolled back down to the bottom
+      userScrolledAwayThisTurnRef.current = false;
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (!userScrolledAwayThisTurnRef.current) {
+      const timer = setTimeout(() => {
+        scrollToBottom(false);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
   }, [chats, isModelSpeaking]);
 
   // 2. Fetch Initial AI Greeting
@@ -181,6 +204,7 @@ export const ChatPage: React.FC = () => {
     const userMessageId = `user_${Date.now()}`;
     const newTurnsCount = turnsCount + 1;
     setTurnsCount(newTurnsCount);
+    userScrolledAwayThisTurnRef.current = false;
 
     const updatedChats: ChatBubble[] = [
       ...chats,
@@ -193,6 +217,7 @@ export const ChatPage: React.FC = () => {
     ];
 
     setChats(updatedChats);
+    setTimeout(() => scrollToBottom(true), 40);
     setIsSending(true);
     setIsModelSpeaking(true);
 
@@ -527,7 +552,11 @@ export const ChatPage: React.FC = () => {
             </header>
 
             {/* Main Chat Conversation Feed (ONLY this element scrolls on mobile) */}
-            <main className="relative z-10 flex-1 min-h-0 overflow-y-auto overscroll-contain px-3.5 pt-3 pb-4 space-y-4">
+            <main
+              ref={mainRef}
+              onScroll={handleScroll}
+              className="relative z-10 flex-1 min-h-0 overflow-y-auto overscroll-contain px-3.5 pt-3 pb-4 space-y-4"
+            >
               {/* Loading Skeleton */}
               {isLoadingStage && (
                 <div className="space-y-4 pt-6">

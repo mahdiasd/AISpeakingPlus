@@ -843,6 +843,13 @@ class ChatViewModel(
                         }
                         is StageChatStreamEvent.TextDone -> {
                             val d = event.payload
+                            val answeredUserChat = userChat.copy(
+                                status = ChatStatus.Answered(
+                                    grammar = d.grammarFeedbackFa,
+                                    correctedSentence = d.correctedSentence,
+                                    hasGrammarError = d.hasGrammarError || d.grammarFeedbackFa.isNotBlank()
+                                )
+                            )
                             val textDoneAiChat = Chat.Ai(
                                 uid = aiUid,
                                 message = if (d.message.isNotBlank()) d.message else accumulatedText,
@@ -853,11 +860,12 @@ class ChatViewModel(
                             )
                             _uiState.update { state ->
                                 val withoutWaiting = state.chats.filter { it !is Chat.WaitingForAi }
-                                val existingIndex = withoutWaiting.indexOfFirst { it.uid == aiUid }
+                                val withAnsweredUser = withoutWaiting.map { if (it.uid == userChat.uid) answeredUserChat else it }
+                                val existingIndex = withAnsweredUser.indexOfFirst { it.uid == aiUid }
                                 val updatedChats = if (existingIndex != -1) {
-                                    withoutWaiting.map { if (it.uid == aiUid) textDoneAiChat else it }
+                                    withAnsweredUser.map { if (it.uid == aiUid) textDoneAiChat else it }
                                 } else {
-                                    withoutWaiting + textDoneAiChat
+                                    withAnsweredUser + textDoneAiChat
                                 }
                                 state.copy(
                                     chats = updatedChats.toImmutableList(),
