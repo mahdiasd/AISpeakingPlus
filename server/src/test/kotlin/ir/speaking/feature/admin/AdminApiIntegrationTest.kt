@@ -20,6 +20,8 @@ import ir.speaking.feature.subscription.db.SubscriptionTable
 import ir.speaking.feature.user.db.UserTable
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -284,6 +286,24 @@ class AdminApiIntegrationTest {
                 it[nickName] = "کاربر مسدود شده"
                 it[status] = "SUSPENDED"
             }
+
+            val now = Clock.System.now()
+            SubscriptionTable.insert {
+                it[id] = UUID.randomUUID()
+                it[userId] = userId1
+                it[planType] = "MONTHLY"
+                it[startedAt] = now
+                it[expiresAt] = now.plus(30, DateTimeUnit.DAY, TimeZone.UTC)
+                it[status] = "ACTIVE"
+            }
+            SubscriptionTable.insert {
+                it[id] = UUID.randomUUID()
+                it[userId] = userId2
+                it[planType] = "MONTHLY"
+                it[startedAt] = now.minus(60, DateTimeUnit.DAY, TimeZone.UTC)
+                it[expiresAt] = now.minus(30, DateTimeUnit.DAY, TimeZone.UTC)
+                it[status] = "EXPIRED"
+            }
         }
 
         // 1. Unauthenticated users list -> 401
@@ -330,6 +350,27 @@ class AdminApiIntegrationTest {
         val suspendedData = json.parseToJsonElement(filterSuspendedRes.bodyAsText()).jsonObject["data"]?.jsonArray
         assertNotNull(suspendedData)
         assertTrue(suspendedData.all { it.jsonObject["status"]?.jsonPrimitive?.content == "SUSPENDED" })
+
+        // 5.1 Filter by subscription: subscription=ACTIVE -> should only find userId1 with active subscription
+        val filterActiveSubRes = client.get("/api/admin/users?subscription=ACTIVE") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+        assertEquals(HttpStatusCode.OK, filterActiveSubRes.status)
+        val activeSubData = json.parseToJsonElement(filterActiveSubRes.bodyAsText()).jsonObject["data"]?.jsonArray
+        assertNotNull(activeSubData)
+        assertEquals(1, activeSubData.size)
+        assertEquals(userId1.toString(), activeSubData[0].jsonObject["id"]?.jsonPrimitive?.content)
+        assertTrue(activeSubData[0].jsonObject["hasActiveSubscription"]?.jsonPrimitive?.content?.toBoolean() == true)
+
+        // 5.2 Filter by subscription: hasSubscription=false -> should exclude userId1
+        val filterNoSubRes = client.get("/api/admin/users?hasSubscription=false") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+        assertEquals(HttpStatusCode.OK, filterNoSubRes.status)
+        val noSubData = json.parseToJsonElement(filterNoSubRes.bodyAsText()).jsonObject["data"]?.jsonArray
+        assertNotNull(noSubData)
+        assertTrue(noSubData.none { it.jsonObject["id"]?.jsonPrimitive?.content == userId1.toString() })
+        assertTrue(noSubData.all { it.jsonObject["hasActiveSubscription"]?.jsonPrimitive?.content?.toBoolean() == false })
 
         // 6. Get User Details
         val detailRes = client.get("/api/admin/users/$userId1") {

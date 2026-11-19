@@ -213,7 +213,13 @@ class ApiClient {
   }
 
   // --- Users APIs ---
-  async getUsers(page: number = 1, limit: number = 20, search?: string, status?: string): Promise<{ users: UserItem[]; totalPages: number; totalItems: number }> {
+  async getUsers(
+    page: number = 1,
+    limit: number = 20,
+    search?: string,
+    status?: string,
+    subscription?: string
+  ): Promise<{ users: UserItem[]; totalPages: number; totalItems: number }> {
     const params = new URLSearchParams();
     params.set('page', page.toString());
     params.set('limit', limit.toString());
@@ -222,6 +228,9 @@ class ApiClient {
     }
     if (status && status !== 'ALL') {
       params.set('status', status);
+    }
+    if (subscription && subscription !== 'ALL') {
+      params.set('subscription', subscription);
     }
 
     const res = await this.request<UserItem[]>(`/api/admin/users?${params.toString()}`);

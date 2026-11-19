@@ -37,8 +37,21 @@ fun Route.adminUserRouting(
                 val limit = (call.request.queryParameters["limit"]?.toIntOrNull() ?: 20).coerceIn(1, 100)
                 val search = call.request.queryParameters["search"]
                 val status = call.request.queryParameters["status"]
+                val subscriptionParam = call.request.queryParameters["subscription"]
+                val hasSubParam = call.request.queryParameters["hasSubscription"]?.toBooleanStrictOrNull()
+                val hasSubscription: Boolean? = when {
+                    hasSubParam != null -> hasSubParam
+                    subscriptionParam.equals("ACTIVE", ignoreCase = true) ||
+                    subscriptionParam.equals("SUBSCRIBED", ignoreCase = true) ||
+                    subscriptionParam.equals("TRUE", ignoreCase = true) -> true
+                    subscriptionParam.equals("INACTIVE", ignoreCase = true) ||
+                    subscriptionParam.equals("EXPIRED", ignoreCase = true) ||
+                    subscriptionParam.equals("NONE", ignoreCase = true) ||
+                    subscriptionParam.equals("FALSE", ignoreCase = true) -> false
+                    else -> null
+                }
 
-                val (total, users) = adminUserService.getUsers(page, limit, search, status)
+                val (total, users) = adminUserService.getUsers(page, limit, search, status, hasSubscription)
                 val totalPages = if (total == 0L) 1 else ((total + limit - 1) / limit).toInt()
 
                 call.successRespond(
@@ -53,12 +66,14 @@ fun Route.adminUserRouting(
             }.describe {
                 tag("Admin Users")
                 summary = "List and Search Users"
-                description = "Paginated user listing with Persian phone normalization and status filters"
+                description = "Paginated user listing with Persian phone normalization, status, and subscription filters"
                 parameters {
                     query("page") { description = "Page number (1-indexed)"; required = false }
                     query("limit") { description = "Page size (1-100)"; required = false }
                     query("search") { description = "Search query by mobile or name"; required = false }
                     query("status") { description = "Filter by status: ACTIVE, SUSPENDED, ALL"; required = false }
+                    query("subscription") { description = "Filter by subscription status: ACTIVE, INACTIVE, ALL"; required = false }
+                    query("hasSubscription") { description = "Filter by active subscription boolean (true/false)"; required = false }
                 }
                 responses {
                     HttpStatusCode.OK {

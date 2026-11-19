@@ -32,6 +32,7 @@ export const UsersPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [subscriptionFilter, setSubscriptionFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalItems, setTotalItems] = useState<number>(0);
@@ -46,7 +47,7 @@ export const UsersPage: React.FC = () => {
     setIsLoading(true);
     try {
       const normalizedSearch = normalizeDigits(searchQuery.trim());
-      const res = await api.getUsers(currentPage, pageSize, normalizedSearch, statusFilter);
+      const res = await api.getUsers(currentPage, pageSize, normalizedSearch, statusFilter, subscriptionFilter);
       setUsers(res.users);
       setTotalPages(res.totalPages);
       setTotalItems(res.totalItems);
@@ -55,7 +56,7 @@ export const UsersPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchQuery, statusFilter, error]);
+  }, [currentPage, pageSize, searchQuery, statusFilter, subscriptionFilter, error]);
 
   useEffect(() => {
     fetchUsers();
@@ -72,6 +73,18 @@ export const UsersPage: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handleSubscriptionFilterChange = (sub: string) => {
+    setSubscriptionFilter(sub);
+    setCurrentPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('ALL');
+    setSubscriptionFilter('ALL');
+    setCurrentPage(1);
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -83,37 +96,78 @@ export const UsersPage: React.FC = () => {
           <Badge variant="purple" size="md">
             {totalItems} کاربر
           </Badge>
+          {subscriptionFilter === 'ACTIVE' && (
+            <Badge variant="warning" size="md">
+              <Crown className="w-3 h-3 ml-1" />
+              فیلتر: اشتراک فعال
+            </Badge>
+          )}
         </div>
       </div>
 
       {/* Filter and Search Toolbar */}
-      <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl p-3 sm:p-4 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
-        {/* Status Filter Buttons */}
-        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-          <span className="text-xs font-semibold text-slate-400 dark:text-[#858a94] ml-1 hidden sm:inline-flex items-center gap-1.5 uppercase tracking-wider">
-            <Filter className="w-3.5 h-3.5 text-indigo-500" /> وضعیت:
-          </span>
-          {[
-            { id: 'ALL', label: 'همه کاربران' },
-            { id: 'ACTIVE', label: 'فعال' },
-            { id: 'SUSPENDED', label: 'تعلیق شده' },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleStatusFilterChange(item.id)}
-              className={`text-xs sm:text-sm px-3.5 py-1.5 rounded-xl font-medium transition-all ${
-                statusFilter === item.id
-                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs dark:bg-[#282a30] dark:text-[#f1f3f5] dark:border-[#383b44]'
-                  : 'bg-slate-100 dark:bg-[#24262b] text-slate-600 dark:text-[#9ca3af] hover:text-slate-900 dark:hover:text-[#f1f3f5] hover:bg-slate-200/70 dark:hover:bg-[#282a30] border border-transparent'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+      <div className="bg-white dark:bg-[#202125] border border-slate-200 dark:border-[#2d3037] rounded-2xl p-3 sm:p-4 shadow-2xs flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Status Filter Buttons */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <span className="text-xs font-semibold text-slate-400 dark:text-[#858a94] ml-1 hidden sm:inline-flex items-center gap-1.5 uppercase tracking-wider">
+              <Filter className="w-3.5 h-3.5 text-indigo-500" /> حساب:
+            </span>
+            {[
+              { id: 'ALL', label: 'همه' },
+              { id: 'ACTIVE', label: 'فعال' },
+              { id: 'SUSPENDED', label: 'تعلیق شده' },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleStatusFilterChange(item.id)}
+                className={`text-xs px-3 py-1.5 rounded-xl font-medium transition-all ${
+                  statusFilter === item.id
+                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs dark:bg-[#282a30] dark:text-[#f1f3f5] dark:border-[#383b44] font-bold'
+                    : 'bg-slate-100 dark:bg-[#24262b] text-slate-600 dark:text-[#9ca3af] hover:text-slate-900 dark:hover:text-[#f1f3f5] hover:bg-slate-200/70 dark:hover:bg-[#282a30] border border-transparent'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="h-5 w-px bg-slate-200 dark:bg-[#383b44] hidden sm:block" />
+
+          {/* Subscription Filter Buttons */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <span className="text-xs font-semibold text-slate-400 dark:text-[#858a94] ml-1 hidden sm:inline-flex items-center gap-1.5 uppercase tracking-wider">
+              <Crown className="w-3.5 h-3.5 text-amber-500" /> اشتراک:
+            </span>
+            {[
+              { id: 'ALL', label: 'همه', icon: null },
+              { id: 'ACTIVE', label: 'دارای اشتراک فعال', icon: Crown },
+              { id: 'INACTIVE', label: 'بدون اشتراک', icon: null },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isSelected = subscriptionFilter === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleSubscriptionFilterChange(item.id)}
+                  className={`text-xs px-3 py-1.5 rounded-xl font-medium transition-all inline-flex items-center gap-1.5 ${
+                    isSelected
+                      ? item.id === 'ACTIVE'
+                        ? 'bg-amber-50 text-amber-800 border border-amber-300 shadow-2xs dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30 font-bold'
+                        : 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs dark:bg-[#282a30] dark:text-[#f1f3f5] dark:border-[#383b44] font-bold'
+                      : 'bg-slate-100 dark:bg-[#24262b] text-slate-600 dark:text-[#9ca3af] hover:text-slate-900 dark:hover:text-[#f1f3f5] hover:bg-slate-200/70 dark:hover:bg-[#282a30] border border-transparent'
+                  }`}
+                >
+                  {Icon && <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-600 dark:text-amber-400' : 'text-amber-500/70'}`} />}
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Search Input Box */}
-        <div className="relative w-full md:w-80">
+        <div className="relative w-full xl:w-80 shrink-0">
           <input
             type="text"
             placeholder="جستجوی شماره همراه یا نام..."
@@ -139,8 +193,20 @@ export const UsersPage: React.FC = () => {
             </div>
             <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">کاربری یافت نشد</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-              با این مشخصات یا شماره همراه هیچ کاربری در پایگاه‌داده وجود ندارد.
+              {searchQuery || statusFilter !== 'ALL' || subscriptionFilter !== 'ALL'
+                ? 'کاربری متناسب با فیلترها و جستجوی شما یافت نشد.'
+                : 'با این مشخصات یا شماره همراه هیچ کاربری در پایگاه‌داده وجود ندارد.'}
             </p>
+            {(searchQuery || statusFilter !== 'ALL' || subscriptionFilter !== 'ALL') && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4 text-xs"
+                onClick={handleClearFilters}
+              >
+                پاک کردن تمام فیلترها
+              </Button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">

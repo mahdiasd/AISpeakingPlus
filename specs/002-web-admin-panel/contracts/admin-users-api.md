@@ -11,7 +11,7 @@
 جستجوی کاربران با پشتیبانی از ارقام فارسی شماره همراه (`۰۹۱۲...` یا `0912...`).
 
 - **مسیر**: `GET /api/admin/users`
-- **پارامترهای جستجو**: `page`, `limit`, `search`, `status`
+- **پارامترهای جستجو**: `page`, `limit`, `search`, `status`, `subscription` (مقادیر: `ACTIVE`, `INACTIVE`, `ALL`), `hasSubscription` (مقادیر: `true`, `false`)
 
 ### پاسخ موفق (200 OK)
 ```json

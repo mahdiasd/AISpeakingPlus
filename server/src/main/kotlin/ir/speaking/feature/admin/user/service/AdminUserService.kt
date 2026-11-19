@@ -33,9 +33,11 @@ class AdminUserService {
         page: Int = 1,
         limit: Int = 20,
         search: String? = null,
-        status: String? = null
+        status: String? = null,
+        hasSubscription: Boolean? = null
     ): Pair<Long, List<AdminUserItemDto>> = newSuspendedTransaction(Dispatchers.IO) {
         val query = UserTable.selectAll()
+        val now = Clock.System.now()
 
         if (!search.isNullOrBlank()) {
             val normalized = normalizePhone(search)
@@ -51,6 +53,21 @@ class AdminUserService {
             query.andWhere { UserTable.status eq status.uppercase() }
         }
 
+        if (hasSubscription != null) {
+            val activeSubUsersQuery = SubscriptionTable
+                .select(SubscriptionTable.userId)
+                .where {
+                    (SubscriptionTable.status eq "ACTIVE") and
+                    (SubscriptionTable.expiresAt greater now)
+                }
+
+            if (hasSubscription) {
+                query.andWhere { UserTable.id inSubQuery activeSubUsersQuery }
+            } else {
+                query.andWhere { UserTable.id notInSubQuery activeSubUsersQuery }
+            }
+        }
+
         val total = query.count()
         val offset = ((page - 1).coerceAtLeast(0) * limit).toLong()
         val rows = query.orderBy(UserTable.createdAt, SortOrder.DESC)
@@ -58,7 +75,6 @@ class AdminUserService {
             .offset(offset)
             .toList()
 
-        val now = Clock.System.now()
         val userIds = rows.map { it[UserTable.id].value }
 
         val activeSubs = if (userIds.isNotEmpty()) {

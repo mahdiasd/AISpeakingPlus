@@ -10264,7 +10264,7 @@ except ApiException as e:
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Paginated user listing with Persian phone normalization and status filters</p>
+                        <p class="marked">Paginated user listing with Persian phone normalization, status, and subscription filters</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/admin/users</span></code></pre>
@@ -10290,7 +10290,7 @@ except ApiException as e:
                            <pre class="prettyprint"><code class="language-bsh">curl -X GET\
  -H "Authorization: Bearer [[accessToken]]"\
 -H "Accept: application/json"\
-"//api/admin/users?page=&limit=&search=&status="</code></pre>
+"//api/admin/users?page=&limit=&search=&status=&subscription=&hasSubscription="</code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminUsers-apiAdminUsersGet-0-java">
                             <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
@@ -10312,8 +10312,10 @@ public class AdminUsersApiExample {
          limit = ; //  | Page size (1-100)
          search = ; //  | Search query by mobile or name
          status = ; //  | Filter by status: ACTIVE, SUSPENDED, ALL
+         subscription = ; //  | Filter by subscription status: ACTIVE, INACTIVE, ALL
+         hasSubscription = ; //  | Filter by active subscription boolean (true/false)
         try {
-            Object result = apiInstance.apiAdminUsersGet(page, limit, search, status);
+            Object result = apiInstance.apiAdminUsersGet(page, limit, search, status, subscription, hasSubscription);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling AdminUsersApi#apiAdminUsersGet");
@@ -10334,8 +10336,10 @@ public class AdminUsersApiExample {
          limit = ; //  | Page size (1-100)
          search = ; //  | Search query by mobile or name
          status = ; //  | Filter by status: ACTIVE, SUSPENDED, ALL
+         subscription = ; //  | Filter by subscription status: ACTIVE, INACTIVE, ALL
+         hasSubscription = ; //  | Filter by active subscription boolean (true/false)
         try {
-            Object result = apiInstance.apiAdminUsersGet(page, limit, search, status);
+            Object result = apiInstance.apiAdminUsersGet(page, limit, search, status, subscription, hasSubscription);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling AdminUsersApi#apiAdminUsersGet");
@@ -10354,6 +10358,8 @@ public class AdminUsersApiExample {
  *limit = ; // Page size (1-100) (optional)
  *search = ; // Search query by mobile or name (optional)
  *status = ; // Filter by status: ACTIVE, SUSPENDED, ALL (optional)
+ *subscription = ; // Filter by subscription status: ACTIVE, INACTIVE, ALL (optional)
+ *hasSubscription = ; // Filter by active subscription boolean (true/false) (optional)
 
 AdminUsersApi *apiInstance = [[AdminUsersApi alloc] init];
 
@@ -10362,6 +10368,8 @@ AdminUsersApi *apiInstance = [[AdminUsersApi alloc] init];
     limit:limit
     search:search
     status:status
+    subscription:subscription
+    hasSubscription:hasSubscription
               completionHandler: ^(Object output, NSError* error) {
                             if (output) {
                                 NSLog(@"%@", output);
@@ -10383,7 +10391,9 @@ var opts = {
   'page': , // {{}} Page number (1-indexed)
   'limit': , // {{}} Page size (1-100)
   'search': , // {{}} Search query by mobile or name
-  'status':  // {{}} Filter by status: ACTIVE, SUSPENDED, ALL
+  'status': , // {{}} Filter by status: ACTIVE, SUSPENDED, ALL
+  'subscription': , // {{}} Filter by subscription status: ACTIVE, INACTIVE, ALL
+  'hasSubscription':  // {{}} Filter by active subscription boolean (true/false)
 };
 var callback = function(error, data, response) {
   if (error) {
@@ -10419,11 +10429,13 @@ namespace Example
             var limit = new (); //  | Page size (1-100) (optional) 
             var search = new (); //  | Search query by mobile or name (optional) 
             var status = new (); //  | Filter by status: ACTIVE, SUSPENDED, ALL (optional) 
+            var subscription = new (); //  | Filter by subscription status: ACTIVE, INACTIVE, ALL (optional) 
+            var hasSubscription = new (); //  | Filter by active subscription boolean (true/false) (optional) 
 
             try
             {
                 // List and Search Users
-                Object result = apiInstance.apiAdminUsersGet(page, limit, search, status);
+                Object result = apiInstance.apiAdminUsersGet(page, limit, search, status, subscription, hasSubscription);
                 Debug.WriteLine(result);
             }
             catch (Exception e)
@@ -10446,9 +10458,11 @@ $page = ; //  | Page number (1-indexed)
 $limit = ; //  | Page size (1-100)
 $search = ; //  | Search query by mobile or name
 $status = ; //  | Filter by status: ACTIVE, SUSPENDED, ALL
+$subscription = ; //  | Filter by subscription status: ACTIVE, INACTIVE, ALL
+$hasSubscription = ; //  | Filter by active subscription boolean (true/false)
 
 try {
-    $result = $api_instance->apiAdminUsersGet($page, $limit, $search, $status);
+    $result = $api_instance->apiAdminUsersGet($page, $limit, $search, $status, $subscription, $hasSubscription);
     print_r($result);
 } catch (Exception $e) {
     echo 'Exception when calling AdminUsersApi->apiAdminUsersGet: ', $e->getMessage(), PHP_EOL;
@@ -10467,9 +10481,11 @@ my $page = ; #  | Page number (1-indexed)
 my $limit = ; #  | Page size (1-100)
 my $search = ; #  | Search query by mobile or name
 my $status = ; #  | Filter by status: ACTIVE, SUSPENDED, ALL
+my $subscription = ; #  | Filter by subscription status: ACTIVE, INACTIVE, ALL
+my $hasSubscription = ; #  | Filter by active subscription boolean (true/false)
 
 eval { 
-    my $result = $api_instance->apiAdminUsersGet(page => $page, limit => $limit, search => $search, status => $status);
+    my $result = $api_instance->apiAdminUsersGet(page => $page, limit => $limit, search => $search, status => $status, subscription => $subscription, hasSubscription => $hasSubscription);
     print Dumper($result);
 };
 if ($@) {
@@ -10491,10 +10507,12 @@ page =  #  | Page number (1-indexed) (optional)
 limit =  #  | Page size (1-100) (optional)
 search =  #  | Search query by mobile or name (optional)
 status =  #  | Filter by status: ACTIVE, SUSPENDED, ALL (optional)
+subscription =  #  | Filter by subscription status: ACTIVE, INACTIVE, ALL (optional)
+hasSubscription =  #  | Filter by active subscription boolean (true/false) (optional)
 
 try: 
     # List and Search Users
-    api_response = api_instance.api_admin_users_get(page=page, limit=limit, search=search, status=status)
+    api_response = api_instance.api_admin_users_get(page=page, limit=limit, search=search, status=status, subscription=subscription, hasSubscription=hasSubscription)
     pprint(api_response)
 except ApiException as e:
     print("Exception when calling AdminUsersApi->apiAdminUsersGet: %s\n" % e)</code></pre>
@@ -10583,6 +10601,44 @@ except ApiException as e:
                                 
                                                     <div class="inner description">
                                                         Filter by status: ACTIVE, SUSPENDED, ALL
+                                                    </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                </tr>
+                                <tr><td style="width:150px;">subscription</td>
+                                <td>
+                                
+                                
+                                    <div id="d2e199_apiAdminUsersGet_subscription">
+                                        <div class="json-schema-view">
+                                            <div class="primitive">
+                                                <span class="type">
+                                                    
+                                                </span>
+                                
+                                                    <div class="inner description">
+                                                        Filter by subscription status: ACTIVE, INACTIVE, ALL
+                                                    </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                </tr>
+                                <tr><td style="width:150px;">hasSubscription</td>
+                                <td>
+                                
+                                
+                                    <div id="d2e199_apiAdminUsersGet_hasSubscription">
+                                        <div class="json-schema-view">
+                                            <div class="primitive">
+                                                <span class="type">
+                                                    
+                                                </span>
+                                
+                                                    <div class="inner description">
+                                                        Filter by active subscription boolean (true/false)
                                                     </div>
                                             </div>
                                         </div>
