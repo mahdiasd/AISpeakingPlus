@@ -78,6 +78,19 @@ object AppDeepLinkManager {
             !stageId.isNullOrBlank() -> StageChatRoute(stageId)
             screen == "profile" -> ProfileRoute
             screen == "subscription" || screen == "sub" || screen == "vip" -> SubscriptionRoute
+            screen == "placement" || screen == "placement_test" || screen == "placement-test" -> PlacementTestRoute
+            screen == "payment-result" || screen == "payment_result" -> {
+                val status = data["status"] ?: data["payment_status"] ?: "failed"
+                val isSuccess = status.equals("success", ignoreCase = true) || status.equals("ok", ignoreCase = true)
+                PaymentResultRoute(
+                    isSuccess = isSuccess,
+                    refId = data["ref_id"] ?: data["refId"] ?: data["authority"],
+                    planTitle = data["plan"] ?: data["plan_title"],
+                    orderId = data["order_id"] ?: data["orderId"],
+                    errorMessage = data["error"] ?: data["message"],
+                    market = data["market"]
+                )
+            }
             screen == "stages" || screen == "stages_list" || screen == "stageslist" -> StagesListRoute
             screen == "leaderboard" || screen == "ranking" || screen == "podium" -> LeaderboardRoute
             screen == "main" || screen == "roadmap" || screen == "map" -> MainRoute
@@ -131,6 +144,38 @@ object AppDeepLinkManager {
             normalizedRoute == "stages" || normalizedRoute == "stages_list" || normalizedRoute == "stageslist" -> StagesListRoute
             normalizedRoute == "leaderboard" || normalizedRoute == "ranking" || normalizedRoute == "podium" -> LeaderboardRoute
             normalizedRoute == "profile" -> ProfileRoute
+            normalizedRoute == "placement" || normalizedRoute == "placement_test" || normalizedRoute == "placement-test" -> PlacementTestRoute
+            normalizedRoute == "payment-result" || normalizedRoute == "payment_result" -> {
+                val isSuccess = cleanUrl.contains("status=success") || cleanUrl.contains("payment_status=success")
+                val refId = when {
+                    cleanUrl.contains("ref_id=") -> cleanUrl.substringAfter("ref_id=").substringBefore("&")
+                    cleanUrl.contains("refId=") -> cleanUrl.substringAfter("refId=").substringBefore("&")
+                    cleanUrl.contains("authority=") -> cleanUrl.substringAfter("authority=").substringBefore("&")
+                    else -> null
+                }
+                val plan = if (cleanUrl.contains("plan=")) cleanUrl.substringAfter("plan=").substringBefore("&") else null
+                val error = if (cleanUrl.contains("error=")) cleanUrl.substringAfter("error=").substringBefore("&") else null
+                PaymentResultRoute(
+                    isSuccess = isSuccess,
+                    refId = refId,
+                    planTitle = plan,
+                    errorMessage = error
+                )
+            }
+            normalizedRoute == "subscription" && cleanUrl.contains("payment_status") -> {
+                val isSuccess = cleanUrl.contains("payment_status=success")
+                val refId = when {
+                    cleanUrl.contains("ref_id=") -> cleanUrl.substringAfter("ref_id=").substringBefore("&")
+                    cleanUrl.contains("authority=") -> cleanUrl.substringAfter("authority=").substringBefore("&")
+                    else -> null
+                }
+                val error = if (cleanUrl.contains("error=")) cleanUrl.substringAfter("error=").substringBefore("&") else null
+                PaymentResultRoute(
+                    isSuccess = isSuccess,
+                    refId = refId,
+                    errorMessage = error
+                )
+            }
             normalizedRoute == "subscription" || normalizedRoute == "sub" || normalizedRoute == "vip" -> SubscriptionRoute
             normalizedRoute == "main" || normalizedRoute == "roadmap" || normalizedRoute == "map" -> MainRoute
             normalizedRoute == "login" || normalizedRoute == "auth" -> LoginRoute

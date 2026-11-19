@@ -12,6 +12,8 @@ import ir.aispeaking.navigation.IntroVideoRoute
 import ir.aispeaking.navigation.LeaderboardRoute
 import ir.aispeaking.navigation.LoginRoute
 import ir.aispeaking.navigation.MainRoute
+import ir.aispeaking.navigation.PaymentResultRoute
+import ir.aispeaking.navigation.PlacementTestRoute
 import ir.aispeaking.navigation.ProfileRoute
 import ir.aispeaking.navigation.SplashRoute
 import ir.aispeaking.navigation.StageChatRoute
@@ -183,6 +185,15 @@ private fun routeToUrl(route: NavKey): String {
         is LeaderboardRoute -> "/app/leaderboard"
         is ProfileRoute -> "/app/profile"
         is SubscriptionRoute -> "/app/subscription"
+        is PlacementTestRoute -> "/app/placement"
+        is PaymentResultRoute -> {
+            val status = if (route.isSuccess) "success" else "failed"
+            val refParam = route.refId?.let { "&ref_id=$it" }.orEmpty()
+            val planParam = route.planTitle?.let { "&plan=$it" }.orEmpty()
+            val errParam = route.errorMessage?.let { "&error=$it" }.orEmpty()
+            val marketParam = route.market?.let { "&market=$it" }.orEmpty()
+            "/app/payment-result?status=$status$refParam$planParam$errParam$marketParam"
+        }
         is LoginRoute -> "/app/login"
         else -> "/app/main"
     }
@@ -198,6 +209,34 @@ private fun urlToRoute(path: String, search: String): AppRoute? {
         cleanPath == "profile" -> ProfileRoute
         cleanPath == "leaderboard" || cleanPath == "ranking" || cleanPath == "podium" -> LeaderboardRoute
         cleanPath == "subscription" || cleanPath == "sub" -> SubscriptionRoute
+        cleanPath == "placement" || cleanPath == "placement-test" || cleanPath == "placement_test" -> PlacementTestRoute
+        cleanPath == "payment-result" || cleanPath == "payment/result" -> {
+            val status = params["status"] ?: params["payment_status"] ?: "failed"
+            val isSuccess = status.equals("success", ignoreCase = true) || status.equals("ok", ignoreCase = true)
+            val refId = params["ref_id"] ?: params["refId"] ?: params["authority"]
+            val planTitle = params["plan"] ?: params["plan_title"]
+            val error = params["error"] ?: params["message"]
+            PaymentResultRoute(
+                isSuccess = isSuccess,
+                refId = refId,
+                planTitle = planTitle,
+                orderId = params["order_id"] ?: params["orderId"],
+                errorMessage = error,
+                market = params["market"]
+            )
+        }
+        cleanPath == "subscription" && (params.containsKey("payment_status") || params.containsKey("status")) -> {
+            val status = params["payment_status"] ?: params["status"] ?: "failed"
+            val isSuccess = status.equals("success", ignoreCase = true) || status.equals("ok", ignoreCase = true)
+            val refId = params["ref_id"] ?: params["authority"]
+            PaymentResultRoute(
+                isSuccess = isSuccess,
+                refId = refId,
+                planTitle = params["plan"],
+                errorMessage = params["error"],
+                market = "DIRECT_ZARINPAL"
+            )
+        }
         cleanPath == "stages" || cleanPath == "stages_list" -> StagesListRoute
         cleanPath == "login" || cleanPath == "auth" -> LoginRoute
         cleanPath == "chat" || cleanPath.startsWith("chat/") -> {
@@ -223,6 +262,32 @@ private fun parseLegacyHash(hash: String): AppRoute? {
         name == "main" || name == "roadmap" -> MainRoute
         name == "profile" -> ProfileRoute
         name == "leaderboard" || name == "ranking" -> LeaderboardRoute
+        name == "subscription" && params.containsKey("payment_status") -> {
+            val status = params["payment_status"] ?: "failed"
+            val isSuccess = status.equals("success", ignoreCase = true) || status.equals("ok", ignoreCase = true)
+            PaymentResultRoute(
+                isSuccess = isSuccess,
+                refId = params["ref_id"] ?: params["authority"],
+                errorMessage = params["error"],
+                market = "DIRECT_ZARINPAL"
+            )
+        }
+        name == "payment-result" || name == "payment_result" -> {
+            val status = params["status"] ?: params["payment_status"] ?: "failed"
+            val isSuccess = status.equals("success", ignoreCase = true) || status.equals("ok", ignoreCase = true)
+            val refId = params["ref_id"] ?: params["refId"] ?: params["authority"]
+            val planTitle = params["plan"] ?: params["plan_title"]
+            val error = params["error"] ?: params["message"]
+            PaymentResultRoute(
+                isSuccess = isSuccess,
+                refId = refId,
+                planTitle = planTitle,
+                orderId = params["order_id"] ?: params["orderId"],
+                errorMessage = error,
+                market = params["market"]
+            )
+        }
+        name == "placement" || name == "placement-test" || name == "placement_test" -> PlacementTestRoute
         name == "subscription" || name == "sub" -> SubscriptionRoute
         name == "stages" || name == "stages_list" -> StagesListRoute
         name == "login" || name == "auth" -> LoginRoute

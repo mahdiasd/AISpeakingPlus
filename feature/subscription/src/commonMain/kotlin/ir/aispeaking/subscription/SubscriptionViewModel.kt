@@ -324,6 +324,15 @@ class SubscriptionViewModel(
                                         planTitle = plan.titleFa
                                     )
                                 )
+                                _effect.send(
+                                    SubscriptionEffect.NavigateToPaymentResult(
+                                        isSuccess = true,
+                                        refId = purchaseResult.orderId ?: purchaseResult.purchaseToken.takeLast(8),
+                                        planTitle = plan.titleFa,
+                                        orderId = purchaseResult.orderId,
+                                        market = market.titleFa
+                                    )
+                                )
                             }
                             is DataResult.Failure -> {
                                 if (verifyResult.appError is ir.aispeaking.domain.model.error.NetworkError.Unauthorized) {
@@ -359,6 +368,16 @@ class SubscriptionViewModel(
                                     )
                                 }
                                 _effect.send(SubscriptionEffect.ShowSnackbar(errorMsg))
+                                _effect.send(
+                                    SubscriptionEffect.NavigateToPaymentResult(
+                                        isSuccess = false,
+                                        refId = purchaseResult.orderId,
+                                        orderId = purchaseResult.orderId,
+                                        errorMessage = errorMsg,
+                                        planTitle = plan.titleFa,
+                                        market = market.titleFa
+                                    )
+                                )
                             }
                         }
                     }
@@ -373,6 +392,14 @@ class SubscriptionViewModel(
                         _uiState.update {
                             it.copy(isPurchasing = false, purchaseProgressMessage = null)
                         }
+                        _effect.send(
+                            SubscriptionEffect.NavigateToPaymentResult(
+                                isSuccess = false,
+                                errorMessage = "فرآیند پرداخت در ${market.titleFa} توسط شما لغو گردید.",
+                                planTitle = plan.titleFa,
+                                market = market.titleFa
+                            )
+                        )
                     }
                     is MarketPurchaseResult.Error -> {
                         analyticsTracker.logEvent(
@@ -393,6 +420,14 @@ class SubscriptionViewModel(
                             )
                         }
                         _effect.send(SubscriptionEffect.ShowSnackbar(purchaseResult.message))
+                        _effect.send(
+                            SubscriptionEffect.NavigateToPaymentResult(
+                                isSuccess = false,
+                                errorMessage = purchaseResult.message.ifBlank { "پرداخت در ${market.titleFa} ناموفق بود." },
+                                planTitle = plan.titleFa,
+                                market = market.titleFa
+                            )
+                        )
                     }
                 }
             } else {

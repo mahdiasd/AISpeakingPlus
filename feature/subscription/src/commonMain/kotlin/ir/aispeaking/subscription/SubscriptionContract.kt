@@ -59,4 +59,12 @@ sealed interface SubscriptionEffect {
     data class SubscriptionActivated(val remainingDays: Int, val planTitle: String) : SubscriptionEffect
     data class ShowSnackbar(val message: String) : SubscriptionEffect
     data class OpenWebUrl(val url: String) : SubscriptionEffect
+    data class NavigateToPaymentResult(
+        val isSuccess: Boolean,
+        val refId: String? = null,
+        val planTitle: String? = null,
+        val orderId: String? = null,
+        val errorMessage: String? = null,
+        val market: String? = null
+    ) : SubscriptionEffect
 }

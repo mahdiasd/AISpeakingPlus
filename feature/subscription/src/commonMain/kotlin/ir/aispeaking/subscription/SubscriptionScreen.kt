@@ -98,6 +98,7 @@ fun SubscriptionScreen(
     viewModel: SubscriptionViewModel,
     onNavigateBack: () -> Unit,
     onSubscriptionSuccess: () -> Unit,
+    onNavigateToPaymentResult: (isSuccess: Boolean, refId: String?, planTitle: String?, orderId: String?, errorMessage: String?, market: String?) -> Unit = { _, _, _, _, _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -116,6 +117,16 @@ fun SubscriptionScreen(
                     try {
                         uriHandler.openUri(effect.url)
                     } catch (_: Exception) {}
+                }
+                is SubscriptionEffect.NavigateToPaymentResult -> {
+                    onNavigateToPaymentResult(
+                        effect.isSuccess,
+                        effect.refId,
+                        effect.planTitle,
+                        effect.orderId,
+                        effect.errorMessage,
+                        effect.market
+                    )
                 }
             }
         }

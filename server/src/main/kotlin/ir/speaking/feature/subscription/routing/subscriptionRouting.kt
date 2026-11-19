@@ -298,7 +298,7 @@ fun Application.subscriptionRouting() {
                 val webappBaseUrl = System.getenv("WEBAPP_BASE_URL") ?: "https://staging.aispeaking.ir/app"
 
                 if (authority.isNullOrBlank()) {
-                    call.respondRedirect("$webappBaseUrl/#subscription?payment_status=failed&error=missing_authority")
+                    call.respondRedirect("$webappBaseUrl/#payment-result?status=failed&payment_status=failed&error=missing_authority")
                     return@get
                 }
 
@@ -309,7 +309,7 @@ fun Application.subscriptionRouting() {
                             it[updatedAt] = Clock.System.now()
                         }
                     }
-                    call.respondRedirect("$webappBaseUrl/#subscription?payment_status=cancelled&authority=$authority")
+                    call.respondRedirect("$webappBaseUrl/#payment-result?status=cancelled&payment_status=cancelled&ref_id=$authority")
                     return@get
                 }
 
@@ -320,7 +320,7 @@ fun Application.subscriptionRouting() {
                 }
 
                 if (tx == null) {
-                    call.respondRedirect("$webappBaseUrl/#subscription?payment_status=failed&error=tx_not_found")
+                    call.respondRedirect("$webappBaseUrl/#payment-result?status=failed&payment_status=failed&error=tx_not_found")
                     return@get
                 }
 
@@ -333,7 +333,7 @@ fun Application.subscriptionRouting() {
 
                 if (currentStatus == "VERIFIED") {
                     val refId = tx[MarketPaymentTable.orderId] ?: ""
-                    call.respondRedirect("$webappBaseUrl/#subscription?payment_status=success&ref_id=$refId")
+                    call.respondRedirect("$webappBaseUrl/#payment-result?status=success&payment_status=success&ref_id=$refId&plan=$sku")
                     return@get
                 }
 
@@ -387,7 +387,7 @@ fun Application.subscriptionRouting() {
                         }
                     }
 
-                    call.respondRedirect("$webappBaseUrl/#subscription?payment_status=success&ref_id=$refId")
+                    call.respondRedirect("$webappBaseUrl/#payment-result?status=success&payment_status=success&ref_id=$refId&plan=$sku")
                 } else {
                     suspendTransaction {
                         MarketPaymentTable.update({ MarketPaymentTable.purchaseToken eq authority }) {
@@ -397,7 +397,7 @@ fun Application.subscriptionRouting() {
                         }
                     }
                     val err = verifyResult.errorMessage ?: "verification_failed"
-                    call.respondRedirect("$webappBaseUrl/#subscription?payment_status=failed&error=$err")
+                    call.respondRedirect("$webappBaseUrl/#payment-result?status=failed&payment_status=failed&error=$err&ref_id=$authority")
                 }
             }.describe {
                 tag("Subscriptions")

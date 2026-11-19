@@ -33,6 +33,7 @@ import ir.aispeaking.sharedui.ui.dialog.AnnouncementDialog
 import ir.aispeaking.sharedui.ui.navigation.BackNavigationManager
 import ir.aispeaking.splash.SplashRoute
 import ir.aispeaking.stageslist.StagesListScreen
+import ir.aispeaking.subscription.PaymentResultScreen
 import ir.aispeaking.subscription.SubscriptionScreen
 import ir.aispeaking.utils.analytics.AnalyticsTracker
 import ir.aispeaking.utils.analytics.logScreenView
@@ -85,7 +86,7 @@ fun AppNavigation(
 
     LaunchedEffect(Unit) {
         AppDeepLinkManager.navigationRequests.collect { route ->
-            if (route is StageChatRoute || route is ProfileRoute || route is SubscriptionRoute || route is StagesListRoute || route is LeaderboardRoute || route is PlacementTestRoute) {
+            if (route is StageChatRoute || route is ProfileRoute || route is SubscriptionRoute || route is StagesListRoute || route is LeaderboardRoute || route is PlacementTestRoute || route is PaymentResultRoute) {
                 if (backStack.none { it is MainRoute }) {
                     backStack.removeAll { it is SplashRoute }
                     backStack.add(MainRoute)
@@ -321,6 +322,45 @@ fun AppNavigation(
                         onNavigateBack = { backStack.removeLastOrNull() },
                         onSubscriptionSuccess = {
                             backStack.removeLastOrNull()
+                        },
+                        onNavigateToPaymentResult = { isSuccess, refId, planTitle, orderId, errorMsg, market ->
+                            backStack.removeLastOrNull()
+                            backStack.add(
+                                PaymentResultRoute(
+                                    isSuccess = isSuccess,
+                                    refId = refId,
+                                    planTitle = planTitle,
+                                    orderId = orderId,
+                                    errorMessage = errorMsg,
+                                    market = market
+                                )
+                            )
+                        }
+                    )
+                }
+
+                entry<PaymentResultRoute> { route ->
+                    PaymentResultScreen(
+                        isSuccess = route.isSuccess,
+                        refId = route.refId,
+                        planTitle = route.planTitle,
+                        orderId = route.orderId,
+                        errorMessage = route.errorMessage,
+                        market = route.market,
+                        onNavigateHome = {
+                            backStack.clear()
+                            backStack.add(MainRoute)
+                        },
+                        onRetryPayment = {
+                            backStack.removeLastOrNull()
+                            if (backStack.none { it is SubscriptionRoute }) {
+                                backStack.add(SubscriptionRoute)
+                            }
+                        },
+                        onNavigateToProfile = {
+                            backStack.clear()
+                            backStack.add(MainRoute)
+                            backStack.add(ProfileRoute)
                         }
                     )
                 }

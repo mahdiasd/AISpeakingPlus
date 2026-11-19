@@ -58,4 +58,16 @@ data object PlacementTestRoute : AppRoute {
     override val screenName: String = "PlacementTest"
 }
 
+@Serializable
+data class PaymentResultRoute(
+    val isSuccess: Boolean = false,
+    val refId: String? = null,
+    val planTitle: String? = null,
+    val orderId: String? = null,
+    val errorMessage: String? = null,
+    val market: String? = null
+) : AppRoute {
+    override val screenName: String = "PaymentResult"
+}
+
 

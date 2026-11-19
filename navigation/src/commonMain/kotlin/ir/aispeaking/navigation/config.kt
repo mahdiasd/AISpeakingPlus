@@ -18,6 +18,7 @@ val navigationConfig = SavedStateConfiguration {
             subclass(StagesListRoute::class, StagesListRoute.serializer())
             subclass(LeaderboardRoute::class, LeaderboardRoute.serializer())
             subclass(PlacementTestRoute::class, PlacementTestRoute.serializer())
+            subclass(PaymentResultRoute::class, PaymentResultRoute.serializer())
         }
     }
 }
