@@ -15,6 +15,7 @@ fun Application.testModule(dropTables: Boolean = false) {
     configureTestSecurity()
     configureSerialization()
     configureRoutingException()
+    configureWebSockets()
     configureTestDatabases(dropTables)
 
     configureRouting()

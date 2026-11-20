@@ -20,6 +20,7 @@ class AppFirebaseMessagingService : FirebaseMessagingService() {
                 "fcm_token_refreshed",
                 mapOf("platform" to "android")
             )
+            DeviceTokenRegistrar.registerToken(token, "AISpeakingPublic")
         } catch (t: Throwable) {
             logger.e(t) { "Failed to record new FCM token in analytics" }
         }

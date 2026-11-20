@@ -49,7 +49,7 @@ export const NotificationsPage: React.FC = () => {
   const [body, setBody] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [targetType, setTargetType] = useState<'topic' | 'token'>('topic');
-  const [targetValue, setTargetValue] = useState('aispeaking_plus_v1');
+  const [targetValue, setTargetValue] = useState('AISpeakingPublic');
   const [screen, setScreen] = useState('none');
   const [stageId, setStageId] = useState('');
   const [customUrl, setCustomUrl] = useState('');
@@ -134,7 +134,7 @@ export const NotificationsPage: React.FC = () => {
     body: body.trim(),
     imageUrl: imageUrl.trim() || undefined,
     targetType,
-    targetValue: targetValue.trim() || 'aispeaking_plus_v1',
+    targetValue: targetValue.trim() || 'AISpeakingPublic',
     screen: screen !== 'none' && screen !== 'url' ? screen : undefined,
     stageId: screen === 'chat' && stageId ? stageId.trim() : undefined,
     url: screen === 'url' && customUrl ? customUrl.trim() : undefined,
@@ -149,7 +149,7 @@ export const NotificationsPage: React.FC = () => {
       setBrowserPermission(res.permission);
       if (res.token) {
         setBrowserToken(res.token);
-        toastSuccess('نوتیفیکیشن مرورگر فعال و در کانال aispeaking_plus_v1 ثبت شد!');
+        toastSuccess('نوتیفیکیشن مرورگر فعال و در کانال AISpeakingPublic ثبت شد!');
       } else if (res.error) {
         toastError(res.error);
       }
@@ -266,7 +266,7 @@ export const NotificationsPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <Badge variant="success" size="md" className="flex items-center gap-1.5 py-1 px-2.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            کانال فعال: <code className="font-mono text-xs">aispeaking_plus_v1</code>
+            کانال فعال: <code className="font-mono text-xs">AISpeakingPublic</code>
           </Badge>
         </div>
       </div>
@@ -408,22 +408,22 @@ export const NotificationsPage: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label
                   className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
-                    targetType === 'topic' && targetValue === 'aispeaking_plus_v1'
+                    targetType === 'topic' && targetValue === 'AISpeakingPublic'
                       ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10 dark:border-indigo-500/50'
                       : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                   onClick={() => {
                     setTargetType('topic');
-                    setTargetValue('aispeaking_plus_v1');
+                    setTargetValue('AISpeakingPublic');
                   }}
                 >
                   <input
                     type="radio"
                     name="targetMode"
-                    checked={targetType === 'topic' && targetValue === 'aispeaking_plus_v1'}
+                    checked={targetType === 'topic' && targetValue === 'AISpeakingPublic'}
                     onChange={() => {
                       setTargetType('topic');
-                      setTargetValue('aispeaking_plus_v1');
+                      setTargetValue('AISpeakingPublic');
                     }}
                     className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
                   />
@@ -432,7 +432,7 @@ export const NotificationsPage: React.FC = () => {
                       کانال کاربران پلاس (پیش‌فرض)
                     </span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 block">
-                      topic: aispeaking_plus_v1
+                      topic: AISpeakingPublic
                     </span>
                   </div>
                 </label>
@@ -445,7 +445,7 @@ export const NotificationsPage: React.FC = () => {
                   }`}
                   onClick={() => {
                     setTargetType('token');
-                    if (targetValue === 'aispeaking_plus_v1') setTargetValue('');
+                    if (targetValue === 'AISpeakingPublic') setTargetValue('');
                   }}
                 >
                   <input
@@ -454,7 +454,7 @@ export const NotificationsPage: React.FC = () => {
                     checked={targetType === 'token'}
                     onChange={() => {
                       setTargetType('token');
-                      if (targetValue === 'aispeaking_plus_v1') setTargetValue('');
+                      if (targetValue === 'AISpeakingPublic') setTargetValue('');
                     }}
                     className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
                   />
@@ -663,7 +663,7 @@ export const NotificationsPage: React.FC = () => {
 
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               {browserPermission === 'granted'
-                ? 'این مرورگر در سرویس FCM ثبت شده و در کانال aispeaking_plus_v1 عضو است.'
+                ? 'این مرورگر در سرویس FCM ثبت شده و در کانال AISpeakingPublic عضو است.'
                 : 'برای دریافت اعلان‌ها روی این دستگاه، روی دکمه زیر کلیک کنید و در پاپ‌آپ مرورگر Allow را انتخاب کنید.'}
             </p>
 

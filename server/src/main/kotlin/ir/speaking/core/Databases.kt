@@ -14,6 +14,7 @@ import ir.speaking.feature.subscription.db.PromoCodeTable
 import ir.speaking.feature.subscription.db.SubscriptionTable
 import ir.speaking.feature.user.db.UserTable
 import ir.speaking.feature.announcement.db.AnnouncementTable
+import ir.speaking.feature.notification.db.DeviceTokensTable
 import ir.speaking.feature.placement.db.PlacementQuestionsTable
 import ir.speaking.feature.placement.db.PlacementSessionsTable
 import ir.speaking.feature.placement.db.PlacementSeedData
@@ -40,7 +41,8 @@ private val allTables = arrayOf<Table>(
     MarketPaymentTable,
     AnnouncementTable,
     PlacementQuestionsTable,
-    PlacementSessionsTable
+    PlacementSessionsTable,
+    DeviceTokensTable
 )
 
 fun createHikariDataSource(): HikariDataSource {

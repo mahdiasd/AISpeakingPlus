@@ -91,7 +91,7 @@ class AdminNotificationRoutingTest {
         // Valid token registration attempts to subscribe to topic
         val validRes = client.post("/api/v1/notifications/register-token") {
             contentType(ContentType.Application.Json)
-            setBody("""{"token":"mock_test_token_123","topic":"aispeaking_plus_v1"}""")
+            setBody("""{"token":"mock_test_token_123","topic":"AISpeakingPublic"}""")
         }
         // In test environment without active Firebase connection, it may return OK or InternalServerError with full detail
         assertTrue(validRes.status == HttpStatusCode.OK || validRes.status == HttpStatusCode.InternalServerError)
@@ -105,7 +105,7 @@ class AdminNotificationRoutingTest {
         val response = client.post("/api/admin/notifications/send") {
             header(HttpHeaders.Authorization, "Bearer $token")
             contentType(ContentType.Application.Json)
-            setBody("""{"title":"Test None","body":"No deep link","screen":"none","targetType":"topic","targetValue":"aispeaking_plus_v1"}""")
+            setBody("""{"title":"Test None","body":"No deep link","screen":"none","targetType":"topic","targetValue":"AISpeakingPublic"}""")
         }
         // In test environment with Firebase credentials, it may succeed (200) or fail at Google API call (502/500), but not validation error (400)
         assertNotEquals(HttpStatusCode.BadRequest, response.status)

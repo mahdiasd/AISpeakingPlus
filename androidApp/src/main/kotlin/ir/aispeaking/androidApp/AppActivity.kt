@@ -159,14 +159,15 @@ class AppActivity : ComponentActivity() {
                         co.touchlab.kermit.Logger.withTag("AppActivity").i { "FCM Token: $token" }
                         val analytics = GlobalContext.get().getOrNull<ir.aispeaking.utils.analytics.AnalyticsTracker>()
                         analytics?.setUserProperty("fcm_token", token)
+                        ir.aispeaking.androidApp.notification.DeviceTokenRegistrar.registerToken(token, "AISpeakingPublic")
                     }
                 }
-            // Subscribe to dedicated AISpeaking Plus topic (isolated from legacy app)
+            // Subscribe to public announcements channel
             com.google.firebase.messaging.FirebaseMessaging.getInstance()
-                .subscribeToTopic("aispeaking_plus_v1")
+                .subscribeToTopic("AISpeakingPublic")
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        co.touchlab.kermit.Logger.withTag("AppActivity").i { "Subscribed to topic: aispeaking_plus_v1" }
+                        co.touchlab.kermit.Logger.withTag("AppActivity").i { "Subscribed to topic: AISpeakingPublic" }
                     }
                 }
         } catch (_: Throwable) {}

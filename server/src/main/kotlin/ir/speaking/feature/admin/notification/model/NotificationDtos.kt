@@ -8,7 +8,7 @@ data class AdminNotificationSendRequest(
     val body: String,
     val imageUrl: String? = null,
     val targetType: String? = "topic", // "topic" or "token"
-    val targetValue: String? = "aispeaking_plus_v1",
+    val targetValue: String? = "AISpeakingPublic",
     val screen: String? = null, // "chat", "subscription", "profile", "stages", "main", "login"
     val stageId: String? = null, // e.g. "stage-01-inflight-london"
     val url: String? = null
@@ -25,7 +25,8 @@ data class AdminNotificationSendResponse(
 @Serializable
 data class RegisterTokenRequest(
     val token: String,
-    val topic: String? = "aispeaking_plus_v1"
+    val topic: String? = "AISpeakingPublic",
+    val platform: String? = "android"
 )
 
 @Serializable

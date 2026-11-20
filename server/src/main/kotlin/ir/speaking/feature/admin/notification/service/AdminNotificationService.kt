@@ -132,11 +132,11 @@ class AdminNotificationService {
                 messageBuilder.setToken(targetValue)
             }
             "topic" -> {
-                val topic = targetValue ?: "aispeaking_plus_v1"
+                val topic = targetValue ?: "AISpeakingPublic"
                 messageBuilder.setTopic(topic)
             }
             else -> {
-                val topic = targetValue ?: "aispeaking_plus_v1"
+                val topic = targetValue ?: "AISpeakingPublic"
                 messageBuilder.setTopic(topic)
             }
         }
@@ -148,12 +148,12 @@ class AdminNotificationService {
         return AdminNotificationSendResponse(
             success = true,
             messageId = messageId,
-            target = targetValue ?: "aispeaking_plus_v1",
+            target = targetValue ?: "AISpeakingPublic",
             targetType = targetType
         )
     }
 
-    fun subscribeTokenToTopic(token: String, topic: String = "aispeaking_plus_v1"): TopicManagementResponse {
+    fun subscribeTokenToTopic(token: String, topic: String = "AISpeakingPublic"): TopicManagementResponse {
         ensureFirebaseInitialized()
         if (FirebaseApp.getApps().isEmpty()) {
             throw IllegalStateException("فایربیس در سرور مقداردهی نشده است")

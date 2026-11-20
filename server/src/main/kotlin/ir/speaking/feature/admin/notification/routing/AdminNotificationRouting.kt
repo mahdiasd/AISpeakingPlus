@@ -13,6 +13,7 @@ import ir.speaking.core.response.SuccessResponse
 import ir.speaking.core.response.failureRespond
 import ir.speaking.core.response.successRespond
 import ir.speaking.core.utils.MyConstant
+import ir.speaking.core.utils.getUserUid
 import ir.speaking.feature.admin.audit.service.AuditLogService
 import ir.speaking.feature.admin.auth.AdminPrincipal
 import ir.speaking.feature.admin.notification.model.AdminNotificationSendRequest
@@ -20,16 +21,19 @@ import ir.speaking.feature.admin.notification.model.AdminNotificationSendRespons
 import ir.speaking.feature.admin.notification.model.RegisterTokenRequest
 import ir.speaking.feature.admin.notification.model.RegisterTokenResponse
 import ir.speaking.feature.admin.notification.service.AdminNotificationService
+import ir.speaking.feature.notification.service.DeviceTokenService
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.slf4j.LoggerFactory
+import java.util.UUID
 
 private val logger = LoggerFactory.getLogger("AdminNotificationRouting")
 
 @OptIn(ExperimentalKtorApi::class)
 fun Route.adminNotificationRouting(
     adminNotificationService: AdminNotificationService,
-    auditLogService: AuditLogService
+    auditLogService: AuditLogService,
+    deviceTokenService: DeviceTokenService = DeviceTokenService(adminNotificationService)
 ) {
     // Protected admin notification routes
     route("/api/admin/notifications") {
@@ -62,7 +66,7 @@ fun Route.adminNotificationRouting(
                                 put("title", req.title)
                                 put("body", req.body)
                                 put("targetType", req.targetType ?: "topic")
-                                put("targetValue", req.targetValue ?: "aispeaking_plus_v1")
+                                put("targetValue", req.targetValue ?: "AISpeakingPublic")
                                 put("stageId", req.stageId ?: "")
                                 put("screen", req.screen ?: "")
                                 put("imageUrl", req.imageUrl ?: "")
@@ -119,11 +123,25 @@ fun Route.adminNotificationRouting(
                 return@post
             }
 
+            var userId: UUID? = null
             try {
-                val topic = req.topic?.trim()?.ifBlank { null } ?: "aispeaking_plus_v1"
-                adminNotificationService.subscribeTokenToTopic(req.token.trim(), topic)
+                val authHeader = call.request.headers[HttpHeaders.Authorization]
+                if (!authHeader.isNullOrBlank() && authHeader.startsWith("Bearer ")) {
+                    userId = call.getUserUid()
+                }
+            } catch (_: Exception) {}
+
+            try {
+                val topic = req.topic?.trim()?.ifBlank { null } ?: "AISpeakingPublic"
+                val platform = req.platform?.trim()?.ifBlank { null } ?: "android"
+                deviceTokenService.registerOrUpdateToken(
+                    token = req.token.trim(),
+                    userId = userId,
+                    platform = platform,
+                    topic = topic
+                )
                 call.successRespond(
-                    RegisterTokenResponse(success = true, message = "توکن با موفقیت در کانال $topic ثبت شد"),
+                    RegisterTokenResponse(success = true, message = "توکن با موفقیت در کانال $topic و پایگاه داده ثبت شد"),
                     message = "توکن با موفقیت در کانال ثبت شد"
                 )
             } catch (e: Exception) {
