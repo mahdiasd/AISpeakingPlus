@@ -12,6 +12,7 @@ import io.ktor.server.routing.openapi.*
 import io.ktor.utils.io.*
 import ir.speaking.feature.admin.routing.adminRouting
 import ir.speaking.feature.announcement.routing.announcementRouting
+import ir.speaking.feature.config.routing.configRouting
 import ir.speaking.feature.leaderboard.routing.leaderboardRouting
 import ir.speaking.feature.placement.routing.placementRouting
 import ir.speaking.feature.stage.routing.stageRouting
@@ -25,6 +26,7 @@ import ir.speaking.feature.user.routing.userRouting
 @OptIn(ExperimentalKtorApi::class)
 fun Application.configureRouting() {
     // Feature routings registered first so OpenApiDocSource.Routing discovers all endpoints
+    configRouting()
     authRouting()
     userRouting()
     sttRouting()

@@ -1040,6 +1040,31 @@
     }
   }
 };
+            defs["ConfigRequestDto"] = {
+  "title" : "ConfigRequestDto",
+  "properties" : {
+    "deviceName" : { },
+    "androidVersion" : { },
+    "firebaseToken" : { },
+    "appVersion" : { },
+    "versionCode" : { }
+  }
+};
+            defs["ConfigResponseDto"] = {
+  "title" : "ConfigResponseDto",
+  "required" : [ "update" ],
+  "properties" : {
+    "update" : {
+      "$ref" : "#/components/schemas/UpdateResponseDto"
+    },
+    "welcomeMessage" : {
+      "oneOf" : [ {
+        "$ref" : "#/components/schemas/WelcomeMessageResponseDto"
+      }, { } ]
+    },
+    "tokenAlive" : { }
+  }
+};
             defs["CurrentUserRank"] = {
   "title" : "CurrentUserRank",
   "required" : [ "completedStages", "displayName", "rank", "totalStars", "userId" ],
@@ -1583,6 +1608,16 @@
     "languageLevel" : { }
   }
 };
+            defs["UpdateResponseDto"] = {
+  "title" : "UpdateResponseDto",
+  "properties" : {
+    "force_version" : { },
+    "last_version" : { },
+    "suggest_version" : { },
+    "link" : { },
+    "message" : { }
+  }
+};
             defs["UserProfileResponse"] = {
   "title" : "UserProfileResponse",
   "required" : [ "avatar", "id", "nickName", "phoneNumber", "score" ],
@@ -1654,6 +1689,16 @@
     "otpCode" : { },
     "code" : { },
     "otp" : { }
+  }
+};
+            defs["WelcomeMessageResponseDto"] = {
+  "title" : "WelcomeMessageResponseDto",
+  "properties" : {
+    "id" : { },
+    "message" : { },
+    "title" : { },
+    "imageUrl" : { },
+    "isReadByUser" : { }
   }
 };
   </script>
@@ -1768,6 +1813,19 @@
                   <li class="nav-header" data-group="Announcements"><a href="#api-Announcements">API Methods - Announcements</a></li>
                     <li data-group="Announcements" data-name="apiAnnouncementsActiveGet" class="">
                       <a href="#api-Announcements-apiAnnouncementsActiveGet">apiAnnouncementsActiveGet</a>
+                    </li>
+                  <li class="nav-header" data-group="AppConfig"><a href="#api-AppConfig">API Methods - AppConfig</a></li>
+                    <li data-group="AppConfig" data-name="apiV1ConfigGet" class="">
+                      <a href="#api-AppConfig-apiV1ConfigGet">apiV1ConfigGet</a>
+                    </li>
+                    <li data-group="AppConfig" data-name="apiV1ConfigPost" class="">
+                      <a href="#api-AppConfig-apiV1ConfigPost">apiV1ConfigPost</a>
+                    </li>
+                    <li data-group="AppConfig" data-name="apiV2ConfigGet" class="">
+                      <a href="#api-AppConfig-apiV2ConfigGet">apiV2ConfigGet</a>
+                    </li>
+                    <li data-group="AppConfig" data-name="apiV2ConfigPost" class="">
+                      <a href="#api-AppConfig-apiV2ConfigPost">apiV2ConfigPost</a>
                     </li>
                   <li class="nav-header" data-group="Auth"><a href="#api-Auth">API Methods - Auth</a></li>
                     <li data-group="Auth" data-name="apiV2AuthLogoutPost" class="">
@@ -11721,6 +11779,934 @@ except ApiException as e:
                                 </div>
                             </div>
 
+                        </article>
+                      </div>
+                      <hr>
+                  </section>
+                <section id="api-AppConfig">
+                  <h1>AppConfig</h1>
+                    <div id="api-AppConfig-apiV1ConfigGet">
+                      <article id="api-AppConfig-apiV1ConfigGet-0" data-group="User" data-name="apiV1ConfigGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV1ConfigGet</h1>
+                          <p>Get App Config (v1 GET)</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Returns application update requirements and server configuration</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v1/config</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AppConfig-apiV1ConfigGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AppConfig-apiV1ConfigGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AppConfig-apiV1ConfigGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AppConfig-apiV1ConfigGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+"//api/v1/config"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AppConfig-apiV1ConfigGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AppConfigApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AppConfigApiExample {
+
+    public static void main(String[] args) {
+        
+        AppConfigApi apiInstance = new AppConfigApi();
+        try {
+            apiInstance.apiV1ConfigGet();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AppConfigApi#apiV1ConfigGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AppConfig-apiV1ConfigGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AppConfigApi;
+
+public class AppConfigApiExample {
+
+    public static void main(String[] args) {
+        AppConfigApi apiInstance = new AppConfigApi();
+        try {
+            apiInstance.apiV1ConfigGet();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AppConfigApi#apiV1ConfigGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AppConfig-apiV1ConfigGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AppConfig-apiV1ConfigGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+AppConfigApi *apiInstance = [[AppConfigApi alloc] init];
+
+// Get App Config (v1 GET)
+[apiInstance apiV1ConfigGetWithCompletionHandler: 
+              ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV1ConfigGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+
+var api = new AiSpeakingPlusApi.AppConfigApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.apiV1ConfigGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AppConfig-apiV1ConfigGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AppConfig-apiV1ConfigGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV1ConfigGetExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AppConfigApi();
+
+            try
+            {
+                // Get App Config (v1 GET)
+                apiInstance.apiV1ConfigGet();
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AppConfigApi.apiV1ConfigGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV1ConfigGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAppConfigApi();
+
+try {
+    $api_instance->apiV1ConfigGet();
+} catch (Exception $e) {
+    echo 'Exception when calling AppConfigApi->apiV1ConfigGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV1ConfigGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AppConfigApi;
+
+my $api_instance = WWW::SwaggerClient::AppConfigApi->new();
+
+eval { 
+    $api_instance->apiV1ConfigGet();
+};
+if ($@) {
+    warn "Exception when calling AppConfigApi->apiV1ConfigGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV1ConfigGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AppConfigApi()
+
+try: 
+    # Get App Config (v1 GET)
+    api_instance.api_v1_config_get()
+except ApiException as e:
+    print("Exception when calling AppConfigApi->apiV1ConfigGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AppConfig-apiV1ConfigPost">
+                      <article id="api-AppConfig-apiV1ConfigPost-0" data-group="User" data-name="apiV1ConfigPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV1ConfigPost</h1>
+                          <p>Get App Config &amp; Force Update (v1)</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Returns application update requirements and server configuration for legacy and mobile clients</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v1/config</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AppConfig-apiV1ConfigPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AppConfig-apiV1ConfigPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AppConfig-apiV1ConfigPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV1ConfigPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AppConfig-apiV1ConfigPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/v1/config"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AppConfig-apiV1ConfigPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AppConfigApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AppConfigApiExample {
+
+    public static void main(String[] args) {
+        
+        AppConfigApi apiInstance = new AppConfigApi();
+        ConfigRequestDto body = ; // ConfigRequestDto | Optional device info and push token
+        try {
+            Object result = apiInstance.apiV1ConfigPost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AppConfigApi#apiV1ConfigPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AppConfig-apiV1ConfigPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AppConfigApi;
+
+public class AppConfigApiExample {
+
+    public static void main(String[] args) {
+        AppConfigApi apiInstance = new AppConfigApi();
+        ConfigRequestDto body = ; // ConfigRequestDto | Optional device info and push token
+        try {
+            Object result = apiInstance.apiV1ConfigPost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AppConfigApi#apiV1ConfigPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AppConfig-apiV1ConfigPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AppConfig-apiV1ConfigPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">ConfigRequestDto *body = ; // Optional device info and push token (optional)
+
+AppConfigApi *apiInstance = [[AppConfigApi alloc] init];
+
+// Get App Config & Force Update (v1)
+[apiInstance apiV1ConfigPostWith:body
+              completionHandler: ^(Object output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV1ConfigPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+
+var api = new AiSpeakingPlusApi.AppConfigApi()
+var opts = { 
+  'body':  // {{ConfigRequestDto}} Optional device info and push token
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiV1ConfigPost(opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AppConfig-apiV1ConfigPost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AppConfig-apiV1ConfigPost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV1ConfigPostExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AppConfigApi();
+            var body = new ConfigRequestDto(); // ConfigRequestDto | Optional device info and push token (optional) 
+
+            try
+            {
+                // Get App Config & Force Update (v1)
+                Object result = apiInstance.apiV1ConfigPost(body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AppConfigApi.apiV1ConfigPost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV1ConfigPost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAppConfigApi();
+$body = ; // ConfigRequestDto | Optional device info and push token
+
+try {
+    $result = $api_instance->apiV1ConfigPost($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AppConfigApi->apiV1ConfigPost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV1ConfigPost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AppConfigApi;
+
+my $api_instance = WWW::SwaggerClient::AppConfigApi->new();
+my $body = WWW::SwaggerClient::Object::ConfigRequestDto->new(); # ConfigRequestDto | Optional device info and push token
+
+eval { 
+    my $result = $api_instance->apiV1ConfigPost(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AppConfigApi->apiV1ConfigPost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV1ConfigPost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AppConfigApi()
+body =  # ConfigRequestDto | Optional device info and push token (optional)
+
+try: 
+    # Get App Config & Force Update (v1)
+    api_response = api_instance.api_v1_config_post(body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AppConfigApi->apiV1ConfigPost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "description" : "Optional device info and push token",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ConfigRequestDto"
+      }
+    }
+  }
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_apiV1ConfigPost_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_apiV1ConfigPost_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Configuration data </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV1ConfigPost-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV1ConfigPost-200-schema">
+                                  <div id='responses-apiV1ConfigPost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Configuration data",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "properties" : {
+          "data" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ConfigResponseDto"
+            }, { } ]
+          },
+          "message" : { },
+          "pagingMeta" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagingMeta"
+            }, { } ]
+          }
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV1ConfigPost-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1ConfigPost-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV1ConfigPost-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AppConfig-apiV2ConfigGet">
+                      <article id="api-AppConfig-apiV2ConfigGet-0" data-group="User" data-name="apiV2ConfigGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2ConfigGet</h1>
+                          <p>Get App Config (v2 GET)</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Returns application update requirements and server configuration</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v2/config</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AppConfig-apiV2ConfigGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AppConfig-apiV2ConfigGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AppConfig-apiV2ConfigGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AppConfig-apiV2ConfigGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+"//api/v2/config"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AppConfig-apiV2ConfigGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AppConfigApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AppConfigApiExample {
+
+    public static void main(String[] args) {
+        
+        AppConfigApi apiInstance = new AppConfigApi();
+        try {
+            apiInstance.apiV2ConfigGet();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AppConfigApi#apiV2ConfigGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AppConfig-apiV2ConfigGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AppConfigApi;
+
+public class AppConfigApiExample {
+
+    public static void main(String[] args) {
+        AppConfigApi apiInstance = new AppConfigApi();
+        try {
+            apiInstance.apiV2ConfigGet();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AppConfigApi#apiV2ConfigGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AppConfig-apiV2ConfigGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AppConfig-apiV2ConfigGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+AppConfigApi *apiInstance = [[AppConfigApi alloc] init];
+
+// Get App Config (v2 GET)
+[apiInstance apiV2ConfigGetWithCompletionHandler: 
+              ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV2ConfigGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+
+var api = new AiSpeakingPlusApi.AppConfigApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.apiV2ConfigGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AppConfig-apiV2ConfigGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AppConfig-apiV2ConfigGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2ConfigGetExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AppConfigApi();
+
+            try
+            {
+                // Get App Config (v2 GET)
+                apiInstance.apiV2ConfigGet();
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AppConfigApi.apiV2ConfigGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV2ConfigGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAppConfigApi();
+
+try {
+    $api_instance->apiV2ConfigGet();
+} catch (Exception $e) {
+    echo 'Exception when calling AppConfigApi->apiV2ConfigGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV2ConfigGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AppConfigApi;
+
+my $api_instance = WWW::SwaggerClient::AppConfigApi->new();
+
+eval { 
+    $api_instance->apiV2ConfigGet();
+};
+if ($@) {
+    warn "Exception when calling AppConfigApi->apiV2ConfigGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV2ConfigGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AppConfigApi()
+
+try: 
+    # Get App Config (v2 GET)
+    api_instance.api_v2_config_get()
+except ApiException as e:
+    print("Exception when calling AppConfigApi->apiV2ConfigGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AppConfig-apiV2ConfigPost">
+                      <article id="api-AppConfig-apiV2ConfigPost-0" data-group="User" data-name="apiV2ConfigPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV2ConfigPost</h1>
+                          <p>Get App Config &amp; Force Update (v2)</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Returns application update requirements and server configuration for V2 clients</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v2/config</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AppConfig-apiV2ConfigPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AppConfig-apiV2ConfigPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AppConfig-apiV2ConfigPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AppConfig-apiV2ConfigPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AppConfig-apiV2ConfigPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+"//api/v2/config"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AppConfig-apiV2ConfigPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AppConfigApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AppConfigApiExample {
+
+    public static void main(String[] args) {
+        
+        AppConfigApi apiInstance = new AppConfigApi();
+        try {
+            apiInstance.apiV2ConfigPost();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AppConfigApi#apiV2ConfigPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AppConfig-apiV2ConfigPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AppConfigApi;
+
+public class AppConfigApiExample {
+
+    public static void main(String[] args) {
+        AppConfigApi apiInstance = new AppConfigApi();
+        try {
+            apiInstance.apiV2ConfigPost();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AppConfigApi#apiV2ConfigPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AppConfig-apiV2ConfigPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AppConfig-apiV2ConfigPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+AppConfigApi *apiInstance = [[AppConfigApi alloc] init];
+
+// Get App Config & Force Update (v2)
+[apiInstance apiV2ConfigPostWithCompletionHandler: 
+              ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV2ConfigPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var AiSpeakingPlusApi = require('ai_speaking_plus_api');
+
+var api = new AiSpeakingPlusApi.AppConfigApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.apiV2ConfigPost(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AppConfig-apiV2ConfigPost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AppConfig-apiV2ConfigPost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV2ConfigPostExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AppConfigApi();
+
+            try
+            {
+                // Get App Config & Force Update (v2)
+                apiInstance.apiV2ConfigPost();
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AppConfigApi.apiV2ConfigPost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV2ConfigPost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAppConfigApi();
+
+try {
+    $api_instance->apiV2ConfigPost();
+} catch (Exception $e) {
+    echo 'Exception when calling AppConfigApi->apiV2ConfigPost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV2ConfigPost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AppConfigApi;
+
+my $api_instance = WWW::SwaggerClient::AppConfigApi->new();
+
+eval { 
+    $api_instance->apiV2ConfigPost();
+};
+if ($@) {
+    warn "Exception when calling AppConfigApi->apiV2ConfigPost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AppConfig-apiV2ConfigPost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AppConfigApi()
+
+try: 
+    # Get App Config & Force Update (v2)
+    api_instance.api_v2_config_post()
+except ApiException as e:
+    print("Exception when calling AppConfigApi->apiV2ConfigPost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
                         </article>
                       </div>
                       <hr>
