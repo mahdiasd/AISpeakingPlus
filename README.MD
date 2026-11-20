@@ -42,7 +42,6 @@
 | **ناوبری کلاینت** | AndroidX Navigation 3 | `1.1.1` | سیستم ناوبری تایپ-سیف مدرن مبتنی بر `NavKey` با پشتیبانی وب (`nav3-browser 1.1.0`) |
 | **لود تصویر و مدیا** | Coil 3 | `3.5.0` | لودینگ تصاویر و کش شبکه از طریق موتور Ktor 3 (`coil-network-ktor3`) |
 | **پنل مدیریت (Admin)** | React 19 + TypeScript + Vite | `19.0.0` / `6.2.0` | وب‌اپ مدیریت مراحل، سناریوها، کاربران، پروموکدها، اعلانات و لابراتوار صدا |
-| **کلاینت وب مدرن** | React 18 + Vite + Tailwind | `18.3.1` / `3.4.17` | وب‌کلاینت جایگزین مدرن با طراحی Liquid Glass و React Cupertino UI |
 | **پرداخت درون‌برنامه‌ای** | CafeBazaar Poolakey / Myket | `2.2.0` / API | پرداخت درون‌برنامه‌ای بازار و مایکت با اعتبارسنجی سمت سرور |
 | **درگاه پرداخت وب** | Zarinpal Gateway | REST v4 | اتصال به درگاه زرین‌پال برای اشتراک‌های کاربران وب |
 | **پوش نوتیفیکیشن** | Firebase Admin SDK / BOM | `9.5.0` / `33.10.0` | ارسال پیام‌های عمومی و خصوصی از پنل ادمین به کاربران اندروید |
@@ -57,7 +56,7 @@
 3. [خط لوله صوتی و پردازش هوش مصنوعی (Speech & AI Pipeline)](#-خط-لوله-صوتی-و-پردازش-هوش-مصنوعی-speech--ai-pipeline)
 4. [جریان داستانی و منطق دسترسی (Core Business & Story Gating)](#-جریان-داستانی-و-منطق-دسترسی-core-business--story-gating)
 5. [پایگاه داده و ساختار جداول (Database Schema)](#-پایگاه-داده-و-ساختار-جداول-database-schema)
-6. [پنل‌های تحت وب (Admin Web & Client Web)](#-پنل‌های-تحت-وب-admin-web--client-web)
+6. [پنل مدیریت تحت وب (Admin Web)](#-پنل-مدیریت-تحت-وب-admin-web)
 7. [مشخصات سرور لایو و دستورالعمل استقرار (Deployment Runbook)](#-مشخصات-سرور-لایو-و-دستورالعمل-استقرار-deployment-runbook)
 8. [راه‌اندازی محیط توسعه محلی (Local Development)](#-راه‌اندازی-محیط-توسعه-محلی-local-development)
 9. [قوانین اساسی و راهنمای توسعه برای ایجنت‌ها (Constitution)](#-قوانین-اساسی-و-راهنمای-توسعه-برای-ایجنت‌ها-constitution)
@@ -117,9 +116,6 @@ AISpeakingPlus/
 ├── admin-web/                      # پنل مدیریت ادمین بر پایه React 19 + TypeScript + Vite
 │   ├── src/pages/                  # صفحات: Stages, Users, VoiceLab, Promo, Announcements, Stats
 │   └── vite.config.ts              # تنظیمات Vite با پورت 8082 و پروکسی API
-├── client-web/                     # کلاینت وب مدرن بر پایه React 18 + Tailwind + Cupertino UI
-│   ├── src/pages/                  # صفحات: Chat, Stages, Subscription, Profile, Login
-│   └── vite.config.ts              # پورت 8083 با پروکسی به سرور بک‌اند
 ├── androidApp/                     # نقطه ورود اپلیکیشن اندروید (MainActivity, Firebase FCM)
 ├── desktopApp/                     # نقطه ورود اپ دسکتاپ بر بستر Compose Desktop و Swing
 ├── webApp/                         # نقطه ورود وب کلاینت با Compose Wasm و WebAudioBridge
@@ -331,9 +327,8 @@ erDiagram
 
 ---
 
-## 💻 پنل‌های تحت وب (Admin Web & Client Web)
+## 💻 پنل مدیریت تحت وب (Admin Web)
 
-### ۱. پنل مدیریت ادمین (`admin-web`)
 این پنل با **React 19**, **Vite 6** و **Tailwind CSS** در مسیر `admin-web/` قرار دارد و روی پورت `8082` اجرا می‌شود:
 - **داشبورد و آمار:** شمارش کاربران فعال، جلسات چت، دقایق صوت تولیدشده و درآمد.
 - **مدیریت جامع مراحل (Stages CRUD):** ویرایش عنوان‌ها، اهداف، پرامپت کاراکتر، شناسه صدای Kokoro، فصل‌ها و تصاویر پس‌زمینه.
@@ -342,12 +337,6 @@ erDiagram
 - **مدیریت کدهای تخفیف (Promo Codes):** تعریف کد با سقف تعداد مصرف و درصد تخفیف.
 - **مرکز اعلانات و پوش‌نوتیفیکیشن:** ارسال نوتیفیکیشن همگانی یا فردی از طریق Firebase FCM.
 - **لاگ‌های امنیتی (Audit Logs):** ثبت کلیه اقدامات ادمین‌ها با IP و جزئیات تغییرات.
-
-### ۲. وب‌کلاینت مدرن کاربر (`client-web`)
-این پروژه در مسیر `client-web/` قرار دارد و با **React 18** و کامپوننت‌های مدرن **React Cupertino UI** و افکت شیشه‌ای **Liquid Glass** طراحی شده تا تجربه‌ای مشابه سیستم‌عامل iOS را در مرورگر وب ارائه دهد (پورت `8083`).
-
-### ۳. وب‌اپ اصلی کاتلین (`webApp`)
-خروجی کامپایل‌شده **Compose Multiplatform Wasm** به همراه فال‌بک خودکار JS برای مرورگرهای قدیمی با پل ارتباطی **WebAudioBridge** برای مدیریت میکروفون در وب.
 
 ---
 
@@ -401,7 +390,7 @@ ssh ubuntu@193.93.169.198 "sudo systemctl reload nginx"
 
 ### پیش‌نیازها:
 - **JDK 21** (توصیه: Eclipse Temurin 21)
-- **Node.js 20+** و **npm** (جهت اجرای `admin-web` و `client-web`)
+- **Node.js 20+** و **npm** (جهت اجرای `admin-web`)
 - **Docker / OrbStack** (برای سرویس‌های دیتابیس Postgres و Redis)
 - **Android Studio Ladybug+** یا **IntelliJ IDEA 2024.3+**
 
@@ -428,12 +417,7 @@ cd admin-web
 npm install
 npm run dev
 
-# ۴. اجرای وب‌کلاینت کاربری ری‌اکت (پورت 8083)
-cd client-web
-npm install
-npm run dev
-
-# ۵. اجرای وب‌اپ Compose Wasm (پورت 8081)
+# ۴. اجرای وب‌اپ Compose Wasm (پورت 8081)
 ./gradlew :webApp:wasmJsBrowserDevelopmentRun
 ```
 
@@ -443,7 +427,6 @@ npm run dev
 | **Ktor Backend API** | `8080` | اندپوینت‌های REST، مستندات `/openapi` و وب‌سوکت `/api/v2/stt/live` |
 | **Compose Web (Wasm)** | `8081` | وب‌اپ کاربری چندسکویی کاتلین در مرورگر |
 | **Admin Web (React 19)** | `8082` | پنل تحت وب مدیریت سناریوها و کاربران (`http://localhost:8082`) |
-| **Client Web (React 18)**| `8083` | کلاینت وب سریع و سبک با رابط شیشه‌ای اپل (`http://localhost:8083`) |
 | **PostgreSQL 15** | `5432` | دیتابیس `ai_speaking` (کاربر: `postgres`) |
 | **Redis 7** | `6379` | کش توزیع‌شده کدهای OTP و قفل‌ها |
 | **9router AI Gateway** | `20128` | گیت‌وی محلی هدایت درخواست‌های مدل‌های هوش مصنوعی (اختیاری) |
