@@ -21,6 +21,8 @@ import coil3.compose.AsyncImage
 fun String.toFaDigits(): String =
     map { if (it in '0'..'9') '۰' + (it - '0') else it }.joinToString("")
 
+fun String.fa(): String = toFaDigits()
+
 fun Int.fa(): String = toString().toFaDigits()
 
 /**

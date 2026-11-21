@@ -79,6 +79,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":data"))
     implementation(project(":feature:subscription"))
+    implementation(project(":feature:leitner"))
     implementation(libs.androidx.activityCompose)
     implementation(libs.koin.core)
     implementation(libs.koin.annotations)

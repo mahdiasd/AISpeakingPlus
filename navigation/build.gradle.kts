@@ -43,6 +43,7 @@ kotlin {
             api(project(":feature:chat"))
             api(project(":feature:profile"))
             api(project(":feature:subscription"))
+            api(project(":feature:leitner"))
             implementation(project(":utils"))
             implementation(project(":data"))
             implementation(project(":domain"))

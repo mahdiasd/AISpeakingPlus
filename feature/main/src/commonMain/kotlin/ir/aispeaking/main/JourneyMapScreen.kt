@@ -1,12 +1,18 @@
 package ir.aispeaking.main
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -32,8 +39,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -63,6 +72,7 @@ import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.GlassPanel
 import ir.aispeaking.sharedui.ui.game.RubySubscriptionButton
 import ir.aispeaking.sharedui.ui.game.fa
+import ir.aispeaking.sharedui.ui.them.AppTheme
 import ir.aispeaking.sharedui.ui.guide.AppGuideHost
 import ir.aispeaking.sharedui.ui.guide.GuideAlignment
 import ir.aispeaking.sharedui.ui.guide.GuideStep
@@ -79,6 +89,7 @@ fun JourneyMapScreen(
     onNavigateToSubscription: () -> Unit = {},
     onNavigateToStagesList: () -> Unit = {},
     onNavigateToLeaderboard: () -> Unit = {},
+    onNavigateToLeitner: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     OnResume {
@@ -218,6 +229,21 @@ fun JourneyMapScreen(
                                 active = true,
                                 onClick = { viewModel.resetToActiveStage() }
                             )
+                        }
+
+                        // Vertical Floating Edge Pill (Pinned to Right Screen Border) for Leitner Box
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(bottom = 140.dp),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                JourneyLeitnerEdgePill(
+                                    dueCount = uiState.dueLeitnerCardsCount,
+                                    onClick = onNavigateToLeitner
+                                )
+                            }
                         }
 
                         StageCard(
@@ -470,6 +496,91 @@ private fun CenterMessage(
             GameText(text = text, size = 15.sp, lineHeight = 24.sp, color = Game.TextSecondary, align = TextAlign.Center)
             if (actionText != null) {
                 GameButton(text = actionText, onClick = onAction, modifier = Modifier.width(200.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun JourneyLeitnerEdgePill(
+    dueCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isDark = AppTheme.isDark
+    val interaction = remember { MutableInteractionSource() }
+    val isPressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.92f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+        label = "edge_pill_scale"
+    )
+    val shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp, topEnd = 0.dp, bottomEnd = 0.dp)
+
+    Box(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(shape)
+            .background(if (isDark) Color(0xD9181B26) else Color(0xEBFFFFFF))
+            .border(
+                1.dp,
+                Color(0xFF06B6D4).copy(alpha = if (isDark) 0.55f else 0.40f),
+                shape
+            )
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(vertical = 12.dp, horizontal = 7.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Due Count Circular Badge
+            if (dueCount > 0) {
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF06B6D4)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    GameText(
+                        text = dueCount.fa(),
+                        size = 11.sp,
+                        bold = true,
+                        color = Color.White
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(7.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF06B6D4).copy(alpha = 0.6f))
+                )
+            }
+
+            // 90-degree rotated label "لایتنر"
+            Box(
+                modifier = Modifier
+                    .height(52.dp)
+                    .width(22.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                GameText(
+                    text = "لایتنر",
+                    size = 12.sp,
+                    bold = true,
+                    color = if (dueCount > 0) Color(0xFF06B6D4) else Game.TextPrimary,
+                    modifier = Modifier.graphicsLayer { rotationZ = -90f }
+                )
             }
         }
     }

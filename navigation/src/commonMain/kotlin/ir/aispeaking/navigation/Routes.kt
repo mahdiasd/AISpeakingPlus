@@ -59,6 +59,11 @@ data object PlacementTestRoute : AppRoute {
 }
 
 @Serializable
+data object LeitnerRoute : AppRoute {
+    override val screenName: String = "Leitner"
+}
+
+@Serializable
 data class PaymentResultRoute(
     val isSuccess: Boolean = false,
     val refId: String? = null,

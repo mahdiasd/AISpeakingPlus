@@ -1,0 +1,343 @@
+package ir.aispeaking.leitner
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import ir.aispeaking.leitner.component.FocusedCardDialog
+import ir.aispeaking.leitner.component.LeitnerCardGridItem
+import ir.aispeaking.leitner.component.LeitnerTabsRow
+import ir.aispeaking.leitner.component.LeitnerTopBar
+import ir.aispeaking.leitner.dialog.LeitnerReminderSheet
+import ir.aispeaking.leitner.dialog.LeitnerReviewDialog
+import ir.aispeaking.leitner.model.LeitnerTab
+import ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator
+import ir.aispeaking.sharedui.ui.game.Game
+import ir.aispeaking.sharedui.ui.game.GameButton
+import ir.aispeaking.sharedui.ui.game.GameButtonStyle
+import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.fa
+import ir.aispeaking.sharedui.ui.them.AppTheme
+
+@Composable
+fun LeitnerScreen(
+    viewModel: LeitnerViewModel,
+    onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val isDark = AppTheme.isDark
+
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(if (isDark) Color(0xFF090B10) else Color(0xFFF6F8FA))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+            ) {
+                // TopBar with AppBackButton (Start Anchor / Top Right), Symmetrical Title, and Reminder Bell
+                LeitnerTopBar(
+                    onNavigateBack = onNavigateBack,
+                    onReminderClick = { viewModel.openReminderSheet() },
+                    hasActiveReminder = !uiState.reminderTime.isNullOrBlank()
+                )
+
+                // Filter Tabs: [ 🎯 امروز برای مرور ], [ همه ], [ جعبه ۱..۵ ]
+                LeitnerTabsRow(
+                    selectedTab = uiState.selectedTab,
+                    dueCount = uiState.totalDueCount,
+                    allCount = uiState.allCards.size,
+                    boxCounts = uiState.boxCounts,
+                    onSelectTab = { viewModel.selectTab(it) }
+                )
+
+                // Main Content
+                if (uiState.isLoading && uiState.allCards.isEmpty() && uiState.dueCards.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AppLoadingIndicator(
+                            color = Color(0xFF06B6D4),
+                            size = 40.dp
+                        )
+                    }
+                } else {
+                    val displayCards = uiState.displayCards
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 80.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) {
+                        // Hero CTA Banner on "Due Today" tab
+                        if (uiState.selectedTab is LeitnerTab.DueToday) {
+                            item(span = { GridItemSpan(2) }) {
+                                if (uiState.dueCards.isNotEmpty()) {
+                                    DueReviewCtaBanner(
+                                        dueCount = uiState.dueCards.size,
+                                        onStartReview = { viewModel.startReviewSession() }
+                                    )
+                                } else {
+                                    AllDoneBanner()
+                                }
+                            }
+                        }
+
+                        // Empty State if no cards exist for this tab
+                        if (displayCards.isEmpty() && uiState.selectedTab !is LeitnerTab.DueToday) {
+                            item(span = { GridItemSpan(2) }) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 48.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        GameText(
+                                            text = "📦",
+                                            size = 36.sp
+                                        )
+                                        GameText(
+                                            text = "هنوز کارتی در این بخش وجود ندارد.",
+                                            size = 14.sp,
+                                            color = Game.TextSecondary,
+                                            align = TextAlign.Center
+                                        )
+                                        GameText(
+                                            text = "در حین گفتگو در مراحل، با تپ روی کلمات می‌تونی اون‌ها رو به لایتنر اضافه کنی.",
+                                            size = 12.sp,
+                                            color = Game.TextMuted,
+                                            align = TextAlign.Center,
+                                            modifier = Modifier.padding(horizontal = 24.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // 2-Column Cards Grid
+                        items(displayCards, key = { it.id }) { card ->
+                            LeitnerCardGridItem(
+                                card = card,
+                                onClick = { viewModel.openFocusedCard(card) }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Focused 3D Card Inspection Modal
+            AnimatedVisibility(
+                visible = uiState.focusedCard != null,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                uiState.focusedCard?.let { card ->
+                    FocusedCardDialog(
+                        card = card,
+                        onDismiss = { viewModel.closeFocusedCard() },
+                        onPlayAudio = { viewModel.playAudio(it) },
+                        isAudioPlaying = uiState.isAudioPlaying && uiState.audioPlayingCardId == card.id
+                    )
+                }
+            }
+
+            // Fullscreen 3D Coverflow Review Session Modal
+            AnimatedVisibility(
+                visible = uiState.isReviewSessionOpen,
+                enter = slideInVertically { it } + fadeIn(),
+                exit = slideOutVertically { it } + fadeOut()
+            ) {
+                LeitnerReviewDialog(
+                    reviewQueue = uiState.reviewQueue,
+                    currentIndex = uiState.currentReviewIndex,
+                    promotedCount = uiState.promotedCardsCount,
+                    demotedCount = uiState.demotedCardsCount,
+                    isFinished = uiState.isReviewSessionFinished,
+                    onReviewCard = { card, rem -> viewModel.submitCardReview(card, rem) },
+                    onDismiss = { viewModel.dismissReviewSession() },
+                    onPlayAudio = { viewModel.playAudio(it) },
+                    isAudioPlaying = uiState.isAudioPlaying
+                )
+            }
+
+            // Reminder Time Stepper BottomSheet
+            if (uiState.isReminderSheetOpen) {
+                LeitnerReminderSheet(
+                    initialHour = uiState.reminderHour,
+                    initialMinute = uiState.reminderMinute,
+                    onSave = { hour, minute ->
+                        viewModel.setReminderTime(hour, minute)
+                    },
+                    onDismiss = { viewModel.dismissReminderSheet() }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DueReviewCtaBanner(
+    dueCount: Int,
+    onStartReview: () -> Unit
+) {
+    val isDark = AppTheme.isDark
+    val shape = RoundedCornerShape(22.dp)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF06B6D4).copy(alpha = if (isDark) 0.22f else 0.16f),
+                        Color(0xFF3B82F6).copy(alpha = if (isDark) 0.18f else 0.12f)
+                    )
+                )
+            )
+            .border(
+                1.5.dp,
+                Color(0xFF06B6D4).copy(alpha = if (isDark) 0.55f else 0.45f),
+                shape
+            )
+            .padding(18.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(Color(0xFF06B6D4))
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        GameText(
+                            text = "مرور آماده",
+                            size = 11.sp,
+                            bold = true,
+                            color = Color.White
+                        )
+                    }
+
+                    GameText(
+                        text = "$dueCount کارت نوبت مروره".fa(),
+                        size = 14.sp,
+                        bold = true,
+                        color = Game.TextPrimary
+                    )
+                }
+            }
+
+            GameText(
+                text = "کارت‌هایی که امروز زمان مرورشون رسیده رو بررسی کن تا به جعبه‌های بالاتر ارتقا پیدا کنن.",
+                size = 12.sp,
+                color = Game.TextSecondary
+            )
+
+            GameButton(
+                text = "🚀 شروع مرور ۳بعدی ($dueCount کارت)".fa(),
+                onClick = onStartReview,
+                style = GameButtonStyle.Primary,
+                modifier = Modifier.fillMaxWidth(),
+                height = 48.dp,
+                textSize = 14.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun AllDoneBanner() {
+    val isDark = AppTheme.isDark
+    val shape = RoundedCornerShape(22.dp)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(if (isDark) Color(0x1A22C55E) else Color(0x1422C55E))
+            .border(1.dp, Color(0xFF22C55E).copy(alpha = 0.35f), shape)
+            .padding(20.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            GameText(
+                text = "🎉 آفرین! کارت‌های امروز رو مرور کردی",
+                size = 15.sp,
+                bold = true,
+                color = Color(0xFF22C55E),
+                align = TextAlign.Center
+            )
+            GameText(
+                text = "برای اضافه کردن کارت جدید، حین مکالمه در مراحل کلمات نامفهوم رو لمس کن.",
+                size = 12.sp,
+                color = Game.TextSecondary,
+                align = TextAlign.Center
+            )
+        }
+    }
+}

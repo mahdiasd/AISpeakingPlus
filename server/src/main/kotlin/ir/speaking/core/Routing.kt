@@ -17,6 +17,8 @@ import ir.speaking.feature.leaderboard.routing.leaderboardRouting
 import ir.speaking.feature.placement.routing.placementRouting
 import ir.speaking.feature.stage.routing.stageRouting
 import ir.speaking.feature.stage_progress.routing.progressRouting
+import ir.speaking.feature.dictionary.routing.dictionaryRouting
+import ir.speaking.feature.leitner.routing.leitnerRouting
 import ir.speaking.feature.stt.routing.sttRouting
 import ir.speaking.feature.subscription.routing.subscriptionRouting
 import ir.speaking.feature.tts.routing.ttsRouting
@@ -31,6 +33,8 @@ fun Application.configureRouting() {
     userRouting()
     sttRouting()
     ttsRouting()
+    dictionaryRouting()
+    leitnerRouting()
     stageRouting()
     progressRouting()
     subscriptionRouting()

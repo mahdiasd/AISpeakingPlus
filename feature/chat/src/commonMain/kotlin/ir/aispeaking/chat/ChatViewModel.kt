@@ -9,6 +9,7 @@ import ir.aispeaking.domain.model.chat.Chat
 import ir.aispeaking.domain.model.chat.ChatStatus
 import ir.aispeaking.domain.model.chat.StageChatStreamEvent
 import ir.aispeaking.domain.model.data_result.DataResult
+import ir.aispeaking.domain.model.dictionary.DictionaryEntry
 import ir.aispeaking.domain.model.error.getErrorMessage
 import ir.aispeaking.domain.model.stage.AccessTier
 import ir.aispeaking.domain.model.stage.EvaluationSession
@@ -20,9 +21,11 @@ import ir.aispeaking.domain.model.stt.SttEngine
 import ir.aispeaking.domain.model.stt.SttStreamEvent
 import ir.aispeaking.domain.repository.stage.StageRepository
 import ir.aispeaking.domain.usecase.auth.GetCurrentAccessTierUseCase
+import ir.aispeaking.domain.usecase.dictionary.LookupWordUseCase
 import ir.aispeaking.domain.usecase.guide.IsGuideCompletedUseCase
 import ir.aispeaking.domain.usecase.guide.MarkGuideCompletedUseCase
 import ir.aispeaking.domain.usecase.guide.ResetGuideUseCase
+import ir.aispeaking.domain.usecase.leitner.AddCardToLeitnerUseCase
 import ir.aispeaking.domain.usecase.stage.GetStageDetailUseCase
 import ir.aispeaking.domain.usecase.stage.RequestStageHintUseCase
 import ir.aispeaking.domain.usecase.stage.SubmitStageEvaluationUseCase
@@ -87,7 +90,18 @@ data class ChatUiState(
     val sttEngine: SttEngine = SttEngine.APP,
     val sttConnectionStatus: SttConnectionStatus = SttConnectionStatus.DISCONNECTED,
     val hasBrowserSupport: Boolean = false,
-    val showSettingsSheet: Boolean = false
+    val showSettingsSheet: Boolean = false,
+    val showWordSelectorSheet: Boolean = false,
+    val wordSelectorSentence: String = "",
+    val showDictionarySheet: Boolean = false,
+    val dictionaryTargetWord: String = "",
+    val dictionaryTargetContext: String? = null,
+    val dictionaryEntry: DictionaryEntry? = null,
+    val isDictionaryLoading: Boolean = false,
+    val dictionaryError: String? = null,
+    val isDictionaryAudioPlaying: Boolean = false,
+    val isCardAddedToLeitner: Boolean = false,
+    val isAddingCardToLeitner: Boolean = false
 )
 
 @Factory
@@ -109,7 +123,9 @@ class ChatViewModel(
     private val crashReporter: CrashReporter,
     private val isGuideCompletedUseCase: IsGuideCompletedUseCase? = null,
     private val markGuideCompletedUseCase: MarkGuideCompletedUseCase? = null,
-    private val resetGuideUseCase: ResetGuideUseCase? = null
+    private val resetGuideUseCase: ResetGuideUseCase? = null,
+    private val lookupWordUseCase: LookupWordUseCase? = null,
+    private val addCardToLeitnerUseCase: AddCardToLeitnerUseCase? = null
 ) : ViewModel() {
 
     fun isGuideCompleted(key: String): Boolean = isGuideCompletedUseCase?.invoke(key) ?: true
@@ -132,6 +148,135 @@ class ChatViewModel(
 
     fun setSettingsSheetVisible(visible: Boolean) {
         _uiState.update { it.copy(showSettingsSheet = visible) }
+    }
+
+    fun openWordSelector(sentence: String) {
+        _uiState.update {
+            it.copy(
+                showWordSelectorSheet = true,
+                wordSelectorSentence = sentence
+            )
+        }
+    }
+
+    fun closeWordSelector() {
+        _uiState.update { it.copy(showWordSelectorSheet = false) }
+    }
+
+    fun lookupWord(word: String, sentenceContext: String? = null) {
+        val cleanWord = word.trim()
+        if (cleanWord.isBlank()) return
+
+        _uiState.update {
+            it.copy(
+                showWordSelectorSheet = false,
+                showDictionarySheet = true,
+                dictionaryTargetWord = cleanWord,
+                dictionaryTargetContext = sentenceContext,
+                dictionaryEntry = null,
+                isDictionaryLoading = true,
+                dictionaryError = null,
+                isCardAddedToLeitner = false,
+                isAddingCardToLeitner = false,
+                isDictionaryAudioPlaying = false
+            )
+        }
+
+        viewModelScope.launch {
+            if (lookupWordUseCase == null) {
+                _uiState.update {
+                    it.copy(
+                        isDictionaryLoading = false,
+                        dictionaryError = "سرویس دیکشنری در دسترس نیست"
+                    )
+                }
+                return@launch
+            }
+
+            when (val result = lookupWordUseCase(cleanWord, sentenceContext)) {
+                is DataResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isDictionaryLoading = false,
+                            dictionaryEntry = result.data,
+                            dictionaryError = null
+                        )
+                    }
+                }
+                is DataResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isDictionaryLoading = false,
+                            dictionaryError = result.appError.getErrorMessage()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun retryDictionaryLookup() {
+        val word = _uiState.value.dictionaryTargetWord
+        val context = _uiState.value.dictionaryTargetContext
+        if (word.isNotBlank()) {
+            lookupWord(word, context)
+        }
+    }
+
+    fun closeDictionarySheet() {
+        stopDictionaryAudio()
+        _uiState.update {
+            it.copy(
+                showDictionarySheet = false,
+                isDictionaryAudioPlaying = false
+            )
+        }
+    }
+
+    fun playDictionaryAudio(url: String) {
+        if (url.isBlank()) return
+        _uiState.value.currentlyPlayingUid?.let { stopAiVoice(it) } ?: audioController.stopVoice()
+        stopDictionaryAudio()
+        _uiState.update { it.copy(isDictionaryAudioPlaying = true) }
+        audioController.playVoice(url) {
+            _uiState.update { it.copy(isDictionaryAudioPlaying = false) }
+        }
+    }
+
+    fun stopDictionaryAudio() {
+        audioController.stopVoice()
+        _uiState.update { it.copy(isDictionaryAudioPlaying = false) }
+    }
+
+    fun addCardToLeitner(entry: DictionaryEntry) {
+        if (_uiState.value.isCardAddedToLeitner || _uiState.value.isAddingCardToLeitner) return
+
+        _uiState.update { it.copy(isAddingCardToLeitner = true) }
+
+        viewModelScope.launch {
+            if (addCardToLeitnerUseCase == null) {
+                _uiState.update { it.copy(isAddingCardToLeitner = false) }
+                return@launch
+            }
+
+            when (val result = addCardToLeitnerUseCase(entry)) {
+                is DataResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isAddingCardToLeitner = false,
+                            isCardAddedToLeitner = true
+                        )
+                    }
+                }
+                is DataResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isAddingCardToLeitner = false
+                        )
+                    }
+                }
+            }
+        }
     }
 
     fun setSttEngine(engine: SttEngine) {

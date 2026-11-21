@@ -128,6 +128,14 @@ fun ChatScreen(
 
     val handleBackPress: () -> Boolean = {
         when {
+            uiState.showDictionarySheet -> {
+                viewModel.closeDictionarySheet()
+                true
+            }
+            uiState.showWordSelectorSheet -> {
+                viewModel.closeWordSelector()
+                true
+            }
             showExitConfirmDialog -> {
                 showExitConfirmDialog = false
                 true
@@ -462,7 +470,8 @@ fun ChatScreen(
                                                 isStreaming = uiState.isModelSpeaking && chat.uid == uiState.chats.lastOrNull()?.uid,
                                                 onPlayVoice = { viewModel.playAiVoice(chat.uid) },
                                                 onStopVoice = { viewModel.stopAiVoice(chat.uid) },
-                                                onCopied = { toastMessage = "متن پیام در کلیپ‌بورد کپی شد" }
+                                                onCopied = { toastMessage = "متن پیام در کلیپ‌بورد کپی شد" },
+                                                onOpenDictionary = { message -> viewModel.openWordSelector(message) }
                                             )
 
                                             is Chat.WaitingForAi -> TypingBubble(
@@ -529,6 +538,33 @@ fun ChatScreen(
                 visible = showObjectiveSheet,
                 stage = stage,
                 onDismiss = { showObjectiveSheet = false }
+            )
+
+            // Word Token Selector Bottom Sheet
+            WordTokenSelectorSheet(
+                visible = uiState.showWordSelectorSheet,
+                sentence = uiState.wordSelectorSentence,
+                onDismiss = { viewModel.closeWordSelector() },
+                onWordSelected = { selectedWord, sentenceContext ->
+                    viewModel.lookupWord(selectedWord, sentenceContext)
+                }
+            )
+
+            // Dictionary Detail Bottom Sheet
+            DictionaryDetailSheet(
+                visible = uiState.showDictionarySheet,
+                targetWord = uiState.dictionaryTargetWord,
+                entry = uiState.dictionaryEntry,
+                isLoading = uiState.isDictionaryLoading,
+                errorMessage = uiState.dictionaryError,
+                isAudioPlaying = uiState.isDictionaryAudioPlaying,
+                isAddedToLeitner = uiState.isCardAddedToLeitner,
+                isAddingToLeitner = uiState.isAddingCardToLeitner,
+                onDismiss = { viewModel.closeDictionarySheet() },
+                onRetry = { viewModel.retryDictionaryLookup() },
+                onPlayAudio = { url -> viewModel.playDictionaryAudio(url) },
+                onStopAudio = { viewModel.stopDictionaryAudio() },
+                onAddToLeitner = { entry -> viewModel.addCardToLeitner(entry) }
             )
 
             // Language Level Explanation Bottom Sheet
