@@ -35,6 +35,10 @@ class UserFlashcardRepository {
         customAudioUrl: String? = null,
         now: Instant = Clock.System.now()
     ): UserFlashcard = suspendTransaction {
+        require(lexiconId != null || !customWord.isNullOrBlank()) {
+            "Either lexiconId or a non-blank customWord must be provided"
+        }
+
         // If lexiconId is provided, check if user already has this card in deck
         if (lexiconId != null) {
             val existing = UserFlashcardTable
@@ -77,6 +81,7 @@ class UserFlashcardRepository {
             .orderBy(UserFlashcardTable.nextReviewAt)
             .limit(limit)
             .map { it.toUserFlashcard() }
+            .filter { it.headword.isNotBlank() || !it.customWord.isNullOrBlank() }
     }
 
     suspend fun getCardsByBox(userId: UUID, boxNumber: Int): List<UserFlashcard> = suspendTransaction {
@@ -86,6 +91,7 @@ class UserFlashcardRepository {
             .where { (UserFlashcardTable.userId eq userId) and (UserFlashcardTable.boxNumber eq boxNumber) }
             .orderBy(UserFlashcardTable.createdAt)
             .map { it.toUserFlashcard() }
+            .filter { it.headword.isNotBlank() || !it.customWord.isNullOrBlank() }
     }
 
     suspend fun getAllCards(userId: UUID): List<UserFlashcard> = suspendTransaction {
@@ -95,6 +101,7 @@ class UserFlashcardRepository {
             .where { UserFlashcardTable.userId eq userId }
             .orderBy(UserFlashcardTable.createdAt)
             .map { it.toUserFlashcard() }
+            .filter { it.headword.isNotBlank() || !it.customWord.isNullOrBlank() }
     }
 
     suspend fun getCardById(cardId: UUID, userId: UUID): UserFlashcard? = suspendTransaction {
@@ -217,8 +224,8 @@ class UserFlashcardRepository {
         val lexiconExFa = this.getOrNull(LexiconTable.sampleSentenceFa)
         val lexiconAudio = this.getOrNull(LexiconTable.audioUrl)
 
-        val effectiveHeadword = customWord ?: lexiconHeadword ?: ""
-        val effectiveMeaning = customMeaning ?: lexiconMeaning ?: ""
+        val effectiveHeadword = customWord?.takeIf { it.isNotBlank() } ?: lexiconHeadword?.takeIf { it.isNotBlank() } ?: ""
+        val effectiveMeaning = customMeaning?.takeIf { it.isNotBlank() } ?: lexiconMeaning?.takeIf { it.isNotBlank() } ?: ""
         val effectiveExampleEn = customExample ?: lexiconExEn
         val effectiveAudio = customAudio ?: lexiconAudio
 

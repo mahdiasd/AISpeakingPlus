@@ -108,6 +108,11 @@ private fun Route.registerLeitnerEndpoints(
                 return@post
             }
 
+            if (request.lexiconId.isNullOrBlank() && request.customWord.isNullOrBlank()) {
+                call.failureRespond(HttpStatusCode.BadRequest, "Either lexiconId or customWord must be provided")
+                return@post
+            }
+
             try {
                 val card = leitnerService.addCard(userId, request)
                 call.successRespond(card, message = "Flashcard added successfully")

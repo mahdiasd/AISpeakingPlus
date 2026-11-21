@@ -1,12 +1,17 @@
 package ir.aispeaking.leitner
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,15 +31,18 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
@@ -44,16 +52,21 @@ import ir.aispeaking.leitner.component.FocusedCardDialog
 import ir.aispeaking.leitner.component.LeitnerCardGridItem
 import ir.aispeaking.leitner.component.LeitnerTabsRow
 import ir.aispeaking.leitner.component.LeitnerTopBar
+import ir.aispeaking.leitner.dialog.AddWordDialog
 import ir.aispeaking.leitner.dialog.LeitnerReminderSheet
 import ir.aispeaking.leitner.dialog.LeitnerReviewDialog
 import ir.aispeaking.leitner.model.LeitnerTab
+import ir.aispeaking.sharedui.Res
+import ir.aispeaking.sharedui.ic_add
 import ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator
+import ir.aispeaking.sharedui.ui.dictionary.DictionaryDetailSheet
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.fa
 import ir.aispeaking.sharedui.ui.them.AppTheme
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun LeitnerScreen(
@@ -109,7 +122,7 @@ fun LeitnerScreen(
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 80.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier
@@ -154,7 +167,7 @@ fun LeitnerScreen(
                                             align = TextAlign.Center
                                         )
                                         GameText(
-                                            text = "در حین گفتگو در مراحل، با تپ روی کلمات می‌تونی اون‌ها رو به لایتنر اضافه کنی.",
+                                            text = "می‌تونی با دکمه + کلمه دلخواهت رو اضافه کنی یا در حین مراحل روی کلمات تپ کنی.",
                                             size = 12.sp,
                                             color = Game.TextMuted,
                                             align = TextAlign.Center,
@@ -175,6 +188,47 @@ fun LeitnerScreen(
                     }
                 }
             }
+
+            // Floating Action Button (+ Add Word FAB)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .navigationBarsPadding()
+                    .padding(bottom = 24.dp, end = 20.dp)
+            ) {
+                LeitnerAddWordFab(
+                    onClick = { viewModel.openAddWordDialog() }
+                )
+            }
+
+            // Add Word Modal Dialog
+            AnimatedVisibility(
+                visible = uiState.isAddWordDialogOpen,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                AddWordDialog(
+                    onDismiss = { viewModel.closeAddWordDialog() },
+                    onConfirm = { word -> viewModel.searchAndOpenDictionary(word) }
+                )
+            }
+
+            // Dictionary Detail Bottom Sheet
+            DictionaryDetailSheet(
+                visible = uiState.isDictionarySheetOpen,
+                targetWord = uiState.dictionaryTargetWord,
+                entry = uiState.dictionaryEntry,
+                isLoading = uiState.isDictionaryLoading,
+                errorMessage = uiState.dictionaryError,
+                isAudioPlaying = uiState.isDictionaryAudioPlaying,
+                isAddedToLeitner = uiState.isCardAddedToLeitner,
+                isAddingToLeitner = uiState.isAddingCardToLeitner,
+                onDismiss = { viewModel.closeDictionarySheet() },
+                onRetry = { viewModel.retryDictionaryLookup() },
+                onPlayAudio = { url -> viewModel.playDictionaryAudio(url) },
+                onStopAudio = { viewModel.stopDictionaryAudio() },
+                onAddToLeitner = { entry -> viewModel.addCardFromDictionary(entry) }
+            )
 
             // Focused 3D Card Inspection Modal
             AnimatedVisibility(
@@ -223,6 +277,52 @@ fun LeitnerScreen(
                 )
             }
         }
+    }
+}
+
+/**
+ * Apple Design Floating Action Button for adding custom words to Leitner deck.
+ */
+@Composable
+private fun LeitnerAddWordFab(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val isPressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.90f else 1f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 420f),
+        label = "fab_press_scale"
+    )
+
+    Box(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .size(56.dp)
+            .clip(CircleShape)
+            .background(
+                Brush.linearGradient(
+                    listOf(Color(0xFF0A84FF), Color(0xFF0066CC))
+                )
+            )
+            .border(1.5.dp, Color.White.copy(alpha = 0.45f), CircleShape)
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_add),
+            contentDescription = "افزودن کلمه جدید به لایتنر",
+            tint = Color.White,
+            modifier = Modifier.size(28.dp)
+        )
     }
 }
 
@@ -333,7 +433,7 @@ private fun AllDoneBanner() {
                 align = TextAlign.Center
             )
             GameText(
-                text = "برای اضافه کردن کارت جدید، حین مکالمه در مراحل کلمات نامفهوم رو لمس کن.",
+                text = "برای اضافه کردن کارت جدید، حین مکالمه در مراحل کلمات نامفهوم رو لمس کن یا دکمه + رو بزن.",
                 size = 12.sp,
                 color = Game.TextSecondary,
                 align = TextAlign.Center

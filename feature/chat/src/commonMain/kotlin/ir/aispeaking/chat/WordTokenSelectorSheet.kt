@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -65,9 +64,8 @@ private data class WordToken(
  *
  * Breaks AI chat message sentences into interactive, touchable word chips:
  * - Direct single-word or multi-word contiguous phrase selection.
- * - Eliminates imprecise native OS text handles on mobile & Wasm/Canvas.
- * - Tactile spring feedback with Serene Cyan highlight on selected tokens.
- * - Live phrase preview panel with one-tap dictionary lookup.
+ * - Compact Apple-style layout with tactile spring feedback.
+ * - Selection preview box with separate primary action button outside.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -133,8 +131,8 @@ fun WordTokenSelectorSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(11.dp)
         ) {
             // Header Bar
             Row(
@@ -148,7 +146,7 @@ fun WordTokenSelectorSheet(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(28.dp)
                             .clip(CircleShape)
                             .background(AppleChatTheme.PrimaryAzure.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
@@ -157,20 +155,20 @@ fun WordTokenSelectorSheet(
                             painter = painterResource(Res.drawable.ic_spell_check),
                             contentDescription = null,
                             tint = AppleChatTheme.PrimaryAzure,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                     }
 
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                         GameText(
                             text = "انتخاب کلمه یا عبارت",
-                            size = 16.sp,
+                            size = 15.sp,
                             bold = true,
                             color = Game.TextPrimary
                         )
                         GameText(
                             text = "برای ترجمه و دیکشنری، کلمات مورد نظر را لمس کنید",
-                            size = 12.sp,
+                            size = 11.sp,
                             color = Game.TextSecondary
                         )
                     }
@@ -178,7 +176,7 @@ fun WordTokenSelectorSheet(
 
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(28.dp)
                         .applePressEffect(targetScale = 0.92f, onClick = onDismiss)
                         .clip(CircleShape)
                         .background(AppleChatTheme.GlassPanelRaised)
@@ -189,26 +187,26 @@ fun WordTokenSelectorSheet(
                         painter = painterResource(Res.drawable.ic_close),
                         contentDescription = "بستن",
                         tint = Game.TextSecondary,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(13.dp)
                     )
                 }
             }
 
             // Word Tokens Flow Container (Rendered LTR for correct English word order)
-            val containerShape = RoundedCornerShape(18.dp)
+            val containerShape = RoundedCornerShape(16.dp)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(containerShape)
                     .background(AppleChatTheme.GlassPanel)
                     .border(1.dp, AppleChatTheme.SpecularStrokeBrush, containerShape)
-                    .padding(14.dp)
+                    .padding(horizontal = 12.dp, vertical = 10.dp)
             ) {
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         tokens.forEach { token ->
                             val isSelected = token.index in selectedIndices
@@ -222,56 +220,63 @@ fun WordTokenSelectorSheet(
                 }
             }
 
-            // Confirmation / Action Panel
-            val actionPanelShape = RoundedCornerShape(18.dp)
+            // Confirmation / Action Area
+            val actionPanelShape = RoundedCornerShape(14.dp)
             AnimatedVisibility(
                 visible = selectedPhrase.isNotBlank(),
                 enter = fadeIn(tween(180)),
                 exit = fadeOut(tween(140))
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(actionPanelShape)
-                        .background(AppleChatTheme.PrimaryAzure.copy(alpha = 0.08f))
-                        .border(1.dp, AppleChatTheme.PrimaryAzure.copy(alpha = 0.35f), actionPanelShape)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    // Selected Words Box (Distinct display card WITHOUT button inside)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(actionPanelShape)
+                            .background(AppleChatTheme.PrimaryAzure.copy(alpha = 0.08f))
+                            .border(1.dp, AppleChatTheme.PrimaryAzure.copy(alpha = 0.35f), actionPanelShape)
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        GameText(
-                            text = "عبارت انتخاب‌شده:",
-                            size = 12.sp,
-                            color = Game.TextSecondary
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            GameText(
+                                text = "عبارت انتخاب‌شده:",
+                                size = 11.5.sp,
+                                color = Game.TextSecondary
+                            )
 
-                        // Deselect button
-                        GameText(
-                            text = "پاک کردن انتخاب",
-                            size = 11.sp,
-                            color = AppleChatTheme.PrimaryAzure,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .clickable { selectedIndices = emptySet() }
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
+                            // Deselect button
+                            GameText(
+                                text = "پاک کردن انتخاب",
+                                size = 11.sp,
+                                color = AppleChatTheme.PrimaryAzure,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .clickable { selectedIndices = emptySet() }
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            GameText(
+                                text = selectedPhrase,
+                                size = 17.sp,
+                                bold = true,
+                                color = AppleChatTheme.PrimaryAzure,
+                                latin = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
 
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        GameText(
-                            text = selectedPhrase,
-                            size = 18.sp,
-                            bold = true,
-                            color = AppleChatTheme.PrimaryAzure,
-                            latin = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-
+                    // Action Button (Outside the box as requested)
                     GameButton(
                         text = "مشاهده در دیکشنری",
                         icon = Res.drawable.ic_spell_check,
@@ -290,24 +295,24 @@ fun WordTokenSelectorSheet(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp),
+                        .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     GameText(
                         text = "یک کلمه را لمس کنید، یا کلمات متوالی را برای انتخاب عبارت انتخاب نمایید",
-                        size = 12.sp,
+                        size = 11.5.sp,
                         color = Game.TextSecondary.copy(alpha = 0.7f)
                     )
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
         }
     }
 }
 
 /**
- * Individual touchable word token chip.
+ * Individual touchable word token chip with compact Apple-style ergonomics.
  */
 @Composable
 private fun TokenChip(
@@ -317,11 +322,11 @@ private fun TokenChip(
     modifier: Modifier = Modifier
 ) {
     val isDark = AppTheme.isDark
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(9.dp)
 
     val scaleAnim by animateFloatAsState(
-        targetValue = if (isSelected) 1.05f else 1f,
-        animationSpec = spring(dampingRatio = 0.75f, stiffness = 400f),
+        targetValue = if (isSelected) 1.04f else 1f,
+        animationSpec = spring(dampingRatio = 0.78f, stiffness = 420f),
         label = "token_scale"
     )
 
@@ -359,12 +364,12 @@ private fun TokenChip(
             .clip(shape)
             .background(bgAnim)
             .border(if (isSelected) 1.5.dp else 1.dp, strokeAnim, shape)
-            .padding(horizontal = 11.dp, vertical = 7.dp),
+            .padding(horizontal = 10.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         GameText(
             text = token.raw,
-            size = 14.sp,
+            size = 13.5.sp,
             bold = isSelected,
             color = textColor,
             latin = true

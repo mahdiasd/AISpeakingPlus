@@ -3,8 +3,11 @@ package ir.aispeaking.leitner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.aispeaking.domain.model.data_result.DataResult
+import ir.aispeaking.domain.model.dictionary.DictionaryEntry
 import ir.aispeaking.domain.model.leitner.Flashcard
 import ir.aispeaking.domain.model.leitner.LeitnerBox
+import ir.aispeaking.domain.usecase.dictionary.LookupWordUseCase
+import ir.aispeaking.domain.usecase.leitner.AddCardToLeitnerUseCase
 import ir.aispeaking.domain.usecase.leitner.GetBoxCountsUseCase
 import ir.aispeaking.domain.usecase.leitner.GetCardsByBoxUseCase
 import ir.aispeaking.domain.usecase.leitner.GetDueCardsUseCase
@@ -27,7 +30,9 @@ class LeitnerViewModel(
     private val getBoxCountsUseCase: GetBoxCountsUseCase,
     private val submitCardReviewUseCase: SubmitCardReviewUseCase,
     private val getReminderTimeUseCase: GetReminderTimeUseCase,
-    private val setReminderTimeUseCase: SetReminderTimeUseCase
+    private val setReminderTimeUseCase: SetReminderTimeUseCase,
+    private val lookupWordUseCase: LookupWordUseCase? = null,
+    private val addCardToLeitnerUseCase: AddCardToLeitnerUseCase? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LeitnerUiState(isLoading = true))
@@ -201,5 +206,124 @@ class LeitnerViewModel(
                 )
             }
         }
+    }
+
+    /* -------------------------------- Add Word & Dictionary Integration -------------------------------- */
+
+    fun openAddWordDialog() {
+        _uiState.update { it.copy(isAddWordDialogOpen = true) }
+    }
+
+    fun closeAddWordDialog() {
+        _uiState.update { it.copy(isAddWordDialogOpen = false) }
+    }
+
+    fun searchAndOpenDictionary(word: String) {
+        val trimmed = word.trim()
+        if (trimmed.isBlank()) return
+
+        _uiState.update {
+            it.copy(
+                isAddWordDialogOpen = false,
+                isDictionarySheetOpen = true,
+                isDictionaryLoading = true,
+                dictionaryTargetWord = trimmed,
+                dictionaryEntry = null,
+                dictionaryError = null,
+                isCardAddedToLeitner = false,
+                isAddingCardToLeitner = false
+            )
+        }
+
+        viewModelScope.launch {
+            if (lookupWordUseCase == null) {
+                _uiState.update {
+                    it.copy(
+                        isDictionaryLoading = false,
+                        dictionaryError = "سرویس دیکشنری در دسترس نیست"
+                    )
+                }
+                return@launch
+            }
+
+            when (val result = lookupWordUseCase(trimmed)) {
+                is DataResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isDictionaryLoading = false,
+                            dictionaryEntry = result.data,
+                            dictionaryError = null
+                        )
+                    }
+                }
+                is DataResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isDictionaryLoading = false,
+                            dictionaryError = "معنای کلمه «$trimmed» در دیکشنری یافت نشد."
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun retryDictionaryLookup() {
+        searchAndOpenDictionary(_uiState.value.dictionaryTargetWord)
+    }
+
+    fun closeDictionarySheet() {
+        _uiState.update {
+            it.copy(
+                isDictionarySheetOpen = false,
+                isDictionaryAudioPlaying = false
+            )
+        }
+    }
+
+    fun addCardFromDictionary(entry: DictionaryEntry) {
+        if (_uiState.value.isCardAddedToLeitner || _uiState.value.isAddingCardToLeitner) return
+
+        _uiState.update { it.copy(isAddingCardToLeitner = true) }
+
+        viewModelScope.launch {
+            if (addCardToLeitnerUseCase == null) {
+                _uiState.update { it.copy(isAddingCardToLeitner = false) }
+                return@launch
+            }
+
+            when (val result = addCardToLeitnerUseCase(entry)) {
+                is DataResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isAddingCardToLeitner = false,
+                            isCardAddedToLeitner = true
+                        )
+                    }
+                    // Immediately refresh the Leitner deck cards
+                    loadData()
+                }
+                is DataResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isAddingCardToLeitner = false
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun playDictionaryAudio(url: String) {
+        if (url.isBlank()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isDictionaryAudioPlaying = true) }
+            kotlinx.coroutines.delay(1200)
+            _uiState.update { it.copy(isDictionaryAudioPlaying = false) }
+        }
+    }
+
+    fun stopDictionaryAudio() {
+        _uiState.update { it.copy(isDictionaryAudioPlaying = false) }
     }
 }

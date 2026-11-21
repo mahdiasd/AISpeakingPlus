@@ -511,11 +511,11 @@ private fun JourneyLeitnerEdgePill(
     val interaction = remember { MutableInteractionSource() }
     val isPressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.92f else 1f,
+        targetValue = if (isPressed) 0.90f else 1f,
         animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
         label = "edge_pill_scale"
     )
-    val shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp, topEnd = 0.dp, bottomEnd = 0.dp)
+    val shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp, topEnd = 0.dp, bottomEnd = 0.dp)
 
     Box(
         modifier = modifier
@@ -524,10 +524,10 @@ private fun JourneyLeitnerEdgePill(
                 scaleY = scale
             }
             .clip(shape)
-            .background(if (isDark) Color(0xD9181B26) else Color(0xEBFFFFFF))
+            .background(if (isDark) Color(0xFF0F172A) else Color(0xFFFFFFFF))
             .border(
-                1.dp,
-                Color(0xFF06B6D4).copy(alpha = if (isDark) 0.55f else 0.40f),
+                1.5.dp,
+                Color(0xFF06B6D4),
                 shape
             )
             .clickable(
@@ -535,25 +535,25 @@ private fun JourneyLeitnerEdgePill(
                 indication = null,
                 onClick = onClick
             )
-            .padding(vertical = 12.dp, horizontal = 7.dp),
+            .padding(vertical = 8.dp, horizontal = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             // Due Count Circular Badge
             if (dueCount > 0) {
                 Box(
                     modifier = Modifier
-                        .size(20.dp)
+                        .size(18.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF06B6D4)),
                     contentAlignment = Alignment.Center
                 ) {
                     GameText(
                         text = dueCount.fa(),
-                        size = 11.sp,
+                        size = 10.sp,
                         bold = true,
                         color = Color.White
                     )
@@ -561,24 +561,24 @@ private fun JourneyLeitnerEdgePill(
             } else {
                 Box(
                     modifier = Modifier
-                        .size(7.dp)
+                        .size(6.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF06B6D4).copy(alpha = 0.6f))
+                        .background(Color(0xFF06B6D4).copy(alpha = 0.8f))
                 )
             }
 
             // 90-degree rotated label "لایتنر"
             Box(
                 modifier = Modifier
-                    .height(52.dp)
-                    .width(22.dp),
+                    .height(38.dp)
+                    .width(16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 GameText(
                     text = "لایتنر",
-                    size = 12.sp,
+                    size = 11.sp,
                     bold = true,
-                    color = if (dueCount > 0) Color(0xFF06B6D4) else Game.TextPrimary,
+                    color = if (dueCount > 0) Color(0xFF06B6D4) else (if (isDark) Color(0xFFE2E8F0) else Color(0xFF0F172A)),
                     modifier = Modifier.graphicsLayer { rotationZ = -90f }
                 )
             }

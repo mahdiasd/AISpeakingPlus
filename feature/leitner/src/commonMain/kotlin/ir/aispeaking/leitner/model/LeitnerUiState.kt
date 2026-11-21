@@ -1,5 +1,6 @@
 package ir.aispeaking.leitner.model
 
+import ir.aispeaking.domain.model.dictionary.DictionaryEntry
 import ir.aispeaking.domain.model.leitner.Flashcard
 import ir.aispeaking.domain.model.leitner.LeitnerBox
 
@@ -51,18 +52,31 @@ data class LeitnerUiState(
     val currentReviewIndex: Int = 0,
     val promotedCardsCount: Int = 0,
     val demotedCardsCount: Int = 0,
-    val isReviewSessionFinished: Boolean = false
+    val isReviewSessionFinished: Boolean = false,
+    // Add Word & Dictionary Lookup state
+    val isAddWordDialogOpen: Boolean = false,
+    val isDictionarySheetOpen: Boolean = false,
+    val isDictionaryLoading: Boolean = false,
+    val dictionaryTargetWord: String = "",
+    val dictionaryEntry: DictionaryEntry? = null,
+    val dictionaryError: String? = null,
+    val isDictionaryAudioPlaying: Boolean = false,
+    val isAddingCardToLeitner: Boolean = false,
+    val isCardAddedToLeitner: Boolean = false
 ) {
     /**
-     * Cards displayed in the current tab.
+     * Cards displayed in the current tab (sanitized against corrupt empty cards).
      */
     val displayCards: List<Flashcard>
-        get() = when (val tab = selectedTab) {
-            is LeitnerTab.DueToday -> dueCards
-            is LeitnerTab.All -> allCards
-            is LeitnerTab.BoxTab -> allCards.filter { it.boxNumber == tab.box.boxNumber }
+        get() {
+            val list = when (val tab = selectedTab) {
+                is LeitnerTab.DueToday -> dueCards
+                is LeitnerTab.All -> allCards
+                is LeitnerTab.BoxTab -> allCards.filter { it.boxNumber == tab.box.boxNumber }
+            }
+            return list.filter { it.headword.isNotBlank() || !it.customWord.isNullOrBlank() }
         }
 
     val totalDueCount: Int
-        get() = dueCards.size
+        get() = dueCards.count { it.headword.isNotBlank() || !it.customWord.isNullOrBlank() }
 }

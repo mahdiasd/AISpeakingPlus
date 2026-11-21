@@ -149,16 +149,21 @@ fun LeitnerCardGridItem(
             }
 
             // Center Content: Headword & Phonetics
+            val displayWord = card.headword.ifBlank { card.customWord.orEmpty() }
+                .ifBlank { card.meaningFa }
+                .ifBlank { card.customMeaning.orEmpty() }
+                .ifBlank { "—" }
+
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 GameText(
-                    text = card.headword.ifBlank { card.customWord.orEmpty() },
+                    text = displayWord,
                     size = 18.sp,
                     bold = true,
-                    color = Game.TextPrimary,
+                    color = if (isDark) Color.White else Color(0xFF0F172A),
                     align = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
