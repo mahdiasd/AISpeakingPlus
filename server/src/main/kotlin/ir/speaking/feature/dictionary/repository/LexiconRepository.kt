@@ -4,6 +4,8 @@ import ir.speaking.core.utils.suspendTransaction
 import ir.speaking.feature.dictionary.db.LexiconTable
 import ir.speaking.feature.dictionary.model.LexiconEntry
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
@@ -82,6 +84,15 @@ class LexiconRepository {
         LexiconTable.update({ LexiconTable.id eq id }) { row ->
             row[LexiconTable.audioUrl] = audioUrl
         } > 0
+    }
+
+    suspend fun deleteById(id: UUID): Boolean = suspendTransaction {
+        LexiconTable.deleteWhere { LexiconTable.id eq id } > 0
+    }
+
+    suspend fun deleteByNormalizedText(normalizedText: String): Boolean = suspendTransaction {
+        val trimmed = normalizedText.trim().lowercase()
+        LexiconTable.deleteWhere { LexiconTable.normalizedText eq trimmed } > 0
     }
 
     private fun ResultRow.toLexiconEntry(): LexiconEntry {

@@ -43,10 +43,10 @@ open class DictionaryService(
         private const val CACHE_TTL_DAYS = 30L
 
         private const val SYSTEM_PROMPT = """You are an expert bilingual lexicographer and dictionary service for language learners.
-Analyze the given English word or phrase within its context (if provided) and output a strict JSON object with:
-- "headword": the base lemma form (lowercase, e.g. "withdraw", "apple")
-- "phonetic": accurate IPA phonetic transcription (e.g. "/wɪðˈdrɔː/")
-- "partOfSpeech": grammatical category (e.g. "noun", "verb", "adjective", "adverb", "phrasal verb", "idiom")
+Analyze the given English word, phrase, idiom, or expression within its context (if provided) and output a strict JSON object with:
+- "headword": the exact word, phrase, idiom, or expression being analyzed (e.g. "Hello, I am Rachel", "take care of", "withdraw", "apple"). Preserve multi-word phrases and expressions exactly as requested by the user, without reducing or truncating them to a single word lemma!
+- "phonetic": accurate IPA phonetic transcription (e.g. "/hə'loʊ/"). Use standard ASCII apostrophe "'" for primary stress to guarantee font compatibility across all devices.
+- "partOfSpeech": grammatical category (e.g. "phrase", "expression", "sentence", "noun", "verb", "adjective", "adverb", "phrasal verb", "idiom")
 - "contextMeaningFa": natural, accurate Persian translation matching the provided context (or primary meaning if no context)
 - "definitionEn": simple, clear English learner definition
 - "otherMeaningsFa": list of 1 to 4 other common Persian translations (array of strings)
@@ -67,23 +67,34 @@ CRITICAL: Output ONLY valid, parseable JSON conforming to this schema. Do not in
         // 1. Check Redis cache (or in-memory fallback)
         val cached = getFromCache(normalized)
         if (cached != null) {
-            logger.debug("Dictionary cache hit for '$normalized'")
-            return cached
+            // Guardrail: if normalized query is a multi-word phrase but cached headword was truncated to a single word, invalidate
+            if (normalized.contains(" ") && !cached.headword.contains(" ")) {
+                logger.info("Evicting outdated single-word cached entry '${cached.headword}' for multi-word phrase '$normalized'")
+                evictFromCache(normalized)
+            } else {
+                logger.debug("Dictionary cache hit for '$normalized'")
+                return cached
+            }
         }
 
         // 2. Check Database (LexiconRepository)
         val dbEntry = lexiconRepository.findByNormalizedText(normalized)
         if (dbEntry != null) {
-            val response = ensureAudioAndMap(dbEntry)
-            putToCache(normalized, response)
-            return response
+            if (normalized.contains(" ") && !dbEntry.headword.contains(" ")) {
+                logger.info("Found outdated single-word headword '${dbEntry.headword}' in DB for phrase '$normalized'. Re-analyzing with AI.")
+                lexiconRepository.deleteByNormalizedText(normalized)
+            } else {
+                val response = ensureAudioAndMap(dbEntry)
+                putToCache(normalized, response)
+                return response
+            }
         }
 
         // 3. Cache Miss: Query 9router AI model via AiApiService
         val aiResult = queryAiDictionary(normalized, rawWord, contextSentence)
 
         // 4. Synthesize pronunciation audio via Kokoro TTS
-        val effectiveHeadword = aiResult.headword.ifBlank { normalized }
+        val effectiveHeadword = aiResult.headword.ifBlank { rawWord.trim() }
         val audioUrl = synthesizeWordAudio(effectiveHeadword)
 
         // 5. Persist to Database
@@ -130,11 +141,11 @@ CRITICAL: Output ONLY valid, parseable JSON conforming to this schema. Do not in
         contextSentence: String?
     ): AiDictionaryResult {
         val userContent = buildString {
-            append("Word: \"$rawWord\"\n")
+            append("Word or Phrase to Analyze: \"$rawWord\"\n")
             if (!contextSentence.isNullOrBlank()) {
-                append("Context: \"$contextSentence\"")
+                append("Context Sentence: \"$contextSentence\"")
             } else {
-                append("Context: None")
+                append("Context Sentence: None")
             }
         }
 
@@ -191,7 +202,7 @@ CRITICAL: Output ONLY valid, parseable JSON conforming to this schema. Do not in
     }
 
     open suspend fun synthesizeWordAudio(headword: String): String? {
-        val safeLemma = headword.trim().lowercase().replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
+        val safeLemma = headword.trim().lowercase().replace(Regex("[^a-zA-Z0-9_\\-]"), "_").take(60)
         if (safeLemma.isBlank()) return null
 
         val wordsDir = File("audio_cache/words")
@@ -293,5 +304,18 @@ CRITICAL: Output ONLY valid, parseable JSON conforming to this schema. Do not in
             }
         }
         inMemoryCache[normalized] = response
+    }
+
+    private fun evictFromCache(normalized: String) {
+        val client = redissonClient
+        if (client != null) {
+            try {
+                val bucket: RBucket<String> = client.getBucket(REDIS_PREFIX + normalized)
+                bucket.delete()
+            } catch (e: Exception) {
+                logger.warn("Redis delete error for key '$normalized': ${e.message}")
+            }
+        }
+        inMemoryCache.remove(normalized)
     }
 }

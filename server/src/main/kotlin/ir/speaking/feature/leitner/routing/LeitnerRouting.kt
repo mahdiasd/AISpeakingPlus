@@ -26,27 +26,25 @@ import java.util.UUID
 
 @OptIn(ExperimentalKtorApi::class)
 fun Application.leitnerRouting() {
-    val leitnerService by inject<LeitnerService>()
-
     routing {
         // v2 Primary route
         route("/api/v2/leitner") {
-            registerLeitnerEndpoints(leitnerService, tag = "Leitner", suffix = "")
+            registerLeitnerEndpoints(tag = "Leitner", suffix = "")
         }
 
         // v1 / Root API route for direct compatibility
         route("/api/leitner") {
-            registerLeitnerEndpoints(leitnerService, tag = "Leitner", suffix = " (Legacy)")
+            registerLeitnerEndpoints(tag = "Leitner", suffix = " (Legacy)")
         }
     }
 }
 
 @OptIn(ExperimentalKtorApi::class)
 private fun Route.registerLeitnerEndpoints(
-    leitnerService: LeitnerService,
     tag: String,
     suffix: String
 ) {
+    val leitnerService by inject<LeitnerService>()
     authenticate(MyConstant.USER_JWT_NAME) {
         // 1. Get cards (filtered by box or dueOnly)
         get("/cards") {

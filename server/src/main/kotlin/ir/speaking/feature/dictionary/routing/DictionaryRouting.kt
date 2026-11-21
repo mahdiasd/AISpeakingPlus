@@ -22,44 +22,32 @@ import java.io.File
 
 @OptIn(ExperimentalKtorApi::class)
 fun Application.dictionaryRouting() {
-    val dictionaryService by inject<DictionaryService>()
-
     routing {
         // v2 Primary route
         route("/api/v2/dictionary") {
-            registerDictionaryEndpoints(dictionaryService, tag = "Dictionary", suffix = "")
+            registerDictionaryEndpoints(tag = "Dictionary", suffix = "")
+            get("/audio/{filename}") {
+                serveWordAudio(call)
+            }
+            head("/audio/{filename}") {
+                serveWordAudioHead(call)
+            }
         }
 
         // v1 / Root API route for direct compatibility
         route("/api/dictionary") {
-            registerDictionaryEndpoints(dictionaryService, tag = "Dictionary", suffix = " (Legacy)")
+            registerDictionaryEndpoints(tag = "Dictionary", suffix = " (Legacy)")
+            get("/audio/{filename}") {
+                serveWordAudio(call)
+            }
+            head("/audio/{filename}") {
+                serveWordAudioHead(call)
+            }
         }
 
         // Word audio file static serving
         get("/audio_cache/words/{filename}") {
-            val filename = call.parameters["filename"]
-            if (filename.isNullOrBlank()) {
-                call.failureRespond(HttpStatusCode.BadRequest, "Filename is required")
-                return@get
-            }
-            val sanitized = File(filename).name
-            val candidates = listOf(
-                File("audio_cache/words", sanitized),
-                File("server/audio_cache/words", sanitized),
-                File("../audio_cache/words", sanitized),
-                File("/app/audio_cache/words", sanitized)
-            )
-            val file = candidates.firstOrNull { it.exists() && it.isFile }
-            if (file != null && file.exists()) {
-                val contentType = if (sanitized.endsWith(".mp3", ignoreCase = true)) "audio/mpeg" else "audio/wav"
-                call.response.header(HttpHeaders.ContentType, contentType)
-                call.response.header(HttpHeaders.ContentDisposition, "inline; filename=\"$sanitized\"")
-                call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
-                call.response.header(HttpHeaders.AcceptRanges, "bytes")
-                call.respondFile(file)
-            } else {
-                call.failureRespond(HttpStatusCode.NotFound, "Audio file not found")
-            }
+            serveWordAudio(call)
         }.describe {
             tag("Dictionary")
             summary = "Get Word Audio File"
@@ -84,15 +72,66 @@ fun Application.dictionaryRouting() {
                 }
             }
         }
+
+        head("/audio_cache/words/{filename}") {
+            serveWordAudioHead(call)
+        }
+    }
+}
+
+private fun resolveAudioFile(filename: String?): File? {
+    if (filename.isNullOrBlank()) return null
+    val sanitized = File(filename).name
+    val candidates = listOf(
+        File("audio_cache/words", sanitized),
+        File("server/audio_cache/words", sanitized),
+        File("../audio_cache/words", sanitized),
+        File("/app/audio_cache/words", sanitized),
+        File("audio_cache", sanitized),
+        File("/app/audio_cache", sanitized)
+    )
+    return candidates.firstOrNull { it.exists() && it.isFile }
+}
+
+private suspend fun serveWordAudio(call: ApplicationCall) {
+    val filename = call.parameters["filename"]
+    val file = resolveAudioFile(filename)
+    if (file != null && file.exists()) {
+        val sanitized = File(filename!!).name
+        val contentType = if (sanitized.endsWith(".mp3", ignoreCase = true)) "audio/mpeg" else "audio/wav"
+        call.response.header(HttpHeaders.ContentType, contentType)
+        call.response.header(HttpHeaders.ContentDisposition, "inline; filename=\"$sanitized\"")
+        call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
+        call.response.header(HttpHeaders.AcceptRanges, "bytes")
+        call.respondFile(file)
+    } else {
+        call.failureRespond(HttpStatusCode.NotFound, "Audio file not found")
+    }
+}
+
+private suspend fun serveWordAudioHead(call: ApplicationCall) {
+    val filename = call.parameters["filename"]
+    val file = resolveAudioFile(filename)
+    if (file != null && file.exists()) {
+        val sanitized = File(filename!!).name
+        val contentType = if (sanitized.endsWith(".mp3", ignoreCase = true)) "audio/mpeg" else "audio/wav"
+        call.response.header(HttpHeaders.ContentType, contentType)
+        call.response.header(HttpHeaders.ContentLength, file.length().toString())
+        call.response.header(HttpHeaders.ContentDisposition, "inline; filename=\"$sanitized\"")
+        call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
+        call.response.header(HttpHeaders.AcceptRanges, "bytes")
+        call.respond(HttpStatusCode.OK)
+    } else {
+        call.respond(HttpStatusCode.NotFound)
     }
 }
 
 @OptIn(ExperimentalKtorApi::class)
 private fun Route.registerDictionaryEndpoints(
-    dictionaryService: DictionaryService,
     tag: String,
     suffix: String
 ) {
+    val dictionaryService by inject<DictionaryService>()
     authenticate(MyConstant.USER_JWT_NAME, optional = true) {
         post("/lookup") {
             val request = try {

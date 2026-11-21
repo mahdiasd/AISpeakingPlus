@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -38,7 +39,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -175,6 +179,7 @@ fun DictionaryDetailSheet(
                 entry != null -> {
                     DictionaryContentState(
                         entry = entry,
+                        targetWord = targetWord,
                         isAudioPlaying = isAudioPlaying,
                         isAddedToLeitner = isAddedToLeitner,
                         isAddingToLeitner = isAddingToLeitner,
@@ -282,6 +287,7 @@ private fun DictionaryErrorState(
 @Composable
 private fun DictionaryContentState(
     entry: DictionaryEntry,
+    targetWord: String = "",
     isAudioPlaying: Boolean,
     isAddedToLeitner: Boolean,
     isAddingToLeitner: Boolean,
@@ -291,6 +297,12 @@ private fun DictionaryContentState(
 ) {
     val isDark = AppTheme.isDark
     val panelShape = RoundedCornerShape(18.dp)
+
+    val displayHeadword = when {
+        targetWord.isNotBlank() && (targetWord.contains(" ") || entry.headword.isBlank() || (entry.headword.length < targetWord.length && !entry.headword.contains(" "))) -> targetWord
+        entry.headword.isNotBlank() -> entry.headword
+        else -> targetWord
+    }
 
     // 1. Headword, Phonetic & Pronunciation Audio Hero Card
     Column(
@@ -305,41 +317,67 @@ private fun DictionaryContentState(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
-            // Headword & Part of Speech
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Headword & Part of Speech (strictly bounded with weight(1f))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    GameText(
-                        text = entry.headword,
-                        size = 22.sp,
-                        bold = true,
-                        color = Game.TextPrimary,
-                        latin = true
-                    )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        Text(
+                            text = displayHeadword,
+                            fontSize = when {
+                                displayHeadword.length > 35 -> 16.sp
+                                displayHeadword.length > 20 -> 18.sp
+                                else -> 22.sp
+                            },
+                            fontWeight = FontWeight.Bold,
+                            color = Game.TextPrimary,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            lineHeight = if (displayHeadword.length > 20) 24.sp else 28.sp
+                        )
+                    }
+
+                    val pos = entry.partOfSpeech
+                    if (!pos.isNullOrBlank()) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AppleTheme.PrimaryAzure.copy(alpha = 0.15f))
+                                .border(0.8.dp, AppleTheme.PrimaryAzure.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 7.dp, vertical = 2.dp)
+                        ) {
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                Text(
+                                    text = pos,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AppleTheme.PrimaryAzure
+                                )
+                            }
+                        }
+                    }
                 }
 
-                val pos = entry.partOfSpeech
-                if (!pos.isNullOrBlank()) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(AppleTheme.PrimaryAzure.copy(alpha = 0.15f))
-                            .border(0.8.dp, AppleTheme.PrimaryAzure.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 7.dp, vertical = 2.dp)
-                    ) {
-                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                            GameText(
-                                text = pos,
-                                size = 11.sp,
-                                bold = true,
-                                color = AppleTheme.PrimaryAzure,
-                                latin = true
-                            )
-                        }
+                // Phonetic notation with clean IPA sanitization and system sans-serif font
+                val phonetic = entry.phonetic
+                if (!phonetic.isNullOrBlank()) {
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        Text(
+                            text = cleanIpaPhonetic(phonetic),
+                            fontSize = 13.sp,
+                            color = Game.TextSecondary,
+                            fontFamily = FontFamily.SansSerif
+                        )
                     }
                 }
             }
@@ -386,19 +424,6 @@ private fun DictionaryContentState(
                         )
                     }
                 }
-            }
-        }
-
-        // Phonetic notation
-        val phonetic = entry.phonetic
-        if (!phonetic.isNullOrBlank()) {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                GameText(
-                    text = phonetic,
-                    size = 14.sp,
-                    color = Game.TextSecondary,
-                    latin = true
-                )
             }
         }
     }
@@ -584,12 +609,32 @@ private fun DictionaryContentState(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     if (!isAddingToLeitner) {
-                        onAddToLeitner(entry)
+                        val effectiveEntry = if (displayHeadword.isNotBlank() && displayHeadword != entry.headword) {
+                            entry.copy(headword = displayHeadword)
+                        } else {
+                            entry
+                        }
+                        onAddToLeitner(effectiveEntry)
                     }
                 }
             )
         }
     }
+}
+
+/**
+ * Sanitizes IPA phonetic transcriptions to prevent missing glyphs (tofu boxes '☒')
+ * caused by fonts lacking modifier letters (like U+02C8 primary stress 'ˈ').
+ */
+internal fun cleanIpaPhonetic(raw: String): String {
+    return raw
+        .replace('\u02C8', '\'') // modifier letter vertical line (primary stress) -> standard apostrophe
+        .replace('\u02CC', ',')  // modifier letter low vertical line (secondary stress) -> comma
+        .replace('\u2019', '\'') // right single quotation mark
+        .replace('\u2018', '\'') // left single quotation mark
+        .replace("ˈ", "'")
+        .replace("ˌ", ",")
+        .trim()
 }
 
 @Composable
