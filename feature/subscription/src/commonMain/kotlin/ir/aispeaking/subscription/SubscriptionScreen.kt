@@ -309,14 +309,12 @@ fun SubscriptionScreen(
                                 }
                             }
 
-                            // 3D coverflow calculation with enhanced side peek visibility
+                            // Smooth Apple-style carousel calculation with enhanced side peek visibility and high-performance 2D transforms
                             val pageOffset = ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction)
                             val absOffset = pageOffset.absoluteValue.coerceIn(0f, 1.5f)
 
-                            val scale = 1f - (absOffset * 0.08f)
-                            val alpha = 1f - (absOffset * 0.18f).coerceIn(0f, 0.28f)
-                            val rotationZ = -pageOffset * 3.5f
-                            val rotationY = pageOffset * 7.5f
+                            val scale = 1f - (absOffset * 0.06f)
+                            val alpha = 1f - (absOffset * 0.15f).coerceIn(0f, 0.25f)
 
                             ModernPlanCard(
                                 plan = plan,
@@ -341,9 +339,6 @@ fun SubscriptionScreen(
                                         scaleX = scale
                                         scaleY = scale
                                         this.alpha = alpha
-                                        this.rotationZ = rotationZ
-                                        this.rotationY = rotationY
-                                        cameraDistance = 16f * density
                                         translationY = absOffset * 4.dp.toPx()
                                     }
                             )

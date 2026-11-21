@@ -139,16 +139,16 @@ fun ModernPlanCard(
             .then(
                 if (isSelected) {
                     Modifier.shadow(
-                        elevation = 14.dp,
+                        elevation = 8.dp,
                         shape = cardShape,
-                        spotColor = accentColor.copy(alpha = if (isDark) 0.50f else 0.35f),
-                        ambientColor = accentColor.copy(alpha = 0.20f)
+                        spotColor = accentColor.copy(alpha = if (isDark) 0.40f else 0.28f),
+                        ambientColor = accentColor.copy(alpha = 0.15f)
                     )
                 } else {
                     Modifier.shadow(
-                        elevation = 4.dp,
+                        elevation = 2.dp,
                         shape = cardShape,
-                        spotColor = Color.Black.copy(alpha = 0.08f)
+                        spotColor = Color.Black.copy(alpha = 0.06f)
                     )
                 }
             )

@@ -1985,8 +1985,14 @@
             }
             ensureProxyInput();
 
-            // 2. Deep collector for all active ShadowRoots
+            // 2. Deep collector for all active ShadowRoots (with cached throttling to prevent layout thrashing on touch)
+            var _cachedShadowRoots = null;
+            var _lastShadowRootsCollect = 0;
             function getAllShadowRoots() {
+                var now = Date.now();
+                if (_cachedShadowRoots && (now - _lastShadowRootsCollect < 2500)) {
+                    return _cachedShadowRoots;
+                }
                 var roots = [];
                 function traverse(el) {
                     if (!el) return;
@@ -2000,6 +2006,8 @@
                     }
                 }
                 traverse(document.body);
+                _cachedShadowRoots = roots;
+                _lastShadowRootsCollect = now;
                 return roots;
             }
 
@@ -2102,7 +2110,15 @@
                     var buttons = root.querySelectorAll ? root.querySelectorAll('[role="button"]') : [];
                     for (var j = 0; j < buttons.length; j++) {
                         var bText = (buttons[j].innerText || buttons[j].textContent || "").trim();
-                        if (bText.indexOf("میکروفون") !== -1 || bText.indexOf("اجازه") !== -1 || bText.indexOf("صوتی") !== -1) {
+                        // Only match short explicit microphone permission buttons (exclude general cards, dialogs, or text containing "صوتی")
+                        var isMicPermButton = bText.length <= 35 && (
+                            bText === "اجازه دادن" ||
+                            bText.indexOf("دسترسی به میکروفون") !== -1 ||
+                            bText.indexOf("فعال‌سازی میکروفون") !== -1 ||
+                            bText.indexOf("مجوز میکروفون") !== -1 ||
+                            (bText.indexOf("میکروفون") !== -1 && (bText.indexOf("اجازه") !== -1 || bText.indexOf("دسترسی") !== -1))
+                        );
+                        if (isMicPermButton) {
                             micButtons.push(buttons[j]);
                         }
                     }
@@ -2170,8 +2186,8 @@
                 }
             }
 
+            // Execute on touchstart to synchronously prime audio and prepare input focus on iOS gesture without stuttering fling on touchend
             window.addEventListener('touchstart', onNativeTouch, { capture: true, passive: true });
-            window.addEventListener('touchend', onNativeTouch, { capture: true, passive: true });
         })();
 
         // Dynamic visualViewport synchronization for iOS Safari virtual keyboard
