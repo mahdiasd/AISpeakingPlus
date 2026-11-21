@@ -1,0 +1,297 @@
+package ir.speaking.feature.dictionary.service
+
+import com.aallam.openai.api.chat.ChatMessage
+import com.aallam.openai.api.chat.ChatResponseFormat
+import com.aallam.openai.api.chat.ChatRole
+import ir.speaking.core.network.api.AiApiService
+import ir.speaking.core.redis.di.RedisClientHolder
+import ir.speaking.feature.dictionary.dto.AiDictionaryResult
+import ir.speaking.feature.dictionary.dto.DictionaryLookupResponse
+import ir.speaking.feature.dictionary.model.LexiconEntry
+import ir.speaking.feature.dictionary.repository.LexiconRepository
+import ir.speaking.feature.tts.service.TtsService
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import org.koin.core.annotation.Single
+import org.redisson.api.RBucket
+import org.redisson.api.RedissonClient
+import org.slf4j.LoggerFactory
+import java.io.File
+import java.time.Duration
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+
+@Single
+open class DictionaryService(
+    private val lexiconRepository: LexiconRepository,
+    private val aiApiService: AiApiService,
+    private val ttsService: TtsService,
+    redisClientHolder: RedisClientHolder
+) {
+    private val logger = LoggerFactory.getLogger(DictionaryService::class.java)
+    private val redissonClient: RedissonClient? = redisClientHolder.client
+    private val inMemoryCache = ConcurrentHashMap<String, DictionaryLookupResponse>()
+
+    private val jsonParser = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        coerceInputValues = true
+    }
+
+    companion object {
+        private const val REDIS_PREFIX = "dict:lookup:"
+        private const val CACHE_TTL_DAYS = 30L
+
+        private const val SYSTEM_PROMPT = """You are an expert bilingual lexicographer and dictionary service for language learners.
+Analyze the given English word or phrase within its context (if provided) and output a strict JSON object with:
+- "headword": the base lemma form (lowercase, e.g. "withdraw", "apple")
+- "phonetic": accurate IPA phonetic transcription (e.g. "/wɪðˈdrɔː/")
+- "partOfSpeech": grammatical category (e.g. "noun", "verb", "adjective", "adverb", "phrasal verb", "idiom")
+- "contextMeaningFa": natural, accurate Persian translation matching the provided context (or primary meaning if no context)
+- "definitionEn": simple, clear English learner definition
+- "otherMeaningsFa": list of 1 to 4 other common Persian translations (array of strings)
+- "sampleSentenceEn": a natural English example sentence illustrating the usage
+- "sampleSentenceFa": accurate Persian translation of the sample sentence
+
+CRITICAL: Output ONLY valid, parseable JSON conforming to this schema. Do not include markdown codeblocks, explanations, or additional text."""
+    }
+
+    open fun normalize(raw: String): String {
+        return raw.trim().lowercase().replace(Regex("[^a-zA-Z0-9'\\-\\s]"), "").trim()
+    }
+
+    open suspend fun lookup(rawWord: String, contextSentence: String? = null): DictionaryLookupResponse {
+        val normalized = normalize(rawWord)
+        require(normalized.isNotBlank()) { "Word cannot be empty" }
+
+        // 1. Check Redis cache (or in-memory fallback)
+        val cached = getFromCache(normalized)
+        if (cached != null) {
+            logger.debug("Dictionary cache hit for '$normalized'")
+            return cached
+        }
+
+        // 2. Check Database (LexiconRepository)
+        val dbEntry = lexiconRepository.findByNormalizedText(normalized)
+        if (dbEntry != null) {
+            val response = ensureAudioAndMap(dbEntry)
+            putToCache(normalized, response)
+            return response
+        }
+
+        // 3. Cache Miss: Query 9router AI model via AiApiService
+        val aiResult = queryAiDictionary(normalized, rawWord, contextSentence)
+
+        // 4. Synthesize pronunciation audio via Kokoro TTS
+        val effectiveHeadword = aiResult.headword.ifBlank { normalized }
+        val audioUrl = synthesizeWordAudio(effectiveHeadword)
+
+        // 5. Persist to Database
+        val otherMeaningsJson = if (aiResult.otherMeaningsFa.isNotEmpty()) {
+            jsonParser.encodeToString(aiResult.otherMeaningsFa)
+        } else {
+            null
+        }
+
+        val savedEntry = lexiconRepository.save(
+            normalizedText = normalized,
+            headword = effectiveHeadword,
+            phonetic = aiResult.phonetic,
+            partOfSpeech = aiResult.partOfSpeech,
+            contextMeaningFa = aiResult.contextMeaningFa,
+            otherMeaningsJson = otherMeaningsJson,
+            definitionEn = aiResult.definitionEn,
+            sampleSentenceEn = aiResult.sampleSentenceEn,
+            sampleSentenceFa = aiResult.sampleSentenceFa,
+            audioUrl = audioUrl
+        )
+
+        val response = DictionaryLookupResponse(
+            id = savedEntry.id,
+            headword = savedEntry.headword,
+            phonetic = savedEntry.phonetic,
+            partOfSpeech = savedEntry.partOfSpeech,
+            contextMeaningFa = savedEntry.contextMeaningFa,
+            otherMeaningsFa = aiResult.otherMeaningsFa,
+            definitionEn = savedEntry.definitionEn,
+            sampleSentenceEn = savedEntry.sampleSentenceEn,
+            sampleSentenceFa = savedEntry.sampleSentenceFa,
+            audioUrl = savedEntry.audioUrl
+        )
+
+        // 6. Cache and return
+        putToCache(normalized, response)
+        return response
+    }
+
+    private suspend fun queryAiDictionary(
+        normalized: String,
+        rawWord: String,
+        contextSentence: String?
+    ): AiDictionaryResult {
+        val userContent = buildString {
+            append("Word: \"$rawWord\"\n")
+            if (!contextSentence.isNullOrBlank()) {
+                append("Context: \"$contextSentence\"")
+            } else {
+                append("Context: None")
+            }
+        }
+
+        val messages = listOf(
+            ChatMessage(role = ChatRole.System, content = SYSTEM_PROMPT),
+            ChatMessage(role = ChatRole.User, content = userContent)
+        )
+
+        val result = aiApiService.requestRaw(
+            messages = messages,
+            responseFormat = ChatResponseFormat.JsonObject
+        )
+
+        val rawJson = result.getOrThrow()
+        val cleanJson = sanitizeJson(rawJson)
+
+        return try {
+            jsonParser.decodeFromString<AiDictionaryResult>(cleanJson)
+        } catch (e: Exception) {
+            logger.warn("Failed to parse AI dictionary JSON: '$cleanJson', error: ${e.message}")
+            // Fallback object to ensure service resilience
+            AiDictionaryResult(
+                headword = normalized,
+                phonetic = null,
+                partOfSpeech = null,
+                contextMeaningFa = rawWord,
+                definitionEn = null,
+                otherMeaningsFa = emptyList(),
+                sampleSentenceEn = contextSentence,
+                sampleSentenceFa = null
+            )
+        }
+    }
+
+    private fun sanitizeJson(text: String): String {
+        var cleaned = text.trim()
+        if (cleaned.startsWith("```json", ignoreCase = true)) {
+            cleaned = cleaned.substring(7)
+        } else if (cleaned.startsWith("```")) {
+            cleaned = cleaned.substring(3)
+        }
+        if (cleaned.endsWith("```")) {
+            cleaned = cleaned.substring(0, cleaned.length - 3)
+        }
+        cleaned = cleaned.trim()
+
+        val start = cleaned.indexOf('{')
+        val end = cleaned.lastIndexOf('}')
+        return if (start != -1 && end != -1 && end > start) {
+            cleaned.substring(start, end + 1)
+        } else {
+            cleaned
+        }
+    }
+
+    open suspend fun synthesizeWordAudio(headword: String): String? {
+        val safeLemma = headword.trim().lowercase().replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
+        if (safeLemma.isBlank()) return null
+
+        val wordsDir = File("audio_cache/words")
+        if (!wordsDir.exists()) {
+            wordsDir.mkdirs()
+        }
+
+        val targetFile = File(wordsDir, "$safeLemma.mp3")
+        val relativeUrl = "/audio_cache/words/$safeLemma.mp3"
+
+        if (targetFile.exists() && targetFile.length() > 44) {
+            return relativeUrl
+        }
+
+        return try {
+            val ttsResult = ttsService.synthesize(headword)
+            if (ttsResult != null) {
+                val bytes = ttsResult.audioData ?: run {
+                    ttsService.getAudioFile(ttsResult.filename)?.readBytes()
+                }
+                if (bytes != null && bytes.isNotEmpty()) {
+                    targetFile.writeBytes(bytes)
+                    return relativeUrl
+                }
+
+                val srcFile = ttsService.getAudioFile(ttsResult.filename)
+                if (srcFile != null && srcFile.exists()) {
+                    srcFile.copyTo(targetFile, overwrite = true)
+                    return relativeUrl
+                }
+
+                ttsResult.audioUrl
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            logger.warn("Audio synthesis for word '$headword' failed: ${e.message}")
+            null
+        }
+    }
+
+    private suspend fun ensureAudioAndMap(dbEntry: LexiconEntry): DictionaryLookupResponse {
+        var audioUrl = dbEntry.audioUrl
+        if (audioUrl.isNullOrBlank()) {
+            val generated = synthesizeWordAudio(dbEntry.headword)
+            if (generated != null) {
+                audioUrl = generated
+                lexiconRepository.updateAudioUrl(UUID.fromString(dbEntry.id), generated)
+            }
+        }
+
+        val otherMeanings = dbEntry.otherMeaningsJson?.let {
+            try {
+                jsonParser.decodeFromString<List<String>>(it)
+            } catch (_: Exception) {
+                emptyList()
+            }
+        } ?: emptyList()
+
+        return DictionaryLookupResponse(
+            id = dbEntry.id,
+            headword = dbEntry.headword,
+            phonetic = dbEntry.phonetic,
+            partOfSpeech = dbEntry.partOfSpeech,
+            contextMeaningFa = dbEntry.contextMeaningFa,
+            otherMeaningsFa = otherMeanings,
+            definitionEn = dbEntry.definitionEn,
+            sampleSentenceEn = dbEntry.sampleSentenceEn,
+            sampleSentenceFa = dbEntry.sampleSentenceFa,
+            audioUrl = audioUrl
+        )
+    }
+
+    private fun getFromCache(normalized: String): DictionaryLookupResponse? {
+        val client = redissonClient
+        if (client != null) {
+            try {
+                val bucket: RBucket<String> = client.getBucket(REDIS_PREFIX + normalized)
+                val json = bucket.get()
+                if (!json.isNullOrBlank()) {
+                    return jsonParser.decodeFromString<DictionaryLookupResponse>(json)
+                }
+            } catch (e: Exception) {
+                logger.warn("Redis read error for key '$normalized': ${e.message}")
+            }
+        }
+        return inMemoryCache[normalized]
+    }
+
+    private fun putToCache(normalized: String, response: DictionaryLookupResponse) {
+        val client = redissonClient
+        if (client != null) {
+            try {
+                val bucket: RBucket<String> = client.getBucket(REDIS_PREFIX + normalized)
+                val json = jsonParser.encodeToString(response)
+                bucket.set(json, Duration.ofDays(CACHE_TTL_DAYS))
+            } catch (e: Exception) {
+                logger.warn("Redis write error for key '$normalized': ${e.message}")
+            }
+        }
+        inMemoryCache[normalized] = response
+    }
+}

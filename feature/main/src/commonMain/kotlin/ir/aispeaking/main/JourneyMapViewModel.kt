@@ -13,6 +13,7 @@ import ir.aispeaking.domain.usecase.auth.SendOtpUseCase
 import ir.aispeaking.domain.usecase.auth.VerifyOtpUseCase
 import ir.aispeaking.domain.usecase.guide.IsGuideCompletedUseCase
 import ir.aispeaking.domain.usecase.guide.MarkGuideCompletedUseCase
+import ir.aispeaking.domain.usecase.leitner.GetDueCardsUseCase
 import ir.aispeaking.domain.usecase.stage.CheckSubscriptionStatusUseCase
 import ir.aispeaking.domain.usecase.stage.GetJourneyLeaderboardUseCase
 import ir.aispeaking.domain.usecase.stage.GetStagesUseCase
@@ -46,7 +47,8 @@ data class JourneyMapUiState(
     val registerError: String? = null,
     val showLeaderboardSheet: Boolean = false,
     val leaderboard: JourneyLeaderboard? = null,
-    val snackbarMessage: String? = null
+    val snackbarMessage: String? = null,
+    val dueLeitnerCardsCount: Int = 0
 ) {
     /**
      * The stage to display on screen: either a previewed stage or the user's active stage in the story journey.
@@ -87,7 +89,8 @@ class JourneyMapViewModel(
     private val analyticsTracker: AnalyticsTracker,
     private val isGuideCompletedUseCase: IsGuideCompletedUseCase? = null,
     private val markGuideCompletedUseCase: MarkGuideCompletedUseCase? = null,
-    private val checkSubscriptionStatusUseCase: CheckSubscriptionStatusUseCase? = null
+    private val checkSubscriptionStatusUseCase: CheckSubscriptionStatusUseCase? = null,
+    private val getDueCardsUseCase: GetDueCardsUseCase? = null
 ) : ViewModel() {
 
     fun isGuideCompleted(key: String): Boolean = isGuideCompletedUseCase?.invoke(key) ?: true
@@ -262,10 +265,20 @@ class JourneyMapViewModel(
         _uiState.update { it.copy(isLoading = true, currentTier = tier, remainingDays = days) }
         when (val result = getStagesUseCase(tier)) {
             is DataResult.Success -> {
+                var dueCount = 0
+                if (getDueCardsUseCase != null) {
+                    try {
+                        val dueResult = getDueCardsUseCase(limit = 100)
+                        if (dueResult is DataResult.Success) {
+                            dueCount = dueResult.data.size
+                        }
+                    } catch (_: Throwable) {}
+                }
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        stages = result.data
+                        stages = result.data,
+                        dueLeitnerCardsCount = dueCount
                     )
                 }
             }

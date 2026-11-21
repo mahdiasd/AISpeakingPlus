@@ -18,6 +18,9 @@ import ir.speaking.feature.notification.db.DeviceTokensTable
 import ir.speaking.feature.placement.db.PlacementQuestionsTable
 import ir.speaking.feature.placement.db.PlacementSessionsTable
 import ir.speaking.feature.placement.db.PlacementSeedData
+import ir.speaking.feature.dictionary.db.LexiconTable
+import ir.speaking.feature.leitner.db.UserFlashcardTable
+import ir.speaking.feature.leitner.db.UserLeitnerSettingsTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
@@ -42,7 +45,10 @@ private val allTables = arrayOf<Table>(
     AnnouncementTable,
     PlacementQuestionsTable,
     PlacementSessionsTable,
-    DeviceTokensTable
+    DeviceTokensTable,
+    LexiconTable,
+    UserFlashcardTable,
+    UserLeitnerSettingsTable
 )
 
 fun createHikariDataSource(): HikariDataSource {

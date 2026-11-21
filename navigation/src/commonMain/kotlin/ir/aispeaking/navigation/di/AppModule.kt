@@ -2,6 +2,7 @@ package ir.aispeaking.navigation.di
 
 import ir.aispeaking.auth.di.AuthKoinModule
 import ir.aispeaking.chat.di.ChatKoinModule
+import ir.aispeaking.leitner.di.LeitnerKoinModule
 import ir.aispeaking.main.di.MainKoinModule
 import ir.aispeaking.profile.di.ProfileKoinModule
 import ir.aispeaking.sharedui.ui.di.UiKoinModule
@@ -36,6 +37,7 @@ class MyModule
         ChatKoinModule::class,
         ProfileKoinModule::class,
         SubscriptionKoinModule::class,
+        LeitnerKoinModule::class,
     ]
 )
 class MyApp

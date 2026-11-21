@@ -55,6 +55,7 @@ import ir.aispeaking.sharedui.ic_copy
 import ir.aispeaking.sharedui.ic_done
 import ir.aispeaking.sharedui.ic_pause
 import ir.aispeaking.sharedui.ic_play
+import ir.aispeaking.sharedui.ic_spell_check
 import ir.aispeaking.sharedui.ic_translate
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameAvatar
@@ -86,7 +87,8 @@ fun AiChatItem(
     isStreaming: Boolean = false,
     onPlayVoice: () -> Unit = {},
     onStopVoice: () -> Unit = {},
-    onCopied: () -> Unit = {}
+    onCopied: () -> Unit = {},
+    onOpenDictionary: (sentence: String) -> Unit = {}
 ) {
     val clipboardManager = LocalClipboardManager.current
     var showTranslation by remember { mutableStateOf(false) }
@@ -192,10 +194,10 @@ fun AiChatItem(
                     }
                 }
 
-                // Apple Labelled Action Chips (Stable Size & Zero Layout Shift)
+                // Apple Labelled Action Chips (Responsive 4-action row)
                 if (chat.message.isNotBlank()) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         AiVoiceChip(
@@ -211,15 +213,13 @@ fun AiChatItem(
                             onToggleTranslation = { showTranslation = !showTranslation }
                         )
 
-                        GameChip(
-                            text = if (copied) "کپی شد" else "کپی",
-                            icon = if (copied) Res.drawable.ic_done else Res.drawable.ic_copy,
-                            accent = AppleChatTheme.PrimaryAzure,
-                            border = AppleChatTheme.SubtleBorderColor,
-                            active = copied,
-                            keepContainerOnActive = true,
-                            modifier = Modifier.defaultMinSize(minWidth = 72.dp, minHeight = 32.dp),
-                            onClick = {
+                        AiDictionaryChip(
+                            onOpenDictionary = { onOpenDictionary(chat.message) }
+                        )
+
+                        AiCopyIconButton(
+                            copied = copied,
+                            onCopy = {
                                 clipboardManager.setText(AnnotatedString(chat.message))
                                 copied = true
                                 onCopied()
@@ -316,8 +316,8 @@ private fun AiVoiceChip(
             .clip(shape)
             .background(containerBg)
             .border(if (isPlaying) 1.5.dp else 1.dp, strokeColor, shape)
-            .defaultMinSize(minWidth = if (isPlaying) 76.dp else 98.dp, minHeight = 32.dp)
-            .padding(horizontal = if (isPlaying) 14.dp else 11.dp, vertical = 7.dp),
+            .defaultMinSize(minWidth = if (isPlaying) 68.dp else 74.dp, minHeight = 30.dp)
+            .padding(horizontal = if (isPlaying) 8.dp else 8.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -326,19 +326,19 @@ private fun AiVoiceChip(
                 painter = painterResource(Res.drawable.ic_pause),
                 contentDescription = "توقف صدا",
                 tint = accent,
-                modifier = Modifier.size(15.dp)
+                modifier = Modifier.size(13.dp)
             )
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(6.dp))
             Row(
-                modifier = Modifier.height(15.dp),
+                modifier = Modifier.height(13.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(2.5.dp)
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 listOf(bar1, bar2, bar3, bar4, bar2).forEach { barVal ->
                     Box(
                         modifier = Modifier
-                            .width(2.5.dp)
-                            .height((4 + 11 * barVal).dp)
+                            .width(2.dp)
+                            .height((3 + 9 * barVal).dp)
                             .background(
                                 Brush.verticalGradient(
                                     listOf(
@@ -346,7 +346,7 @@ private fun AiVoiceChip(
                                         AppleChatTheme.PrimaryIndigo
                                     )
                                 ),
-                                RoundedCornerShape(1.5.dp)
+                                RoundedCornerShape(1.dp)
                             )
                     )
                 }
@@ -356,12 +356,12 @@ private fun AiVoiceChip(
                 painter = painterResource(Res.drawable.ic_play),
                 contentDescription = "پخش صدا",
                 tint = if (isReady) accent else Game.TextSecondary.copy(alpha = 0.6f),
-                modifier = Modifier.size(15.dp)
+                modifier = Modifier.size(13.dp)
             )
-            Spacer(Modifier.width(5.dp))
+            Spacer(Modifier.width(4.dp))
             GameText(
-                text = "پخش صدا",
-                size = 13.sp,
+                text = "پخش",
+                size = 12.sp,
                 color = if (isReady) Game.TextPrimary else Game.TextSecondary.copy(alpha = 0.7f),
                 bold = isReady
             )
@@ -406,8 +406,8 @@ private fun AiTranslateChip(
             .clip(shape)
             .background(containerBg)
             .border(if (isActive) 1.5.dp else 1.dp, strokeColor, shape)
-            .defaultMinSize(minWidth = 84.dp, minHeight = 32.dp)
-            .padding(horizontal = 12.dp, vertical = 7.dp),
+            .defaultMinSize(minWidth = 68.dp, minHeight = 30.dp)
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -415,14 +415,88 @@ private fun AiTranslateChip(
             painter = painterResource(Res.drawable.ic_translate),
             contentDescription = "ترجمه",
             tint = if (isActive || hasTranslation) accent else Game.TextSecondary.copy(alpha = 0.6f),
-            modifier = Modifier.size(15.dp)
+            modifier = Modifier.size(13.dp)
         )
-        Spacer(Modifier.width(5.dp))
+        Spacer(Modifier.width(4.dp))
         GameText(
             text = "ترجمه",
-            size = 13.sp,
+            size = 12.sp,
             color = if (isActive) accent else if (hasTranslation) Game.TextPrimary else Game.TextSecondary.copy(alpha = 0.7f),
             bold = isActive
+        )
+    }
+}
+
+/**
+ * Unified Dictionary Action Chip.
+ */
+@Composable
+private fun AiDictionaryChip(
+    onOpenDictionary: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isDark = AppTheme.isDark
+    val shape = RoundedCornerShape(50)
+    val accent = AppleChatTheme.PrimaryAzure
+    val containerBg = if (isDark) Color(0xEB181A22) else Color(0xCCFFFFFF)
+    val strokeColor = AppleChatTheme.SubtleBorderColor
+
+    Row(
+        modifier = modifier
+            .applePressEffect(targetScale = 0.95f, onClick = onOpenDictionary)
+            .clip(shape)
+            .background(containerBg)
+            .border(1.dp, strokeColor, shape)
+            .defaultMinSize(minWidth = 72.dp, minHeight = 30.dp)
+            .padding(horizontal = 8.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_spell_check),
+            contentDescription = "دیکشنری",
+            tint = accent,
+            modifier = Modifier.size(13.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        GameText(
+            text = "دیکشنری",
+            size = 12.sp,
+            color = Game.TextPrimary,
+            bold = false
+        )
+    }
+}
+
+/**
+ * Compact Glass Copy Icon Button with checkmark transition.
+ */
+@Composable
+private fun AiCopyIconButton(
+    copied: Boolean,
+    onCopy: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isDark = AppTheme.isDark
+    val shape = CircleShape
+    val accent = AppleChatTheme.PrimaryAzure
+    val containerBg = if (isDark) Color(0xEB181A22) else Color(0xCCFFFFFF)
+    val strokeColor = if (copied) accent.copy(alpha = 0.65f) else AppleChatTheme.SubtleBorderColor
+
+    Box(
+        modifier = modifier
+            .size(30.dp)
+            .applePressEffect(targetScale = 0.92f, onClick = onCopy)
+            .clip(shape)
+            .background(containerBg)
+            .border(1.dp, strokeColor, shape),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(if (copied) Res.drawable.ic_done else Res.drawable.ic_copy),
+            contentDescription = if (copied) "کپی شد" else "کپی",
+            tint = if (copied) accent else Game.TextSecondary,
+            modifier = Modifier.size(13.dp)
         )
     }
 }

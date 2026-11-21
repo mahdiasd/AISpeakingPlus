@@ -24,6 +24,7 @@ import ir.aispeaking.domain.model.Announcement
 import ir.aispeaking.domain.usecase.announcement.GetActiveAnnouncementUseCase
 import ir.aispeaking.domain.usecase.announcement.SuppressAnnouncementUseCase
 import ir.aispeaking.domain.usecase.auth.SetHasSeenIntroVideoUseCase
+import ir.aispeaking.leitner.LeitnerScreen
 import ir.aispeaking.main.IntroVideoScreen
 import ir.aispeaking.main.JourneyMapScreen
 import ir.aispeaking.main.leaderboard.LeaderboardScreen
@@ -86,7 +87,7 @@ fun AppNavigation(
 
     LaunchedEffect(Unit) {
         AppDeepLinkManager.navigationRequests.collect { route ->
-            if (route is StageChatRoute || route is ProfileRoute || route is SubscriptionRoute || route is StagesListRoute || route is LeaderboardRoute || route is PlacementTestRoute || route is PaymentResultRoute) {
+            if (route is StageChatRoute || route is ProfileRoute || route is SubscriptionRoute || route is StagesListRoute || route is LeaderboardRoute || route is PlacementTestRoute || route is PaymentResultRoute || route is LeitnerRoute) {
                 if (backStack.none { it is MainRoute }) {
                     backStack.removeAll { it is SplashRoute }
                     backStack.add(MainRoute)
@@ -131,6 +132,11 @@ fun AppNavigation(
                     "stages" -> {
                         if (backStack.lastOrNull() !is StagesListRoute) {
                             backStack.add(StagesListRoute)
+                        }
+                    }
+                    "leitner" -> {
+                        if (backStack.lastOrNull() !is LeitnerRoute) {
+                            backStack.add(LeitnerRoute)
                         }
                     }
                 }
@@ -250,7 +256,17 @@ fun AppNavigation(
                         },
                         onNavigateToLeaderboard = {
                             backStack.add(LeaderboardRoute)
+                        },
+                        onNavigateToLeitner = {
+                            backStack.add(LeitnerRoute)
                         }
+                    )
+                }
+
+                entry<LeitnerRoute> {
+                    LeitnerScreen(
+                        viewModel = koinViewModel(),
+                        onNavigateBack = { backStack.removeLastOrNull() }
                     )
                 }
 
