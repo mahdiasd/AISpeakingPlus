@@ -187,10 +187,7 @@ fun PaymentResultScreen(
                         .padding(horizontal = 18.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    AppBackButton(
-                        onClick = onNavigateHome,
-                        modifier = Modifier.size(38.dp)
-                    )
+                    AppBackButton(onClick = onNavigateHome)
 
                     GameText(
                         text = "وضعیت پرداخت",

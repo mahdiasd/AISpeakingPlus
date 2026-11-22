@@ -108,13 +108,7 @@ fun ProfileScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Right side in RTL: AppBackButton
-                    AppBackButton(
-                        onClick = onNavigateBack,
-                        containerSize = 38.dp,
-                        iconSize = 18.dp,
-                        backgroundColor = if (isDark) Color(0x33FFFFFF) else Color(0x99FFFFFF),
-                        borderColor = if (isDark) Color(0x38FFFFFF) else Color(0x1F000000)
-                    )
+                    AppBackButton(onClick = onNavigateBack)
 
                     // Centered title
                     GameText(

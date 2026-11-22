@@ -143,11 +143,7 @@ fun LeaderboardScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    AppBackButton(
-                        onClick = onNavigateBack,
-                        backgroundColor = if (isDark) Color(0x33FFFFFF) else Color(0x99FFFFFF),
-                        borderColor = Color(0x38FFFFFF)
-                    )
+                    AppBackButton(onClick = onNavigateBack)
 
                     GameText(
                         text = "جدول برترین‌ها",

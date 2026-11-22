@@ -125,11 +125,7 @@ fun PlacementTestScreen(
                             } else {
                                 viewModel.onEvent(PlacementTestUiEvent.ShowExitConfirm)
                             }
-                        },
-                        containerSize = 38.dp,
-                        iconSize = 18.dp,
-                        backgroundColor = if (isDark) Color(0x33FFFFFF) else Color(0x99FFFFFF),
-                        borderColor = if (isDark) Color(0x38FFFFFF) else Color(0x1F000000)
+                        }
                     )
 
                     // Symmetrical Center-Aligned Title

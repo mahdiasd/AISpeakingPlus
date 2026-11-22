@@ -133,13 +133,7 @@ fun StagesListScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     // RTL Start anchor (Right): Standard AppBackButton
-                    AppBackButton(
-                        onClick = onNavigateBack,
-                        containerSize = 38.dp,
-                        iconSize = 18.dp,
-                        backgroundColor = if (isDark) Color(0x33FFFFFF) else Color(0x99FFFFFF),
-                        borderColor = if (isDark) Color(0x38FFFFFF) else Color(0x1F000000)
-                    )
+                    AppBackButton(onClick = onNavigateBack)
 
                     // Center: Symmetrical centered title
                     GameText(
