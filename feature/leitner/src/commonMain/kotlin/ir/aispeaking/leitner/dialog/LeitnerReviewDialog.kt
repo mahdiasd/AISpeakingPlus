@@ -64,6 +64,7 @@ import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_close
 import ir.aispeaking.sharedui.ic_done
 import ir.aispeaking.sharedui.ic_speaker
+import ir.aispeaking.sharedui.ui.core.text.PhoneticText
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
@@ -338,18 +339,41 @@ private fun Review3DFlipCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Top Tag
-                Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(if (isDark) Color(0x24FFFFFF) else Color(0x14000000))
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                // Top Row: Tag + Audio Pronunciation Button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    GameText(
-                        text = "صورت کارت",
-                        size = 11.sp,
-                        color = Game.TextSecondary
-                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(if (isDark) Color(0x24FFFFFF) else Color(0x14000000))
+                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        GameText(
+                            text = "صورت کارت",
+                            size = 11.sp,
+                            color = Game.TextSecondary
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(boxColor.copy(alpha = 0.22f))
+                            .border(1.dp, boxColor.copy(alpha = 0.6f), CircleShape)
+                            .clickable(onClick = onPlayAudio),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_speaker),
+                            contentDescription = "پخش تلفظ",
+                            tint = if (isAudioPlaying) Color.White else boxColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
 
                 // English Word & Phonetics
@@ -367,8 +391,8 @@ private fun Review3DFlipCard(
 
                     val phonetic = card.phonetic
                     if (!phonetic.isNullOrBlank()) {
-                        GameText(
-                            text = phonetic,
+                        PhoneticText(
+                            phonetic = phonetic,
                             size = 16.sp,
                             color = boxColor,
                             align = TextAlign.Center

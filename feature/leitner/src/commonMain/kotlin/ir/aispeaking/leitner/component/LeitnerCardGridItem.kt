@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.leitner.Flashcard
 import ir.aispeaking.domain.model.leitner.LeitnerBox
+import ir.aispeaking.sharedui.ui.core.text.PhoneticText
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.fa
@@ -171,8 +172,8 @@ fun LeitnerCardGridItem(
 
                 val phonetic = card.phonetic
                 if (!phonetic.isNullOrBlank()) {
-                    GameText(
-                        text = phonetic,
+                    PhoneticText(
+                        phonetic = phonetic,
                         size = 12.sp,
                         color = Game.TextSecondary,
                         align = TextAlign.Center,

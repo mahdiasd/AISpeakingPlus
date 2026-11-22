@@ -10,6 +10,7 @@ import androidx.navigation3.runtime.NavKey
 import ir.aispeaking.navigation.AppRoute
 import ir.aispeaking.navigation.IntroVideoRoute
 import ir.aispeaking.navigation.LeaderboardRoute
+import ir.aispeaking.navigation.LeitnerRoute
 import ir.aispeaking.navigation.LoginRoute
 import ir.aispeaking.navigation.MainRoute
 import ir.aispeaking.navigation.PaymentResultRoute
@@ -185,6 +186,7 @@ private fun routeToUrl(route: NavKey): String {
         is LeaderboardRoute -> "/app/leaderboard"
         is ProfileRoute -> "/app/profile"
         is SubscriptionRoute -> "/app/subscription"
+        is LeitnerRoute -> "/app/leitner"
         is PlacementTestRoute -> "/app/placement"
         is PaymentResultRoute -> {
             val status = if (route.isSuccess) "success" else "failed"
@@ -209,6 +211,7 @@ private fun urlToRoute(path: String, search: String): AppRoute? {
         cleanPath == "profile" -> ProfileRoute
         cleanPath == "leaderboard" || cleanPath == "ranking" || cleanPath == "podium" -> LeaderboardRoute
         cleanPath == "subscription" || cleanPath == "sub" -> SubscriptionRoute
+        cleanPath == "leitner" || cleanPath == "box" -> LeitnerRoute
         cleanPath == "placement" || cleanPath == "placement-test" || cleanPath == "placement_test" -> PlacementTestRoute
         cleanPath == "payment-result" || cleanPath == "payment/result" -> {
             val status = params["status"] ?: params["payment_status"] ?: "failed"
@@ -289,6 +292,7 @@ private fun parseLegacyHash(hash: String): AppRoute? {
         }
         name == "placement" || name == "placement-test" || name == "placement_test" -> PlacementTestRoute
         name == "subscription" || name == "sub" -> SubscriptionRoute
+        name == "leitner" || name == "box" -> LeitnerRoute
         name == "stages" || name == "stages_list" -> StagesListRoute
         name == "login" || name == "auth" -> LoginRoute
         name == "chat" || name.startsWith("chat") -> {

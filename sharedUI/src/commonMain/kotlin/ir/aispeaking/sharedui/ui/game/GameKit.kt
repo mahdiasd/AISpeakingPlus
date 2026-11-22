@@ -43,6 +43,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import ir.aispeaking.sharedui.ui.core.text.PhoneticText
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -112,7 +113,22 @@ fun GameText(
     overflow: TextOverflow = TextOverflow.Clip,
     lineHeight: TextUnit = TextUnit.Unspecified,
     latin: Boolean = false,
+    phonetic: Boolean = false,
 ) {
+    if (phonetic) {
+        PhoneticText(
+            phonetic = text,
+            modifier = modifier,
+            size = size,
+            color = color,
+            fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+            align = align ?: TextAlign.Center,
+            maxLines = maxLines,
+            overflow = overflow
+        )
+        return
+    }
+
     val typography = AppTheme.typography
     val family: FontFamily = when {
         latin && bold -> typography.bodyLargeBold.fontFamily

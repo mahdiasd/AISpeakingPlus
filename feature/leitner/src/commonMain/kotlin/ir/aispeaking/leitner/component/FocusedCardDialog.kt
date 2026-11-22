@@ -49,6 +49,7 @@ import ir.aispeaking.domain.model.leitner.LeitnerBox
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_close
 import ir.aispeaking.sharedui.ic_speaker
+import ir.aispeaking.sharedui.ui.core.text.PhoneticText
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameIconButton
 import ir.aispeaking.sharedui.ui.game.GameText
@@ -181,6 +182,24 @@ fun FocusedCardDialog(
                             )
                         }
 
+                        // Audio pronunciation button on front side
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(boxColor.copy(alpha = 0.2f))
+                                .border(1.dp, boxColor.copy(alpha = 0.6f), CircleShape)
+                                .clickable { onPlayAudio(card) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_speaker),
+                                contentDescription = "پخش تلفظ",
+                                tint = if (isAudioPlaying) Color.White else boxColor,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
                         GameText(
                             text = "مرور شده ${card.reviewCount.fa()} بار",
                             size = 12.sp,
@@ -203,8 +222,8 @@ fun FocusedCardDialog(
 
                         val phonetic = card.phonetic
                         if (!phonetic.isNullOrBlank()) {
-                            GameText(
-                                text = phonetic,
+                            PhoneticText(
+                                phonetic = phonetic,
                                 size = 16.sp,
                                 color = Game.TextSecondary,
                                 align = TextAlign.Center

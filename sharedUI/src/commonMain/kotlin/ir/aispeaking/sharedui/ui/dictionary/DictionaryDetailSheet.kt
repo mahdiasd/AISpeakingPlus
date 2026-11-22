@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.dictionary.DictionaryEntry
+import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_alert_circle
 import ir.aispeaking.sharedui.ic_archive
@@ -61,7 +62,7 @@ import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameSheet
-import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.core.text.PhoneticText
 import ir.aispeaking.sharedui.ui.them.AppleTheme
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import ir.aispeaking.sharedui.ui.them.applePressEffect
@@ -371,19 +372,18 @@ private fun DictionaryContentState(
                 // Phonetic notation with clean IPA sanitization and system sans-serif font
                 val phonetic = entry.phonetic
                 if (!phonetic.isNullOrBlank()) {
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        Text(
-                            text = cleanIpaPhonetic(phonetic),
-                            fontSize = 13.sp,
-                            color = Game.TextSecondary,
-                            fontFamily = FontFamily.SansSerif
-                        )
-                    }
+                    PhoneticText(
+                        phonetic = phonetic,
+                        size = 13.sp,
+                        color = Game.TextSecondary,
+                        align = TextAlign.Start
+                    )
                 }
             }
 
             // Audio Playback Button (Kokoro TTS)
-            val audioUrl = entry.audioUrl
+            val audioUrl = entry.audioUrl.takeIf { !it.isNullOrBlank() }
+                ?: if (displayHeadword.isNotBlank()) "/api/v2/tts/speak?text=${displayHeadword}" else null
             if (!audioUrl.isNullOrBlank()) {
                 val audioShape = RoundedCornerShape(50)
                 Row(
@@ -609,10 +609,16 @@ private fun DictionaryContentState(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     if (!isAddingToLeitner) {
+                        val guaranteedAudio = entry.audioUrl.takeIf { !it.isNullOrBlank() }
+                            ?: if (displayHeadword.isNotBlank()) "/api/v2/tts/speak?text=${displayHeadword}" else null
                         val effectiveEntry = if (displayHeadword.isNotBlank() && displayHeadword != entry.headword) {
-                            entry.copy(headword = displayHeadword)
+                            entry.copy(headword = displayHeadword, audioUrl = guaranteedAudio)
                         } else {
-                            entry
+                            if (entry.audioUrl.isNullOrBlank() && guaranteedAudio != null) {
+                                entry.copy(audioUrl = guaranteedAudio)
+                            } else {
+                                entry
+                            }
                         }
                         onAddToLeitner(effectiveEntry)
                     }
@@ -622,20 +628,6 @@ private fun DictionaryContentState(
     }
 }
 
-/**
- * Sanitizes IPA phonetic transcriptions to prevent missing glyphs (tofu boxes '☒')
- * caused by fonts lacking modifier letters (like U+02C8 primary stress 'ˈ').
- */
-internal fun cleanIpaPhonetic(raw: String): String {
-    return raw
-        .replace('\u02C8', '\'') // modifier letter vertical line (primary stress) -> standard apostrophe
-        .replace('\u02CC', ',')  // modifier letter low vertical line (secondary stress) -> comma
-        .replace('\u2019', '\'') // right single quotation mark
-        .replace('\u2018', '\'') // left single quotation mark
-        .replace("ˈ", "'")
-        .replace("ˌ", ",")
-        .trim()
-}
 
 @Composable
 private fun PronunciationEqualizerWaves() {
