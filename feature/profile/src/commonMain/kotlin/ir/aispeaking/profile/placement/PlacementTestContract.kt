@@ -13,7 +13,8 @@ data class PlacementTestUiState(
     val selectedAnswers: Map<String, String> = emptyMap(), // questionId -> selectedOption
     val evaluationResult: PlacementEvaluationResult? = null,
     val showReviewDialog: Boolean = false,
-    val showExitConfirmDialog: Boolean = false
+    val showExitConfirmDialog: Boolean = false,
+    val showEarlyFinishDialog: Boolean = false
 ) {
     val totalQuestions: Int get() = questions.size
     val currentQuestion: PlacementQuestion? get() = questions.getOrNull(currentQuestionIndex)
@@ -34,6 +35,9 @@ sealed interface PlacementTestUiEvent {
     data object ToggleReviewDialog : PlacementTestUiEvent
     data object ShowExitConfirm : PlacementTestUiEvent
     data object DismissExitConfirm : PlacementTestUiEvent
+    data object ShowEarlyFinishConfirm : PlacementTestUiEvent
+    data object DismissEarlyFinishConfirm : PlacementTestUiEvent
+    data object ConfirmEarlyFinish : PlacementTestUiEvent
 }
 
 sealed interface PlacementTestUiEffect {

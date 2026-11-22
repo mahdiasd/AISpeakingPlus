@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.sharedui.ui.core.button.AppBackButton
 import ir.aispeaking.profile.placement.component.OptionSelectableCard
+import ir.aispeaking.profile.placement.component.PlacementEarlyFinishDialog
 import ir.aispeaking.profile.placement.component.PlacementExitConfirmDialog
 import ir.aispeaking.profile.placement.component.PlacementProgressBar
 import ir.aispeaking.profile.placement.component.PlacementResultView
@@ -137,8 +139,28 @@ fun PlacementTestScreen(
                         align = TextAlign.Center
                     )
 
-                    // Symmetrical balance spacer
-                    Spacer(modifier = Modifier.size(38.dp))
+                    // Left in RTL: Early Finish Button or balance spacer
+                    if (uiState.questions.isNotEmpty() && uiState.evaluationResult == null) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isDark) Color(0x1FEB7040) else Color(0x14D9531E))
+                                .border(1.dp, if (isDark) Color(0x40EB7040) else Color(0x2AD9531E), RoundedCornerShape(12.dp))
+                                .clickable { viewModel.onEvent(PlacementTestUiEvent.ShowEarlyFinishConfirm) }
+                                .padding(horizontal = 10.dp, vertical = 7.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            GameText(
+                                text = "اتمام آزمون",
+                                size = 11.5.sp,
+                                bold = true,
+                                color = if (isDark) Color(0xFFFF8A65) else Color(0xFFD9531E)
+                            )
+                        }
+                    } else {
+                        // Symmetrical balance spacer
+                        Spacer(modifier = Modifier.size(38.dp))
+                    }
                 }
 
                 // Main Content Body
@@ -241,59 +263,89 @@ fun PlacementTestScreen(
                                 )
                             }
 
-                            // Bottom Navigation Actions Row
-                            Row(
+                            // Bottom Navigation Actions Area
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .navigationBarsPadding()
-                                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                // Previous Question Button
-                                if (pagerState.currentPage > 0) {
-                                    GameButton(
-                                        text = "قبلی",
-                                        style = GameButtonStyle.Glass,
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                try {
-                                                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                                                } catch (_: Throwable) {}
-                                            }
-                                        },
-                                        modifier = Modifier.weight(1f)
-                                    )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Previous Question Button
+                                    if (pagerState.currentPage > 0) {
+                                        GameButton(
+                                            text = "قبلی",
+                                            style = GameButtonStyle.Glass,
+                                            onClick = {
+                                                coroutineScope.launch {
+                                                    try {
+                                                        pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                                                    } catch (_: Throwable) {}
+                                                }
+                                            },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+
+                                    // Next or Submit Button
+                                    if (pagerState.currentPage == uiState.totalQuestions - 1) {
+                                        GameButton(
+                                            text = if (uiState.isEvaluating) "در حال تصحیح…" else "ثبت و مشاهده نتیجه",
+                                            onClick = { viewModel.onEvent(PlacementTestUiEvent.SubmitTest) },
+                                            enabled = !uiState.isEvaluating,
+                                            modifier = Modifier.weight(if (pagerState.currentPage > 0) 1.6f else 1f)
+                                        )
+                                    } else {
+                                        GameButton(
+                                            text = "بعدی",
+                                            onClick = {
+                                                coroutineScope.launch {
+                                                    try {
+                                                        if (pagerState.currentPage < uiState.totalQuestions - 1) {
+                                                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                                        }
+                                                    } catch (_: Throwable) {}
+                                                }
+                                            },
+                                            modifier = Modifier.weight(if (pagerState.currentPage > 0) 1.6f else 1f)
+                                        )
+                                    }
                                 }
 
-                                // Next or Submit Button
-                                if (pagerState.currentPage == uiState.totalQuestions - 1) {
-                                    GameButton(
-                                        text = if (uiState.isEvaluating) "در حال تصحیح…" else "ثبت و مشاهده نتیجه",
-                                        onClick = { viewModel.onEvent(PlacementTestUiEvent.SubmitTest) },
-                                        enabled = !uiState.isEvaluating,
-                                        modifier = Modifier.weight(if (pagerState.currentPage > 0) 1.6f else 1f)
-                                    )
-                                } else {
-                                    GameButton(
-                                        text = "بعدی",
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                try {
-                                                    if (pagerState.currentPage < uiState.totalQuestions - 1) {
-                                                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                                                    }
-                                                } catch (_: Throwable) {}
-                                            }
-                                        },
-                                        modifier = Modifier.weight(if (pagerState.currentPage > 0) 1.6f else 1f)
-                                    )
+                                if (pagerState.currentPage < uiState.totalQuestions - 1) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .clickable { viewModel.onEvent(PlacementTestUiEvent.ShowEarlyFinishConfirm) }
+                                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        GameText(
+                                            text = "نمی‌تونی به بقیه سوالات جواب بدی؟ اتمام آزمون",
+                                            size = 12.sp,
+                                            color = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B),
+                                            align = TextAlign.Center
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+
+            // Early Finish Confirmation Dialog
+            PlacementEarlyFinishDialog(
+                visible = uiState.showEarlyFinishDialog,
+                onConfirmFinish = { viewModel.onEvent(PlacementTestUiEvent.ConfirmEarlyFinish) },
+                onDismiss = { viewModel.onEvent(PlacementTestUiEvent.DismissEarlyFinishConfirm) }
+            )
 
             // Exit Confirmation Dialog
             PlacementExitConfirmDialog(

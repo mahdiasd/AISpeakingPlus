@@ -182,7 +182,12 @@ fun ChatBottomBar(
                 text = text,
                 enabled = isInteractive,
                 onEdit = { onInputModeChange(ChatInputMode.TEXT) },
-                onClear = { onTextChange("") }
+                onClear = {
+                    if (isRecording || isRecordingPreparing) {
+                        onVoiceToggle(false)
+                    }
+                    onTextChange("")
+                }
             )
         }
 

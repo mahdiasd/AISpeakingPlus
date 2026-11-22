@@ -45,6 +45,12 @@ class PlacementTestViewModel(
             is PlacementTestUiEvent.ToggleReviewDialog -> toggleReviewDialog()
             is PlacementTestUiEvent.ShowExitConfirm -> _uiState.update { it.copy(showExitConfirmDialog = true) }
             is PlacementTestUiEvent.DismissExitConfirm -> _uiState.update { it.copy(showExitConfirmDialog = false) }
+            is PlacementTestUiEvent.ShowEarlyFinishConfirm -> _uiState.update { it.copy(showEarlyFinishDialog = true) }
+            is PlacementTestUiEvent.DismissEarlyFinishConfirm -> _uiState.update { it.copy(showEarlyFinishDialog = false) }
+            is PlacementTestUiEvent.ConfirmEarlyFinish -> {
+                _uiState.update { it.copy(showEarlyFinishDialog = false) }
+                submitTest()
+            }
         }
     }
 
@@ -61,6 +67,7 @@ class PlacementTestViewModel(
                             questions = result.data.questions,
                             currentQuestionIndex = 0,
                             selectedAnswers = emptyMap(),
+                            showEarlyFinishDialog = false,
                             evaluationResult = null
                         )
                     }
@@ -118,7 +125,7 @@ class PlacementTestViewModel(
         if (state.sessionId.isBlank() || state.isEvaluating) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isEvaluating = true, errorMessage = null) }
+            _uiState.update { it.copy(isEvaluating = true, errorMessage = null, showEarlyFinishDialog = false) }
             val submission = PlacementSubmission(
                 sessionId = state.sessionId,
                 answers = state.selectedAnswers
@@ -151,6 +158,7 @@ class PlacementTestViewModel(
             it.copy(
                 evaluationResult = null,
                 showReviewDialog = false,
+                showEarlyFinishDialog = false,
                 selectedAnswers = emptyMap()
             )
         }

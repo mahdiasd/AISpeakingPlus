@@ -620,13 +620,13 @@ fun ChatScreen(
                 FinishConversationDialog(
                     visible = uiState.showFinishConfirmDialog && uiState.evaluationSession != null,
                     evaluation = evaluation,
-                    onContinueChatting = { viewModel.dismissFinishConfirmDialog() },
+                    onContinueChatting = { viewModel.continueChattingAfterFinish() },
                     onReplayStage = { viewModel.replayStage() },
                     onConfirmAndNext = {
                         viewModel.dismissFinishConfirmDialog()
                         onNavigateBack()
                     },
-                    onDismissRequest = { viewModel.dismissFinishConfirmDialog() },
+                    onDismissRequest = { viewModel.continueChattingAfterFinish() },
                     onExitWithoutSave = {
                         viewModel.dismissFinishConfirmDialog()
                         onNavigateBack()

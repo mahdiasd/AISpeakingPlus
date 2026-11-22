@@ -130,4 +130,37 @@ class PlacementTestViewModelTest {
         assertEquals(LanguageLevel.B2, state.evaluationResult.assignedLevel)
         assertEquals(85, state.evaluationResult.scorePercent)
     }
+
+    @Test
+    fun testEarlyFinishDialogVisibilityAndSubmit() = runTest {
+        val viewModel = PlacementTestViewModel(getQuestionsUseCase, submitUseCase)
+        advanceUntilIdle()
+
+        // Initially early finish dialog is closed
+        assertFalse(viewModel.uiState.value.showEarlyFinishDialog)
+
+        // Show early finish dialog
+        viewModel.onEvent(PlacementTestUiEvent.ShowEarlyFinishConfirm)
+        assertTrue(viewModel.uiState.value.showEarlyFinishDialog)
+
+        // Dismiss early finish dialog
+        viewModel.onEvent(PlacementTestUiEvent.DismissEarlyFinishConfirm)
+        assertFalse(viewModel.uiState.value.showEarlyFinishDialog)
+
+        // Select partial answers (e.g. only 2 questions answered)
+        viewModel.onEvent(PlacementTestUiEvent.SelectOption("q_1", "Opt A"))
+        viewModel.onEvent(PlacementTestUiEvent.SelectOption("q_2", "Opt B"))
+        assertEquals(2, viewModel.uiState.value.answeredCount)
+
+        // Confirm early finish
+        viewModel.onEvent(PlacementTestUiEvent.ShowEarlyFinishConfirm)
+        viewModel.onEvent(PlacementTestUiEvent.ConfirmEarlyFinish)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.showEarlyFinishDialog)
+        assertFalse(state.isEvaluating)
+        assertNotNull(state.evaluationResult)
+        assertEquals(LanguageLevel.B2, state.evaluationResult.assignedLevel)
+    }
 }

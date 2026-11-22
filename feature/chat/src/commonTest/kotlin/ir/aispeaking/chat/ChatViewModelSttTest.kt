@@ -606,4 +606,41 @@ class ChatViewModelSttTest {
         assertFalse(viewModel.uiState.value.isRecording)
         assertFalse(viewModel.uiState.value.isRecordingPreparing)
     }
+
+    @Test
+    fun testClearMessageTextStopsRecordingWhenRecordingActive() = runTest {
+        viewModel.toggleRecording(true)
+        runCurrent()
+        assertTrue(viewModel.uiState.value.isRecording)
+
+        viewModel.onMessageTextChanged("Some recognized speech")
+        assertEquals("Some recognized speech", viewModel.uiState.value.messageText)
+
+        // Calling clearMessageText must stop recording and clear text
+        viewModel.clearMessageText()
+        runCurrent()
+
+        assertFalse(viewModel.uiState.value.isRecording, "Recording must be stopped on clear")
+        assertFalse(viewModel.uiState.value.isRecordingPreparing)
+        assertEquals("", viewModel.uiState.value.messageText, "Message text must be empty")
+    }
+
+    @Test
+    fun testDismissFinishConfirmDialogSetsHasDismissedAutoFinishDialog() = runTest {
+        viewModel.initStage("stage-1")
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.hasDismissedAutoFinishDialog)
+
+        viewModel.submitEvaluation()
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.showFinishConfirmDialog)
+
+        // When user chooses to continue chatting
+        viewModel.continueChattingAfterFinish()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.showFinishConfirmDialog)
+        assertTrue(viewModel.uiState.value.hasDismissedAutoFinishDialog)
+    }
 }

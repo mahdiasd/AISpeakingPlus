@@ -79,6 +79,7 @@ data class ChatUiState(
     val showEvaluationDialog: Boolean = false,
     val isObjectiveCompleted: Boolean = false,
     val showFinishConfirmDialog: Boolean = false,
+    val hasDismissedAutoFinishDialog: Boolean = false,
     val isSubmittingEvaluation: Boolean = false,
     val evaluationSession: EvaluationSession? = null,
     val earnedStars: Int = 0,
@@ -472,6 +473,7 @@ class ChatViewModel(
                             showEvaluationDialog = false,
                             isObjectiveCompleted = false,
                             showFinishConfirmDialog = false,
+                            hasDismissedAutoFinishDialog = false,
                             isSubmittingEvaluation = false,
                             evaluationSession = null,
                             currentHintSuggestion = null,
@@ -880,7 +882,12 @@ class ChatViewModel(
     }
 
     fun clearMessageText() {
-        _uiState.update { it.copy(messageText = "") }
+        if (_uiState.value.isRecording || _uiState.value.isRecordingPreparing) {
+            stopRecordingSession()
+            _uiState.update { it.copy(isRecording = false, isRecordingPreparing = false, messageText = "") }
+        } else {
+            _uiState.update { it.copy(messageText = "") }
+        }
     }
 
     // Requirement 4 & 7: Send message, grammar evaluation & beautiful correction box
@@ -888,7 +895,7 @@ class ChatViewModel(
         val stateSnapshot = _uiState.value
         if (stateSnapshot.isSubmittingEvaluation || stateSnapshot.isModelSpeaking) return
         val maxTurnsLimit = stateSnapshot.stage?.maxTurns ?: 12
-        if (stateSnapshot.turnsCount >= maxTurnsLimit) {
+        if (!stateSnapshot.hasDismissedAutoFinishDialog && stateSnapshot.turnsCount >= maxTurnsLimit) {
             submitEvaluation()
             return
         }
@@ -1065,7 +1072,8 @@ class ChatViewModel(
                             }
 
                             val maxTurns = _uiState.value.stage?.maxTurns ?: 12
-                            val shouldAutoComplete = isGoalCompleted || _uiState.value.turnsCount >= maxTurns
+                            val shouldAutoComplete = !_uiState.value.hasDismissedAutoFinishDialog &&
+                                (isGoalCompleted || _uiState.value.turnsCount >= maxTurns)
 
                             if (hasAudio) {
                                 audioController.preloadVoice(turn.audioUrl)
@@ -1367,7 +1375,11 @@ class ChatViewModel(
     }
 
     fun dismissFinishConfirmDialog() {
-        _uiState.update { it.copy(showFinishConfirmDialog = false) }
+        _uiState.update { it.copy(showFinishConfirmDialog = false, hasDismissedAutoFinishDialog = true) }
+    }
+
+    fun continueChattingAfterFinish() {
+        _uiState.update { it.copy(showFinishConfirmDialog = false, hasDismissedAutoFinishDialog = true) }
     }
 
     fun replayStage() {
@@ -1375,6 +1387,7 @@ class ChatViewModel(
         _uiState.update {
             it.copy(
                 showFinishConfirmDialog = false,
+                hasDismissedAutoFinishDialog = false,
                 evaluationSession = null,
                 chats = persistentListOf(),
                 isObjectiveCompleted = false,
