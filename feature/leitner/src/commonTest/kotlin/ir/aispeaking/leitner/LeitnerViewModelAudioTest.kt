@@ -148,8 +148,9 @@ class LeitnerViewModelAudioTest {
 
 private class FakeLeitnerRepository : LeitnerRepository {
     override suspend fun getDueCards(limit: Int): DataResult<List<Flashcard>> = DataResult.Success(emptyList())
-    override suspend fun getCardsByBox(boxNumber: Int?): DataResult<List<Flashcard>> = DataResult.Success(emptyList())
-    override suspend fun getBoxCounts(): DataResult<Map<String, Long>> = DataResult.Success(emptyMap())
+    override suspend fun getCardsByBox(boxNumber: Int): DataResult<List<Flashcard>> = DataResult.Success(emptyList())
+    override suspend fun getAllCards(): DataResult<List<Flashcard>> = DataResult.Success(emptyList())
+    override suspend fun getBoxCounts(): DataResult<Map<Int, Long>> = DataResult.Success(emptyMap())
     override suspend fun addCard(
         lexiconId: String?,
         customWord: String?,
@@ -164,7 +165,7 @@ private class FakeLeitnerRepository : LeitnerRepository {
             audioUrl = customAudioUrl
         )
     )
-    override suspend fun reviewCard(cardId: String, remembered: Boolean): DataResult<Flashcard> =
+    override suspend fun submitCardReview(cardId: String, remembered: Boolean): DataResult<Flashcard> =
         DataResult.Success(Flashcard(id = cardId))
     override suspend fun deleteCard(cardId: String): DataResult<Boolean> = DataResult.Success(true)
     override suspend fun getReminderTime(): DataResult<String?> = DataResult.Success("20:00")
