@@ -1,0 +1,7 @@
+models/
+audio_cache/
+logs/
+native/
+docs/
+src/
+.gradle/
