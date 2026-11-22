@@ -58,6 +58,7 @@ import ir.aispeaking.sharedui.ic_history
 import ir.aispeaking.sharedui.ic_play
 import ir.aispeaking.sharedui.ic_profile
 import ir.aispeaking.sharedui.ic_roadmap
+import ir.aispeaking.sharedui.ui.extension.vertical
 import ir.aispeaking.sharedui.ic_star
 import ir.aispeaking.sharedui.ui.component.AsyncStageBackground
 import ir.aispeaking.sharedui.ui.game.Game
@@ -515,7 +516,7 @@ private fun JourneyLeitnerEdgePill(
         animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
         label = "edge_pill_scale"
     )
-    val shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp, topEnd = 0.dp, bottomEnd = 0.dp)
+    val shape = RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp, topEnd = 0.dp, bottomEnd = 0.dp)
 
     Box(
         modifier = modifier
@@ -535,7 +536,7 @@ private fun JourneyLeitnerEdgePill(
                 indication = null,
                 onClick = onClick
             )
-            .padding(vertical = 8.dp, horizontal = 4.dp),
+            .padding(vertical = 10.dp, horizontal = 5.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -567,19 +568,18 @@ private fun JourneyLeitnerEdgePill(
                 )
             }
 
-            // 90-degree rotated label "لایتنر"
-            Box(
-                modifier = Modifier
-                    .height(38.dp)
-                    .width(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
+            // Vertical rotated label "لایتنر" with proper orientation and unconstrained length
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 GameText(
                     text = "لایتنر",
                     size = 11.sp,
                     bold = true,
+                    maxLines = 1,
+                    overflow = TextOverflow.Visible,
                     color = if (dueCount > 0) Color(0xFF06B6D4) else (if (isDark) Color(0xFFE2E8F0) else Color(0xFF0F172A)),
-                    modifier = Modifier.graphicsLayer { rotationZ = -90f }
+                    modifier = Modifier
+                        .vertical(-90f)
+                        .padding(vertical = 2.dp)
                 )
             }
         }

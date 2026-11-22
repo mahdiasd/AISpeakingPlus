@@ -50,16 +50,42 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.AndroidUiModes.UI_MODE_NIGHT_NO
 import androidx.compose.ui.tooling.preview.AndroidUiModes.UI_MODE_NIGHT_YES
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ir.aispeaking.sharedui.ui.them.AppTheme
 
 
 fun Dp.toCorner() = CornerSize(this)
+
+/**
+ * Rotates layout measurements by [rotation] degrees (-90f or 90f), swapping width
+ * and height constraints so that vertical text or elements fit correctly in their
+ * bounding box without truncation or unwanted multi-line wrapping.
+ */
+fun Modifier.vertical(rotation: Float = -90f): Modifier = layout { measurable, constraints ->
+    val swappedConstraints = Constraints(
+        minWidth = if (constraints.hasBoundedHeight) constraints.minHeight else 0,
+        maxWidth = if (constraints.hasBoundedHeight) constraints.maxHeight else Constraints.Infinity,
+        minHeight = if (constraints.hasBoundedWidth) constraints.minWidth else 0,
+        maxHeight = if (constraints.hasBoundedWidth) constraints.maxWidth else Constraints.Infinity
+    )
+    val placeable = measurable.measure(swappedConstraints)
+    layout(placeable.height, placeable.width) {
+        placeable.placeWithLayer(
+            x = (placeable.height - placeable.width) / 2,
+            y = (placeable.width - placeable.height) / 2,
+            layerBlock = {
+                rotationZ = rotation
+            }
+        )
+    }
+}
 
 @Composable
 fun LazyListState.OnBottomReached(
