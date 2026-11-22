@@ -1,13 +1,19 @@
 package ir.aispeaking.main
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -53,16 +59,18 @@ import ir.aispeaking.domain.model.stage.AccessTier
 import ir.aispeaking.domain.model.stage.Stage
 import ir.aispeaking.domain.model.stage.StageLockStatus
 import ir.aispeaking.sharedui.Res
+import ir.aispeaking.sharedui.ic_flashcard
 import ir.aispeaking.sharedui.ic_gem
 import ir.aispeaking.sharedui.ic_history
 import ir.aispeaking.sharedui.ic_play
 import ir.aispeaking.sharedui.ic_profile
 import ir.aispeaking.sharedui.ic_roadmap
-import ir.aispeaking.sharedui.ui.extension.vertical
 import ir.aispeaking.sharedui.ic_star
 import ir.aispeaking.sharedui.ui.component.AsyncStageBackground
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameAvatar
+import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.painterResource
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameChip
@@ -512,11 +520,23 @@ private fun JourneyLeitnerEdgePill(
     val interaction = remember { MutableInteractionSource() }
     val isPressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.90f else 1f,
+        targetValue = if (isPressed) 0.92f else 1f,
         animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
         label = "edge_pill_scale"
     )
-    val shape = RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp, topEnd = 0.dp, bottomEnd = 0.dp)
+
+    var isExpanded by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        delay(2000L)
+        isExpanded = false
+    }
+
+    val shape = RoundedCornerShape(
+        topStart = 20.dp,
+        bottomStart = 20.dp,
+        topEnd = 0.dp,
+        bottomEnd = 0.dp
+    )
 
     Box(
         modifier = modifier
@@ -525,7 +545,7 @@ private fun JourneyLeitnerEdgePill(
                 scaleY = scale
             }
             .clip(shape)
-            .background(if (isDark) Color(0xFF0F172A) else Color(0xFFFFFFFF))
+            .background(if (isDark) Color(0xF20F172A) else Color(0xF2FFFFFF))
             .border(
                 1.5.dp,
                 Color(0xFF06B6D4),
@@ -536,51 +556,77 @@ private fun JourneyLeitnerEdgePill(
                 indication = null,
                 onClick = onClick
             )
-            .padding(vertical = 10.dp, horizontal = 5.dp),
+            .animateContentSize(
+                animationSpec = tween(
+                    durationMillis = 350,
+                    easing = FastOutSlowInEasing
+                )
+            )
+            .padding(vertical = 7.dp, horizontal = 7.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Due Count Circular Badge
-            if (dueCount > 0) {
-                Box(
-                    modifier = Modifier
-                        .size(18.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF06B6D4)),
-                    contentAlignment = Alignment.Center
+            // Expandable Text "جعبه لایتنر" (collapses to the right edge after 2 seconds)
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandHorizontally(
+                    animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                    expandFrom = Alignment.End
+                ) + fadeIn(animationSpec = tween(durationMillis = 200)),
+                exit = shrinkHorizontally(
+                    animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                    shrinkTowards = Alignment.End
+                ) + fadeOut(animationSpec = tween(durationMillis = 150))
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(start = 6.dp, end = 2.dp)
                 ) {
-                    GameText(
-                        text = dueCount.fa(),
-                        size = 10.sp,
-                        bold = true,
-                        color = Color.White
-                    )
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                        GameText(
+                            text = "جعبه لایتنر",
+                            size = 12.sp,
+                            bold = true,
+                            maxLines = 1,
+                            overflow = TextOverflow.Clip,
+                            color = if (dueCount > 0) Color(0xFF06B6D4) else (if (isDark) Color(0xFFE2E8F0) else Color(0xFF0F172A))
+                        )
+                    }
                 }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF06B6D4).copy(alpha = 0.8f))
-                )
             }
 
-            // Vertical rotated label "لایتنر" with proper orientation and unconstrained length
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                GameText(
-                    text = "لایتنر",
-                    size = 11.sp,
-                    bold = true,
-                    maxLines = 1,
-                    overflow = TextOverflow.Visible,
-                    color = if (dueCount > 0) Color(0xFF06B6D4) else (if (isDark) Color(0xFFE2E8F0) else Color(0xFF0F172A)),
-                    modifier = Modifier
-                        .vertical(-90f)
-                        .padding(vertical = 2.dp)
+            // Flashcard Icon with Due Count Badge
+            Box(
+                modifier = Modifier.size(28.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(Res.drawable.ic_flashcard),
+                    contentDescription = "جعبه لایتنر",
+                    modifier = Modifier.size(26.dp)
                 )
+
+                // Due Count Badge (pinned to top-start corner of icon)
+                if (dueCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .size(15.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF06B6D4)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        GameText(
+                            text = dueCount.fa(),
+                            size = 9.sp,
+                            bold = true,
+                            color = Color.White
+                        )
+                    }
+                }
             }
         }
     }

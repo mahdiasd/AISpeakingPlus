@@ -16,6 +16,7 @@ import ir.aispeaking.domain.usecase.leitner.SetReminderTimeUseCase
 import ir.aispeaking.domain.usecase.leitner.SubmitCardReviewUseCase
 import ir.aispeaking.leitner.model.LeitnerTab
 import ir.aispeaking.leitner.model.LeitnerUiState
+import ir.aispeaking.sharedui.audio.StageAudioController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +33,8 @@ class LeitnerViewModel(
     private val getReminderTimeUseCase: GetReminderTimeUseCase,
     private val setReminderTimeUseCase: SetReminderTimeUseCase,
     private val lookupWordUseCase: LookupWordUseCase? = null,
-    private val addCardToLeitnerUseCase: AddCardToLeitnerUseCase? = null
+    private val addCardToLeitnerUseCase: AddCardToLeitnerUseCase? = null,
+    private val audioController: StageAudioController? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LeitnerUiState(isLoading = true))
@@ -112,10 +114,12 @@ class LeitnerViewModel(
     }
 
     fun closeFocusedCard() {
+        stopAudio()
         _uiState.update { it.copy(focusedCard = null) }
     }
 
     fun startReviewSession() {
+        stopAudio()
         val currentDue = _uiState.value.dueCards
         if (currentDue.isEmpty()) return
 
@@ -132,6 +136,7 @@ class LeitnerViewModel(
     }
 
     fun dismissReviewSession() {
+        stopAudio()
         _uiState.update {
             it.copy(
                 isReviewSessionOpen = false,
@@ -190,21 +195,59 @@ class LeitnerViewModel(
     }
 
     fun playAudio(card: Flashcard) {
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isAudioPlaying = true,
-                    audioPlayingCardId = card.id
-                )
+        stopAudio()
+
+        val rawUrl = when {
+            !card.audioUrl.isNullOrBlank() -> card.audioUrl
+            !card.customAudioUrl.isNullOrBlank() -> card.customAudioUrl
+            else -> {
+                val word = card.headword.ifBlank { card.customWord.orEmpty() }.trim()
+                if (word.isNotBlank()) "/api/v2/tts/speak?text=${word}" else null
             }
-            // Reset state after simulated or actual playback duration
-            kotlinx.coroutines.delay(1200)
-            _uiState.update {
-                it.copy(
-                    isAudioPlaying = false,
-                    audioPlayingCardId = null
-                )
+        }
+
+        if (rawUrl.isNullOrBlank()) {
+            _uiState.update { it.copy(isAudioPlaying = false, audioPlayingCardId = null) }
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                isAudioPlaying = true,
+                audioPlayingCardId = card.id
+            )
+        }
+
+        if (audioController != null) {
+            audioController.primeAudioPlayback()
+            audioController.playVoice(rawUrl) {
+                _uiState.update { state ->
+                    if (state.audioPlayingCardId == card.id) {
+                        state.copy(isAudioPlaying = false, audioPlayingCardId = null)
+                    } else state
+                }
             }
+        } else {
+            // Fallback simulated duration if no platform native player attached
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(1200)
+                _uiState.update { state ->
+                    if (state.audioPlayingCardId == card.id) {
+                        state.copy(isAudioPlaying = false, audioPlayingCardId = null)
+                    } else state
+                }
+            }
+        }
+    }
+
+    fun stopAudio() {
+        audioController?.stopVoice()
+        _uiState.update {
+            it.copy(
+                isAudioPlaying = false,
+                audioPlayingCardId = null,
+                isDictionaryAudioPlaying = false
+            )
         }
     }
 
@@ -273,6 +316,7 @@ class LeitnerViewModel(
     }
 
     fun closeDictionarySheet() {
+        stopAudio()
         _uiState.update {
             it.copy(
                 isDictionarySheetOpen = false,
@@ -316,14 +360,28 @@ class LeitnerViewModel(
 
     fun playDictionaryAudio(url: String) {
         if (url.isBlank()) return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isDictionaryAudioPlaying = true) }
-            kotlinx.coroutines.delay(1200)
-            _uiState.update { it.copy(isDictionaryAudioPlaying = false) }
+        stopAudio()
+        _uiState.update { it.copy(isDictionaryAudioPlaying = true) }
+
+        if (audioController != null) {
+            audioController.primeAudioPlayback()
+            audioController.playVoice(url) {
+                _uiState.update { it.copy(isDictionaryAudioPlaying = false) }
+            }
+        } else {
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(1200)
+                _uiState.update { it.copy(isDictionaryAudioPlaying = false) }
+            }
         }
     }
 
     fun stopDictionaryAudio() {
-        _uiState.update { it.copy(isDictionaryAudioPlaying = false) }
+        stopAudio()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopAudio()
     }
 }

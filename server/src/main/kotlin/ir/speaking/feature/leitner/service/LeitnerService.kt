@@ -86,13 +86,18 @@ open class LeitnerService(
             }
         }
 
+        val effectiveAudio = request.customAudioUrl?.takeIf { it.isNotBlank() }
+            ?: request.customWord?.takeIf { it.isNotBlank() }?.let { word ->
+                "/api/v2/tts/speak?text=${java.net.URLEncoder.encode(word.trim(), "UTF-8")}"
+            }
+
         return flashcardRepository.addCard(
             userId = userId,
             lexiconId = lexiconUuid,
             customWord = request.customWord,
             customMeaning = request.customMeaning,
             customExample = request.customExample,
-            customAudioUrl = request.customAudioUrl
+            customAudioUrl = effectiveAudio
         )
     }
 

@@ -227,7 +227,11 @@ class UserFlashcardRepository {
         val effectiveHeadword = customWord?.takeIf { it.isNotBlank() } ?: lexiconHeadword?.takeIf { it.isNotBlank() } ?: ""
         val effectiveMeaning = customMeaning?.takeIf { it.isNotBlank() } ?: lexiconMeaning?.takeIf { it.isNotBlank() } ?: ""
         val effectiveExampleEn = customExample ?: lexiconExEn
-        val effectiveAudio = customAudio ?: lexiconAudio
+        val effectiveAudio = customAudio?.takeIf { it.isNotBlank() }
+            ?: lexiconAudio?.takeIf { it.isNotBlank() }
+            ?: if (effectiveHeadword.isNotBlank()) {
+                "/api/v2/tts/speak?text=${java.net.URLEncoder.encode(effectiveHeadword, "UTF-8")}"
+            } else null
 
         return UserFlashcard(
             id = this[UserFlashcardTable.id].value.toString(),
