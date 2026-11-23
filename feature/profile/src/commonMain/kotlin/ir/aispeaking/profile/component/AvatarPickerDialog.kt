@@ -83,7 +83,7 @@ fun AvatarPickerDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(4.dp)
             ) {
-                items(avatars) { profileAvatar ->
+                items(avatars, key = { it.name }) { profileAvatar ->
                     val isSelected = profileAvatar.name.equals(currentAvatar, ignoreCase = true) ||
                         currentAvatar.contains(profileAvatar.name.replace("-", "").lowercase())
 

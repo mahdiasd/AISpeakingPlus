@@ -129,7 +129,7 @@ fun JourneyLeaderboardSheet(
                     .heightIn(max = 380.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(leaderboard.items) { entry ->
+                items(leaderboard.items, key = { it.userId }) { entry ->
                     LeaderboardEntryRow(entry = entry)
                 }
             }

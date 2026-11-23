@@ -96,7 +96,7 @@ fun QuestionReviewDialog(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        itemsIndexed(reviewItems) { index, item ->
+                        itemsIndexed(reviewItems, key = { _, item -> item.questionId }) { index, item ->
                             val statusBg = if (item.isCorrect) {
                                 if (isDark) Color(0x2210B981) else Color(0x1F10B981)
                             } else {

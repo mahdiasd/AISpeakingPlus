@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.collections.immutable.toImmutableList
 import org.koin.core.annotation.Factory
 
 @Factory
@@ -42,7 +43,7 @@ class StagesListViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            stages = result.data.sortedBy { stage -> stage.orderIndex },
+                            stages = result.data.sortedBy { stage -> stage.orderIndex }.toImmutableList(),
                             errorMessage = null
                         )
                     }

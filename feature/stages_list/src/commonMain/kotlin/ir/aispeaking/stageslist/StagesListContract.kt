@@ -1,10 +1,12 @@
 package ir.aispeaking.stageslist
 
 import ir.aispeaking.domain.model.stage.Stage
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 data class StagesListUiState(
     val isLoading: Boolean = true,
-    val stages: List<Stage> = emptyList(),
+    val stages: ImmutableList<Stage> = persistentListOf(),
     val errorMessage: String? = null
 ) {
     /**
