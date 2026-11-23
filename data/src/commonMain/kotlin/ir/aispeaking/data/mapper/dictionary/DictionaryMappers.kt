@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 
 private val json = Json { ignoreUnknownKeys = true }
 
-fun DictionaryEntryDto.toDomain(): DictionaryEntry {
+internal fun DictionaryEntryDto.toDomain(): DictionaryEntry {
     val parsedMeanings = if (otherMeanings.isNotEmpty()) {
         otherMeanings
     } else if (!otherMeaningsJson.isNullOrBlank()) {

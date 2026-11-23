@@ -3,13 +3,13 @@ package ir.aispeaking.data.model.dictionary
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DictionaryLookupRequestDto(
+internal data class DictionaryLookupRequestDto(
     val word: String,
     val context: String? = null
 )
 
 @Serializable
-data class DictionaryEntryDto(
+internal data class DictionaryEntryDto(
     val id: String = "",
     val normalizedText: String = "",
     val headword: String = "",

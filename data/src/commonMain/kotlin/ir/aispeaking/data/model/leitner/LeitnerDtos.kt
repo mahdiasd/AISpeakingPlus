@@ -3,7 +3,7 @@ package ir.aispeaking.data.model.leitner
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AddFlashcardRequestDto(
+internal data class AddFlashcardRequestDto(
     val lexiconId: String? = null,
     val customWord: String? = null,
     val customMeaning: String? = null,
@@ -12,18 +12,18 @@ data class AddFlashcardRequestDto(
 )
 
 @Serializable
-data class CardReviewRequestDto(
+internal data class CardReviewRequestDto(
     val cardId: String,
     val remembered: Boolean
 )
 
 @Serializable
-data class LeitnerReminderRequestDto(
+internal data class LeitnerReminderRequestDto(
     val reminderTime: String
 )
 
 @Serializable
-data class FlashcardDto(
+internal data class FlashcardDto(
     val id: String = "",
     val userId: String = "",
     val lexiconId: String? = null,
@@ -46,11 +46,11 @@ data class FlashcardDto(
 )
 
 @Serializable
-data class FlashcardListDto(
+internal data class FlashcardListDto(
     val cards: List<FlashcardDto> = emptyList()
 )
 
 @Serializable
-data class BoxCountsDto(
+internal data class BoxCountsDto(
     val counts: Map<String, Long> = emptyMap()
 )

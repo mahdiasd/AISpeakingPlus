@@ -3,7 +3,7 @@ package ir.aispeaking.data.mapper.leitner
 import ir.aispeaking.data.model.leitner.FlashcardDto
 import ir.aispeaking.domain.model.leitner.Flashcard
 
-fun FlashcardDto.toDomain(): Flashcard {
+internal fun FlashcardDto.toDomain(): Flashcard {
     return Flashcard(
         id = id,
         userId = userId,
