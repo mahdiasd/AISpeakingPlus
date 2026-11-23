@@ -318,8 +318,9 @@ fun Application.stageRouting() {
                             val doneJson = sseJson.encodeToString(doneObj)
                             write("data: $doneJson\n\n")
                             flush()
-                        } catch (_: kotlinx.coroutines.CancellationException) {
-                            // Client cancelled or disconnected cleanly
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            // Client cancelled or disconnected cleanly - must rethrow for coroutine cancellation
+                            throw e
                         } catch (e: Exception) {
                             try {
                                 val errorMsg = (e as? ir.speaking.core.exeptions.AppException)?.message
