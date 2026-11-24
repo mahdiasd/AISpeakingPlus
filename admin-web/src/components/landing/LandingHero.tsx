@@ -5,20 +5,24 @@ interface LandingHeroProps {
   onLaunchApp: () => void;
 }
 
+const MOBILE_BREAKPOINT = '(max-width: 767px)';
+
 export const LandingHero: React.FC<LandingHeroProps> = ({ onLaunchApp }) => {
   const [isMobile, setIsMobile] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return window.innerWidth < 768;
+      return window.matchMedia(MOBILE_BREAKPOINT).matches;
     }
     return false;
   });
 
   useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    const mediaQuery = window.matchMedia(MOBILE_BREAKPOINT);
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
     };
-    window.addEventListener('resize', checkIsMobile);
-    return () => window.removeEventListener('resize', checkIsMobile);
+    setIsMobile(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   return (
@@ -30,7 +34,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onLaunchApp }) => {
         loop
         muted
         playsInline
-        preload="auto"
+        preload="metadata"
         className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
         src={isMobile ? '/videos/hero-mobile.mp4' : '/videos/hero-desktop.mp4'}
       />
@@ -44,30 +48,30 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onLaunchApp }) => {
         {/* Apple Pill Badge (Desktop only to prevent clutter on mobile) */}
         <div className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full apple-pill text-cyan-300 text-xs sm:text-sm font-medium mb-6 shadow-sm">
           <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
-          <span>تمرین تعاملی مکالمه انگلیسی با پارتنر هوش مصنوعی</span>
+          <span>تمرین مکالمه انگلیسی در دل یک داستان واقعی</span>
         </div>
 
-        {/* Main Headline - Crisp, compact on mobile, majestic on desktop */}
+        {/* Main Headline */}
         <h1 className="text-[30px] sm:text-[56px] font-black leading-[1.25] text-white tracking-tight mb-4 sm:mb-5">
-          مکالمه انگلیسی با هوش مصنوعی
+          انگلیسی رو با حرف زدن یاد بگیر
           <span className="block mt-1.5 sm:mt-2 font-extrabold bg-gradient-to-r from-white via-slate-100 to-cyan-300 bg-clip-text text-transparent">
-            بدون استرس، روان و طبیعی صحبت کنید
+            بدون استرس، مثل یه گفتگوی واقعی
           </span>
         </h1>
 
-        {/* Secondary Paragraph - Hidden on mobile to keep video clean and decluttered */}
+        {/* Secondary Paragraph (Desktop) */}
         <p className="hidden sm:block text-[15px] sm:text-[17px] text-white/85 max-w-2xl mx-auto leading-relaxed mb-8 font-normal">
-          در موقعیت‌های واقعی با کاراکترهای صوتی زنده به زبان انگلیسی گفتگو کنید و در همان لحظه بازخورد تلفظ و اصلاح گرامر دریافت نمایید.
+          تو ۳۱ مرحلهٔ داستانی با شخصیت‌های هوش مصنوعی انگلیسی حرف بزن. هر جا جمله‌ات ایراد داشت شکل درستش رو ببین، کلمه‌های جدید رو همون لحظه معنی کن و بفرست تو جعبه لایتنرت.
         </p>
 
-        {/* Action Button - Single, prominent Apple Glass CTA */}
+        {/* Action Button */}
         <div className="mt-3 sm:mt-0 w-full sm:w-auto flex items-center justify-center">
           <button
             onClick={onLaunchApp}
             className="w-full sm:w-auto px-8 sm:px-9 py-3.5 sm:py-4 apple-btn-primary font-extrabold text-[15px] sm:text-[16px] rounded-full flex items-center justify-center gap-2.5 cursor-pointer shadow-2xl"
           >
             <Play className="w-4 h-4 fill-black text-black" />
-            <span>شروع رایگان (مرحله اول و دوم)</span>
+            <span>شروع رایگان (مرحله ۱ و ۲)</span>
           </button>
         </div>
       </div>

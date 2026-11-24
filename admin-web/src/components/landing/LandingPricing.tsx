@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Check, Sparkles, Zap, ShieldCheck, Gift, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Check, Sparkles, Zap, ShieldCheck, Gift, ArrowLeft, CalendarCheck } from 'lucide-react';
 
 interface SubscriptionPlan {
   id: string;
@@ -49,12 +49,20 @@ const DEFAULT_PLANS: SubscriptionPlan[] = [
   },
 ];
 
-const toPersianDigits = (value: number | string): string => {
-  const farsiDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  return value
-    .toString()
-    .replace(/[0-9]/g, (d) => farsiDigits[parseInt(d, 10)]);
-};
+const PLAN_FEATURES = [
+  'دسترسی کامل به تمام ۳۱ مرحلهٔ داستانی',
+  'مکالمه صوتی و متنی با شخصیت‌های داستان',
+  'بررسی و اصلاح گرامر جملات همراه با توضیح فارسی',
+  'دیکشنری هوشمند داخل مکالمه و جعبه لایتنر ۵ خانه‌ای',
+  'ترجمهٔ فارسی پیام‌ها و راهنمای جمله وسط گفتگو',
+  'آزمون تعیین سطح رایگان و ثبت ستاره‌ها و امتیازها',
+  'اجرا رو مرورگر گوشی، تبلت و کامپیوتر',
+];
+
+const FARSI_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+
+const toPersianDigits = (value: number | string): string =>
+  value.toString().replace(/[0-9]/g, (d) => FARSI_DIGITS[parseInt(d, 10)]);
 
 const formatPrice = (tomans: number): string => {
   try {
@@ -70,41 +78,34 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
     const fetchPlans = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch('/api/v2/subscriptions/plans');
+        const res = await fetch('/api/v2/subscriptions/plans', { signal: controller.signal });
         if (!res.ok) throw new Error('Failed to fetch plans');
         const json = await res.json();
-        if (json?.data && Array.isArray(json.data) && json.data.length > 0 && isMounted) {
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
           setPlans(json.data);
         }
       } catch {
         // Fallback to default plans already set
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchPlans();
-    return () => {
-      isMounted = false;
-    };
+    return () => controller.abort();
   }, []);
 
-  const featuresList = [
-    'دسترسی کامل به سناریوهای ملموس و واقعی زندگی',
-    'مکالمه صوتی با تمام کاراکترهای زن و مرد (آمریکایی و بریتانیایی)',
-    'تحلیل در لحظه گرامر، اشکالات ساختاری و تصحیح هوشمند',
-    'ارزیابی هوشمند تلفظ واژگان و روانی کلام',
-    'پیشنهاد هوشمند جملات و اصطلاحات متداول حین مکالمه',
-    'ذخیره کامل سابقه گفتگوها و نمودار پیشرفت آموزشی',
-    'دسترسی همزمان در گوشی موبایل، تبلت و کامپیوتر',
-  ];
-
   return (
-    <section id="pricing" className="scroll-mt-24 py-20 sm:py-24 max-w-7xl mx-auto px-5 sm:px-8 relative">
+    <section
+      id="pricing"
+      className="scroll-mt-24 py-20 sm:py-24 max-w-7xl mx-auto px-5 sm:px-8 relative [content-visibility:auto] [contain-intrinsic-size:900px]"
+    >
       {/* Background glow effects */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
 
@@ -112,13 +113,13 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
       <div className="text-center max-w-3xl mx-auto mb-14 relative z-10">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full apple-pill text-indigo-300 text-xs font-semibold mb-4">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span>{isLoading ? 'در حال دریافت تعرفه‌ها...' : 'پلن‌ها و تعرفه‌ها'}</span>
+          <span>{isLoading ? 'در حال دریافت تعرفه‌ها...' : 'تعرفه‌ها و اشتراک'}</span>
         </div>
         <h2 className="text-2xl sm:text-4xl font-extrabold text-white mb-4">
-          سرمایه‌گذاری برای تسلط کامل بر مکالمه انگلیسی
+          ساده، شفاف و به‌صرفه
         </h2>
         <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-          بدون نیاز به پرداخت هزینه‌های سنگین کلاس‌های حضوری، هر روز در هر زمان و مکانی با پارتنر هوش مصنوعی مکالمه کنید.
+          اول دو مرحلهٔ اول رو رایگان امتحان کن؛ هر وقت دوست داشتی همهٔ ۳۱ مرحلهٔ داستان رو باز کنی، یکی از پلن‌ها رو انتخاب کن.
         </p>
       </div>
 
@@ -131,13 +132,13 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
             </div>
             <div>
               <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-semibold mb-2 border border-emerald-500/30">
-                <span>تست رایگان و بدون ریسک</span>
+                <span>امتحان رایگان</span>
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-white mb-1.5">
-                مرحله اول و دوم کاملاً رایگان است!
+                مرحله اول و دوم کاملاً رایگانه!
               </h3>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                برای ورود و تجربه مکالمه نیازی به پرداخت هزینه یا ثبت کارت بانکی نیست. شما می‌توانید دو مرحله اول را با صداهای طبیعی و بازخورد هوشمند رایگان تجربه کنید و پس از اطمینان از کیفیت، اشتراک تهیه فرمایید.
+                برای شروع نیازی به پرداخت نداری. همین الان وارد شو، دو مرحلهٔ اول رو با گفتگوی صوتی، اصلاح گرامر، دیکشنری و جعبه لایتنر رایگان تست کن و بعد اگه راضی بودی اشتراک بگیر.
               </p>
             </div>
           </div>
@@ -146,25 +147,28 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
             onClick={onLaunchApp}
             className="w-full md:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition-all active:scale-[0.97] cursor-pointer"
           >
-            <span>شروع دو مرحله اول رایگان</span>
+            <span>شروع ۲ مرحله اول رایگان</span>
             <ArrowLeft className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {/* Pricing Cards Grid */}
-      <div className={`relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto transition-opacity duration-300 ${isLoading ? 'opacity-70' : 'opacity-100'}`}>
+      <div
+        className={`relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto transition-opacity duration-300 ${
+          isLoading ? 'opacity-70' : 'opacity-100'
+        }`}
+      >
         {plans.map((plan) => {
-          const isFeatured = plan.discountPercent && plan.discountPercent > 0 && plan.durationDays === 90;
+          const isFeatured = Boolean(plan.discountPercent && plan.discountPercent > 0 && plan.durationDays === 90);
           const isBestValue = plan.durationDays === 180;
-          const originalPrice = plan.originalPriceTomans || (
-            plan.discountPercent && plan.discountPercent > 0
+          const originalPrice =
+            plan.originalPriceTomans ||
+            (plan.discountPercent && plan.discountPercent > 0
               ? Math.round(plan.priceTomans / (1 - plan.discountPercent / 100))
-              : null
-          );
-          const monthlyPrice = plan.durationDays >= 60
-            ? Math.round(plan.priceTomans / (plan.durationDays / 30))
-            : null;
+              : null);
+          const monthlyPrice =
+            plan.durationDays >= 60 ? Math.round(plan.priceTomans / (plan.durationDays / 30)) : null;
 
           return (
             <div
@@ -176,7 +180,7 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
               }`}
             >
               {/* Badge on top if present */}
-              {plan.badge && (
+              {plan.badge ? (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                   <span
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-md ${
@@ -191,26 +195,24 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
                     <span>{plan.badge}</span>
                   </span>
                 </div>
-              )}
+              ) : null}
 
               <div>
                 {/* Title & Duration */}
                 <div className="text-center pb-5 border-b border-white/10">
-                  <h3 className="text-lg sm:text-xl font-bold text-white mb-1">
-                    {plan.titleFa}
-                  </h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-1">{plan.titleFa}</h3>
                   <p className="text-xs text-slate-400">
-                    دسترسی نامحدود به‌مدت {toPersianDigits(plan.durationDays)} روز
+                    دسترسی نامحدود به مدت {toPersianDigits(plan.durationDays)} روز
                   </p>
                 </div>
 
                 {/* Price Display */}
                 <div className="py-6 text-center">
-                  {originalPrice && (
+                  {originalPrice ? (
                     <div className="text-xs sm:text-sm text-slate-500 line-through mb-1">
                       {formatPrice(originalPrice)} تومان
                     </div>
-                  )}
+                  ) : null}
                   <div className="flex items-baseline justify-center gap-1.5">
                     <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
                       {formatPrice(plan.priceTomans)}
@@ -218,11 +220,15 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
                     <span className="text-xs text-slate-400 font-medium">تومان</span>
                   </div>
 
-                  {monthlyPrice && (
-                    <div className={`mt-1.5 text-xs font-semibold ${isFeatured ? 'text-amber-300' : 'text-slate-300'}`}>
+                  {monthlyPrice ? (
+                    <div
+                      className={`mt-1.5 text-xs font-semibold ${
+                        isFeatured ? 'text-amber-300' : 'text-slate-300'
+                      }`}
+                    >
                       معادل ماهی فقط {formatPrice(monthlyPrice)} تومان
                     </div>
-                  )}
+                  ) : null}
 
                   {plan.discountPercent && plan.discountPercent > 0 ? (
                     <div className="mt-2.5 inline-block">
@@ -231,16 +237,14 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
                       </span>
                     </div>
                   ) : (
-                    <div className="mt-2.5 text-[11px] text-slate-500">
-                      تعرفه عادی ماهانه
-                    </div>
+                    <div className="mt-2.5 text-[11px] text-slate-500">تعرفه عادی ماهانه</div>
                   )}
                 </div>
 
                 {/* Features List */}
                 <div className="space-y-3 pt-2 pb-6 border-t border-white/10 text-right">
-                  {featuresList.map((feat, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-300">
+                  {PLAN_FEATURES.map((feat) => (
+                    <div key={feat} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-300">
                       <div className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
                         <Check className="w-2.5 h-2.5 stroke-[3]" />
                       </div>
@@ -254,9 +258,7 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
               <button
                 onClick={onLaunchApp}
                 className={`w-full py-3.5 px-4 rounded-2xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
-                  isFeatured
-                    ? 'apple-btn-primary'
-                    : 'apple-btn-glass'
+                  isFeatured ? 'apple-btn-primary' : 'apple-btn-glass'
                 }`}
               >
                 <span>انتخاب اشتراک</span>
@@ -271,15 +273,15 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
       <div className="relative z-10 mt-14 pt-8 border-t border-white/10 flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs sm:text-sm text-slate-400">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>پرداخت امن با کلیه کارت‌های عضو شتاب</span>
+          <span>پرداخت آنلاین امن با همهٔ کارت‌های عضو شتاب</span>
         </div>
         <div className="flex items-center gap-2">
           <Zap className="w-4 h-4 text-cyan-400" />
-          <span>فعال‌سازی آنی اشتراک پس از پرداخت</span>
+          <span>فعال‌سازی فوری اشتراک بلافاصله بعد از پرداخت</span>
         </div>
         <div className="flex items-center gap-2">
-          <RefreshCw className="w-4 h-4 text-indigo-400" />
-          <span>بدون نیاز به تمدید اجباری یا برداشت خودکار</span>
+          <CalendarCheck className="w-4 h-4 text-indigo-400" />
+          <span>اشتراک مدت‌دار بدون تمدید یا کسر خودکار</span>
         </div>
       </div>
     </section>

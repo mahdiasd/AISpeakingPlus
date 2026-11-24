@@ -1,69 +1,80 @@
 import React from 'react';
-import { Headphones, ShieldCheck, CheckCircle2, MessageSquare, Award, Sparkles } from 'lucide-react';
+import {
+  Map,
+  Volume2,
+  SpellCheck,
+  BookOpen,
+  Lightbulb,
+  Target,
+  Sparkles,
+} from 'lucide-react';
+
+const FEATURES = [
+  {
+    icon: Map,
+    title: 'ماجراجویی ۳۱ مرحله‌ای در لندن',
+    desc: 'به جای تمرین‌های خشک و پراکنده، تو نقش یک دانشجوی تازه‌وارد در لندن قرار می‌گیری؛ از کنترل مرزی فرودگاه و خرید سیم‌کارت تا کلاس درس و مصاحبهٔ کاری.',
+    badge: 'مسیر داستانی',
+  },
+  {
+    icon: Volume2,
+    title: 'گفتگو با صداهای طبیعی آمریکایی و بریتانیایی',
+    desc: 'با میکروفون حرف بزن یا بنویس تا شخصیت داستان با صدای طبیعی جوابت رو بده. هر جا هم متوجه نشدی، با یک لمس ترجمهٔ فارسی پیام رو ببین.',
+    badge: 'صوت و ترجمه',
+  },
+  {
+    icon: SpellCheck,
+    title: 'اصلاح گرامر جمله‌ها زیر هر پیام',
+    desc: 'بعد از ارسال هر پیام، اگه ایراد گرامری یا ساختاری داشته باشی، شکل درست جمله همراه با توضیح کوتاه فارسی همون‌جا بهت نشون داده می‌شه.',
+    badge: 'آموزش گرامر',
+  },
+  {
+    icon: BookOpen,
+    title: 'دیکشنری وسط مکالمه و جعبه لایتنر',
+    desc: 'روی هر کلمه یا عبارت تو پیام‌ها تپ کن تا معنیش رو در جمله، فونتیک و تلفظ صوتیش رو ببینی و با یک دکمه بفرستیش تو جعبه لایتنر ۵ خانه‌ای.',
+    badge: 'مرور لغات',
+  },
+  {
+    icon: Lightbulb,
+    title: 'کمک‌دست هر وقت وسط حرف زدن گیر کردی',
+    desc: 'اگه ندونستی چی جواب بدی، دکمهٔ راهنما یک جملهٔ آماده و متناسب با سطح خودت رو همراه با معنی فارسی پیشنهاد می‌ده تا مکالمه متوقف نشه.',
+    badge: 'راهنمای هوشمند',
+  },
+  {
+    icon: Target,
+    title: 'آزمون تعیین سطح و امتیازگیری',
+    desc: 'با آزمون رایگان ۲۰ سؤالی سطحت (از A1 تا C1) مشخص می‌شه تا گفتگوها اندازهٔ خودت باشن. پایان هر مرحله هم ستاره و امتیاز می‌گیری و تو جدول برترین‌ها رقابت می‌کنی.',
+    badge: 'شخصی‌سازی سطح',
+  },
+];
 
 export const LandingFeatures: React.FC = () => {
-  const features = [
-    {
-      icon: Headphones,
-      title: 'صداهای طبیعی و زنده با لحن انسانی',
-      desc: 'با شخصیت‌های صوتی متنوع خانم و آقا در لهجه‌های آمریکایی و بریتانیایی گفتگو کنید. لحن گرم، مکث‌های تنفسی و تلفظ دقیق، حس یک مکالمه واقعی را خلق می‌کند.',
-      badge: 'کیفیت استودیویی',
-    },
-    {
-      icon: MessageSquare,
-      title: 'سناریوها و ماموریت‌های کاربردی',
-      desc: 'به جای حفظ طوطی‌وار گرامر یا لغات، در نقش مسافر، مهمان هتل یا کارجوی مصاحبه کاری قرار بگیرید و در فضایی هدفمند مکالمه کنید.',
-      badge: 'مکالمه کاربردی',
-    },
-    {
-      icon: Award,
-      title: 'تبدیل دقیق صوت به متن و تصحیح ساختار',
-      desc: 'گفتار انگلیسی شما بی‌درنگ به متن تبدیل شده و ساختار دستوری، درستی گرامر و کاربرد واژگان در جملاتتان بررسی و تصحیح می‌شود.',
-      badge: 'تصحیح در لحظه',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'تمرین در فضایی امن و بدون قضاوت',
-      desc: 'هر قدر که می‌خواهید مکث کنید، اشتباه کنید و دوباره بگویید. پارتنر هوش مصنوعی با صبوری در کنار شماست تا اعتمادبه‌نفس گفتاری‌تان رشد کند.',
-      badge: 'محیط ۱۰۰٪ آرام',
-    },
-    {
-      icon: Sparkles,
-      title: 'پیشنهاد هوشمند جملات در بن‌بست مکالمه',
-      desc: 'اگر وسط گفتگو متوجه نشدید چه پاسخی بدهید، سامانه عبارات متداول انگلیسی را همراه با معنی فارسی پیشنهاد می‌دهد تا مکالمه متوقف نشود.',
-      badge: 'راهنمای همراه',
-    },
-    {
-      icon: CheckCircle2,
-      title: 'اجرای مستقیم در مرورگر بدون نیاز به نصب',
-      desc: 'تنها با یک کلیک روی مرورگر گوشی، تبلت یا لپ‌تاپ وارد شوید؛ تمام سوابق یادگیری و پیشرفت شما در حسابتان محفوظ می‌ماند.',
-      badge: 'دسترسی آسان',
-    },
-  ];
-
   return (
-    <section id="features" className="scroll-mt-24 py-20 sm:py-24 max-w-7xl mx-auto px-5 sm:px-8">
+    <section
+      id="features"
+      className="scroll-mt-24 py-20 sm:py-24 max-w-7xl mx-auto px-5 sm:px-8 [content-visibility:auto] [contain-intrinsic-size:700px]"
+    >
       {/* Section Header */}
       <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-16">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full apple-pill text-indigo-300 text-xs font-semibold mb-4">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span>امکانات و مزیت‌های منحصربه‌فرد</span>
+          <span>امکانات واقعی برنامه</span>
         </div>
         <h2 className="text-2xl sm:text-4xl font-extrabold text-white mb-4">
-          چرا یادگیری مکالمه با AISpeaking متفاوت است؟
+          توی AISpeaking چه امکاناتی داری؟
         </h2>
         <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-          ترکیب هوش مصنوعی تعاملی، صداهای طبیعی انسانی و بازخورد بلادرنگ به شما کمک می‌کند سد صحبت کردن به زبان انگلیسی را برای همیشه بشکنید.
+          از تمرین مکالمه تو موقعیت‌های واقعی تا معنی کردن کلمه‌ها و مرورشون با لایتنر، همه‌چیز برای این چیده شده که کم‌کم راه بیفتی و راحت‌تر انگلیسی حرف بزنی.
         </p>
       </div>
 
       {/* Feature Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-        {features.map((feature, idx) => {
+        {FEATURES.map((feature) => {
           const Icon = feature.icon;
           return (
             <div
-              key={idx}
+              key={feature.title}
               className="group p-6 sm:p-7 rounded-3xl apple-glass hover:border-indigo-500/40 transition-all duration-300 relative flex flex-col justify-between"
             >
               <div>

@@ -5,6 +5,13 @@ interface LandingNavbarProps {
   onLaunchApp: () => void;
 }
 
+const NAV_LINKS = [
+  { label: 'امکانات', href: '#features' },
+  { label: 'لایتنر و دیکشنری', href: '#leitner' },
+  { label: 'تعرفه‌ها', href: '#pricing' },
+  { label: 'سؤال‌های رایج', href: '#faq' },
+];
+
 export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchApp }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -16,14 +23,6 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchApp }) => 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const navLinks = [
-    { label: 'امکانات', href: '#features' },
-    { label: 'صداهای طبیعی', href: '#voice' },
-    { label: 'تعرفه‌ها', href: '#pricing' },
-    { label: 'نحوه کار', href: '#how-it-works' },
-    { label: 'پرسش‌های متداول', href: '#faq' },
-  ];
 
   return (
     <header
@@ -50,7 +49,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchApp }) => 
 
         {/* Desktop Menu Items */}
         <nav className="hidden lg:flex items-center gap-7">
-          {navLinks.map((link) => (
+          {NAV_LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -72,7 +71,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchApp }) => 
           </button>
 
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
             className="lg:hidden p-2 text-white/90 hover:text-white rounded-xl bg-white/10 border border-white/15 backdrop-blur-md active:scale-95 transition-transform"
             aria-label="منوی سایت"
           >
@@ -82,10 +81,10 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchApp }) => 
       </div>
 
       {/* Mobile Drawer */}
-      {mobileMenuOpen && (
+      {mobileMenuOpen ? (
         <div className="lg:hidden bg-[#0B0F17]/95 backdrop-blur-3xl border-b border-white/10 px-6 py-5 space-y-4 shadow-2xl">
           <nav className="flex flex-col space-y-1">
-            {navLinks.map((link) => (
+            {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
@@ -104,11 +103,11 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onLaunchApp }) => 
             }}
             className="w-full mt-2 flex items-center justify-center gap-2 apple-btn-primary font-bold text-[15px] py-3 rounded-2xl cursor-pointer"
           >
-            <span>ورود به برنامه (دو مرحله اول رایگان)</span>
+            <span>ورود به برنامه (۲ مرحله اول رایگان)</span>
             <ArrowLeft className="w-4 h-4" />
           </button>
         </div>
-      )}
+      ) : null}
     </header>
   );
 };
