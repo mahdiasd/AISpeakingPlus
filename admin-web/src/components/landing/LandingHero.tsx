@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, ChevronDown, Sparkles } from 'lucide-react';
+import { Play, Sparkles } from 'lucide-react';
 
 interface LandingHeroProps {
   onLaunchApp: () => void;
@@ -22,7 +22,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onLaunchApp }) => {
   }, []);
 
   return (
-    <section className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center text-center px-4 select-none">
+    <section className="relative w-full h-screen min-h-[600px] overflow-hidden flex flex-col items-center justify-center text-center px-4 select-none">
       {/* Background Video (Responsive: Desktop & Mobile) */}
       <video
         key={isMobile ? 'mobile' : 'desktop'}
@@ -71,16 +71,6 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onLaunchApp }) => {
           </button>
         </div>
       </div>
-
-      {/* Subtle Bottom Scroll Indicator */}
-      <a
-        href="#features"
-        className="absolute bottom-5 sm:bottom-6 z-20 flex flex-col items-center gap-1 text-white/60 hover:text-white transition-colors duration-200 cursor-pointer"
-        aria-label="مشاهده امکانات"
-      >
-        <span className="text-[11px] font-normal tracking-wide hidden sm:block">آشنایی با امکانات و ویژگی‌ها</span>
-        <ChevronDown className="w-4 h-4 animate-bounce" />
-      </a>
     </section>
   );
 };

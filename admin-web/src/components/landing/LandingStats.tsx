@@ -30,7 +30,7 @@ export const LandingStats: React.FC = () => {
   ];
 
   return (
-    <section className="relative z-20 -mt-10 sm:-mt-14 max-w-6xl mx-auto px-4">
+    <section className="relative z-20 pt-14 sm:pt-20 pb-4 max-w-6xl mx-auto px-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-5 rounded-3xl apple-glass shadow-2xl">
         {stats.map((item, index) => {
           const Icon = item.icon;
