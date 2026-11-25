@@ -1,7 +1,6 @@
 package ir.aispeaking.main
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -556,18 +555,11 @@ private fun JourneyLeitnerEdgePill(
                 indication = null,
                 onClick = onClick
             )
-            .animateContentSize(
-                animationSpec = tween(
-                    durationMillis = 350,
-                    easing = FastOutSlowInEasing
-                )
-            )
             .padding(vertical = 7.dp, horizontal = 7.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.CenterEnd
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            verticalAlignment = Alignment.CenterVertically
         ) {
             // Expandable Text "جعبه لایتنر" (collapses to the right edge after 2 seconds)
             AnimatedVisibility(
@@ -583,7 +575,7 @@ private fun JourneyLeitnerEdgePill(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(start = 6.dp, end = 2.dp)
+                    modifier = Modifier.padding(start = 6.dp, end = 8.dp)
                 ) {
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                         GameText(
