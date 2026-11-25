@@ -80,7 +80,10 @@ fun resolveInitialWebRoute(): AppRoute {
  * Automatically cleans up any legacy hash bookmarks and synchronizes with browser Back/Forward.
  */
 @Composable
-fun WebBrowserNavigation(backStack: NavBackStack<NavKey>) {
+fun WebBrowserNavigation(
+    backStack: NavBackStack<NavKey>,
+    onRouteChanged: (AppRoute?) -> Unit = {}
+) {
     LaunchedEffect(backStack) {
         // 1. Initial URL inspection (detect deep-links or legacy hash fragments)
         val initialHash = jsGetHash()
@@ -107,6 +110,7 @@ fun WebBrowserNavigation(backStack: NavBackStack<NavKey>) {
             }
             jsReplaceUrl(routeToUrl(initialRoute))
         }
+        onRouteChanged(backStack.lastOrNull() as? AppRoute)
 
         // 2. Observe backStack changes and push clean HTML5 paths to window.history
         var previousWasSplash = (backStack.lastOrNull() is SplashRoute)
@@ -114,6 +118,7 @@ fun WebBrowserNavigation(backStack: NavBackStack<NavKey>) {
         launch {
             snapshotFlow { backStack.toList() }.collect { stack ->
                 val top = stack.lastOrNull() ?: return@collect
+                onRouteChanged(top as? AppRoute)
                 val targetUrl = routeToUrl(top)
                 val currentUrl = jsGetCurrentPath() + jsGetCurrentSearch()
 

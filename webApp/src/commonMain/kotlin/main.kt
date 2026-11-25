@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -41,25 +40,22 @@ import androidx.compose.ui.window.ComposeViewport
 import ir.aispeaking.chat.audio.DefaultStageAudioController
 import ir.aispeaking.chat.audio.StageAudioController
 import ir.aispeaking.navigation.AppNavigation
+import ir.aispeaking.navigation.AppRoute
 import ir.aispeaking.navigation.di.initKoin
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_arrow_left
 import ir.aispeaking.sharedui.ic_logo
 import ir.aispeaking.sharedui.ic_qr
-import ir.aispeaking.sharedui.ic_speaker
-import ir.aispeaking.sharedui.ic_star
-import ir.aispeaking.sharedui.ic_transcribe
-import ir.aispeaking.sharedui.ic_voice
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.them.AppTheme
-import org.jetbrains.compose.resources.DrawableResource
 import ir.aispeaking.web.IosChromeGuideModal
 import ir.aispeaking.web.IosPwaTutorialModal
 import ir.aispeaking.web.IosSafariCompassIcon
 import ir.aispeaking.web.IosShareIcon
 import ir.aispeaking.web.IosTopNoticeBanner
 import ir.aispeaking.web.WebBrowserNavigation
+import ir.aispeaking.web.WebPageGuideCard
 import ir.aispeaking.web.dismissIosA2hsBanner
 import ir.aispeaking.web.dismissIosChromeBanner
 import ir.aispeaking.web.exitWebApp
@@ -98,6 +94,7 @@ fun main() {
         AppTheme {
             val isDark = AppTheme.isDark
             val initialRoute = remember { resolveInitialWebRoute() }
+            var currentRoute by remember { mutableStateOf<AppRoute?>(initialRoute) }
 
             LaunchedEffect(Unit) {
                 // Allow the first frame and text shapes to settle before fading out the HTML loader
@@ -169,13 +166,16 @@ fun main() {
                                         .fillMaxSize()
                                         .padding(horizontal = 32.dp)
                                 ) {
-                                    // Right Panel (Start in RTL layout): Brand Identity & Feature Highlights
+                                    // Right Panel (Start in RTL layout): Minimal Brand Header + Contextual Page Guide
                                     Box(
                                         modifier = Modifier
                                             .align(Alignment.CenterStart)
                                             .width(panelWidth)
                                     ) {
-                                        WebBrandPanel(isDark = isDark)
+                                        WebBrandPanel(
+                                            isDark = isDark,
+                                            currentRoute = currentRoute
+                                        )
                                     }
 
                                     // Left Panel (End in RTL layout): Mobile QR & Companion Tips
@@ -234,7 +234,12 @@ fun main() {
                                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                                     AppNavigation(
                                         initialRoute = initialRoute,
-                                        onBackStackCreated = { WebBrowserNavigation(it) },
+                                        onBackStackCreated = { backStack ->
+                                            WebBrowserNavigation(
+                                                backStack = backStack,
+                                                onRouteChanged = { currentRoute = it }
+                                            )
+                                        },
                                         onExitApp = { exitWebApp() }
                                     )
                                 }
@@ -277,7 +282,12 @@ fun main() {
                                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                                     AppNavigation(
                                         initialRoute = initialRoute,
-                                        onBackStackCreated = { WebBrowserNavigation(it) },
+                                        onBackStackCreated = { backStack ->
+                                            WebBrowserNavigation(
+                                                backStack = backStack,
+                                                onRouteChanged = { currentRoute = it }
+                                            )
+                                        },
                                         onExitApp = { exitWebApp() }
                                     )
                                 }
@@ -348,22 +358,25 @@ private fun AppTopBannerSection(
 }
 
 @Composable
-private fun WebBrandPanel(isDark: Boolean) {
+private fun WebBrandPanel(
+    isDark: Boolean,
+    currentRoute: AppRoute?
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
-        // App Identity Header
+        // Minimal App Identity Header
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(52.dp)
-                    .shadow(12.dp, RoundedCornerShape(16.dp), spotColor = Color(0x33000000))
-                    .border(1.dp, if (isDark) Color(0x33FFFFFF) else Color(0x18000000), RoundedCornerShape(16.dp))
-                    .clip(RoundedCornerShape(16.dp))
+                    .size(42.dp)
+                    .shadow(10.dp, RoundedCornerShape(13.dp), spotColor = Color(0x33000000))
+                    .border(1.dp, if (isDark) Color(0x28FFFFFF) else Color(0x16000000), RoundedCornerShape(13.dp))
+                    .clip(RoundedCornerShape(13.dp))
             ) {
                 Image(
                     painter = painterResource(Res.drawable.ic_logo),
@@ -372,89 +385,22 @@ private fun WebBrandPanel(isDark: Boolean) {
                 )
             }
             Column {
-                GameText(text = "AI Speaking Plus", size = 20.sp, bold = true, latin = true)
-                Spacer(Modifier.height(2.dp))
+                GameText(text = "AI Speaking Plus", size = 17.sp, bold = true, latin = true)
+                Spacer(Modifier.height(1.dp))
                 GameText(
                     text = "دستیار هوشمند مکالمه",
-                    size = 12.sp,
+                    size = 11.sp,
                     color = Game.Blue,
                     bold = true
                 )
             }
         }
 
-        // Brief Value Text
-        GameText(
-            text = "مکالمه انگلیسی را در موقعیت‌های واقعی، بدون استرس و با فیدبک زنده هوش مصنوعی تمرین کنید.",
-            size = 13.sp,
-            lineHeight = 22.sp,
-            color = Game.TextSecondary
+        // Contextual Guide for the Active Screen
+        WebPageGuideCard(
+            currentRoute = currentRoute,
+            isDark = isDark
         )
-
-        // 3 Key Feature Chips
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            WebFeatureCard(
-                icon = Res.drawable.ic_voice,
-                iconTint = Color(0xFF38BDF8),
-                title = "پارتنر صوتی طبیعی",
-                subtitle = "لهجه‌های زنده آمریکایی و بریتانیایی",
-                isDark = isDark
-            )
-            WebFeatureCard(
-                icon = Res.drawable.ic_transcribe,
-                iconTint = Color(0xFF34C759),
-                title = "تصحیح زنده و فوری",
-                subtitle = "ارزیابی پیوسته تلفظ و گرامر",
-                isDark = isDark
-            )
-            WebFeatureCard(
-                icon = Res.drawable.ic_star,
-                iconTint = Color(0xFFFFD60A),
-                title = "مسیر هدفمند و ماجراجویی",
-                subtitle = "سناریوهای روزمره و کسب ستاره",
-                isDark = isDark
-            )
-        }
-    }
-}
-
-@Composable
-private fun WebFeatureCard(
-    icon: DrawableResource,
-    iconTint: Color,
-    title: String,
-    subtitle: String,
-    isDark: Boolean
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(if (isDark) Color(0x12FFFFFF) else Color(0x0A000000))
-            .border(1.dp, if (isDark) Color(0x1AFFFFFF) else Color(0x10000000), RoundedCornerShape(14.dp))
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(iconTint.copy(alpha = if (isDark) 0.18f else 0.12f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(icon),
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                colorFilter = ColorFilter.tint(iconTint)
-            )
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            GameText(text = title, size = 12.sp, bold = true)
-            Spacer(Modifier.height(2.dp))
-            GameText(text = subtitle, size = 11.sp, color = Game.TextSecondary)
-        }
     }
 }
 
@@ -466,123 +412,68 @@ private fun WebCompanionPanel(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
-            .background(if (isDark) Color(0x10FFFFFF) else Color(0x08000000))
-            .border(1.dp, if (isDark) Color(0x1EFFFFFF) else Color(0x14000000), RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (isDark) Color(0x0DFFFFFF) else Color(0x06000000))
+            .border(1.dp, if (isDark) Color(0x18FFFFFF) else Color(0x10000000), RoundedCornerShape(20.dp))
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Card Header
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Box(
+            modifier = Modifier
+                .size(104.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(Color.White)
+                .padding(6.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(7.dp)
-                    .background(Game.Green, CircleShape)
-            )
-            GameText(
-                text = "ادامه تمرین روی گوشی",
-                size = 14.sp,
-                bold = true
+            Image(
+                painter = painterResource(Res.drawable.ic_qr),
+                contentDescription = "QR Code",
+                modifier = Modifier.size(92.dp),
+                colorFilter = ColorFilter.tint(Color.Black)
             )
         }
 
-        // QR Code Box
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(if (isDark) Color(0x16FFFFFF) else Color(0x0E000000))
-                .border(1.dp, if (isDark) Color(0x22FFFFFF) else Color(0x12000000), RoundedCornerShape(16.dp))
-                .padding(vertical = 14.dp, horizontal = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(108.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White)
-                    .padding(6.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(Res.drawable.ic_qr),
-                    contentDescription = "QR Code",
-                    modifier = Modifier.size(96.dp),
-                    colorFilter = ColorFilter.tint(Color.Black)
-                )
-            }
             GameText(
-                text = "اسکن با دوربین گوشی",
-                size = 12.sp,
+                text = "ادامه روی گوشی",
+                size = 13.sp,
                 bold = true,
                 color = Game.TextPrimary
             )
             GameText(
-                text = "ورود مستقیم بدون نیاز به نصب برنامه",
+                text = "با دوربین گوشی اسکن کن",
                 size = 11.sp,
                 color = Game.TextSecondary
             )
         }
 
-        // Audio Tip Box
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(if (isDark) Color(0x180A84FF) else Color(0x100A84FF))
-                .border(1.dp, if (isDark) Color(0x330A84FF) else Color(0x200A84FF), RoundedCornerShape(12.dp))
-                .padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .background(Game.Blue.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(Res.drawable.ic_speaker),
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    colorFilter = ColorFilter.tint(Game.Blue)
-                )
-            }
-            GameText(
-                text = "توصیه مکالمه: جهت مکالمه شفاف و کاهش نویز، استفاده از هندزفری پیشنهاد می‌شود.",
-                size = 11.sp,
-                lineHeight = 18.sp,
-                color = Game.TextSecondary
-            )
-        }
-
-        // Action Link to Landing
+        // Subtle Link to Landing
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
                 .clickable { onOpenLanding() }
-                .background(if (isDark) Color(0x10FFFFFF) else Color(0x08000000))
-                .border(1.dp, if (isDark) Color(0x1AFFFFFF) else Color(0x10000000), RoundedCornerShape(12.dp))
+                .background(if (isDark) Color(0x0EFFFFFF) else Color(0x07000000))
+                .border(1.dp, if (isDark) Color(0x16FFFFFF) else Color(0x0E000000), RoundedCornerShape(12.dp))
                 .padding(horizontal = 12.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             GameText(
-                text = "وب‌سایت و معرفی امکانات",
-                size = 12.sp,
+                text = "معرفی امکانات در سایت",
+                size = 11.sp,
                 bold = true,
-                color = Game.TextPrimary
+                color = Game.TextSecondary
             )
             Image(
                 painter = painterResource(Res.drawable.ic_arrow_left),
                 contentDescription = null,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.size(13.dp),
                 colorFilter = ColorFilter.tint(Game.Blue)
             )
         }
