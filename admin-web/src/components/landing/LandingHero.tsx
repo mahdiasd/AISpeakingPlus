@@ -61,7 +61,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onLaunchApp }) => {
 
         {/* Secondary Paragraph (Desktop) */}
         <p className="hidden sm:block text-[15px] sm:text-[17px] text-white/85 max-w-2xl mx-auto leading-relaxed mb-8 font-normal">
-          تو ۳۱ مرحلهٔ داستانی با شخصیت‌های هوش مصنوعی انگلیسی حرف بزن. هر جا جمله‌ات ایراد داشت شکل درستش رو ببین، کلمه‌های جدید رو همون لحظه معنی کن و بفرست تو جعبه لایتنرت.
+          تو مراحل داستانی مختلف با شخصیت‌های هوش مصنوعی انگلیسی حرف بزن. هر جا جمله‌ات ایراد داشت شکل درستش رو ببین، کلمه‌های جدید رو همون لحظه معنی کن و بفرست تو جعبه لایتنرت.
         </p>
 
         {/* Action Button */}

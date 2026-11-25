@@ -4,7 +4,7 @@ import { Compass, Mic, Layers, Globe } from 'lucide-react';
 const STATS = [
   {
     icon: Compass,
-    value: '۳۱ مرحلهٔ داستانی',
+    value: 'مراحل داستانی دنباله‌دار',
     label: 'سفر و زندگی دانشجویی در لندن در ۶ فاز؛ از فرودگاه تا دانشگاه و کار.',
     color: 'text-indigo-400',
   },
