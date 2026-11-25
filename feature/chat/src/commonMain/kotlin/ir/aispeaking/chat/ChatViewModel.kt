@@ -782,6 +782,17 @@ class ChatViewModel(
             }
         }
 
+        audioController.onMicrophoneError = { errorMsg ->
+            stopRecordingSession()
+            _uiState.update {
+                it.copy(
+                    isRecording = false,
+                    isRecordingPreparing = false,
+                    sttError = errorMsg
+                )
+            }
+        }
+
         viewModelScope.launch {
             delay(1800)
             if (_uiState.value.isRecording && _uiState.value.isRecordingPreparing) {
@@ -1240,7 +1251,18 @@ class ChatViewModel(
                 }
             val localGrammarErrorsCount = localGrammarErrors.size
 
-            val session = when (val result = submitStageEvaluationUseCase(
+            val session = if (!isGoalDone) {
+                EvaluationSession(
+                    stageId = stageId,
+                    hintsUsedCount = hintsCount,
+                    grammarErrorsCount = localGrammarErrorsCount,
+                    objectiveCompleted = false,
+                    grammarErrors = localGrammarErrors,
+                    calculatedStars = 0,
+                    score = 0,
+                    feedbackFa = "مکالمه قبل از اینکه به هدف برسی تموم شد. برای دریافت ستاره و تکمیل مرحله، مکالمه رو ادامه بده."
+                )
+            } else when (val result = submitStageEvaluationUseCase(
                 stageId = stageId,
                 hintsUsedCount = hintsCount,
                 turnsCount = turnsCount,

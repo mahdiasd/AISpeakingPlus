@@ -6,6 +6,7 @@ import ir.aispeaking.domain.model.data_result.DataResult
 import ir.aispeaking.domain.model.dictionary.DictionaryEntry
 import ir.aispeaking.domain.model.leitner.Flashcard
 import ir.aispeaking.domain.model.leitner.LeitnerBox
+import ir.aispeaking.domain.usecase.auth.IsLoggedInUseCase
 import ir.aispeaking.domain.usecase.dictionary.LookupWordUseCase
 import ir.aispeaking.domain.usecase.leitner.AddCardToLeitnerUseCase
 import ir.aispeaking.domain.usecase.leitner.GetBoxCountsUseCase
@@ -34,7 +35,8 @@ class LeitnerViewModel(
     private val setReminderTimeUseCase: SetReminderTimeUseCase,
     private val lookupWordUseCase: LookupWordUseCase? = null,
     private val addCardToLeitnerUseCase: AddCardToLeitnerUseCase? = null,
-    private val audioController: StageAudioController? = null
+    private val audioController: StageAudioController? = null,
+    private val isLoggedInUseCase: IsLoggedInUseCase? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LeitnerUiState(isLoading = true))
@@ -46,7 +48,20 @@ class LeitnerViewModel(
 
     fun loadData() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            if (isLoggedInUseCase != null && !isLoggedInUseCase.invoke()) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isGuest = true,
+                        dueCards = emptyList(),
+                        allCards = emptyList(),
+                        boxCounts = emptyMap(),
+                        errorMessage = null
+                    )
+                }
+                return@launch
+            }
+            _uiState.update { it.copy(isLoading = true, isGuest = false, errorMessage = null) }
 
             // 1. Fetch due cards
             val dueResult = getDueCardsUseCase(limit = 50)

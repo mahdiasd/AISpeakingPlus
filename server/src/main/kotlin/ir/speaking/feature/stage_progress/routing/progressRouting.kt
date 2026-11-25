@@ -66,8 +66,8 @@ fun Application.progressRouting() {
                         objectiveCompleted = objectiveCompleted
                     )
 
-                    var isHighScore = true
-                    if (userId != null) {
+                    var isHighScore = false
+                    if (userId != null && objectiveCompleted) {
                         val saveResult = progressRepo.saveOrUpdateProgress(
                             userId = userId,
                             stageId = stageId,

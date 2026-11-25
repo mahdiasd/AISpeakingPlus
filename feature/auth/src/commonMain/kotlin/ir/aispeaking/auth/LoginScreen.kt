@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -45,6 +46,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -192,10 +195,10 @@ fun LoginScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxHeight()
                     .widthIn(max = 440.dp)
                     .fillMaxWidth()
                     .statusBarsPadding()
+                    .navigationBarsPadding()
                     .imePadding()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 18.dp, vertical = 20.dp),
@@ -259,6 +262,8 @@ fun LoginScreen(
                     color = Game.TextMuted,
                     align = TextAlign.Center
                 )
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
@@ -463,15 +468,21 @@ private fun OtpDigitBoxes(
     onDone: () -> Unit,
     boxCount: Int = 5
 ) {
+    val focusRequester = androidx.compose.runtime.remember { FocusRequester() }
     BasicTextField(
         value = code,
         onValueChange = { newText ->
             val digits = newText.filter { it.isDigit() }
             if (digits.length <= boxCount) {
                 onCodeChanged(digits)
+                if (digits.length == boxCount) {
+                    onDone()
+                }
             }
         },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusRequester(focusRequester),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number,
             imeAction = ImeAction.Done
@@ -506,7 +517,13 @@ private fun OtpDigitBoxes(
                                     .size(width = 50.dp, height = 60.dp)
                                     .clip(shape)
                                     .background(if (isFocused) Game.PanelRaised else Game.Panel)
-                                    .border(if (isFocused) 2.dp else 1.dp, borderColor, shape),
+                                    .border(if (isFocused) 2.dp else 1.dp, borderColor, shape)
+                                    .clickable {
+                                        if (index < code.length) {
+                                            onCodeChanged(code.take(index))
+                                        }
+                                        focusRequester.requestFocus()
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 GameText(

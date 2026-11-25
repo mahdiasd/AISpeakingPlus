@@ -113,7 +113,7 @@ export const LandingPricing: React.FC<LandingPricingProps> = ({ onLaunchApp }) =
       <div className="text-center max-w-3xl mx-auto mb-14 relative z-10">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full apple-pill text-indigo-300 text-xs font-semibold mb-4">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span>{isLoading ? 'در حال دریافت تعرفه‌ها...' : 'تعرفه‌ها و اشتراک'}</span>
+          <span>تعرفه‌ها و اشتراک</span>
         </div>
         <h2 className="text-2xl sm:text-4xl font-extrabold text-white mb-4">
           ساده، شفاف و به‌صرفه

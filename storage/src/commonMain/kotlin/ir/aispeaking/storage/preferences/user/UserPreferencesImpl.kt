@@ -25,4 +25,16 @@ class UserPreferencesImpl(private val settings: Settings) : UserPreferences {
     override fun setHasSeenIntroVideo(seen: Boolean) {
         settings.putBoolean(SharedKeyConstant.HAS_SEEN_INTRO_VIDEO, seen)
     }
+
+    override fun getPendingOtpPhone(): String? {
+        return settings.getStringOrNull("pending_otp_phone")?.takeIf { it.isNotBlank() }
+    }
+
+    override fun setPendingOtpPhone(phone: String?) {
+        if (phone.isNullOrBlank()) {
+            settings.remove("pending_otp_phone")
+        } else {
+            settings.putString("pending_otp_phone", phone)
+        }
+    }
 }

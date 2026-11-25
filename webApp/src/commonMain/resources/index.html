@@ -15,6 +15,7 @@
         <link rel="preload" href="./composeResources/ir.aispeaking.sharedui/font/vazir_bold.ttf" as="font" type="font/ttf" crossorigin>
         <link rel="preload" href="./composeResources/ir.aispeaking.sharedui/font/poppins_regular.ttf" as="font" type="font/ttf" crossorigin>
         <link rel="preload" href="./composeResources/ir.aispeaking.sharedui/font/poppins_bold.ttf" as="font" type="font/ttf" crossorigin>
+        <link rel="preload" href="./composeResources/ir.aispeaking.sharedui/font/noto_sans_regular.ttf" as="font" type="font/ttf" crossorigin>
 
         <style>
             @font-face {
@@ -934,6 +935,7 @@
                 }
 
                 this._userWantsRecording = true;
+                this._lastError = "";
                 this.isRecording = true;
                 this.transcript = "";
                 this._accumulatedTranscript = "";
@@ -1135,6 +1137,7 @@
 
                 if (!getUserMediaFn) {
                     console.error("[aiSpeakingSpeech] Neither SpeechRecognition nor getUserMedia available.");
+                    self._lastError = "NotSupportedError";
                     self.isRecording = false;
                     self._userWantsRecording = false;
                     return;
@@ -1211,12 +1214,20 @@
                         self.isRecording = true;
                     } catch(err) {
                         console.error("[aiSpeakingSpeech] Fallback AudioContext graph error:", err);
+                        self._lastError = (err && (err.name || err.message)) ? String(err.name || err.message) : "AudioContextError";
+                        self.isRecording = false;
+                        self._userWantsRecording = false;
                     }
                 }).catch(function(err) {
                     console.error("[aiSpeakingSpeech] getUserMedia fallback error:", err);
+                    self._lastError = (err && (err.name || err.message)) ? String(err.name || err.message) : "NotAllowedError";
                     self.isRecording = false;
                     self._userWantsRecording = false;
                 });
+            },
+
+            getLastError: function() {
+                return this._lastError || "";
             },
 
             _sendFallbackAudioToTranscribe: function() {
@@ -1609,31 +1620,41 @@
 
     <script>
         window.aiSpeakingAnalytics = {
+            _isReady: function() {
+                try {
+                    return typeof firebase !== 'undefined' &&
+                        firebase.apps && firebase.apps.length > 0 &&
+                        firebase.app().options &&
+                        !!firebase.app().options.measurementId &&
+                        typeof firebase.analytics === 'function';
+                } catch(_) {
+                    return false;
+                }
+            },
             logEvent: function(name, paramsJson) {
                 try {
+                    if (!this._isReady()) return;
                     var params = {};
                     if (typeof paramsJson === 'string' && paramsJson.length > 0) {
                         try { params = JSON.parse(paramsJson); } catch(_) {}
                     } else if (typeof paramsJson === 'object' && paramsJson !== null) {
                         params = paramsJson;
                     }
-                    if (typeof firebase !== 'undefined' && typeof firebase.analytics === 'function') {
-                        firebase.analytics().logEvent(name, params);
-                    }
+                    firebase.analytics().logEvent(name, params);
                 } catch(e) {
                     console.warn('[Analytics Web] logEvent error:', e);
                 }
             },
             setUserId: function(userId) {
                 try {
-                    if (typeof firebase !== 'undefined' && typeof firebase.analytics === 'function') {
+                    if (this._isReady()) {
                         firebase.analytics().setUserId(userId);
                     }
                 } catch(e) {}
             },
             setUserProperty: function(name, value) {
                 try {
-                    if (typeof firebase !== 'undefined' && typeof firebase.analytics === 'function') {
+                    if (this._isReady()) {
                         var props = {};
                         props[name] = value;
                         firebase.analytics().setUserProperties(props);

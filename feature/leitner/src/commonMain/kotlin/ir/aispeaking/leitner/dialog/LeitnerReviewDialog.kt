@@ -511,12 +511,17 @@ private fun Review3DFlipCard(
                             .padding(10.dp),
                         verticalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
-                        GameText(
-                            text = example,
-                            size = 12.sp,
-                            bold = true,
-                            color = Game.TextPrimary
-                        )
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            GameText(
+                                text = example,
+                                size = 12.sp,
+                                bold = true,
+                                color = Game.TextPrimary,
+                                latin = true,
+                                align = TextAlign.Left,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                         val exampleFa = card.exampleFa
                         if (!exampleFa.isNullOrBlank()) {
                             GameText(

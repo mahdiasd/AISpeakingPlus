@@ -11,4 +11,8 @@ interface UserPreferences {
     fun hasSeenIntroVideo(): Boolean
 
     fun setHasSeenIntroVideo(seen: Boolean)
+
+    fun getPendingOtpPhone(): String? = null
+
+    fun setPendingOtpPhone(phone: String?) {}
 }

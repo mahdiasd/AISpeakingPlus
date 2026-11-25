@@ -34,6 +34,7 @@ sealed interface LeitnerTab {
 
 data class LeitnerUiState(
     val isLoading: Boolean = false,
+    val isGuest: Boolean = false,
     val selectedTab: LeitnerTab = LeitnerTab.DueToday,
     val allCards: List<Flashcard> = emptyList(),
     val dueCards: List<Flashcard> = emptyList(),

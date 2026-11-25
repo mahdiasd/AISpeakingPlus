@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -107,6 +108,20 @@ fun main() {
             var showIosTutorialModal by remember { mutableStateOf(false) }
             var showChromeGuideModal by remember { mutableStateOf(false) }
             val isInApp = remember { isUserInAppBrowser() }
+            val appContent = remember(initialRoute) {
+                movableContentOf {
+                    AppNavigation(
+                        initialRoute = initialRoute,
+                        onBackStackCreated = { backStack ->
+                            WebBrowserNavigation(
+                                backStack = backStack,
+                                onRouteChanged = { currentRoute = it }
+                            )
+                        },
+                        onExitApp = { exitWebApp() }
+                    )
+                }
+            }
 
             // Apple-style ambient backdrop shown around the phone frame on large screens.
             val backdropBrush = if (isDark) {
@@ -232,16 +247,7 @@ fun main() {
                                     }
                                 )
                                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                                    AppNavigation(
-                                        initialRoute = initialRoute,
-                                        onBackStackCreated = { backStack ->
-                                            WebBrowserNavigation(
-                                                backStack = backStack,
-                                                onRouteChanged = { currentRoute = it }
-                                            )
-                                        },
-                                        onExitApp = { exitWebApp() }
-                                    )
+                                    appContent()
                                 }
                             }
 
@@ -280,16 +286,7 @@ fun main() {
                                     }
                                 )
                                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                                    AppNavigation(
-                                        initialRoute = initialRoute,
-                                        onBackStackCreated = { backStack ->
-                                            WebBrowserNavigation(
-                                                backStack = backStack,
-                                                onRouteChanged = { currentRoute = it }
-                                            )
-                                        },
-                                        onExitApp = { exitWebApp() }
-                                    )
+                                    appContent()
                                 }
                             }
                         }

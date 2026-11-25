@@ -101,9 +101,15 @@ fun ModernPlanCard(
 
     val baseOriginalPrice = plan.originalPriceTomans
     val hasDiscount = baseOriginalPrice != null && baseOriginalPrice > finalPriceTomans
-    val discountPercent = if (hasDiscount && baseOriginalPrice > 0) {
-        (((baseOriginalPrice - finalPriceTomans) * 100) / baseOriginalPrice).toInt()
-    } else plan.discountPercent
+    val hasPromoDiscount = finalPriceTomans < plan.priceTomans
+    val discountPercent = when {
+        hasPromoDiscount && baseOriginalPrice != null && baseOriginalPrice > 0 ->
+            kotlin.math.round(((baseOriginalPrice - finalPriceTomans) * 100.0) / baseOriginalPrice).toInt()
+        plan.discountPercent > 0 -> plan.discountPercent
+        hasDiscount && baseOriginalPrice != null && baseOriginalPrice > 0 ->
+            kotlin.math.round(((baseOriginalPrice - finalPriceTomans) * 100.0) / baseOriginalPrice).toInt()
+        else -> 0
+    }
 
     val monthlyPrice = if (plan.durationDays >= 60) {
         finalPriceTomans / (plan.durationDays / 30).coerceAtLeast(1)

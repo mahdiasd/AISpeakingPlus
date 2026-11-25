@@ -185,7 +185,7 @@ fun AiChatItem(
                                         size = 13.sp,
                                         lineHeight = 20.sp,
                                         color = Game.TextSecondary,
-                                        align = TextAlign.Justify,
+                                        align = TextAlign.Start,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
