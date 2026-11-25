@@ -123,4 +123,12 @@ class AuthRepositoryImpl(
     override fun setHasSeenIntroVideo(seen: Boolean) {
         userPreferences.setHasSeenIntroVideo(seen)
     }
+
+    override fun getPendingOtpPhone(): String? {
+        return userPreferences.getPendingOtpPhone()
+    }
+
+    override fun setPendingOtpPhone(phone: String?) {
+        userPreferences.setPendingOtpPhone(phone)
+    }
 }

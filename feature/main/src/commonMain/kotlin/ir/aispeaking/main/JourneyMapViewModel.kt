@@ -18,6 +18,7 @@ import ir.aispeaking.domain.usecase.stage.CheckSubscriptionStatusUseCase
 import ir.aispeaking.domain.usecase.stage.GetJourneyLeaderboardUseCase
 import ir.aispeaking.domain.usecase.stage.GetStagesUseCase
 import ir.aispeaking.domain.usecase.stage.SyncGuestProgressUseCase
+import ir.aispeaking.domain.usecase.user.GetUserProfileUseCase
 import ir.aispeaking.utils.analytics.AnalyticsTracker
 import ir.aispeaking.utils.analytics.AnalyticsEvents
 import ir.aispeaking.utils.analytics.logLogin
@@ -48,7 +49,8 @@ data class JourneyMapUiState(
     val showLeaderboardSheet: Boolean = false,
     val leaderboard: JourneyLeaderboard? = null,
     val snackbarMessage: String? = null,
-    val dueLeitnerCardsCount: Int = 0
+    val dueLeitnerCardsCount: Int = 0,
+    val userAvatarUrl: String? = null
 ) {
     /**
      * The stage to display on screen: either a previewed stage or the user's active stage in the story journey.
@@ -90,7 +92,8 @@ class JourneyMapViewModel(
     private val isGuideCompletedUseCase: IsGuideCompletedUseCase? = null,
     private val markGuideCompletedUseCase: MarkGuideCompletedUseCase? = null,
     private val checkSubscriptionStatusUseCase: CheckSubscriptionStatusUseCase? = null,
-    private val getDueCardsUseCase: GetDueCardsUseCase? = null
+    private val getDueCardsUseCase: GetDueCardsUseCase? = null,
+    private val getUserProfileUseCase: GetUserProfileUseCase? = null
 ) : ViewModel() {
 
     fun isGuideCompleted(key: String): Boolean = isGuideCompletedUseCase?.invoke(key) ?: true
@@ -266,7 +269,7 @@ class JourneyMapViewModel(
         when (val result = getStagesUseCase(tier)) {
             is DataResult.Success -> {
                 var dueCount = 0
-                if (getDueCardsUseCase != null) {
+                if (tier != AccessTier.GUEST && getDueCardsUseCase != null) {
                     try {
                         val dueResult = getDueCardsUseCase(limit = 100)
                         if (dueResult is DataResult.Success) {
@@ -274,11 +277,21 @@ class JourneyMapViewModel(
                         }
                     } catch (_: Throwable) {}
                 }
+                var avatarUrl = _uiState.value.userAvatarUrl
+                if (tier != AccessTier.GUEST && avatarUrl == null && getUserProfileUseCase != null) {
+                    try {
+                        val profileResult = getUserProfileUseCase.invoke()
+                        if (profileResult is DataResult.Success) {
+                            avatarUrl = profileResult.data.avatar
+                        }
+                    } catch (_: Throwable) {}
+                }
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         stages = result.data,
-                        dueLeitnerCardsCount = dueCount
+                        dueLeitnerCardsCount = dueCount,
+                        userAvatarUrl = avatarUrl
                     )
                 }
             }

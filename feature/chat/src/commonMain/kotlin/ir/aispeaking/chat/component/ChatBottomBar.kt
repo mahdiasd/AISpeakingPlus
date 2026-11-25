@@ -803,14 +803,18 @@ private fun AppleRecordingPreparingButton(
                     .graphicsLayer { alpha = pulseAlpha }
                     .background(amberColor, CircleShape)
             )
-            GameText(
-                text = "در حال آماده‌سازی…",
-                size = 12.5.sp,
-                bold = true,
-                maxLines = 1,
-                overflow = TextOverflow.Clip,
-                color = amberColor
-            )
+            androidx.compose.runtime.CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Rtl
+            ) {
+                GameText(
+                    text = "در حال آماده‌سازی\u200F…",
+                    size = 12.5.sp,
+                    bold = true,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip,
+                    color = amberColor
+                )
+            }
         }
     }
 }

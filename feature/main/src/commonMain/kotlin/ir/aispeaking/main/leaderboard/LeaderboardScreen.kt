@@ -105,11 +105,19 @@ fun LeaderboardScreen(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        listOf(
-                            Color(0xFF131522),
-                            Color(0xFF0C0E18),
-                            Color(0xFF06070D)
-                        )
+                        if (isDark) {
+                            listOf(
+                                Color(0xFF131522),
+                                Color(0xFF0C0E18),
+                                Color(0xFF06070D)
+                            )
+                        } else {
+                            listOf(
+                                Color(0xFFF4F6FB),
+                                Color(0xFFEAF0FA),
+                                Color(0xFFF8FAFC)
+                            )
+                        }
                     )
                 )
         ) {
@@ -149,7 +157,7 @@ fun LeaderboardScreen(
                         text = "جدول برترین‌ها",
                         size = 18.sp,
                         bold = true,
-                        color = Color.White,
+                        color = if (isDark) Color.White else Color(0xFF0F172A),
                         align = TextAlign.Center
                     )
 
@@ -233,40 +241,59 @@ fun LeaderboardScreen(
                             // Bottom Glass Card for Ranks 4+
                             Box(
                                 modifier = Modifier
-                                    .weight(1f)
+                                    .then(if (remainingItems.isNotEmpty()) Modifier.weight(1f) else Modifier)
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                                    .background(Color(0xD9141724))
+                                    .background(if (isDark) Color(0xD9141724) else Color(0xF2FFFFFF))
                                     .border(
                                         1.dp,
                                         Brush.verticalGradient(
-                                            listOf(Color(0x38FFFFFF), Color(0x0DFFFFFF))
+                                            if (isDark) listOf(Color(0x38FFFFFF), Color(0x0DFFFFFF))
+                                            else listOf(Color(0x1F000000), Color(0x0A000000))
                                         ),
                                         RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
                                     )
                             ) {
-                                LazyColumn(
-                                    state = listState,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentPadding = PaddingValues(
-                                        top = 12.dp,
-                                        bottom = if (showCurrentUserBar || (currentUserRank == null && onNavigateToLogin != null)) 90.dp else 24.dp
-                                    )
-                                ) {
-                                    items(
-                                        items = remainingItems,
-                                        key = { it.userId }
-                                    ) { entry ->
-                                        val isCurrentUser = entry.userId == currentUserRank?.userId
-                                        LeaderboardRowItem(
-                                            entry = entry,
-                                            isCurrentUser = isCurrentUser
+                                if (remainingItems.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 24.dp, vertical = 28.dp)
+                                            .padding(bottom = if (currentUserRank == null && onNavigateToLogin != null) 64.dp else 0.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        GameText(
+                                            text = "رتبه‌های بعدی با پیوستن مسافران جدید تکمیل می‌شوند. برای کسب ستاره‌های بیشتر و حفظ جایگاهت، مراحل را ادامه بده!",
+                                            size = 13.sp,
+                                            lineHeight = 20.sp,
+                                            color = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B),
+                                            align = TextAlign.Center
                                         )
-                                        HorizontalDivider(
-                                            modifier = Modifier.padding(horizontal = 20.dp),
-                                            color = Color(0x14FFFFFF),
-                                            thickness = 0.75.dp
+                                    }
+                                } else {
+                                    LazyColumn(
+                                        state = listState,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentPadding = PaddingValues(
+                                            top = 12.dp,
+                                            bottom = if (showCurrentUserBar || (currentUserRank == null && onNavigateToLogin != null)) 90.dp else 24.dp
                                         )
+                                    ) {
+                                        items(
+                                            items = remainingItems,
+                                            key = { it.userId }
+                                        ) { entry ->
+                                            val isCurrentUser = entry.userId == currentUserRank?.userId
+                                            LeaderboardRowItem(
+                                                entry = entry,
+                                                isCurrentUser = isCurrentUser
+                                            )
+                                            HorizontalDivider(
+                                                modifier = Modifier.padding(horizontal = 20.dp),
+                                                color = if (isDark) Color(0x14FFFFFF) else Color(0x14000000),
+                                                thickness = 0.75.dp
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -373,6 +400,7 @@ private fun PodiumColumn(
     badgeColor: Brush,
     modifier: Modifier = Modifier
 ) {
+    val isDark = AppTheme.isDark
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -436,7 +464,7 @@ private fun PodiumColumn(
             bold = true,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            color = if (entry != null) Color.White else Color(0xFF94A3B8),
+            color = if (entry != null) (if (isDark) Color.White else Color(0xFF0F172A)) else Color(0xFF94A3B8),
             align = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 4.dp)
         )
@@ -447,7 +475,7 @@ private fun PodiumColumn(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color(0x334F46E5))
+                .background(if (isDark) Color(0x334F46E5) else Color(0x1A4F46E5))
                 .border(0.75.dp, Color(0x666366F1), RoundedCornerShape(12.dp))
                 .padding(horizontal = 8.dp, vertical = 3.dp)
         ) {
@@ -458,14 +486,14 @@ private fun PodiumColumn(
                 Icon(
                     painter = painterResource(Res.drawable.ic_star),
                     contentDescription = null,
-                    tint = if (rank == 1) Color(0xFFFFD700) else Color(0xFFFCD34D),
+                    tint = if (rank == 1) Color(0xFFFFD700) else Color(0xFFF59E0B),
                     modifier = Modifier.size(13.dp)
                 )
                 GameText(
                     text = "${entry?.totalStars?.fa() ?: 0.fa()}",
                     size = 11.sp,
                     bold = true,
-                    color = Color.White
+                    color = if (isDark) Color.White else Color(0xFF1E293B)
                 )
             }
         }
@@ -480,11 +508,19 @@ private fun PodiumColumn(
                 .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
                 .background(
                     Brush.verticalGradient(
-                        listOf(
-                            Color(0xFF333748),
-                            Color(0xFF232634),
-                            Color(0xFF161822)
-                        )
+                        if (isDark) {
+                            listOf(
+                                Color(0xFF333748),
+                                Color(0xFF232634),
+                                Color(0xFF161822)
+                            )
+                        } else {
+                            listOf(
+                                Color(0xFFE2E8F0),
+                                Color(0xFFCBD5E1),
+                                Color(0xFF94A3B8)
+                            )
+                        }
                     )
                 )
                 .border(
@@ -492,7 +528,7 @@ private fun PodiumColumn(
                     Brush.verticalGradient(
                         listOf(
                             ringColor.copy(alpha = if (rank == 1) 0.6f else 0.4f),
-                            Color(0x1AFFFFFF)
+                            if (isDark) Color(0x1AFFFFFF) else Color(0x33FFFFFF)
                         )
                     ),
                     RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
@@ -517,7 +553,7 @@ private fun PodiumColumn(
                 text = "$rank",
                 size = if (rank == 1) 56.sp else 44.sp,
                 bold = true,
-                color = Color.White.copy(alpha = if (rank == 1) 0.22f else 0.16f),
+                color = (if (isDark) Color.White else Color(0xFF0F172A)).copy(alpha = if (rank == 1) 0.22f else 0.16f),
                 align = TextAlign.Center
             )
         }
@@ -809,17 +845,34 @@ private fun LeaderboardAvatar(
     borderWidth: Dp = 2.dp,
     modifier: Modifier = Modifier
 ) {
+    val isDark = AppTheme.isDark
     val localAvatar = remember(avatarUrl) { AvatarUtils.findAvatarByName(avatarUrl) }
+    val fallbackInitial = remember(name) {
+        name.trim().split(" ", "_").lastOrNull { it.isNotBlank() }?.firstOrNull()?.uppercase()
+            ?: name.trim().firstOrNull()?.uppercase()
+            ?: "A"
+    }
     Box(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
             .background(
-                Brush.linearGradient(listOf(Color(0xFF282B3E), Color(0xFF161824)))
+                Brush.linearGradient(
+                    if (isDark) listOf(Color(0xFF282B3E), Color(0xFF161824))
+                    else listOf(Color(0xFF6366F1), Color(0xFF4F46E5))
+                )
             )
             .border(borderWidth, borderColor, CircleShape),
         contentAlignment = Alignment.Center
     ) {
+        // Fallback initial always rendered underneath so broken/empty remote URLs never show a blank circle
+        GameText(
+            text = fallbackInitial,
+            size = (size.value * 0.42f).sp,
+            bold = true,
+            latin = true,
+            color = Color.White
+        )
         if (localAvatar != null) {
             Image(
                 painter = painterResource(localAvatar.drawable),
@@ -833,14 +886,6 @@ private fun LeaderboardAvatar(
                 contentDescription = name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
-            )
-        } else {
-            GameText(
-                text = name.trim().split(" ").lastOrNull { it.isNotBlank() }?.firstOrNull()?.uppercase() ?: "A",
-                size = (size.value * 0.42f).sp,
-                bold = true,
-                latin = true,
-                color = Color.White
             )
         }
     }

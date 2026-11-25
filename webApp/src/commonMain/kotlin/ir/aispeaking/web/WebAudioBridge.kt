@@ -49,6 +49,9 @@ private external fun jsDrainPcmChunks(): String
 @JsFun("() => !!(window.aiSpeakingSpeech && window.aiSpeakingSpeech.hasVoiceActivity && window.aiSpeakingSpeech.hasVoiceActivity())")
 private external fun jsHasVoiceActivity(): Boolean
 
+@JsFun("() => (window.aiSpeakingSpeech && typeof window.aiSpeakingSpeech.getLastError === 'function') ? window.aiSpeakingSpeech.getLastError() : ''")
+private external fun jsGetSpeechError(): String
+
 @JsFun("() => window.aiSpeakingPermission ? window.aiSpeakingPermission.check() : 'prompt'")
 private external fun jsCheckSpeechPermission(): String
 
@@ -139,8 +142,25 @@ fun setupWebAudioBridge(controller: DefaultStageAudioController) {
                 var graceElapsedMs = 0
                 val maxGraceMs = 15000
                 while ((!jsIsSpeechRecording() || !jsIsAudioReady()) && graceElapsedMs < maxGraceMs && isActive) {
+                    if (jsGetSpeechError().isNotBlank()) break
                     delay(50)
                     graceElapsedMs += 50
+                }
+
+                val speechError = jsGetSpeechError()
+                if (speechError.isNotBlank()) {
+                    val errorMessageFa = when {
+                        speechError.contains("NotAllowed", ignoreCase = true) ||
+                            speechError.contains("Permission", ignoreCase = true) ->
+                            "دسترسی میکروفون رد شد. لطفاً از تنظیمات مرورگر اجازه دسترسی به میکروفون را بدهید."
+                        speechError.contains("NotFound", ignoreCase = true) ||
+                            speechError.contains("DevicesNotFound", ignoreCase = true) ->
+                            "میکروفونی روی دستگاه پیدا نشد. لطفاً میکروفون را بررسی کنید."
+                        else ->
+                            "امکان دسترسی به میکروفون وجود ندارد. لطفاً دسترسی مرورگر را بررسی کنید."
+                    }
+                    controller.notifyMicrophoneError(errorMessageFa)
+                    return@launch
                 }
 
                 // If recording failed to start (e.g. permission denied or unsupported), notify controller and exit

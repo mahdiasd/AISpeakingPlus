@@ -212,6 +212,7 @@ fun JourneyMapScreen(
                             totalStars = uiState.totalStarsEarned,
                             isSubscriber = uiState.currentTier == AccessTier.SUBSCRIBER,
                             remainingDays = uiState.remainingDays,
+                            userAvatarUrl = uiState.userAvatarUrl,
                             onProfile = onNavigateToProfile,
                             onSubscribe = onNavigateToSubscription,
                             onLeaderboard = onNavigateToLeaderboard,
@@ -340,6 +341,7 @@ private fun TopHud(
     totalStars: Int,
     isSubscriber: Boolean,
     remainingDays: Int,
+    userAvatarUrl: String? = null,
     onProfile: () -> Unit,
     onSubscribe: () -> Unit,
     onLeaderboard: () -> Unit = {},
@@ -353,12 +355,51 @@ private fun TopHud(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 1. Start anchor (Right in RTL): Profile Icon Button
-        GameIconButton(
-            icon = Res.drawable.ic_profile,
-            onClick = onProfile,
-            contentDescription = "پروفایل من"
-        )
+        // 1. Start anchor (Right in RTL): Profile Avatar / Icon Button
+        val localAvatar = remember(userAvatarUrl) {
+            ir.aispeaking.sharedui.ui.utils.avatar.AvatarUtils.findAvatarByName(userAvatarUrl)
+        }
+        if (localAvatar != null) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Game.Panel)
+                    .border(1.5.dp, Game.Stroke, CircleShape)
+                    .clickable(onClick = onProfile),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.foundation.Image(
+                    painter = painterResource(localAvatar.drawable),
+                    contentDescription = "پروفایل من",
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        } else if (!userAvatarUrl.isNullOrBlank()) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Game.Panel)
+                    .border(1.5.dp, Game.Stroke, CircleShape)
+                    .clickable(onClick = onProfile),
+                contentAlignment = Alignment.Center
+            ) {
+                coil3.compose.AsyncImage(
+                    model = userAvatarUrl,
+                    contentDescription = "پروفایل من",
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        } else {
+            GameIconButton(
+                icon = Res.drawable.ic_profile,
+                onClick = onProfile,
+                contentDescription = "پروفایل من"
+            )
+        }
 
         // 2. Center: Subscription Button (Not subscribed) / Remaining Days (Subscribed)
         val centerText = if (isSubscriber) {

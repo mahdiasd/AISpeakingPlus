@@ -306,6 +306,34 @@ private fun Route.registerLeitnerEndpoints(
             }
         }
 
+        // 6b. Get Leitner box counts
+        get("/box-counts") {
+            val userId = try {
+                call.getUserUid()
+            } catch (e: Exception) {
+                call.failureRespond(HttpStatusCode.Unauthorized, "Authentication required")
+                return@get
+            }
+
+            val stats = leitnerService.getStats(userId)
+            val counts = stats.boxCounts.mapKeys { it.key.toString() }
+            call.successRespond(counts, message = "Leitner box counts retrieved successfully")
+        }.describe {
+            this.tag(tag)
+            summary = "Get Leitner Box Counts$suffix"
+            description = "Get flashcard counts grouped by Leitner box number (1 to 5)"
+            responses {
+                HttpStatusCode.OK {
+                    description = "Box counts retrieved"
+                    schema = jsonSchema<SuccessResponse<Map<String, Long>>>()
+                }
+                HttpStatusCode.Unauthorized {
+                    description = "Authentication required"
+                    schema = jsonSchema<FailureResponse>()
+                }
+            }
+        }
+
         // 7. Delete a flashcard
         delete("/cards/{cardId}") {
             val userId = try {

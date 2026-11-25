@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.aispeaking.domain.model.data_result.DataResult
 import ir.aispeaking.domain.model.error.getErrorMessage
+import ir.aispeaking.domain.repository.auth.AuthRepository
 import ir.aispeaking.domain.usecase.auth.SendOtpUseCase
 import ir.aispeaking.domain.usecase.auth.VerifyOtpUseCase
 import ir.aispeaking.domain.usecase.stage.SyncGuestProgressUseCase
@@ -29,7 +30,8 @@ class LoginViewModel(
     private val verifyOtpUseCase: VerifyOtpUseCase,
     private val syncGuestProgressUseCase: SyncGuestProgressUseCase,
     private val analyticsTracker: AnalyticsTracker,
-    private val crashReporter: CrashReporter
+    private val crashReporter: CrashReporter,
+    private val authRepository: AuthRepository? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -39,6 +41,20 @@ class LoginViewModel(
     val effect = _effect.receiveAsFlow()
 
     private var timerJob: Job? = null
+
+    init {
+        val pendingPhone = authRepository?.getPendingOtpPhone()
+        if (!pendingPhone.isNullOrBlank()) {
+            _uiState.update {
+                it.copy(
+                    phoneNumber = pendingPhone,
+                    step = LoginStep.ENTER_OTP,
+                    canResendOtp = true,
+                    countdownSeconds = 0
+                )
+            }
+        }
+    }
 
     fun processIntent(intent: LoginIntent) {
         when (intent) {
@@ -104,6 +120,7 @@ class LoginViewModel(
             _uiState.update { it.copy(isLoading = true, phoneError = null, generalError = null) }
             when (val result = sendOtpUseCase(phone)) {
                 is DataResult.Success -> {
+                    authRepository?.setPendingOtpPhone(phone)
                     // Backend OTP resend cooldown is 60s (OTP_COOLDOWN_SECONDS), whereas token TTL is 120s
                     val cooldownSeconds = minOf(result.data, 60).coerceAtLeast(30)
                     _uiState.update {
@@ -150,6 +167,7 @@ class LoginViewModel(
             when (val result = verifyOtpUseCase(phone, otp)) {
                 is DataResult.Success -> {
                     timerJob?.cancel()
+                    authRepository?.setPendingOtpPhone(null)
                     val user = result.data
                     val level = user.languageLevel.ifBlank { "A1" }
 
@@ -205,6 +223,7 @@ class LoginViewModel(
 
     private fun changePhone() {
         timerJob?.cancel()
+        authRepository?.setPendingOtpPhone(null)
         _uiState.update {
             it.copy(
                 step = LoginStep.ENTER_PHONE,
@@ -218,6 +237,7 @@ class LoginViewModel(
     }
 
     private fun skipToGuest() {
+        authRepository?.setPendingOtpPhone(null)
         viewModelScope.launch {
             analyticsTracker.logEvent(
                 "guest_mode_selected",

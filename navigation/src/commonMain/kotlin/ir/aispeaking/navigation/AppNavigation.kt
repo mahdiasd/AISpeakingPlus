@@ -266,7 +266,11 @@ fun AppNavigation(
                 entry<LeitnerRoute> {
                     LeitnerScreen(
                         viewModel = koinViewModel(),
-                        onNavigateBack = { backStack.removeLastOrNull() }
+                        onNavigateBack = { backStack.removeLastOrNull() },
+                        onNavigateToLogin = {
+                            backStack.clear()
+                            backStack.add(LoginRoute)
+                        }
                     )
                 }
 

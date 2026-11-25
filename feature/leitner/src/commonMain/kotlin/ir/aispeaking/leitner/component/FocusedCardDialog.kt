@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +42,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.leitner.Flashcard
@@ -337,12 +340,17 @@ fun FocusedCardDialog(
                                 .padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            GameText(
-                                text = exampleEn,
-                                size = 13.sp,
-                                bold = true,
-                                color = Game.TextPrimary
-                            )
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                GameText(
+                                    text = exampleEn,
+                                    size = 13.sp,
+                                    bold = true,
+                                    color = Game.TextPrimary,
+                                    latin = true,
+                                    align = TextAlign.Left,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                             val exampleFa = card.exampleFa
                             if (!exampleFa.isNullOrBlank()) {
                                 GameText(

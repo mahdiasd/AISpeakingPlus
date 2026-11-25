@@ -72,6 +72,7 @@ import org.jetbrains.compose.resources.painterResource
 fun LeitnerScreen(
     viewModel: LeitnerViewModel,
     onNavigateBack: () -> Unit,
+    onNavigateToLogin: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -105,7 +106,57 @@ fun LeitnerScreen(
                 )
 
                 // Main Content
-                if (uiState.isLoading && uiState.allCards.isEmpty() && uiState.dueCards.isEmpty()) {
+                if (uiState.isGuest) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(horizontal = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(22.dp))
+                                .background(if (isDark) Color(0xD9181A22) else Color(0xF2FFFFFF))
+                                .border(
+                                    1.dp,
+                                    if (isDark) Color.White.copy(alpha = 0.14f) else Color.Black.copy(alpha = 0.08f),
+                                    RoundedCornerShape(22.dp)
+                                )
+                                .padding(24.dp)
+                        ) {
+                            GameText(
+                                text = "🔐",
+                                size = 40.sp,
+                                align = TextAlign.Center
+                            )
+                            GameText(
+                                text = "برای استفاده از جعبه لایتنر وارد شوید",
+                                size = 16.sp,
+                                bold = true,
+                                color = Game.TextPrimary,
+                                align = TextAlign.Center
+                            )
+                            GameText(
+                                text = "کلمات جدیدی که در طول مراحل ذخیره می‌کنید در جعبه لایتنر شما نگهداری و طبق برنامه مرور می‌شوند.",
+                                size = 13.sp,
+                                color = Game.TextSecondary,
+                                align = TextAlign.Center
+                            )
+                            GameButton(
+                                text = "ورود یا ثبت‌نام",
+                                onClick = onNavigateToLogin,
+                                style = GameButtonStyle.Primary,
+                                modifier = Modifier.fillMaxWidth(),
+                                height = 48.dp,
+                                textSize = 14.sp
+                            )
+                        }
+                    }
+                } else if (uiState.isLoading && uiState.allCards.isEmpty() && uiState.dueCards.isEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -190,15 +241,17 @@ fun LeitnerScreen(
             }
 
             // Floating Action Button (+ Add Word FAB)
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .navigationBarsPadding()
-                    .padding(bottom = 24.dp, end = 20.dp)
-            ) {
-                LeitnerAddWordFab(
-                    onClick = { viewModel.openAddWordDialog() }
-                )
+            if (!uiState.isGuest) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .navigationBarsPadding()
+                        .padding(bottom = 24.dp, end = 20.dp)
+                ) {
+                    LeitnerAddWordFab(
+                        onClick = { viewModel.openAddWordDialog() }
+                    )
+                }
             }
 
             // Add Word Modal Dialog

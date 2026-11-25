@@ -45,6 +45,7 @@ import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.them.AppTheme
 import ir.aispeaking.sharedui.ui.video.VideoPlayerBridgeHolder
 import org.jetbrains.compose.resources.painterResource
 
@@ -88,19 +89,30 @@ fun IntroVideoScreen(
         }
     }
 
+    val isDark = AppTheme.isDark
+    val backgroundBrush = if (isPlayingVideo || isDark) {
+        Brush.verticalGradient(
+            listOf(
+                Color(0xFF090A10),
+                Color(0xFF141726),
+                Color(0xFF090A10)
+            )
+        )
+    } else {
+        Brush.verticalGradient(
+            listOf(
+                Color(0xFFF4F6FB),
+                Color(0xFFEAF0FC),
+                Color(0xFFF4F6FB)
+            )
+        )
+    }
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color(0xFF090A10),
-                            Color(0xFF141726),
-                            Color(0xFF090A10)
-                        )
-                    )
-                )
+                .background(backgroundBrush)
         ) {
             if (isPlayingVideo) {
                 // Ambient backdrop while video overlay is active
@@ -115,12 +127,12 @@ fun IntroVideoScreen(
                         GameText(
                             text = "در حال پخش داستان بازی...",
                             size = 15.sp,
-                            color = Game.TextSecondary
+                            color = Color(0xFFB8C0D4)
                         )
                         GameButton(
                             text = "رد کردن و ورود به مراحل ›",
                             onClick = handleSkip,
-                            style = GameButtonStyle.Glass,
+                            style = GameButtonStyle.Primary,
                             height = 38.dp,
                             textSize = 13.sp
                         )

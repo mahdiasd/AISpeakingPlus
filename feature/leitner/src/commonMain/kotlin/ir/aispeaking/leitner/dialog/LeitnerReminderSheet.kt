@@ -143,41 +143,43 @@ fun LeitnerReminderSheet(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 // Numeric Stepper Row (No Keyboard!)
-                // In RTL layout: Right is Hour, Left is Minute
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(if (isDark) Color(0x24FFFFFF) else Color(0xCCFFFFFF))
-                        .border(1.dp, Game.Stroke, RoundedCornerShape(24.dp))
-                        .padding(vertical = 16.dp, horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Hour Stepper
-                    StepperColumn(
-                        label = "ساعت",
-                        value = hour,
-                        onIncrement = { hour = (hour + 1) % 24 },
-                        onDecrement = { hour = if (hour - 1 < 0) 23 else hour - 1 }
-                    )
+                // Explicit LTR layout so Hour appears on the left and Minute on the right (HH:MM)
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(if (isDark) Color(0x24FFFFFF) else Color(0xCCFFFFFF))
+                            .border(1.dp, Game.Stroke, RoundedCornerShape(24.dp))
+                            .padding(vertical = 16.dp, horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Hour Stepper
+                        StepperColumn(
+                            label = "ساعت",
+                            value = hour,
+                            onIncrement = { hour = (hour + 1) % 24 },
+                            onDecrement = { hour = if (hour - 1 < 0) 23 else hour - 1 }
+                        )
 
-                    // Colon Divider
-                    GameText(
-                        text = ":",
-                        size = 36.sp,
-                        bold = true,
-                        color = Color(0xFF06B6D4),
-                        modifier = Modifier.padding(bottom = 20.dp)
-                    )
+                        // Colon Divider
+                        GameText(
+                            text = ":",
+                            size = 36.sp,
+                            bold = true,
+                            color = Color(0xFF06B6D4),
+                            modifier = Modifier.padding(bottom = 20.dp)
+                        )
 
-                    // Minute Stepper (5 min steps)
-                    StepperColumn(
-                        label = "دقیقه",
-                        value = minute,
-                        onIncrement = { minute = (minute + 5) % 60 },
-                        onDecrement = { minute = if (minute - 5 < 0) 55 else minute - 5 }
-                    )
+                        // Minute Stepper (5 min steps)
+                        StepperColumn(
+                            label = "دقیقه",
+                            value = minute,
+                            onIncrement = { minute = (minute + 5) % 60 },
+                            onDecrement = { minute = if (minute - 5 < 0) 55 else minute - 5 }
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(6.dp))

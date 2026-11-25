@@ -104,18 +104,38 @@ class SubscriptionViewModel(
                 }
             }
 
-            // 2. Fetch current status
-            val statusResult = checkSubscriptionStatusUseCase()
-            val currentStatus = when (statusResult) {
-                is DataResult.Success -> statusResult.data
-                is DataResult.Failure -> null
+            // 2. Fetch current status (only for logged-in users; guests should not trigger 401)
+            val currentStatus = if (isLoggedInUseCase()) {
+                when (val statusResult = checkSubscriptionStatusUseCase()) {
+                    is DataResult.Success -> statusResult.data
+                    is DataResult.Failure -> null
+                }
+            } else {
+                null
             }
 
             _uiState.update {
+                val activePlanId = if (currentStatus?.isSubscriber == true) {
+                    val st = currentStatus.planType?.uppercase()?.trim().orEmpty()
+                    loadedPlans.firstOrNull { p ->
+                        st.isNotEmpty() && (
+                            p.type.equals(st, ignoreCase = true) ||
+                                p.id.equals(st, ignoreCase = true) ||
+                                (st.contains("1") && (p.type.contains("1") || p.id.contains("1"))) ||
+                                (st.contains("3") && (p.type.contains("3") || p.id.contains("3"))) ||
+                                (st.contains("6") && (p.type.contains("6") || p.id.contains("6")))
+                            )
+                    }?.id
+                } else null
+
+                val defaultPlanId = activePlanId
+                    ?: if (loadedPlans.any { p -> p.id == it.selectedPlanId }) it.selectedPlanId
+                    else (loadedPlans.getOrNull(1)?.id ?: loadedPlans.firstOrNull()?.id ?: "")
+
                 it.copy(
                     isLoading = false,
                     plans = loadedPlans,
-                    selectedPlanId = if (loadedPlans.any { p -> p.id == it.selectedPlanId }) it.selectedPlanId else (loadedPlans.getOrNull(1)?.id ?: loadedPlans.firstOrNull()?.id ?: ""),
+                    selectedPlanId = defaultPlanId,
                     errorMessage = plansError,
                     currentStatus = currentStatus
                 )

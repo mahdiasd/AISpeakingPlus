@@ -24,6 +24,11 @@ interface StageAudioController {
         set(_) {}
     fun notifyNetworkOffline() {}
 
+    var onMicrophoneError: ((String) -> Unit)?
+        get() = null
+        set(_) {}
+    fun notifyMicrophoneError(message: String) {}
+
     fun startRecording(
         engine: String = "app",
         onSpeechRecognized: (String) -> Unit,
@@ -47,6 +52,7 @@ class DefaultStageAudioController : StageAudioController {
     override var onAudioChunkCaptured: ((ByteArray) -> Unit)? = null
     override var onRecordingReady: (() -> Unit)? = null
     override var onNetworkOffline: (() -> Unit)? = null
+    override var onMicrophoneError: ((String) -> Unit)? = null
 
     override fun notifyRecordingReady() {
         onRecordingReady?.invoke()
@@ -54,6 +60,10 @@ class DefaultStageAudioController : StageAudioController {
 
     override fun notifyNetworkOffline() {
         onNetworkOffline?.invoke()
+    }
+
+    override fun notifyMicrophoneError(message: String) {
+        onMicrophoneError?.invoke(message)
     }
 
     private var isPlayingState = false

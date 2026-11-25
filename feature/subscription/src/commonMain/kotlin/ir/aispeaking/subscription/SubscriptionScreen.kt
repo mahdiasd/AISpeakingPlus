@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,6 +54,7 @@ import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.GlassPanel
+import ir.aispeaking.sharedui.ui.game.fa
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import ir.aispeaking.subscription.component.ModernPlanCard
 import ir.aispeaking.subscription.component.ModernPromoRow
@@ -156,10 +158,10 @@ fun SubscriptionScreen(
         }
     }
 
-    // Sync ViewModel selectedPlanId to pager scroll
+    // Sync ViewModel selectedPlanId to pager scroll (only when user is not actively dragging)
     LaunchedEffect(uiState.selectedPlanId, effectivePlans) {
         val targetIndex = effectivePlans.indexOfFirst { it.id == uiState.selectedPlanId }
-        if (targetIndex >= 0 && targetIndex != pagerState.currentPage) {
+        if (targetIndex >= 0 && targetIndex != pagerState.currentPage && !pagerState.isScrollInProgress) {
             pagerState.animateScrollToPage(targetIndex)
         }
     }
@@ -206,6 +208,39 @@ fun SubscriptionScreen(
                 ModernSubscriptionHeader(
                     onNavigateBack = onNavigateBack
                 )
+
+                // Active Subscription Summary Banner (for subscribers)
+                val activeStatus = uiState.currentStatus
+                if (activeStatus?.isSubscriber == true) {
+                    val activePlanTitle = effectivePlans.firstOrNull { p ->
+                        val st = activeStatus.planType?.uppercase()?.trim().orEmpty()
+                        st.isNotEmpty() && (
+                            p.type.equals(st, ignoreCase = true) ||
+                                p.id.equals(st, ignoreCase = true) ||
+                                (st.contains("1") && (p.type.contains("1") || p.id.contains("1"))) ||
+                                (st.contains("3") && (p.type.contains("3") || p.id.contains("3"))) ||
+                                (st.contains("6") && (p.type.contains("6") || p.id.contains("6")))
+                            )
+                    }?.titleFa ?: "ویژه"
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 4.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(Color(0xFF22C55E).copy(alpha = if (isDark) 0.16f else 0.12f))
+                            .border(1.dp, Color(0xFF22C55E).copy(alpha = 0.45f), RoundedCornerShape(14.dp))
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        GameText(
+                            text = "✨ اشتراک فعال: پلن $activePlanTitle · ${activeStatus.remainingDays.fa()} روز باقیمانده",
+                            size = 12.5.sp,
+                            bold = true,
+                            color = if (isDark) Color(0xFF4ADE80) else Color(0xFF15803D),
+                            align = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
 
                 // Sleek Promo Code Row prominently positioned above the plan cards
                 ModernPromoRow(
@@ -273,6 +308,7 @@ fun SubscriptionScreen(
                         // Horizontal 3D Coverflow Pager with enhanced side card visibility
                         HorizontalPager(
                             state = pagerState,
+                            beyondViewportPageCount = 2,
                             contentPadding = PaddingValues(horizontal = 54.dp),
                             pageSpacing = 12.dp,
                             modifier = Modifier
