@@ -48,6 +48,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun AppNavigation(
     initialRoute: NavKey = SplashRoute,
+    showSplashText: Boolean = true,
     onBackStackCreated: @Composable (NavBackStack<NavKey>) -> Unit = {},
     onExitApp: (() -> Unit)? = null
 ) {
@@ -191,6 +192,7 @@ fun AppNavigation(
             entryProvider = entryProvider {
                 entry<SplashRoute> {
                     SplashRoute(
+                        showText = showSplashText,
                         onNavigateToMain = {
                             backStack.removeAll { it is SplashRoute }
                             backStack.add(MainRoute)

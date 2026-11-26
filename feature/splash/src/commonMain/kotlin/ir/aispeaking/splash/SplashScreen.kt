@@ -50,7 +50,7 @@ import ir.aispeaking.domain.model.user.User
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_logo
 import ir.aispeaking.sharedui.ic_support
-import ir.aispeaking.sharedui.ui.core.loading.DotLoading
+import ir.aispeaking.sharedui.ui.core.loading.AppLoadingIndicator
 import ir.aispeaking.sharedui.ui.dialog.SupportDialog
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
@@ -68,6 +68,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun SplashRoute(
     modifier: Modifier = Modifier,
     viewModel: SplashViewModel = koinViewModel(),
+    showText: Boolean = true,
     onNavigateToMain: (User?) -> Unit = {},
     onNavigateToIntroVideo: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
@@ -90,6 +91,7 @@ fun SplashRoute(
     SplashScreen(
         modifier = modifier,
         uiState = uiState,
+        showText = showText,
         onRetry = { viewModel.processIntent(SplashIntent.Retry) }
     )
 }
@@ -101,6 +103,7 @@ fun SplashRoute(
 fun SplashScreen(
     modifier: Modifier = Modifier,
     viewModel: SplashViewModel = koinViewModel(),
+    showText: Boolean = true,
     onNavigateToMain: (User?) -> Unit = {},
     onNavigateToIntroVideo: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
@@ -108,6 +111,7 @@ fun SplashScreen(
     SplashRoute(
         modifier = modifier,
         viewModel = viewModel,
+        showText = showText,
         onNavigateToMain = onNavigateToMain,
         onNavigateToIntroVideo = onNavigateToIntroVideo,
         onNavigateToLogin = onNavigateToLogin
@@ -115,14 +119,16 @@ fun SplashScreen(
 }
 
 /**
- * Pure stateless splash: brand mark floating over the dark game backdrop, with either a calm
- * loading state or a clear retry card.
+ * Pure stateless splash: brand mark floating over the game backdrop, with either a calm
+ * loading state or a clear retry card. On web (`showText = false`), renders only a minimal
+ * centered spinner without text so fonts never flash as square glyphs during initial load.
  */
 @Composable
 fun SplashScreen(
     modifier: Modifier = Modifier,
     uiState: SplashUiState,
     onRetry: () -> Unit,
+    showText: Boolean = true,
     onSupportClick: (() -> Unit)? = null
 ) {
     var showSupportDialog by remember { mutableStateOf(false) }
@@ -151,135 +157,146 @@ fun SplashScreen(
                 .background(bgBrush),
             contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .widthIn(max = 440.dp)
-                    .fillMaxWidth()
-                    .padding(horizontal = 28.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
+            if (!showText && uiState.errorMessage == null) {
+                AppLoadingIndicator(
+                    size = 36.dp,
+                    color = Game.Blue
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .widthIn(max = 440.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 28.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.offset(y = floatAnim.dp)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(190.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    Brush.radialGradient(
-                                        listOf(Game.Violet.copy(alpha = if (isDark) 0.45f else 0.2f), Color.Transparent)
-                                    )
+                        if (showText) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.offset(y = floatAnim.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(190.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            Brush.radialGradient(
+                                                listOf(Game.Violet.copy(alpha = if (isDark) 0.45f else 0.2f), Color.Transparent)
+                                            )
+                                        )
                                 )
-                        )
-                        val shape = RoundedCornerShape(34.dp)
-                        Box(
-                            modifier = Modifier
-                                .size(116.dp)
-                                .clip(shape)
-                                .background(Color.White)
-                                .border(2.dp, Game.StrokeStrong, shape)
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(Res.drawable.ic_logo),
-                                contentDescription = "AI Speaking Plus",
-                                modifier = Modifier.size(80.dp)
-                            )
-                        }
-                    }
+                                val shape = RoundedCornerShape(34.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .size(116.dp)
+                                        .clip(shape)
+                                        .background(Color.White)
+                                        .border(2.dp, Game.StrokeStrong, shape)
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(Res.drawable.ic_logo),
+                                        contentDescription = "AI Speaking Plus",
+                                        modifier = Modifier.size(80.dp)
+                                    )
+                                }
+                            }
 
-                    Spacer(modifier = Modifier.height(28.dp))
+                            Spacer(modifier = Modifier.height(28.dp))
 
-                    GameText(
-                        text = "AI Speaking Plus",
-                        size = 30.sp,
-                        bold = true,
-                        latin = true,
-                        align = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    GameText(
-                        text = "مکالمه انگلیسی، مثل یک ماجراجویی",
-                        size = 16.sp,
-                        bold = true,
-                        color = Game.Blue,
-                        align = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(52.dp))
-
-                    AnimatedVisibility(
-                        visible = uiState.isLoading,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
-                        ) {
-                            DotLoading(dotColor = Game.Gold, dotSize = 12.dp)
                             GameText(
-                                text = "در حال آماده‌سازی…",
-                                size = 13.sp,
-                                color = Game.TextSecondary,
+                                text = "AI Speaking Plus",
+                                size = 30.sp,
+                                bold = true,
+                                latin = true,
                                 align = TextAlign.Center
                             )
-                        }
-                    }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            GameText(
+                                text = "مکالمه انگلیسی، مثل یک ماجراجویی",
+                                size = 16.sp,
+                                bold = true,
+                                color = Game.Blue,
+                                align = TextAlign.Center
+                            )
 
-                    AnimatedVisibility(
-                        visible = uiState.errorMessage != null,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        GlassPanel(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(24.dp),
-                            color = Game.PanelSolid,
-                            border = Game.Coral.copy(alpha = 0.5f)
+                            Spacer(modifier = Modifier.height(52.dp))
+                        }
+
+                        AnimatedVisibility(
+                            visible = uiState.isLoading,
+                            enter = fadeIn(),
+                            exit = fadeOut()
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                                verticalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
-                                GameText(
-                                    text = "اتصال برقرار نشد",
-                                    size = 16.sp,
-                                    bold = true,
-                                    color = Game.Coral,
-                                    align = TextAlign.Center
-                                )
-                                GameText(
-                                    text = uiState.errorMessage ?: "",
-                                    size = 13.sp,
-                                    lineHeight = 21.sp,
-                                    color = Game.TextSecondary,
-                                    align = TextAlign.Center
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                GameButton(
-                                    text = "تلاش دوباره",
-                                    onClick = onRetry,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                GameButton(
-                                    text = "ارتباط با پشتیبانی",
-                                    icon = Res.drawable.ic_support,
-                                    onClick = {
-                                        if (onSupportClick != null) onSupportClick() else showSupportDialog = true
-                                    },
-                                    style = GameButtonStyle.Glass,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                AppLoadingIndicator(size = 34.dp, color = Game.Blue)
+                                if (showText) {
+                                    GameText(
+                                        text = "در حال آماده‌سازی…",
+                                        size = 13.sp,
+                                        color = Game.TextSecondary,
+                                        align = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+
+                        AnimatedVisibility(
+                            visible = uiState.errorMessage != null,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            GlassPanel(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(24.dp),
+                                color = Game.PanelSolid,
+                                border = Game.Coral.copy(alpha = 0.5f)
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(20.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    GameText(
+                                        text = "اتصال برقرار نشد",
+                                        size = 16.sp,
+                                        bold = true,
+                                        color = Game.Coral,
+                                        align = TextAlign.Center
+                                    )
+                                    GameText(
+                                        text = uiState.errorMessage ?: "",
+                                        size = 13.sp,
+                                        lineHeight = 21.sp,
+                                        color = Game.TextSecondary,
+                                        align = TextAlign.Center
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    GameButton(
+                                        text = "تلاش دوباره",
+                                        onClick = onRetry,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    GameButton(
+                                        text = "ارتباط با پشتیبانی",
+                                        icon = Res.drawable.ic_support,
+                                        onClick = {
+                                            if (onSupportClick != null) onSupportClick() else showSupportDialog = true
+                                        },
+                                        style = GameButtonStyle.Glass,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
                     }

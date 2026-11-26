@@ -43,6 +43,7 @@ import ir.aispeaking.chat.audio.StageAudioController
 import ir.aispeaking.domain.usecase.auth.HasSeenIntroVideoUseCase
 import ir.aispeaking.navigation.AppNavigation
 import ir.aispeaking.navigation.AppRoute
+import ir.aispeaking.navigation.SplashRoute
 import ir.aispeaking.navigation.di.initKoin
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_arrow_left
@@ -61,7 +62,6 @@ import ir.aispeaking.web.WebPageGuideCard
 import ir.aispeaking.web.dismissIosA2hsBanner
 import ir.aispeaking.web.dismissIosChromeBanner
 import ir.aispeaking.web.exitWebApp
-import ir.aispeaking.web.hideWebLoader
 import ir.aispeaking.web.isUserInAppBrowser
 import ir.aispeaking.web.resolveInitialWebRoute
 import ir.aispeaking.web.setupWebAnalyticsBridge
@@ -69,7 +69,6 @@ import ir.aispeaking.web.setupWebAudioBridge
 import ir.aispeaking.web.setupWebVideoBridge
 import ir.aispeaking.web.shouldShowIosA2hsBanner
 import ir.aispeaking.web.shouldShowIosChromeBanner
-import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.context.GlobalContext
 
@@ -105,12 +104,6 @@ fun main() {
             }
             var currentRoute by remember { mutableStateOf<AppRoute?>(initialRoute) }
 
-            LaunchedEffect(Unit) {
-                // Allow the first frame and text shapes to settle before fading out the HTML loader
-                delay(150)
-                hideWebLoader()
-            }
-
             var showA2hsBanner by remember { mutableStateOf(shouldShowIosA2hsBanner()) }
             var showChromeBanner by remember { mutableStateOf(shouldShowIosChromeBanner()) }
             var showIosTutorialModal by remember { mutableStateOf(false) }
@@ -120,6 +113,7 @@ fun main() {
                 movableContentOf {
                     AppNavigation(
                         initialRoute = initialRoute,
+                        showSplashText = false,
                         onBackStackCreated = { backStack ->
                             WebBrowserNavigation(
                                 backStack = backStack,
@@ -156,7 +150,7 @@ fun main() {
                     contentAlignment = Alignment.Center
                 ) {
                     val isWideScreen = maxWidth > 560.dp
-                    val showSidePanels = maxWidth >= 1060.dp
+                    val showSidePanels = maxWidth >= 1060.dp && currentRoute !is SplashRoute
 
                     if (isWideScreen) {
                         // Desktop / tablet: centered phone-sized stage

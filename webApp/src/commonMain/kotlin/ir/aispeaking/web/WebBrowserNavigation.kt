@@ -46,18 +46,9 @@ private external fun jsGetPopCounter(): Int
 @JsFun("() => { try { window.close(); } catch(e){} window.location.href = '/'; }")
 private external fun jsExitApp()
 
-@JsFun("() => { if (window.hideAppLoader) window.hideAppLoader(); }")
-private external fun jsHideAppLoader()
-
 fun exitWebApp() {
     try {
         jsExitApp()
-    } catch (_: Throwable) {}
-}
-
-fun hideWebLoader() {
-    try {
-        jsHideAppLoader()
     } catch (_: Throwable) {}
 }
 
@@ -76,21 +67,20 @@ internal fun resolveInitialWebRoute(
     hash: String,
     hasSeenIntroVideo: Boolean
 ): AppRoute {
-    val defaultEntryRoute: AppRoute = if (hasSeenIntroVideo) MainRoute else IntroVideoRoute
     if (hash.isNotBlank()) {
         val parsed = parseLegacyHash(hash)
         if (parsed != null && parsed !is SplashRoute) {
-            return if (parsed is MainRoute && !hasSeenIntroVideo) IntroVideoRoute else parsed
+            return if (parsed is MainRoute && !hasSeenIntroVideo) SplashRoute else parsed
         }
     }
     val cleanPath = path.substringAfter("/app").trim('/')
     if (cleanPath.isEmpty()) {
-        return defaultEntryRoute
+        return SplashRoute
     }
     val route = urlToRoute(path, search)
     return when {
-        route == null || route is SplashRoute -> defaultEntryRoute
-        route is MainRoute && !hasSeenIntroVideo -> IntroVideoRoute
+        route == null || route is SplashRoute -> SplashRoute
+        route is MainRoute && !hasSeenIntroVideo -> SplashRoute
         else -> route
     }
 }
