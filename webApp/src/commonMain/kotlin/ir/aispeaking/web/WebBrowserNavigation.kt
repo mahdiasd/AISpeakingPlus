@@ -43,6 +43,12 @@ private external fun jsReplaceUrl(url: String)
 @JsFun("() => window.aiSpeakingRouter ? window.aiSpeakingRouter.getPopCounter() : 0")
 private external fun jsGetPopCounter(): Int
 
+@JsFun("() => window.aiSpeakingRouter ? window.aiSpeakingRouter.getHistoryIndex() : 0")
+private external fun jsGetHistoryIndex(): Int
+
+@JsFun("(steps) => window.aiSpeakingRouter ? window.aiSpeakingRouter.goBack(steps) : window.history.go(-(steps || 1))")
+private external fun jsGoBack(steps: Int)
+
 @JsFun("() => { try { window.close(); } catch(e){} window.location.href = '/'; }")
 private external fun jsExitApp()
 
@@ -109,31 +115,55 @@ fun WebBrowserNavigation(
         }
         onRouteChanged(backStack.lastOrNull() as? AppRoute)
 
-        // 2. Observe backStack changes and push clean HTML5 paths to window.history
-        var previousWasTransientRoot = (
-            backStack.lastOrNull() is SplashRoute ||
-                (backStack.size == 1 && backStack.lastOrNull() is IntroVideoRoute)
-            )
+        // 2. Observe backStack changes and synchronize with window.history (push / pop / replace)
+        var previousStack = backStack.toList()
+        var isSyncingFromPopState = false
 
         launch {
             snapshotFlow { backStack.toList() }.collect { stack ->
                 val top = stack.lastOrNull() ?: return@collect
                 onRouteChanged(top as? AppRoute)
+                if (isSyncingFromPopState) {
+                    previousStack = stack
+                    return@collect
+                }
+
                 val targetUrl = routeToUrl(top)
                 val currentUrl = jsGetCurrentPath() + jsGetCurrentSearch()
 
-                if (targetUrl != currentUrl) {
-                    if (top is SplashRoute || previousWasTransientRoot) {
-                        jsReplaceUrl(targetUrl)
-                    } else {
-                        jsPushUrl(targetUrl)
+                val isTransientTransition = previousStack.lastOrNull() is SplashRoute ||
+                    (previousStack.size == 1 && previousStack.lastOrNull() is IntroVideoRoute) ||
+                    top is SplashRoute
+                val isPop = stack.size < previousStack.size && previousStack.take(stack.size) == stack
+                val isPush = stack.size > previousStack.size && stack.take(previousStack.size) == previousStack
+
+                when {
+                    isTransientTransition -> {
+                        if (targetUrl != currentUrl) {
+                            jsReplaceUrl(targetUrl)
+                        }
+                    }
+                    isPop -> {
+                        val poppedCount = previousStack.size - stack.size
+                        if (jsGetHistoryIndex() >= poppedCount) {
+                            jsGoBack(poppedCount)
+                        } else if (targetUrl != currentUrl) {
+                            jsReplaceUrl(targetUrl)
+                        }
+                    }
+                    isPush -> {
+                        if (targetUrl != currentUrl) {
+                            jsPushUrl(targetUrl)
+                        }
+                    }
+                    else -> {
+                        if (targetUrl != currentUrl) {
+                            jsReplaceUrl(targetUrl)
+                        }
                     }
                 }
 
-                previousWasTransientRoot = (
-                    top is SplashRoute ||
-                        (stack.size == 1 && top is IntroVideoRoute)
-                    )
+                previousStack = stack
             }
         }
 
@@ -162,20 +192,37 @@ fun WebBrowserNavigation(
                     val route = urlToRoute(path, search) ?: MainRoute
 
                     if (backStack.lastOrNull() != route) {
-                        if (route is MainRoute) {
-                            backStack.clear()
-                            backStack.add(MainRoute)
-                        } else if (route is LoginRoute || route is IntroVideoRoute) {
-                            backStack.clear()
-                            backStack.add(route)
-                        } else {
-                            if (backStack.none { it is MainRoute }) {
-                                backStack.clear()
-                                backStack.add(MainRoute)
+                        isSyncingFromPopState = true
+                        try {
+                            val existingIndex = backStack.indexOfLast { it == route }
+                            when {
+                                existingIndex >= 0 -> {
+                                    while (backStack.size > existingIndex + 1) {
+                                        backStack.removeLastOrNull()
+                                    }
+                                }
+                                route is MainRoute -> {
+                                    backStack.clear()
+                                    backStack.add(MainRoute)
+                                }
+                                route is IntroVideoRoute -> {
+                                    backStack.clear()
+                                    backStack.add(route)
+                                }
+                                else -> {
+                                    if (backStack.none { it is MainRoute }) {
+                                        backStack.clear()
+                                        backStack.add(MainRoute)
+                                    }
+                                    if (backStack.lastOrNull() != route) {
+                                        backStack.add(route)
+                                    }
+                                }
                             }
-                            if (backStack.lastOrNull() != route) {
-                                backStack.add(route)
-                            }
+                            previousStack = backStack.toList()
+                            onRouteChanged(backStack.lastOrNull() as? AppRoute)
+                        } finally {
+                            isSyncingFromPopState = false
                         }
                     }
                 }

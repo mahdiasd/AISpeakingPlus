@@ -182,7 +182,11 @@ fun AppNavigation(
             backStack = backStack,
             onBack = {
                 if (!BackNavigationManager.handleBack()) {
-                    backStack.removeLastOrNull()
+                    if (backStack.size > 1) {
+                        backStack.removeLastOrNull()
+                    } else {
+                        onExitApp?.invoke()
+                    }
                 }
             },
             entryDecorators = listOf(
@@ -234,6 +238,14 @@ fun AppNavigation(
 
                 entry<LoginRoute> {
                     LoginRootScreen(
+                        onNavigateBack = {
+                            if (backStack.size > 1) {
+                                backStack.removeLastOrNull()
+                            } else {
+                                backStack.clear()
+                                backStack.add(MainRoute)
+                            }
+                        },
                         onNavigateToMain = {
                             backStack.clear()
                             backStack.add(MainRoute)
@@ -270,7 +282,6 @@ fun AppNavigation(
                         viewModel = koinViewModel(),
                         onNavigateBack = { backStack.removeLastOrNull() },
                         onNavigateToLogin = {
-                            backStack.clear()
                             backStack.add(LoginRoute)
                         }
                     )
@@ -281,7 +292,6 @@ fun AppNavigation(
                         viewModel = koinViewModel(),
                         onNavigateBack = { backStack.removeLastOrNull() },
                         onNavigateToLogin = {
-                            backStack.clear()
                             backStack.add(LoginRoute)
                         }
                     )
@@ -308,6 +318,9 @@ fun AppNavigation(
                         viewModel = koinViewModel(),
                         onNavigateBack = { backStack.removeLastOrNull() },
                         onNavigateToLogin = {
+                            backStack.add(LoginRoute)
+                        },
+                        onSignOutComplete = {
                             backStack.clear()
                             backStack.add(LoginRoute)
                         },

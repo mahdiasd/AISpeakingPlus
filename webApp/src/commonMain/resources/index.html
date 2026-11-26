@@ -51,14 +51,38 @@
     <script>
         window.aiSpeakingRouter = {
             _popCounter: 0,
+            _ignorePopCount: 0,
+            _historyIndex: 0,
             init: function() {
                 var self = this;
+                try {
+                    var st = window.history.state;
+                    if (st && typeof st.idx === 'number') {
+                        self._historyIndex = st.idx;
+                    } else {
+                        var cur = window.location.pathname + (window.location.search || "");
+                        window.history.replaceState({ path: cur, idx: 0 }, "", cur);
+                        self._historyIndex = 0;
+                    }
+                } catch(_) {}
                 window.addEventListener('popstate', function(e) {
+                    if (e && e.state && typeof e.state.idx === 'number') {
+                        self._historyIndex = e.state.idx;
+                    } else if (self._historyIndex > 0) {
+                        self._historyIndex--;
+                    }
+                    if (self._ignorePopCount > 0) {
+                        self._ignorePopCount--;
+                        return;
+                    }
                     self._popCounter++;
                 });
             },
             getPopCounter: function() {
                 return this._popCounter;
+            },
+            getHistoryIndex: function() {
+                return this._historyIndex;
             },
             getCurrentPath: function() {
                 return window.location.pathname;
@@ -72,17 +96,60 @@
             pushUrl: function(url) {
                 var cur = window.location.pathname + (window.location.search || "");
                 if (cur !== url) {
-                    window.history.pushState({ path: url }, "", url);
+                    this._historyIndex++;
+                    window.history.pushState({ path: url, idx: this._historyIndex }, "", url);
                 }
             },
             replaceUrl: function(url) {
-                var cur = window.location.pathname + (window.location.search || "");
-                if (cur !== url) {
-                    window.history.replaceState({ path: url }, "", url);
-                }
+                window.history.replaceState({ path: url, idx: this._historyIndex }, "", url);
+            },
+            goBack: function(steps) {
+                var n = Math.max(1, steps || 1);
+                this._ignorePopCount++;
+                window.history.go(-n);
             }
         };
         window.aiSpeakingRouter.init();
+
+        window.aiSpeakingTheme = {
+            _isDark: true,
+            _changeCounter: 0,
+            init: function() {
+                var self = this;
+                try {
+                    if (window.matchMedia) {
+                        var mq = window.matchMedia('(prefers-color-scheme: dark)');
+                        self._isDark = !!mq.matches;
+                        var onChange = function(e) {
+                            self._isDark = !!e.matches;
+                            self._changeCounter++;
+                        };
+                        if (typeof mq.addEventListener === 'function') {
+                            mq.addEventListener('change', onChange);
+                        } else if (typeof mq.addListener === 'function') {
+                            mq.addListener(onChange);
+                        }
+                    }
+                } catch(_) {}
+            },
+            isDark: function() {
+                try {
+                    if (window.matchMedia) {
+                        return !!window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    }
+                } catch(_) {}
+                return this._isDark;
+            },
+            getChangeCounter: function() {
+                return this._changeCounter;
+            },
+            syncPageBackground: function(isDark) {
+                var bg = isDark ? '#080A10' : '#F4F6F9';
+                if (document.documentElement) document.documentElement.style.backgroundColor = bg;
+                if (document.body) document.body.style.backgroundColor = bg;
+            }
+        };
+        window.aiSpeakingTheme.init();
 
         window.aiSpeakingVideo = {
             overlay: null,
@@ -2043,5 +2110,5 @@
             });
         })();
     </script>
-    <script src="webApp.js?v=20261126v2"></script>
+    <script src="webApp.js?v=20261126v3"></script>
 </html>
