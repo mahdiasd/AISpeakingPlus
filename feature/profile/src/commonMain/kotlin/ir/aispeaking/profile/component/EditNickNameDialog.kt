@@ -17,6 +17,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameModal
@@ -45,10 +46,12 @@ fun isEnglishFirstWord(text: String): Boolean {
 fun EditNickNameDialog(
     visible: Boolean = true,
     currentNickName: String,
+    errorMessage: String? = null,
+    onTextChanged: () -> Unit = {},
     onSave: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var textFieldValue by remember(currentNickName, visible) {
+    var textFieldValue by remember(visible) {
         val initialText = currentNickName
         mutableStateOf(
             TextFieldValue(
@@ -83,16 +86,27 @@ fun EditNickNameDialog(
             GameText(text = "ویرایش نام کاربری", size = 18.sp, bold = true)
             GameTextField(
                 value = textFieldValue,
-                onValueChange = { textFieldValue = it },
+                onValueChange = {
+                    textFieldValue = it
+                    onTextChanged()
+                },
                 label = "نام یا نام مستعار",
                 placeholder = "نام جدید خود را وارد کنید",
                 ltr = isLtr,
+                isError = errorMessage != null,
                 fieldModifier = Modifier.focusRequester(focusRequester),
                 onImeAction = {
                     val trimmed = textFieldValue.text.trim()
                     if (trimmed.isNotBlank()) onSave(trimmed)
                 }
             )
+            if (!errorMessage.isNullOrBlank()) {
+                GameText(
+                    text = errorMessage,
+                    size = 12.sp,
+                    color = Game.Coral
+                )
+            }
             GameButton(
                 text = "ذخیره تغییرات",
                 onClick = {

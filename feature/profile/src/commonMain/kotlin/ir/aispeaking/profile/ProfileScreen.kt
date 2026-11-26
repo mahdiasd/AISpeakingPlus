@@ -1,8 +1,13 @@
 package ir.aispeaking.profile
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,6 +33,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -65,8 +71,10 @@ import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameText
+import ir.aispeaking.sharedui.ui.game.GlassPanel
 import ir.aispeaking.sharedui.ui.them.AppTheme
 import ir.aispeaking.sharedui.utils.lifecycle.OnResume
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -86,6 +94,13 @@ fun ProfileScreen(
 
     OnResume {
         viewModel.refresh()
+    }
+
+    LaunchedEffect(uiState.errorMessage) {
+        if (uiState.errorMessage != null && uiState.user != null) {
+            delay(3500L)
+            viewModel.onDismissError()
+        }
     }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
@@ -259,6 +274,8 @@ fun ProfileScreen(
             EditNickNameDialog(
                 visible = uiState.showEditNameDialog,
                 currentNickName = uiState.user?.nickName ?: "",
+                errorMessage = uiState.editNameError,
+                onTextChanged = { viewModel.onClearEditNameError() },
                 onSave = { viewModel.onSaveNickName(it) },
                 onDismiss = { viewModel.onDismissDialogs() }
             )
@@ -282,6 +299,30 @@ fun ProfileScreen(
                 visible = showSupportDialog,
                 onDismiss = { showSupportDialog = false }
             )
+
+            AnimatedVisibility(
+                visible = uiState.errorMessage != null && uiState.user != null,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 60.dp, start = 16.dp, end = 16.dp),
+                enter = fadeIn() + slideInVertically { -it },
+                exit = fadeOut() + slideOutVertically { -it }
+            ) {
+                GlassPanel(
+                    shape = RoundedCornerShape(18.dp),
+                    color = Game.PanelSolid,
+                    border = Game.Coral.copy(alpha = 0.6f)
+                ) {
+                    GameText(
+                        text = uiState.errorMessage ?: "",
+                        size = 13.sp,
+                        lineHeight = 20.sp,
+                        color = Game.Coral,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
+                }
+            }
         }
     }
 }

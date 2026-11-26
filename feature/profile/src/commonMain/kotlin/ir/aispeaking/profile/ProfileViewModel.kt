@@ -28,6 +28,7 @@ data class ProfileUiState(
     val errorMessage: String? = null,
     val showAvatarPicker: Boolean = false,
     val showEditNameDialog: Boolean = false,
+    val editNameError: String? = null,
     val showSignOutDialog: Boolean = false,
     val showLevelPicker: Boolean = false,
     val isSaving: Boolean = false,
@@ -110,20 +111,25 @@ class ProfileViewModel(
     }
 
     fun onEditNameClicked() {
-        _uiState.update { it.copy(showEditNameDialog = true) }
+        _uiState.update { it.copy(showEditNameDialog = true, editNameError = null) }
+    }
+
+    fun onClearEditNameError() {
+        _uiState.update { it.copy(editNameError = null) }
     }
 
     fun onSaveNickName(newNickName: String) {
         val trimmed = newNickName.trim()
         if (trimmed.length < 2 || trimmed.length > 50) {
-            _uiState.update { it.copy(errorMessage = "نام مستعار باید بین ۲ تا ۵۰ نویسه باشد") }
+            _uiState.update { it.copy(editNameError = "نام مستعار باید بین ۲ تا ۵۰ نویسه باشد") }
             return
         }
-        _uiState.update { it.copy(showEditNameDialog = false) }
+        _uiState.update { it.copy(showEditNameDialog = false, editNameError = null) }
         updateProfile(UpdateProfileInput(nickName = trimmed))
     }
 
     private fun updateProfile(input: UpdateProfileInput) {
+        loadProfileJob?.cancel()
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
             when (val result = updateUserProfileUseCase(input)) {
@@ -169,6 +175,7 @@ class ProfileViewModel(
             it.copy(
                 showAvatarPicker = false,
                 showEditNameDialog = false,
+                editNameError = null,
                 showSignOutDialog = false,
                 showLevelPicker = false
             )

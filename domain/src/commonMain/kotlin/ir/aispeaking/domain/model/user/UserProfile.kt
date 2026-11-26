@@ -28,10 +28,10 @@ data class UserProfile(
 ) {
     val displayName: String
         get() = when {
-            isGuest -> "زبان‌آموز مهمان"
             nickName.isNotBlank() -> nickName
             !firstName.isNullOrBlank() && !lastName.isNullOrBlank() -> "$firstName $lastName"
             !firstName.isNullOrBlank() -> firstName
+            isGuest -> "زبان‌آموز مهمان"
             else -> "کاربر"
         }
 }

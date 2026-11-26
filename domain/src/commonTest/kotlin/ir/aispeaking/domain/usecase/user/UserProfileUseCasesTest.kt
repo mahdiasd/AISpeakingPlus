@@ -98,4 +98,23 @@ class UserProfileUseCasesTest {
         assertEquals(3, guest.totalStars)
         assertEquals(false, guest.subscription.isSubscriber)
     }
+
+    @Test
+    fun testGuestDisplayNamePrefersCustomNickNameAndFallsBackWhenBlank() {
+        val guestWithCustomName = UserProfile(
+            id = "guest",
+            phoneNumber = "",
+            nickName = "مهدی",
+            isGuest = true
+        )
+        assertEquals("مهدی", guestWithCustomName.displayName)
+
+        val guestWithBlankName = UserProfile(
+            id = "guest",
+            phoneNumber = "",
+            nickName = "   ",
+            isGuest = true
+        )
+        assertEquals("زبان‌آموز مهمان", guestWithBlankName.displayName)
+    }
 }
