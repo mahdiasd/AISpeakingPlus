@@ -13,9 +13,6 @@
         <!-- Preload Essential Fonts to Prevent Tofu (□) & FOUT During Initialization -->
         <link rel="preload" href="./composeResources/ir.aispeaking.sharedui/font/vazir.ttf" as="font" type="font/ttf" crossorigin>
         <link rel="preload" href="./composeResources/ir.aispeaking.sharedui/font/vazir_bold.ttf" as="font" type="font/ttf" crossorigin>
-        <link rel="preload" href="./composeResources/ir.aispeaking.sharedui/font/poppins_regular.ttf" as="font" type="font/ttf" crossorigin>
-        <link rel="preload" href="./composeResources/ir.aispeaking.sharedui/font/poppins_bold.ttf" as="font" type="font/ttf" crossorigin>
-        <link rel="preload" href="./composeResources/ir.aispeaking.sharedui/font/noto_sans_regular.ttf" as="font" type="font/ttf" crossorigin>
 
         <style>
             @font-face {
@@ -48,6 +45,366 @@
         </style>
     </head>
     <body>
+    <script>
+        (function() {
+            window.__aiDebugLog = function() {};
+            window.__aiDebugSetMode = function() {};
+            try {
+                var search = window.location.search || "";
+                if (search.indexOf("debug=0") !== -1) {
+                    try { sessionStorage.removeItem("ai_speaking_debug"); } catch (_) {}
+                    return;
+                }
+                var active = search.indexOf("debug=1") !== -1;
+                if (active) {
+                    try { sessionStorage.setItem("ai_speaking_debug", "1"); } catch (_) {}
+                } else {
+                    try { active = sessionStorage.getItem("ai_speaking_debug") === "1"; } catch (_) {}
+                }
+                if (!active) return;
+
+                var bootTime = Date.now();
+                var logs = [];
+                var shadowRoots = [];
+                var bootMode = "init";
+                var glStats = { contexts: [], draws: 0, clears: 0, contextLost: 0, contextRestored: 0, lastError: 0, renderer: "" };
+                var isCollapsed = false;
+                var overlayEl = null;
+                var summaryEl = null;
+                var logEl = null;
+                var bodyEl = null;
+
+                function addLog(msg) {
+                    var dt = Date.now() - bootTime;
+                    var line = "[+" + dt + "ms] " + String(msg);
+                    logs.push(line);
+                    if (logs.length > 60) logs.shift();
+                    renderOverlay();
+                }
+
+                window.__aiDebugLog = addLog;
+                window.__aiDebugSetMode = function(mode) {
+                    bootMode = String(mode || "unknown");
+                    addLog("mode=" + bootMode);
+                };
+
+                // Hook attachShadow
+                if (typeof Element !== "undefined" && Element.prototype && Element.prototype.attachShadow) {
+                    var origAttachShadow = Element.prototype.attachShadow;
+                    Element.prototype.attachShadow = function(init) {
+                        var sr = origAttachShadow.apply(this, arguments);
+                        try {
+                            shadowRoots.push(sr);
+                            addLog("attachShadow on <" + (this.tagName || "?") + ">");
+                        } catch (_) {}
+                        return sr;
+                    };
+                }
+
+                // Hook getContext
+                if (typeof HTMLCanvasElement !== "undefined" && HTMLCanvasElement.prototype && HTMLCanvasElement.prototype.getContext) {
+                    var origGetContext = HTMLCanvasElement.prototype.getContext;
+                    HTMLCanvasElement.prototype.getContext = function(type, attrs) {
+                        var ctx = origGetContext.apply(this, arguments);
+                        try {
+                            var entry = String(type) + ":" + (ctx ? "ok" : "null");
+                            if (glStats.contexts.indexOf(entry) === -1) {
+                                glStats.contexts.push(entry);
+                            }
+                            addLog("getContext(" + type + ") -> " + (ctx ? "ok" : "null"));
+                            if (ctx && (type === "webgl2" || type === "webgl" || type === "experimental-webgl")) {
+                                if (!this.__aiDebugGlListeners) {
+                                    this.__aiDebugGlListeners = true;
+                                    this.addEventListener("webglcontextlost", function(ev) {
+                                        glStats.contextLost++;
+                                        addLog("EVENT webglcontextlost!");
+                                    }, false);
+                                    this.addEventListener("webglcontextrestored", function(ev) {
+                                        glStats.contextRestored++;
+                                        addLog("EVENT webglcontextrestored");
+                                    }, false);
+                                }
+                                if (!glStats.renderer) {
+                                    try {
+                                        var dbgExt = ctx.getExtension("WEBGL_debug_renderer_info");
+                                        if (dbgExt) {
+                                            glStats.renderer = String(ctx.getParameter(dbgExt.UNMASKED_RENDERER_WEBGL) || "");
+                                        } else {
+                                            glStats.renderer = String(ctx.getParameter(ctx.RENDERER) || "");
+                                        }
+                                    } catch (_) {}
+                                }
+                                if (!ctx.__aiDebugWrapped) {
+                                    ctx.__aiDebugWrapped = true;
+                                    var origClear = ctx.clear;
+                                    if (typeof origClear === "function") {
+                                        ctx.clear = function() {
+                                            glStats.clears++;
+                                            return origClear.apply(this, arguments);
+                                        };
+                                    }
+                                    var origDrawArrays = ctx.drawArrays;
+                                    if (typeof origDrawArrays === "function") {
+                                        ctx.drawArrays = function() {
+                                            glStats.draws++;
+                                            return origDrawArrays.apply(this, arguments);
+                                        };
+                                    }
+                                    var origDrawElements = ctx.drawElements;
+                                    if (typeof origDrawElements === "function") {
+                                        ctx.drawElements = function() {
+                                            glStats.draws++;
+                                            return origDrawElements.apply(this, arguments);
+                                        };
+                                    }
+                                    var origGetError = ctx.getError;
+                                    if (typeof origGetError === "function") {
+                                        ctx.getError = function() {
+                                            var err = origGetError.apply(this, arguments);
+                                            if (err && err !== 0) glStats.lastError = err;
+                                            return err;
+                                        };
+                                    }
+                                }
+                            }
+                        } catch (_) {}
+                        return ctx;
+                    };
+                }
+
+                // Capture global errors and console errors/warns
+                window.addEventListener("error", function(ev) {
+                    try {
+                        var msg = (ev && ev.message) ? ev.message : "window.error";
+                        var src = (ev && ev.filename) ? (" @ " + ev.filename + ":" + ev.lineno) : "";
+                        addLog("ERR: " + msg + src);
+                    } catch (_) {}
+                });
+                window.addEventListener("unhandledrejection", function(ev) {
+                    try {
+                        var r = ev && ev.reason;
+                        var msg = (r && (r.message || r.toString)) ? (r.message || String(r)) : "unhandledrejection";
+                        addLog("REJ: " + msg);
+                    } catch (_) {}
+                });
+                if (typeof console !== "undefined") {
+                    var origErr = console.error;
+                    console.error = function() {
+                        try {
+                            var parts = [];
+                            for (var i = 0; i < arguments.length; i++) parts.push(String(arguments[i]));
+                            addLog("console.error: " + parts.join(" ").slice(0, 180));
+                        } catch (_) {}
+                        if (origErr) return origErr.apply(console, arguments);
+                    };
+                    var origWarn = console.warn;
+                    console.warn = function() {
+                        try {
+                            var parts = [];
+                            for (var i = 0; i < arguments.length; i++) parts.push(String(arguments[i]));
+                            addLog("console.warn: " + parts.join(" ").slice(0, 180));
+                        } catch (_) {}
+                        if (origWarn) return origWarn.apply(console, arguments);
+                    };
+                }
+
+                function collectCanvases() {
+                    var list = [];
+                    function scan(root, label) {
+                        if (!root || !root.querySelectorAll) return;
+                        var cs = root.querySelectorAll("canvas");
+                        for (var i = 0; i < cs.length; i++) {
+                            var c = cs[i];
+                            var r = c.getBoundingClientRect ? c.getBoundingClientRect() : { width: 0, height: 0 };
+                            var st = window.getComputedStyle ? window.getComputedStyle(c) : null;
+                            list.push({
+                                loc: label,
+                                buf: c.width + "x" + c.height,
+                                rect: Math.round(r.width) + "x" + Math.round(r.height),
+                                vis: st ? (st.display + "/op=" + st.opacity) : "?"
+                            });
+                        }
+                    }
+                    scan(document, "doc");
+                    for (var s = 0; s < shadowRoots.length; s++) {
+                        scan(shadowRoots[s], "sr#" + s);
+                    }
+                    return list;
+                }
+
+                function collectResources() {
+                    var out = [];
+                    try {
+                        if (window.performance && performance.getEntriesByType) {
+                            var entries = performance.getEntriesByType("resource") || [];
+                            for (var i = 0; i < entries.length; i++) {
+                                var e = entries[i];
+                                var n = e.name || "";
+                                if (n.indexOf(".wasm") !== -1 || n.indexOf("origin") !== -1 || n.indexOf("webApp.js") !== -1 || n.indexOf("skiko") !== -1) {
+                                    var shortName = n.split("/").pop().split("?")[0];
+                                    out.push(shortName + " (" + Math.round(e.duration) + "ms, dec=" + (e.decodedBodySize || 0) + ", tr=" + (e.transferSize || 0) + ")");
+                                }
+                            }
+                        }
+                    } catch (_) {}
+                    return out;
+                }
+
+                function buildFullReport() {
+                    var canvases = collectCanvases();
+                    var res = collectResources();
+                    var vv = window.visualViewport;
+                    var lsInfo = "";
+                    try {
+                        lsInfo = "has_seen_intro=" + localStorage.getItem("has_seen_intro_video") + ", has_token=" + (!!localStorage.getItem("token"));
+                    } catch (e) { lsInfo = "ls_err"; }
+                    var lines = [
+                        "=== AISpeaking Debug Report ===",
+                        "UA: " + (navigator.userAgent || ""),
+                        "URL: " + window.location.href,
+                        "Mode: " + bootMode,
+                        "Viewport: " + window.innerWidth + "x" + window.innerHeight + (vv ? (" vv=" + Math.round(vv.width) + "x" + Math.round(vv.height)) : "") + " dpr=" + (window.devicePixelRatio || 1),
+                        "Dark: " + (window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)").matches : "?"),
+                        "Storage: " + lsInfo,
+                        "WebGL: ctx=[" + glStats.contexts.join(",") + "] renderer=" + (glStats.renderer || "?") + " draws=" + glStats.draws + " clears=" + glStats.clears + " lost=" + glStats.contextLost + "/" + glStats.contextRestored + " err=" + glStats.lastError,
+                        "Canvases (" + canvases.length + "): " + canvases.map(function(c) { return c.loc + "[" + c.buf + " rect=" + c.rect + " " + c.vis + "]"; }).join("; "),
+                        "Resources: " + (res.length ? res.join(" | ") : "none"),
+                        "Logs (" + logs.length + "):",
+                        logs.join("\n")
+                    ];
+                    return lines.join("\n");
+                }
+
+                function renderOverlay() {
+                    try {
+                        var mountTarget = document.documentElement || document.body;
+                        if (!mountTarget) return;
+                        if (!overlayEl) {
+                            overlayEl = document.createElement("div");
+                            overlayEl.id = "aiSpeakingDebugOverlay";
+                            overlayEl.style.cssText = "position:fixed;top:8px;left:8px;right:8px;max-height:52vh;z-index:2147483647;background:rgba(10,14,23,0.92);color:#E2E8F0;border:1px solid rgba(56,189,248,0.45);border-radius:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.4;box-shadow:0 8px 30px rgba(0,0,0,0.6);display:flex;flex-direction:column;overflow:hidden;direction:ltr;text-align:left;";
+
+                            var header = document.createElement("div");
+                            header.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 8px;background:rgba(30,41,59,0.9);border-bottom:1px solid rgba(148,163,184,0.2);";
+
+                            var title = document.createElement("span");
+                            title.textContent = "AISpeaking Debug";
+                            title.style.cssText = "font-weight:700;color:#38BDF8;font-size:11px;";
+
+                            var btnGroup = document.createElement("div");
+                            btnGroup.style.cssText = "display:flex;gap:4px;align-items:center;";
+
+                            function makeBtn(label, bg) {
+                                var b = document.createElement("button");
+                                b.textContent = label;
+                                b.style.cssText = "background:" + (bg || "#334155") + ";color:#F8FAFC;border:none;border-radius:5px;padding:3px 7px;font-size:10px;font-family:inherit;cursor:pointer;";
+                                return b;
+                            }
+
+                            var copyBtn = makeBtn("Copy", "#0284C7");
+                            copyBtn.onclick = function() {
+                                var txt = buildFullReport();
+                                var done = function() {
+                                    copyBtn.textContent = "Copied!";
+                                    setTimeout(function() { copyBtn.textContent = "Copy"; }, 1500);
+                                };
+                                if (navigator.clipboard && navigator.clipboard.writeText) {
+                                    navigator.clipboard.writeText(txt).then(done).catch(function() {
+                                        try {
+                                            var ta = document.createElement("textarea");
+                                            ta.value = txt;
+                                            ta.style.cssText = "position:fixed;top:-9999px;";
+                                            document.body.appendChild(ta);
+                                            ta.select();
+                                            document.execCommand("copy");
+                                            document.body.removeChild(ta);
+                                            done();
+                                        } catch (_) {}
+                                    });
+                                } else {
+                                    try {
+                                        var ta = document.createElement("textarea");
+                                        ta.value = txt;
+                                        ta.style.cssText = "position:fixed;top:-9999px;";
+                                        document.body.appendChild(ta);
+                                        ta.select();
+                                        document.execCommand("copy");
+                                        document.body.removeChild(ta);
+                                        done();
+                                    } catch (_) {}
+                                }
+                            };
+
+                            var isForceJs = (window.location.search || "").indexOf("force_js=1") !== -1;
+                            var toggleModeBtn = makeBtn(isForceJs ? "Wasm Mode" : "JS Mode", "#475569");
+                            toggleModeBtn.onclick = function() {
+                                var target = window.location.pathname + (isForceJs ? "?debug=1" : "?debug=1&force_js=1");
+                                window.location.href = target;
+                            };
+
+                            var minBtn = makeBtn("−", "#334155");
+                            minBtn.onclick = function() {
+                                isCollapsed = !isCollapsed;
+                                bodyEl.style.display = isCollapsed ? "none" : "flex";
+                                minBtn.textContent = isCollapsed ? "+" : "−";
+                            };
+
+                            var closeBtn = makeBtn("×", "#991B1B");
+                            closeBtn.onclick = function() {
+                                try { sessionStorage.removeItem("ai_speaking_debug"); } catch (_) {}
+                                if (overlayEl && overlayEl.parentNode) overlayEl.parentNode.removeChild(overlayEl);
+                                overlayEl = null;
+                            };
+
+                            btnGroup.appendChild(copyBtn);
+                            btnGroup.appendChild(toggleModeBtn);
+                            btnGroup.appendChild(minBtn);
+                            btnGroup.appendChild(closeBtn);
+                            header.appendChild(title);
+                            header.appendChild(btnGroup);
+
+                            bodyEl = document.createElement("div");
+                            bodyEl.style.cssText = "display:flex;flex-direction:column;gap:6px;padding:6px 8px;overflow:auto;";
+
+                            summaryEl = document.createElement("div");
+                            summaryEl.style.cssText = "color:#A5F3FC;white-space:pre-wrap;word-break:break-word;border-bottom:1px dashed rgba(148,163,184,0.25);padding-bottom:4px;";
+
+                            logEl = document.createElement("div");
+                            logEl.style.cssText = "color:#CBD5E1;white-space:pre-wrap;word-break:break-word;max-height:24vh;overflow:auto;";
+
+                            bodyEl.appendChild(summaryEl);
+                            bodyEl.appendChild(logEl);
+                            overlayEl.appendChild(header);
+                            overlayEl.appendChild(bodyEl);
+                            mountTarget.appendChild(overlayEl);
+                        } else if (!overlayEl.isConnected) {
+                            mountTarget.appendChild(overlayEl);
+                        }
+
+                        var canvases = collectCanvases();
+                        var res = collectResources();
+                        var cStr = canvases.length
+                            ? canvases.map(function(c) { return c.loc + " " + c.buf + " (rect=" + c.rect + " " + c.vis + ")"; }).join(" | ")
+                            : "NONE";
+                        summaryEl.textContent =
+                            "mode=" + bootMode + " | url=" + window.location.pathname + " | vp=" + window.innerWidth + "x" + window.innerHeight + " dpr=" + (window.devicePixelRatio || 1) + "\n" +
+                            "canvas=" + cStr + "\n" +
+                            "gl=" + (glStats.contexts.join(",") || "none") + " draws=" + glStats.draws + " clears=" + glStats.clears + " lost=" + glStats.contextLost + " err=" + glStats.lastError + (glStats.renderer ? (" gpu=" + glStats.renderer) : "") + "\n" +
+                            "res=" + (res.length ? res.join("; ") : "loading...");
+                        logEl.textContent = logs.join("\n");
+                    } catch (_) {}
+                }
+
+                addLog("debug active: " + window.location.pathname + window.location.search);
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", renderOverlay);
+                } else {
+                    renderOverlay();
+                }
+                setInterval(renderOverlay, 700);
+            } catch (_) {}
+        })();
+    </script>
     <script>
         window.aiSpeakingRouter = {
             _popCounter: 0,
@@ -2110,5 +2467,6 @@
             });
         })();
     </script>
-    <script src="webApp.js?v=20261126v3"></script>
+    <script src="webApp.js?v=20261126v4"></script>
+    </body>
 </html>

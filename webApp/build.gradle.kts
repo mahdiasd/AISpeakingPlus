@@ -61,6 +61,17 @@ abstract class PatchCompatibilityWebAppJs : DefaultTask() {
     if (window.__aiSpeakingAppBooted) return;
     window.__aiSpeakingAppBooted = true;
 
+    const dbg = (msg) => {
+        try {
+            if (typeof window.__aiDebugLog === "function") window.__aiDebugLog(msg);
+        } catch (_) {}
+    };
+    const setMode = (mode) => {
+        try {
+            if (typeof window.__aiDebugSetMode === "function") window.__aiDebugSetMode(mode);
+        } catch (_) {}
+    };
+
     const getQuery = () => {
         if (__aiSpeakingScriptSrc && __aiSpeakingScriptSrc.includes("?")) {
             return "?" + __aiSpeakingScriptSrc.split("?")[1];
@@ -68,6 +79,8 @@ abstract class PatchCompatibilityWebAppJs : DefaultTask() {
         return "";
     };
     const query = getQuery();
+
+    const forceJs = typeof window !== "undefined" && window.location && (window.location.search || "").indexOf("force_js=1") !== -1;
 
     const hasJsStringBuiltinsSupport = () => {
         try {
@@ -90,9 +103,17 @@ abstract class PatchCompatibilityWebAppJs : DefaultTask() {
         }
     };
 
-    const useWasm = hasSupportOfAllRequiredWasmFeatures() && hasJsStringBuiltinsSupport();
-    if (!useWasm) {
-        document.body.appendChild(createScript("originJsWebApp.js" + query));
+    const hasReqWasm = hasSupportOfAllRequiredWasmFeatures();
+    const hasJsStr = hasReqWasm ? hasJsStringBuiltinsSupport() : false;
+    dbg("boot: reqWasm=" + hasReqWasm + " jsStr=" + hasJsStr + " forceJs=" + forceJs);
+
+    if (forceJs || !hasReqWasm || !hasJsStr) {
+        setMode(forceJs ? "js (forced)" : "js (compat)");
+        dbg("loading originJsWebApp.js" + query);
+        const jsScript = createScript("originJsWebApp.js" + query);
+        jsScript.onload = () => dbg("originJsWebApp.js loaded");
+        jsScript.onerror = (e) => dbg("originJsWebApp.js error: " + (e && e.message ? e.message : "load failed"));
+        document.body.appendChild(jsScript);
         return;
     }
 
@@ -108,17 +129,31 @@ abstract class PatchCompatibilityWebAppJs : DefaultTask() {
         if (fallbackLoaded) return;
         fallbackLoaded = true;
         cleanupRejectionHandler();
+        setMode("js (fallback)");
+        dbg("fallback to JS: " + (err && (err.message || err) ? (err.message || String(err)) : "unknown"));
         console.error("[AISpeaking] Wasm boot failed, falling back to JS:", err);
-        document.body.appendChild(createScript("originJsWebApp.js" + query));
+        const jsScript = createScript("originJsWebApp.js" + query);
+        jsScript.onload = () => dbg("originJsWebApp.js (fallback) loaded");
+        jsScript.onerror = (e) => dbg("originJsWebApp.js (fallback) error");
+        document.body.appendChild(jsScript);
+    };
+
+    const hasAnyCanvas = () => {
+        if (document.querySelector("canvas")) return true;
+        const els = document.querySelectorAll("*");
+        for (let i = 0; i < els.length; i++) {
+            if (els[i].shadowRoot && els[i].shadowRoot.querySelector("canvas")) return true;
+        }
+        return false;
     };
 
     rejectionHandler = (ev) => {
         const reason = ev && ev.reason;
+        dbg("unhandledrejection: " + (reason && (reason.message || reason) ? (reason.message || String(reason)) : "unknown"));
         const isWasmBootError = reason instanceof WebAssembly.LinkError ||
             reason instanceof WebAssembly.CompileError ||
             reason instanceof WebAssembly.RuntimeError;
-        const hasCanvas = !!document.querySelector("canvas");
-        if (isWasmBootError && !hasCanvas) {
+        if (isWasmBootError && !hasAnyCanvas()) {
             if (ev && typeof ev.preventDefault === "function") ev.preventDefault();
             loadJsFallback(reason);
         }
@@ -126,12 +161,24 @@ abstract class PatchCompatibilityWebAppJs : DefaultTask() {
     window.addEventListener("unhandledrejection", rejectionHandler);
     setTimeout(cleanupRejectionHandler, 15000);
 
+    setMode("wasm");
+    dbg("loading originWasmWebApp.js" + query);
     const wasmScript = createScript("originWasmWebApp.js" + query);
-    wasmScript.onerror = (e) => loadJsFallback(e);
+    wasmScript.onerror = (e) => {
+        dbg("originWasmWebApp.js script error");
+        loadJsFallback(e);
+    };
     wasmScript.onload = () => {
+        dbg("originWasmWebApp.js loaded");
         try {
+            if (window.webApp && typeof window.webApp.then === "function") {
+                window.webApp.then(() => dbg("wasm promise resolved"));
+            }
             if (window.webApp && typeof window.webApp.catch === "function") {
-                window.webApp.catch((e) => loadJsFallback(e));
+                window.webApp.catch((e) => {
+                    dbg("wasm promise rejected: " + (e && (e.message || e) ? (e.message || String(e)) : "unknown"));
+                    loadJsFallback(e);
+                });
             }
         } catch (e) {
             loadJsFallback(e);
