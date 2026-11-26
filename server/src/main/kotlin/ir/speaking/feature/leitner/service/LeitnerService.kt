@@ -1,6 +1,10 @@
 package ir.speaking.feature.leitner.service
 
 import ir.speaking.core.redis.di.RedisClientHolder
+import ir.speaking.feature.dictionary.repository.LexiconRepository
+import ir.speaking.feature.dictionary.service.DictionaryService
+import ir.speaking.feature.dictionary.validation.InvalidWordException
+import ir.speaking.feature.dictionary.validation.WordInputValidator
 import ir.speaking.feature.leitner.dto.AddFlashcardRequest
 import ir.speaking.feature.leitner.dto.LeitnerStatsResponse
 import ir.speaking.feature.leitner.dto.ReminderTimeResponse
@@ -20,7 +24,9 @@ import java.util.concurrent.ConcurrentHashMap
 @Single
 open class LeitnerService(
     private val flashcardRepository: UserFlashcardRepository,
-    redisClientHolder: RedisClientHolder
+    redisClientHolder: RedisClientHolder,
+    private val lexiconRepository: LexiconRepository,
+    private val dictionaryService: DictionaryService
 ) {
     private val logger = LoggerFactory.getLogger(LeitnerService::class.java)
     private val redissonClient: RedissonClient? = redisClientHolder.client
@@ -78,23 +84,44 @@ open class LeitnerService(
     }
 
     open suspend fun addCard(userId: UUID, request: AddFlashcardRequest): UserFlashcard {
-        val lexiconUuid = request.lexiconId?.let {
-            try {
-                UUID.fromString(it)
-            } catch (e: Exception) {
-                null
+        val customWord = request.customWord?.trim()
+        if (!customWord.isNullOrBlank()) {
+            val validation = WordInputValidator.validate(customWord)
+            if (!validation.isValid) {
+                throw InvalidWordException(validation.reasonFa ?: "عبارت واردشده معتبر نیست.")
             }
         }
 
+        val lexiconUuid = if (!request.lexiconId.isNullOrBlank()) {
+            try {
+                UUID.fromString(request.lexiconId.trim())
+            } catch (e: Exception) {
+                throw InvalidWordException("شناسه واژه نامعتبر است.")
+            }
+        } else {
+            null
+        }
+
+        if (lexiconUuid != null) {
+            if (lexiconRepository != null && lexiconRepository.findById(lexiconUuid) == null) {
+                throw InvalidWordException("واژه انتخاب‌شده در دیکشنری معتبر نیست.")
+            }
+        } else {
+            if (customWord.isNullOrBlank()) {
+                throw InvalidWordException("لطفاً یک کلمه یا اصطلاح انگلیسی وارد کنید.")
+            }
+            dictionaryService?.validateWordWithAiIfAvailable(customWord)
+        }
+
         val effectiveAudio = request.customAudioUrl?.takeIf { it.isNotBlank() }
-            ?: request.customWord?.takeIf { it.isNotBlank() }?.let { word ->
-                "/api/v2/tts/speak?text=${java.net.URLEncoder.encode(word.trim(), "UTF-8")}"
+            ?: customWord?.takeIf { it.isNotBlank() }?.let { word ->
+                "/api/v2/tts/speak?text=${java.net.URLEncoder.encode(word, "UTF-8")}"
             }
 
         return flashcardRepository.addCard(
             userId = userId,
             lexiconId = lexiconUuid,
-            customWord = request.customWord,
+            customWord = customWord,
             customMeaning = request.customMeaning,
             customExample = request.customExample,
             customAudioUrl = effectiveAudio

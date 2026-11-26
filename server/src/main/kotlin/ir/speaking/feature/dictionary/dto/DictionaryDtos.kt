@@ -24,10 +24,12 @@ data class DictionaryLookupResponse(
 
 @Serializable
 data class AiDictionaryResult(
-    val headword: String,
+    val isValid: Boolean = true,
+    val rejectionReasonFa: String? = null,
+    val headword: String = "",
     val phonetic: String? = null,
     val partOfSpeech: String? = null,
-    val contextMeaningFa: String,
+    val contextMeaningFa: String = "",
     val definitionEn: String? = null,
     val otherMeaningsFa: List<String> = emptyList(),
     val sampleSentenceEn: String? = null,

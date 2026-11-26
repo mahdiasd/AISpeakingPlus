@@ -51,6 +51,7 @@ import ir.aispeaking.domain.model.leitner.Flashcard
 import ir.aispeaking.domain.model.leitner.LeitnerBox
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_close
+import ir.aispeaking.sharedui.ic_delete
 import ir.aispeaking.sharedui.ic_speaker
 import ir.aispeaking.sharedui.ui.core.text.PhoneticText
 import ir.aispeaking.sharedui.ui.game.Game
@@ -66,6 +67,7 @@ fun FocusedCardDialog(
     onDismiss: () -> Unit,
     onPlayAudio: (Flashcard) -> Unit,
     isAudioPlaying: Boolean,
+    onDeleteClick: (Flashcard) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isDark = AppTheme.isDark
@@ -98,6 +100,22 @@ fun FocusedCardDialog(
             ),
         contentAlignment = Alignment.Center
     ) {
+        // Top Delete Button (Start anchor)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(24.dp)
+        ) {
+            GameIconButton(
+                icon = Res.drawable.ic_delete,
+                onClick = { onDeleteClick(card) },
+                contentDescription = "حذف کلمه",
+                container = Color(0x33FF453A),
+                border = Color(0x66FF453A),
+                tint = Color(0xFFFF6961)
+            )
+        }
+
         // Top Close Button
         Box(
             modifier = Modifier

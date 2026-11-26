@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -37,11 +38,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.aispeaking.domain.model.leitner.Flashcard
 import ir.aispeaking.domain.model.leitner.LeitnerBox
+import ir.aispeaking.sharedui.Res
+import ir.aispeaking.sharedui.ic_delete
 import ir.aispeaking.sharedui.ui.core.text.PhoneticText
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.fa
 import ir.aispeaking.sharedui.ui.them.AppTheme
+import org.jetbrains.compose.resources.painterResource
 
 fun getBoxAccentColor(boxNumber: Int): Color {
     return when (boxNumber) {
@@ -58,6 +62,7 @@ fun getBoxAccentColor(boxNumber: Int): Color {
 fun LeitnerCardGridItem(
     card: Flashcard,
     onClick: () -> Unit,
+    onDeleteClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isDark = AppTheme.isDark
@@ -139,13 +144,35 @@ fun LeitnerCardGridItem(
                     )
                 }
 
-                // Due or Review count pill
-                if (card.reviewCount > 0) {
-                    GameText(
-                        text = "دور ${card.reviewCount.fa()}",
-                        size = 10.sp,
-                        color = Game.TextSecondary
-                    )
+                // Review count pill & Delete button
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    if (card.reviewCount > 0) {
+                        GameText(
+                            text = "دور ${card.reviewCount.fa()}",
+                            size = 10.sp,
+                            color = Game.TextSecondary
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(26.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFF453A).copy(alpha = if (isDark) 0.16f else 0.10f))
+                            .border(0.8.dp, Color(0xFFFF453A).copy(alpha = 0.35f), CircleShape)
+                            .clickable(onClick = onDeleteClick),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_delete),
+                            contentDescription = "حذف کلمه",
+                            tint = Color(0xFFFF453A),
+                            modifier = Modifier.size(13.dp)
+                        )
+                    }
                 }
             }
 

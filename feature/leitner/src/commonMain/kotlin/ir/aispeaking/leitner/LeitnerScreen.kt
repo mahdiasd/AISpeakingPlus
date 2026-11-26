@@ -53,6 +53,7 @@ import ir.aispeaking.leitner.component.LeitnerCardGridItem
 import ir.aispeaking.leitner.component.LeitnerTabsRow
 import ir.aispeaking.leitner.component.LeitnerTopBar
 import ir.aispeaking.leitner.dialog.AddWordDialog
+import ir.aispeaking.leitner.dialog.DeleteCardConfirmDialog
 import ir.aispeaking.leitner.dialog.LeitnerReminderSheet
 import ir.aispeaking.leitner.dialog.LeitnerReviewDialog
 import ir.aispeaking.leitner.model.LeitnerTab
@@ -233,7 +234,8 @@ fun LeitnerScreen(
                         items(displayCards, key = { it.id }) { card ->
                             LeitnerCardGridItem(
                                 card = card,
-                                onClick = { viewModel.openFocusedCard(card) }
+                                onClick = { viewModel.openFocusedCard(card) },
+                                onDeleteClick = { viewModel.requestDeleteCard(card) }
                             )
                         }
                     }
@@ -273,11 +275,13 @@ fun LeitnerScreen(
                 entry = uiState.dictionaryEntry,
                 isLoading = uiState.isDictionaryLoading,
                 errorMessage = uiState.dictionaryError,
+                isInvalidWordError = uiState.isDictionaryInvalidWord,
                 isAudioPlaying = uiState.isDictionaryAudioPlaying,
                 isAddedToLeitner = uiState.isCardAddedToLeitner,
                 isAddingToLeitner = uiState.isAddingCardToLeitner,
                 onDismiss = { viewModel.closeDictionarySheet() },
                 onRetry = { viewModel.retryDictionaryLookup() },
+                onEditWord = { viewModel.editInvalidDictionaryWord() },
                 onPlayAudio = { url -> viewModel.playDictionaryAudio(url) },
                 onStopAudio = { viewModel.stopDictionaryAudio() },
                 onAddToLeitner = { entry -> viewModel.addCardFromDictionary(entry) }
@@ -294,7 +298,24 @@ fun LeitnerScreen(
                         card = card,
                         onDismiss = { viewModel.closeFocusedCard() },
                         onPlayAudio = { viewModel.playAudio(it) },
-                        isAudioPlaying = uiState.isAudioPlaying && uiState.audioPlayingCardId == card.id
+                        isAudioPlaying = uiState.isAudioPlaying && uiState.audioPlayingCardId == card.id,
+                        onDeleteClick = { viewModel.requestDeleteCard(it) }
+                    )
+                }
+            }
+
+            // Delete Confirmation Dialog
+            AnimatedVisibility(
+                visible = uiState.cardPendingDelete != null,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                uiState.cardPendingDelete?.let { card ->
+                    DeleteCardConfirmDialog(
+                        card = card,
+                        isDeleting = uiState.isDeletingCard,
+                        onDismiss = { viewModel.cancelDeleteCard() },
+                        onConfirm = { viewModel.confirmDeleteCard() }
                     )
                 }
             }

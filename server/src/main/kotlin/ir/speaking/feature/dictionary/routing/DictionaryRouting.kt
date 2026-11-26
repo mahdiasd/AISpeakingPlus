@@ -17,6 +17,7 @@ import ir.speaking.core.utils.MyConstant
 import ir.speaking.feature.dictionary.dto.DictionaryLookupRequest
 import ir.speaking.feature.dictionary.dto.DictionaryLookupResponse
 import ir.speaking.feature.dictionary.service.DictionaryService
+import ir.speaking.feature.dictionary.validation.InvalidWordException
 import org.koin.ktor.ext.inject
 import java.io.File
 
@@ -149,6 +150,8 @@ private fun Route.registerDictionaryEndpoints(
             try {
                 val response = dictionaryService.lookup(request.word, request.contextSentence)
                 call.successRespond(response, message = "Word looked up successfully")
+            } catch (e: InvalidWordException) {
+                call.failureRespond(HttpStatusCode.BadRequest, e.message ?: "عبارت واردشده معتبر نیست.")
             } catch (e: Exception) {
                 call.failureRespond(HttpStatusCode.InternalServerError, "Failed to lookup word: ${e.message}")
             }
@@ -167,7 +170,7 @@ private fun Route.registerDictionaryEndpoints(
                     schema = jsonSchema<SuccessResponse<DictionaryLookupResponse>>()
                 }
                 HttpStatusCode.BadRequest {
-                    description = "Invalid word or request body"
+                    description = "Invalid, nonsensical, non-English, or inappropriate word or request body"
                     schema = jsonSchema<FailureResponse>()
                 }
                 HttpStatusCode.InternalServerError {

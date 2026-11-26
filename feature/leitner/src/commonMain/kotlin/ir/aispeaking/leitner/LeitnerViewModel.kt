@@ -4,11 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.aispeaking.domain.model.data_result.DataResult
 import ir.aispeaking.domain.model.dictionary.DictionaryEntry
+import ir.aispeaking.domain.model.error.NetworkError
+import ir.aispeaking.domain.model.error.getErrorMessage
 import ir.aispeaking.domain.model.leitner.Flashcard
 import ir.aispeaking.domain.model.leitner.LeitnerBox
 import ir.aispeaking.domain.usecase.auth.IsLoggedInUseCase
 import ir.aispeaking.domain.usecase.dictionary.LookupWordUseCase
 import ir.aispeaking.domain.usecase.leitner.AddCardToLeitnerUseCase
+import ir.aispeaking.domain.usecase.leitner.DeleteCardFromLeitnerUseCase
 import ir.aispeaking.domain.usecase.leitner.GetBoxCountsUseCase
 import ir.aispeaking.domain.usecase.leitner.GetCardsByBoxUseCase
 import ir.aispeaking.domain.usecase.leitner.GetDueCardsUseCase
@@ -35,6 +38,7 @@ class LeitnerViewModel(
     private val setReminderTimeUseCase: SetReminderTimeUseCase,
     private val lookupWordUseCase: LookupWordUseCase? = null,
     private val addCardToLeitnerUseCase: AddCardToLeitnerUseCase? = null,
+    private val deleteCardFromLeitnerUseCase: DeleteCardFromLeitnerUseCase? = null,
     private val audioController: StageAudioController? = null,
     private val isLoggedInUseCase: IsLoggedInUseCase? = null
 ) : ViewModel() {
@@ -131,6 +135,73 @@ class LeitnerViewModel(
     fun closeFocusedCard() {
         stopAudio()
         _uiState.update { it.copy(focusedCard = null) }
+    }
+
+    fun requestDeleteCard(card: Flashcard) {
+        _uiState.update { it.copy(cardPendingDelete = card) }
+    }
+
+    fun cancelDeleteCard() {
+        if (_uiState.value.isDeletingCard) return
+        _uiState.update { it.copy(cardPendingDelete = null) }
+    }
+
+    fun confirmDeleteCard() {
+        val target = _uiState.value.cardPendingDelete ?: return
+        if (_uiState.value.isDeletingCard) return
+
+        if (_uiState.value.audioPlayingCardId == target.id) {
+            stopAudio()
+        }
+
+        _uiState.update { it.copy(isDeletingCard = true) }
+
+        viewModelScope.launch {
+            val useCase = deleteCardFromLeitnerUseCase
+            if (useCase == null) {
+                _uiState.update {
+                    it.copy(
+                        isDeletingCard = false,
+                        cardPendingDelete = null,
+                        errorMessage = "سرویس حذف کارت در دسترس نیست"
+                    )
+                }
+                return@launch
+            }
+
+            when (val result = useCase(target.id)) {
+                is DataResult.Success -> {
+                    _uiState.update { state ->
+                        val updatedAll = state.allCards.filterNot { it.id == target.id }
+                        val updatedDue = state.dueCards.filterNot { it.id == target.id }
+                        val updatedQueue = state.reviewQueue.filterNot { it.id == target.id }
+                        val updatedCounts = state.boxCounts.toMutableMap().apply {
+                            val current = this[target.boxNumber] ?: 0L
+                            this[target.boxNumber] = (current - 1L).coerceAtLeast(0L)
+                        }
+                        state.copy(
+                            allCards = updatedAll,
+                            dueCards = updatedDue,
+                            reviewQueue = updatedQueue,
+                            boxCounts = updatedCounts,
+                            focusedCard = if (state.focusedCard?.id == target.id) null else state.focusedCard,
+                            cardPendingDelete = null,
+                            isDeletingCard = false,
+                            errorMessage = null
+                        )
+                    }
+                }
+                is DataResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isDeletingCard = false,
+                            cardPendingDelete = null,
+                            errorMessage = result.appError.getErrorMessage().ifBlank { "خطا در حذف کلمه از لایتنر" }
+                        )
+                    }
+                }
+            }
+        }
     }
 
     fun startReviewSession() {
@@ -288,6 +359,7 @@ class LeitnerViewModel(
                 dictionaryTargetWord = trimmed,
                 dictionaryEntry = null,
                 dictionaryError = null,
+                isDictionaryInvalidWord = false,
                 isCardAddedToLeitner = false,
                 isAddingCardToLeitner = false
             )
@@ -310,19 +382,41 @@ class LeitnerViewModel(
                         it.copy(
                             isDictionaryLoading = false,
                             dictionaryEntry = result.data,
-                            dictionaryError = null
+                            dictionaryError = null,
+                            isDictionaryInvalidWord = false
                         )
                     }
                 }
                 is DataResult.Failure -> {
+                    val isInvalid = result.appError is NetworkError.BadRequest
+                    val msg = result.appError.getErrorMessage().trim()
                     _uiState.update {
                         it.copy(
                             isDictionaryLoading = false,
-                            dictionaryError = "معنای کلمه «$trimmed» در دیکشنری یافت نشد."
+                            isDictionaryInvalidWord = isInvalid,
+                            dictionaryError = msg.ifBlank {
+                                if (isInvalid) {
+                                    "عبارت «$trimmed» یک کلمه یا اصطلاح معتبر انگلیسی نیست."
+                                } else {
+                                    "معنای کلمه «$trimmed» در دیکشنری یافت نشد."
+                                }
+                            }
                         )
                     }
                 }
             }
+        }
+    }
+
+    fun editInvalidDictionaryWord() {
+        stopAudio()
+        _uiState.update {
+            it.copy(
+                isDictionarySheetOpen = false,
+                dictionaryError = null,
+                isDictionaryInvalidWord = false,
+                isAddWordDialogOpen = true
+            )
         }
     }
 
@@ -363,10 +457,22 @@ class LeitnerViewModel(
                     loadData()
                 }
                 is DataResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            isAddingCardToLeitner = false
-                        )
+                    if (result.appError is NetworkError.BadRequest) {
+                        _uiState.update {
+                            it.copy(
+                                isAddingCardToLeitner = false,
+                                isDictionaryInvalidWord = true,
+                                dictionaryError = result.appError.getErrorMessage().ifBlank {
+                                    "امکان افزودن این کلمه به لایتنر وجود ندارد."
+                                }
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isAddingCardToLeitner = false
+                            )
+                        }
                     }
                 }
             }

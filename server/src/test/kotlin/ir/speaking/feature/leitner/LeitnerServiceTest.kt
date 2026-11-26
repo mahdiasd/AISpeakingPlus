@@ -1,13 +1,21 @@
 package ir.speaking.feature.leitner
 
+import com.aallam.openai.api.chat.ChatMessage
+import com.aallam.openai.api.chat.ChatResponseFormat
+import ir.speaking.core.network.api.AiApiService
+import ir.speaking.core.network.di.AiClientManager
 import ir.speaking.core.redis.di.RedisClientHolder
 import ir.speaking.feature.dictionary.db.LexiconTable
 import ir.speaking.feature.dictionary.repository.LexiconRepository
+import ir.speaking.feature.dictionary.service.DictionaryService
+import ir.speaking.feature.dictionary.validation.InvalidWordException
 import ir.speaking.feature.leitner.db.UserFlashcardTable
 import ir.speaking.feature.leitner.db.UserLeitnerSettingsTable
 import ir.speaking.feature.leitner.dto.AddFlashcardRequest
 import ir.speaking.feature.leitner.repository.UserFlashcardRepository
 import ir.speaking.feature.leitner.service.LeitnerService
+import ir.speaking.feature.tts.service.TtsConfig
+import ir.speaking.feature.tts.service.TtsService
 import ir.speaking.feature.user.db.UserTable
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -19,6 +27,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -39,7 +49,16 @@ class LeitnerServiceTest {
         transaction(db) {
             SchemaUtils.create(UserTable, LexiconTable, UserFlashcardTable, UserLeitnerSettingsTable)
         }
-        leitnerService = LeitnerService(flashcardRepo, redisHolder)
+        val fakeAi = object : AiApiService(AiClientManager()) {
+            override suspend fun requestRaw(messages: List<ChatMessage>, responseFormat: ChatResponseFormat): Result<String> {
+                return Result.success("""{"isValid": true, "headword": "word", "contextMeaningFa": "معنی"}""")
+            }
+        }
+        val ttsService = TtsService(
+            TtsConfig(false, "models/none", "", false, 1, 0, 1.0f, "build/test_audio_cache_leitner")
+        )
+        val dictService = DictionaryService(lexiconRepo, fakeAi, ttsService, redisHolder)
+        leitnerService = LeitnerService(flashcardRepo, redisHolder, lexiconRepo, dictService)
     }
 
     @AfterEach
@@ -128,5 +147,56 @@ class LeitnerServiceTest {
         val retrieved = leitnerService.getReminderTime(userId)
         assertEquals("08:30", retrieved.reminderTime)
         assertTrue(retrieved.enabled)
+    }
+
+    @Test
+    fun testDeleteCardRemovesFromDeckAndUpdatesStats() = runBlocking {
+        val userId = createTestUser()
+        val card = leitnerService.addCard(
+            userId,
+            AddFlashcardRequest(customWord = "resilient", customMeaning = "تاب‌آور")
+        )
+        assertEquals(1L, leitnerService.getStats(userId).totalCards)
+
+        val deleted = leitnerService.deleteCard(userId, UUID.fromString(card.id))
+        assertTrue(deleted)
+        assertEquals(0L, leitnerService.getStats(userId).totalCards)
+        assertTrue(leitnerService.getCards(userId).isEmpty())
+
+        // Deleting non-existent card returns false
+        assertFalse(leitnerService.deleteCard(userId, UUID.fromString(card.id)))
+    }
+
+    @Test
+    fun testAddCardRejectsInvalidWordsAndUnknownLexicon() = runBlocking {
+        val userId = createTestUser()
+
+        assertFailsWith<InvalidWordException> {
+            leitnerService.addCard(userId, AddFlashcardRequest(customWord = "12345", customMeaning = "test"))
+        }
+        assertFailsWith<InvalidWordException> {
+            leitnerService.addCard(userId, AddFlashcardRequest(customWord = "سلام", customMeaning = "test"))
+        }
+        assertFailsWith<InvalidWordException> {
+            leitnerService.addCard(userId, AddFlashcardRequest(customWord = "aaaaaaa", customMeaning = "test"))
+        }
+        assertFailsWith<InvalidWordException> {
+            leitnerService.addCard(userId, AddFlashcardRequest(lexiconId = UUID.randomUUID().toString()))
+        }
+
+        val fakeAi = object : AiApiService(AiClientManager()) {
+            override suspend fun requestRaw(messages: List<ChatMessage>, responseFormat: ChatResponseFormat): Result<String> {
+                return Result.success("""{"isValid": false, "rejectionReasonFa": "عبارت نامعتبر است"}""")
+            }
+        }
+        val ttsService = TtsService(
+            TtsConfig(false, "models/none", "", false, 1, 0, 1.0f, "build/test_audio_cache_leitner")
+        )
+        val dictService = DictionaryService(lexiconRepo, fakeAi, ttsService, redisHolder)
+        val guardedLeitner = LeitnerService(flashcardRepo, redisHolder, lexiconRepo, dictService)
+
+        assertFailsWith<InvalidWordException> {
+            guardedLeitner.addCard(userId, AddFlashcardRequest(customWord = "abbas bo azar", customMeaning = "test"))
+        }
     }
 }

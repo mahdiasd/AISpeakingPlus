@@ -557,6 +557,7 @@ fun ChatScreen(
                 entry = uiState.dictionaryEntry,
                 isLoading = uiState.isDictionaryLoading,
                 errorMessage = uiState.dictionaryError,
+                isInvalidWordError = uiState.isDictionaryInvalidWord,
                 isAudioPlaying = uiState.isDictionaryAudioPlaying,
                 isAddedToLeitner = uiState.isCardAddedToLeitner,
                 isAddingToLeitner = uiState.isAddingCardToLeitner,

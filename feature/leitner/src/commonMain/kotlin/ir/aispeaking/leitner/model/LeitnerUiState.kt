@@ -63,7 +63,11 @@ data class LeitnerUiState(
     val dictionaryError: String? = null,
     val isDictionaryAudioPlaying: Boolean = false,
     val isAddingCardToLeitner: Boolean = false,
-    val isCardAddedToLeitner: Boolean = false
+    val isCardAddedToLeitner: Boolean = false,
+    val isDictionaryInvalidWord: Boolean = false,
+    // Delete Card state
+    val cardPendingDelete: Flashcard? = null,
+    val isDeletingCard: Boolean = false
 ) {
     /**
      * Cards displayed in the current tab (sanitized against corrupt empty cards).

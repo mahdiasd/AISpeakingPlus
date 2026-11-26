@@ -14,6 +14,7 @@ import ir.speaking.core.response.failureRespond
 import ir.speaking.core.response.successRespond
 import ir.speaking.core.utils.MyConstant
 import ir.speaking.core.utils.getUserUid
+import ir.speaking.feature.dictionary.validation.InvalidWordException
 import ir.speaking.feature.leitner.dto.AddFlashcardRequest
 import ir.speaking.feature.leitner.dto.LeitnerStatsResponse
 import ir.speaking.feature.leitner.dto.ReminderTimeResponse
@@ -114,6 +115,8 @@ private fun Route.registerLeitnerEndpoints(
             try {
                 val card = leitnerService.addCard(userId, request)
                 call.successRespond(card, message = "Flashcard added successfully")
+            } catch (e: InvalidWordException) {
+                call.failureRespond(HttpStatusCode.BadRequest, e.message ?: "کلمه واردشده معتبر نیست.")
             } catch (e: Exception) {
                 call.failureRespond(HttpStatusCode.InternalServerError, "Failed to add flashcard: ${e.message}")
             }
@@ -132,7 +135,7 @@ private fun Route.registerLeitnerEndpoints(
                     schema = jsonSchema<SuccessResponse<UserFlashcard>>()
                 }
                 HttpStatusCode.BadRequest {
-                    description = "Invalid request body"
+                    description = "Invalid request body, unknown lexiconId, or nonsensical/inappropriate word"
                     schema = jsonSchema<FailureResponse>()
                 }
                 HttpStatusCode.Unauthorized {

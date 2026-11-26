@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ir.aispeaking.domain.validation.LeitnerWordValidator
 import ir.aispeaking.sharedui.Res
 import ir.aispeaking.sharedui.ic_add
 import ir.aispeaking.sharedui.ic_close
@@ -69,6 +70,7 @@ fun AddWordDialog(
 ) {
     val isDark = AppTheme.isDark
     var wordInput by remember { mutableStateOf("") }
+    var validationError by remember { mutableStateOf<String?>(null) }
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
@@ -177,7 +179,15 @@ fun AddWordDialog(
                             .fillMaxWidth()
                             .clip(inputShape)
                             .background(if (isDark) Color(0xEB161824) else Color(0xF2F1F5F9))
-                            .border(1.5.dp, if (wordInput.isNotBlank()) AppleTheme.PrimaryAzure else AppleTheme.SubtleBorderColor, inputShape)
+                            .border(
+                                1.5.dp,
+                                when {
+                                    validationError != null -> AppleTheme.Coral
+                                    wordInput.isNotBlank() -> AppleTheme.PrimaryAzure
+                                    else -> AppleTheme.SubtleBorderColor
+                                },
+                                inputShape
+                            )
                             .padding(horizontal = 14.dp, vertical = 12.dp)
                     ) {
                         Row(
@@ -197,7 +207,10 @@ fun AddWordDialog(
 
                                 BasicTextField(
                                     value = wordInput,
-                                    onValueChange = { wordInput = it },
+                                    onValueChange = {
+                                        wordInput = it
+                                        validationError = null
+                                    },
                                     singleLine = true,
                                     textStyle = TextStyle(
                                         color = if (isDark) Color.White else Color(0xFF0F172A),
@@ -208,9 +221,11 @@ fun AddWordDialog(
                                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                                     keyboardActions = KeyboardActions(
                                         onSearch = {
-                                            val trimmed = wordInput.trim()
-                                            if (trimmed.isNotBlank()) {
-                                                onConfirm(trimmed)
+                                            val validation = LeitnerWordValidator.validate(wordInput)
+                                            if (validation.isValid) {
+                                                onConfirm(wordInput.trim())
+                                            } else {
+                                                validationError = validation.errorMessage
                                             }
                                         }
                                     ),
@@ -226,7 +241,10 @@ fun AddWordDialog(
                                         .size(22.dp)
                                         .clip(CircleShape)
                                         .background(if (isDark) Color(0x33FFFFFF) else Color(0x1F000000))
-                                        .clickable { wordInput = "" },
+                                        .clickable {
+                                            wordInput = ""
+                                            validationError = null
+                                        },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
@@ -239,6 +257,15 @@ fun AddWordDialog(
                             }
                         }
                     }
+                }
+
+                validationError?.let { errorMsg ->
+                    GameText(
+                        text = errorMsg,
+                        size = 12.sp,
+                        color = AppleTheme.Coral,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
 
                 // Action Buttons
@@ -259,9 +286,11 @@ fun AddWordDialog(
                         style = GameButtonStyle.Primary,
                         modifier = Modifier.weight(1.5f),
                         onClick = {
-                            val trimmed = wordInput.trim()
-                            if (trimmed.isNotBlank()) {
-                                onConfirm(trimmed)
+                            val validation = LeitnerWordValidator.validate(wordInput)
+                            if (validation.isValid) {
+                                onConfirm(wordInput.trim())
+                            } else {
+                                validationError = validation.errorMessage
                             }
                         }
                     )

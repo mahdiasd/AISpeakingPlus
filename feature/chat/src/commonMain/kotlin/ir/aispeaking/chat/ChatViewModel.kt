@@ -10,6 +10,7 @@ import ir.aispeaking.domain.model.chat.ChatStatus
 import ir.aispeaking.domain.model.chat.StageChatStreamEvent
 import ir.aispeaking.domain.model.data_result.DataResult
 import ir.aispeaking.domain.model.dictionary.DictionaryEntry
+import ir.aispeaking.domain.model.error.NetworkError
 import ir.aispeaking.domain.model.error.getErrorMessage
 import ir.aispeaking.domain.model.stage.AccessTier
 import ir.aispeaking.domain.model.stage.EvaluationSession
@@ -100,6 +101,7 @@ data class ChatUiState(
     val dictionaryEntry: DictionaryEntry? = null,
     val isDictionaryLoading: Boolean = false,
     val dictionaryError: String? = null,
+    val isDictionaryInvalidWord: Boolean = false,
     val isDictionaryAudioPlaying: Boolean = false,
     val isCardAddedToLeitner: Boolean = false,
     val isAddingCardToLeitner: Boolean = false
@@ -177,6 +179,7 @@ class ChatViewModel(
                 dictionaryEntry = null,
                 isDictionaryLoading = true,
                 dictionaryError = null,
+                isDictionaryInvalidWord = false,
                 isCardAddedToLeitner = false,
                 isAddingCardToLeitner = false,
                 isDictionaryAudioPlaying = false
@@ -208,7 +211,8 @@ class ChatViewModel(
                     _uiState.update {
                         it.copy(
                             isDictionaryLoading = false,
-                            dictionaryError = result.appError.getErrorMessage()
+                            dictionaryError = result.appError.getErrorMessage(),
+                            isDictionaryInvalidWord = result.appError is NetworkError.BadRequest
                         )
                     }
                 }
@@ -270,10 +274,20 @@ class ChatViewModel(
                     }
                 }
                 is DataResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            isAddingCardToLeitner = false
-                        )
+                    if (result.appError is NetworkError.BadRequest) {
+                        _uiState.update {
+                            it.copy(
+                                isAddingCardToLeitner = false,
+                                isDictionaryInvalidWord = true,
+                                dictionaryError = result.appError.getErrorMessage()
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isAddingCardToLeitner = false
+                            )
+                        }
                     }
                 }
             }

@@ -86,11 +86,13 @@ fun DictionaryDetailSheet(
     entry: DictionaryEntry? = null,
     isLoading: Boolean = false,
     errorMessage: String? = null,
+    isInvalidWordError: Boolean = false,
     isAudioPlaying: Boolean = false,
     isAddedToLeitner: Boolean = false,
     isAddingToLeitner: Boolean = false,
     onDismiss: () -> Unit,
     onRetry: () -> Unit = {},
+    onEditWord: (() -> Unit)? = null,
     onPlayAudio: (url: String) -> Unit = {},
     onStopAudio: () -> Unit = {},
     onAddToLeitner: (entry: DictionaryEntry) -> Unit = {}
@@ -173,7 +175,10 @@ fun DictionaryDetailSheet(
                 errorMessage != null -> {
                     DictionaryErrorState(
                         errorMessage = errorMessage,
-                        onRetry = onRetry
+                        isInvalidWordError = isInvalidWordError,
+                        onRetry = onRetry,
+                        onEditWord = onEditWord,
+                        onDismiss = onDismiss
                     )
                 }
 
@@ -248,7 +253,10 @@ private fun DictionaryLoadingState(targetWord: String) {
 @Composable
 private fun DictionaryErrorState(
     errorMessage: String,
-    onRetry: () -> Unit
+    isInvalidWordError: Boolean = false,
+    onRetry: () -> Unit,
+    onEditWord: (() -> Unit)? = null,
+    onDismiss: () -> Unit = {}
 ) {
     val shape = RoundedCornerShape(18.dp)
     Column(
@@ -268,6 +276,16 @@ private fun DictionaryErrorState(
             modifier = Modifier.size(32.dp)
         )
 
+        if (isInvalidWordError) {
+            GameText(
+                text = "کلمه نامعتبر",
+                size = 15.sp,
+                bold = true,
+                color = AppleTheme.Coral,
+                align = TextAlign.Center
+            )
+        }
+
         GameText(
             text = errorMessage,
             size = 13.sp,
@@ -275,12 +293,22 @@ private fun DictionaryErrorState(
             align = TextAlign.Center
         )
 
-        GameButton(
-            text = "تلاش مجدد",
-            icon = Res.drawable.ic_refresh,
-            style = GameButtonStyle.Danger,
-            onClick = onRetry
-        )
+        if (isInvalidWordError) {
+            GameButton(
+                text = if (onEditWord != null) "وارد کردن کلمه دیگر" else "متوجه شدم",
+                style = GameButtonStyle.Danger,
+                onClick = {
+                    if (onEditWord != null) onEditWord() else onDismiss()
+                }
+            )
+        } else {
+            GameButton(
+                text = "تلاش مجدد",
+                icon = Res.drawable.ic_refresh,
+                style = GameButtonStyle.Danger,
+                onClick = onRetry
+            )
+        }
     }
 }
 

@@ -5,9 +5,12 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import ir.speaking.core.extension.getClient
+import ir.speaking.feature.dictionary.db.LexiconTable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -46,7 +49,14 @@ class LeitnerRoutingTest {
         }
         assertEquals(HttpStatusCode.OK, cardsRes.status)
 
-        // 4. Add a custom flashcard -> 200 OK
+        // 4. Pre-seed perseverance in Lexicon and add a custom flashcard -> 200 OK
+        transaction {
+            LexiconTable.insert {
+                it[normalizedText] = "perseverance"
+                it[headword] = "perseverance"
+                it[contextMeaningFa] = "پشتکار و استقامت"
+            }
+        }
         val addRes = client.post("/api/v2/leitner/cards") {
             header(HttpHeaders.Authorization, authHeader)
             contentType(ContentType.Application.Json)
@@ -110,5 +120,26 @@ class LeitnerRoutingTest {
             header(HttpHeaders.Authorization, authHeader)
         }
         assertEquals(HttpStatusCode.OK, legacyCards.status)
+
+        // 10. Invalid customWord is rejected with 400 Bad Request
+        listOf("12345", "سلام").forEach { invalidWord ->
+            val badAddRes = client.post("/api/v2/leitner/cards") {
+                header(HttpHeaders.Authorization, authHeader)
+                contentType(ContentType.Application.Json)
+                setBody("""{"customWord": "$invalidWord", "customMeaning": "test"}""")
+            }
+            assertEquals(HttpStatusCode.BadRequest, badAddRes.status, "Expected 400 for '$invalidWord'")
+        }
+
+        // 11. Delete card -> 200 OK, then 404 on second delete
+        val deleteRes = client.delete("/api/v2/leitner/cards/$cardId") {
+            header(HttpHeaders.Authorization, authHeader)
+        }
+        assertEquals(HttpStatusCode.OK, deleteRes.status)
+
+        val deleteAgainRes = client.delete("/api/v2/leitner/cards/$cardId") {
+            header(HttpHeaders.Authorization, authHeader)
+        }
+        assertEquals(HttpStatusCode.NotFound, deleteAgainRes.status)
     }
 }

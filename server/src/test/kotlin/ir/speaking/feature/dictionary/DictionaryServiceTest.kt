@@ -8,6 +8,7 @@ import ir.speaking.core.redis.di.RedisClientHolder
 import ir.speaking.feature.dictionary.db.LexiconTable
 import ir.speaking.feature.dictionary.repository.LexiconRepository
 import ir.speaking.feature.dictionary.service.DictionaryService
+import ir.speaking.feature.dictionary.validation.InvalidWordException
 import ir.speaking.feature.tts.service.TtsConfig
 import ir.speaking.feature.tts.service.TtsService
 import kotlinx.coroutines.runBlocking
@@ -20,7 +21,9 @@ import org.junit.jupiter.api.Test
 import java.io.File
 import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DictionaryServiceTest {
@@ -117,5 +120,32 @@ class DictionaryServiceTest {
         assertEquals("hello", service.normalize("  Hello!  "))
         assertEquals("state-of-the-art", service.normalize("State-of-the-art?"))
         assertEquals("don't", service.normalize("  Don't... "))
+    }
+
+    @Test
+    fun testLookupRejectsAiInvalidWordWithoutPersisting() = runBlocking {
+        val rejectedJson = """
+            {
+              "isValid": false,
+              "rejectionReasonFa": "عبارت واردشده یک کلمه یا اصطلاح معتبر انگلیسی نیست."
+            }
+        """.trimIndent()
+
+        val service = DictionaryService(lexiconRepo, FakeAiApiService(rejectedJson), ttsService, redisHolder)
+        val ex = assertFailsWith<InvalidWordException> {
+            service.lookup("abbas bo azar")
+        }
+        assertTrue(ex.message?.contains("معتبر") == true)
+        assertNull(lexiconRepo.findByNormalizedText("abbas bo azar"))
+    }
+
+    @Test
+    fun testLookupRejectsDeterministicInvalidInputs() = runBlocking {
+        val service = DictionaryService(lexiconRepo, FakeAiApiService("{}"), ttsService, redisHolder)
+
+        assertFailsWith<InvalidWordException> { service.lookup("سلام") }
+        assertFailsWith<InvalidWordException> { service.lookup("12345") }
+        assertFailsWith<InvalidWordException> { service.lookup("aaaaaaa") }
+        assertFailsWith<InvalidWordException> { service.lookup("bcdfghj") }
     }
 }
