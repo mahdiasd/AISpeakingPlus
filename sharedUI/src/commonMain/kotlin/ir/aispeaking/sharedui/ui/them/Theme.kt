@@ -116,7 +116,8 @@ fun AppTheme(
     themeMode: ThemeMode = ThemeController.themeMode.collectAsState().value,
     content: @Composable () -> Unit,
 ) {
-    val systemInDark = isSystemInDarkTheme()
+    val systemDarkOverride = ThemeController.systemDarkOverride.collectAsState().value
+    val systemInDark = systemDarkOverride ?: isSystemInDarkTheme()
     val isDark = when (themeMode) {
         ThemeMode.System -> systemInDark
         ThemeMode.Dark -> true

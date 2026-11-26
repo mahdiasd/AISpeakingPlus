@@ -3,6 +3,7 @@ package ir.aispeaking.androidApp
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +19,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import ir.aispeaking.navigation.AppNavigation
 import ir.aispeaking.navigation.di.initKoin
 import ir.aispeaking.sharedui.ui.them.AppTheme
+import ir.aispeaking.sharedui.ui.them.ThemeController
 
 import ir.aispeaking.chat.audio.DefaultStageAudioController
 import ir.aispeaking.chat.audio.StageAudioController
@@ -175,6 +177,10 @@ class AppActivity : ComponentActivity() {
         // Handle cold-start deep link or notification intent
         handleIntentForDeepLink(intent)
 
+        ThemeController.setSystemDarkOverride(
+            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        )
+
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
@@ -190,6 +196,13 @@ class AppActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         ir.aispeaking.androidApp.payment.CurrentActivityHolder.currentActivity = this
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        ThemeController.setSystemDarkOverride(
+            (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        )
     }
 
     override fun onNewIntent(intent: android.content.Intent) {

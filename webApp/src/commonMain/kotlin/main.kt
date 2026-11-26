@@ -66,9 +66,11 @@ import ir.aispeaking.web.isUserInAppBrowser
 import ir.aispeaking.web.resolveInitialWebRoute
 import ir.aispeaking.web.setupWebAnalyticsBridge
 import ir.aispeaking.web.setupWebAudioBridge
+import ir.aispeaking.web.setupWebThemeBridge
 import ir.aispeaking.web.setupWebVideoBridge
 import ir.aispeaking.web.shouldShowIosA2hsBanner
 import ir.aispeaking.web.shouldShowIosChromeBanner
+import ir.aispeaking.web.syncWebPageBackground
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.context.GlobalContext
 
@@ -91,9 +93,16 @@ fun main() {
         setupWebVideoBridge()
     } catch (_: Throwable) {}
 
+    try {
+        setupWebThemeBridge()
+    } catch (_: Throwable) {}
+
     ComposeViewport {
         AppTheme {
             val isDark = AppTheme.isDark
+            LaunchedEffect(isDark) {
+                syncWebPageBackground(isDark)
+            }
             val initialRoute = remember {
                 val hasSeenIntro = try {
                     GlobalContext.get().get<HasSeenIntroVideoUseCase>().invoke()

@@ -13,6 +13,9 @@ object ThemeController {
     private val _themeMode = MutableStateFlow<ThemeMode>(ThemeMode.System)
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
+    private val _systemDarkOverride = MutableStateFlow<Boolean?>(null)
+    val systemDarkOverride: StateFlow<Boolean?> = _systemDarkOverride.asStateFlow()
+
     private var onSaveCallback: ((String) -> Unit)? = null
 
     fun initialize(savedKey: String, onSave: ((String) -> Unit)? = null) {
@@ -25,5 +28,9 @@ object ThemeController {
     fun setThemeMode(mode: ThemeMode) {
         _themeMode.value = mode
         onSaveCallback?.invoke(mode.key)
+    }
+
+    fun setSystemDarkOverride(isDark: Boolean) {
+        _systemDarkOverride.value = isDark
     }
 }
