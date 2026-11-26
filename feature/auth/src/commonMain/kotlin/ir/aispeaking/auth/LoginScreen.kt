@@ -65,6 +65,7 @@ import ir.aispeaking.sharedui.auth_vector
 import ir.aispeaking.sharedui.dialog_message_vector
 import ir.aispeaking.sharedui.ic_edit
 import ir.aispeaking.sharedui.ic_refresh
+import ir.aispeaking.sharedui.ui.core.button.AppBackButton
 import ir.aispeaking.sharedui.ui.game.Game
 import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
@@ -84,6 +85,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun LoginRootScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = koinViewModel(),
+    onNavigateBack: () -> Unit = {},
     onNavigateToMain: (User?) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -117,7 +119,8 @@ fun LoginRootScreen(
         onResendOtp = { viewModel.processIntent(LoginIntent.ResendOtpClicked) },
         onChangePhone = { viewModel.processIntent(LoginIntent.ChangePhoneClicked) },
         onSkipGuest = { viewModel.processIntent(LoginIntent.SkipGuestClicked) },
-        onDismissError = { viewModel.processIntent(LoginIntent.DismissError) }
+        onDismissError = { viewModel.processIntent(LoginIntent.DismissError) },
+        onNavigateBack = onNavigateBack
     )
 }
 
@@ -128,8 +131,9 @@ fun LoginRootScreen(
 fun LoginRoute(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = koinViewModel(),
+    onNavigateBack: () -> Unit = {},
     onNavigateToMain: (User?) -> Unit = {}
-) = LoginRootScreen(modifier, viewModel, onNavigateToMain)
+) = LoginRootScreen(modifier, viewModel, onNavigateBack, onNavigateToMain)
 
 /**
  * Backwards compatible overload for LoginScreen with ViewModel injection.
@@ -138,11 +142,13 @@ fun LoginRoute(
 fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = koinViewModel(),
+    onNavigateBack: () -> Unit = {},
     onNavigateToMain: (User?) -> Unit = {}
 ) {
     LoginRoute(
         modifier = modifier,
         viewModel = viewModel,
+        onNavigateBack = onNavigateBack,
         onNavigateToMain = onNavigateToMain
     )
 }
@@ -162,7 +168,8 @@ fun LoginScreen(
     onResendOtp: () -> Unit,
     onChangePhone: () -> Unit,
     onSkipGuest: () -> Unit,
-    onDismissError: () -> Unit
+    onDismissError: () -> Unit,
+    onNavigateBack: () -> Unit = {}
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "CharacterFloat")
     val floatAnim by infiniteTransition.animateFloat(
@@ -190,80 +197,118 @@ fun LoginScreen(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(bgBrush),
-            contentAlignment = Alignment.Center
+                .background(bgBrush)
         ) {
             Column(
                 modifier = Modifier
-                    .widthIn(max = 440.dp)
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .statusBarsPadding()
-                    .navigationBarsPadding()
-                    .imePadding()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 18.dp, vertical = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
             ) {
-                CharacterHeroSection(step = uiState.step, floatOffset = floatAnim)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AppBackButton(
+                        onClick = {
+                            if (uiState.step == LoginStep.ENTER_OTP) {
+                                onChangePhone()
+                            } else {
+                                onNavigateBack()
+                            }
+                        }
+                    )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                    GameText(
+                        text = "ورود به حساب",
+                        size = 17.sp,
+                        bold = true,
+                        align = TextAlign.Center
+                    )
 
-                GlassPanel(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(30.dp),
-                    color = Game.PanelSolid,
-                    border = Game.StrokeStrong
+                    Spacer(modifier = Modifier.size(38.dp))
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
                 ) {
                     Column(
                         modifier = Modifier
+                            .widthIn(max = 440.dp)
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .navigationBarsPadding()
+                            .imePadding()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 18.dp, vertical = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        AnimatedContent(
-                            targetState = uiState.step,
-                            transitionSpec = {
-                                if (targetState == LoginStep.ENTER_OTP) {
-                                    (slideInHorizontally { width -> -width } + fadeIn()) togetherWith
-                                            (slideOutHorizontally { width -> width } + fadeOut())
-                                } else {
-                                    (slideInHorizontally { width -> width } + fadeIn()) togetherWith
-                                            (slideOutHorizontally { width -> -width } + fadeOut())
-                                }
-                            },
-                            label = "LoginStepAnimation"
-                        ) { step ->
-                            when (step) {
-                                LoginStep.ENTER_PHONE -> PhoneInputStep(
-                                    uiState = uiState,
-                                    onPhoneChanged = onPhoneChanged,
-                                    onSendOtp = onSendOtp,
-                                    onSkipGuest = onSkipGuest
-                                )
+                        CharacterHeroSection(step = uiState.step, floatOffset = floatAnim)
 
-                                LoginStep.ENTER_OTP -> OtpInputStep(
-                                    uiState = uiState,
-                                    onOtpChanged = onOtpChanged,
-                                    onVerifyOtp = onVerifyOtp,
-                                    onChangePhone = onChangePhone,
-                                    onResendOtp = onResendOtp
-                                )
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        GlassPanel(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(30.dp),
+                            color = Game.PanelSolid,
+                            border = Game.StrokeStrong
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                AnimatedContent(
+                                    targetState = uiState.step,
+                                    transitionSpec = {
+                                        if (targetState == LoginStep.ENTER_OTP) {
+                                            (slideInHorizontally { width -> -width } + fadeIn()) togetherWith
+                                                    (slideOutHorizontally { width -> width } + fadeOut())
+                                        } else {
+                                            (slideInHorizontally { width -> width } + fadeIn()) togetherWith
+                                                    (slideOutHorizontally { width -> -width } + fadeOut())
+                                        }
+                                    },
+                                    label = "LoginStepAnimation"
+                                ) { step ->
+                                    when (step) {
+                                        LoginStep.ENTER_PHONE -> PhoneInputStep(
+                                            uiState = uiState,
+                                            onPhoneChanged = onPhoneChanged,
+                                            onSendOtp = onSendOtp,
+                                            onSkipGuest = onSkipGuest
+                                        )
+
+                                        LoginStep.ENTER_OTP -> OtpInputStep(
+                                            uiState = uiState,
+                                            onOtpChanged = onOtpChanged,
+                                            onVerifyOtp = onVerifyOtp,
+                                            onChangePhone = onChangePhone,
+                                            onResendOtp = onResendOtp
+                                        )
+                                    }
+                                }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        GameText(
+                            text = "ورود امن و سریع با کد یک‌بار مصرف پیامکی",
+                            size = 12.sp,
+                            color = Game.TextMuted,
+                            align = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                GameText(
-                    text = "ورود امن و سریع با کد یک‌بار مصرف پیامکی",
-                    size = 12.sp,
-                    color = Game.TextMuted,
-                    align = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
