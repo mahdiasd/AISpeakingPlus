@@ -1,3 +1,5 @@
+import java.security.MessageDigest
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose.compiler)
@@ -191,6 +193,27 @@ abstract class PatchCompatibilityWebAppJs : DefaultTask() {
                 logger.lifecycle("Patched webApp.js with js-string builtins detection and JS fallback.")
             } else {
                 webAppJs.writeText(content)
+            }
+
+            // Stamp index.html with deterministic content-hash query param to bypass CDN cache
+            val dist = distDir.get().asFile
+            val digest = MessageDigest.getInstance("SHA-256")
+            listOf("webApp.js", "originWasmWebApp.js", "originJsWebApp.js").forEach { name ->
+                val f = dist.resolve(name)
+                if (f.exists()) {
+                    digest.update(f.readBytes())
+                }
+            }
+            val shortHash = digest.digest().joinToString("") { b -> "%02x".format(b) }.take(10)
+            val indexHtml = dist.resolve("index.html")
+            if (indexHtml.exists()) {
+                val htmlContent = indexHtml.readText()
+                val updatedHtml = htmlContent.replace(
+                    Regex("""webApp\.js(\?v=[^"']+)?"""),
+                    "webApp.js?v=$shortHash"
+                )
+                indexHtml.writeText(updatedHtml)
+                logger.lifecycle("Stamped index.html with cache-busting version v=$shortHash")
             }
         }
     }

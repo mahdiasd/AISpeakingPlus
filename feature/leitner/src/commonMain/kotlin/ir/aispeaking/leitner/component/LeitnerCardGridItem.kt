@@ -159,10 +159,10 @@ fun LeitnerCardGridItem(
 
                     Box(
                         modifier = Modifier
-                            .size(26.dp)
+                            .size(28.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFFF453A).copy(alpha = if (isDark) 0.16f else 0.10f))
-                            .border(0.8.dp, Color(0xFFFF453A).copy(alpha = 0.35f), CircleShape)
+                            .background(Color(0xFFFF453A).copy(alpha = if (isDark) 0.22f else 0.14f))
+                            .border(1.dp, Color(0xFFFF453A).copy(alpha = 0.5f), CircleShape)
                             .clickable(onClick = onDeleteClick),
                         contentAlignment = Alignment.Center
                     ) {
@@ -170,7 +170,7 @@ fun LeitnerCardGridItem(
                             painter = painterResource(Res.drawable.ic_delete),
                             contentDescription = "حذف کلمه",
                             tint = Color(0xFFFF453A),
-                            modifier = Modifier.size(13.dp)
+                            modifier = Modifier.size(14.dp)
                         )
                     }
                 }
