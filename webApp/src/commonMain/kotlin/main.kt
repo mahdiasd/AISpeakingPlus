@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.ComposeViewport
 import ir.aispeaking.chat.audio.DefaultStageAudioController
 import ir.aispeaking.chat.audio.StageAudioController
+import ir.aispeaking.domain.usecase.auth.HasSeenIntroVideoUseCase
 import ir.aispeaking.navigation.AppNavigation
 import ir.aispeaking.navigation.AppRoute
 import ir.aispeaking.navigation.di.initKoin
@@ -94,7 +95,14 @@ fun main() {
     ComposeViewport {
         AppTheme {
             val isDark = AppTheme.isDark
-            val initialRoute = remember { resolveInitialWebRoute() }
+            val initialRoute = remember {
+                val hasSeenIntro = try {
+                    GlobalContext.get().get<HasSeenIntroVideoUseCase>().invoke()
+                } catch (_: Throwable) {
+                    false
+                }
+                resolveInitialWebRoute(hasSeenIntroVideo = hasSeenIntro)
+            }
             var currentRoute by remember { mutableStateOf<AppRoute?>(initialRoute) }
 
             LaunchedEffect(Unit) {

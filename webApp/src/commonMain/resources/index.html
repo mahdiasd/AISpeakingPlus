@@ -332,6 +332,8 @@
                     : (window.location.origin + (src.startsWith("/") ? src : "/" + src));
 
                 this.video.src = fullUrl;
+                this.video.muted = false;
+                this._hideUnmuteHint();
                 this.overlay.style.display = "flex";
                 this.overlay.style.opacity = "1";
                 this._updateMuteButton(false);
@@ -1613,10 +1615,7 @@
         try { window.aiSpeakingPermission.check(); } catch(e) {}
     </script>
 
-    <!-- Firebase Web SDK Compat scripts for Cloud Messaging & Analytics -->
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
+    <!-- Firebase Web SDK Compat scripts are loaded asynchronously after window load so blocked CDNs never stall app startup -->
 
     <script>
         window.aiSpeakingAnalytics = {
@@ -1835,9 +1834,29 @@
             }
         };
 
-        // Initialize when window finishes loading
+        function loadExternalScript(src, onLoad) {
+            try {
+                var s = document.createElement('script');
+                s.src = src;
+                s.async = true;
+                if (typeof onLoad === 'function') {
+                    s.onload = onLoad;
+                }
+                s.onerror = function() {
+                    // Silently ignore blocked external scripts (e.g. gstatic.com) so app remains usable
+                };
+                (document.head || document.body).appendChild(s);
+            } catch (_) {}
+        }
+
+        // Initialize Firebase SDKs non-blockingly when window finishes loading
         window.addEventListener('load', function() {
-            window.aiSpeakingPush.init();
+            loadExternalScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js', function() {
+                loadExternalScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js', function() {
+                    window.aiSpeakingPush.init();
+                });
+                loadExternalScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js');
+            });
         });
 
         // Request permission on first user gesture (click/tap) if still in 'default' state
@@ -2281,5 +2300,5 @@
             setTimeout(window.hideAppLoader, 8000);
         })();
     </script>
-    <script src="webApp.js?v=20261031v5"></script>
+    <script src="webApp.js?v=20261126v1"></script>
 </html>

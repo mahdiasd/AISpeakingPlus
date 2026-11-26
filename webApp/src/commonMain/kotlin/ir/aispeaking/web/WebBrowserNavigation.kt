@@ -61,16 +61,38 @@ fun hideWebLoader() {
     } catch (_: Throwable) {}
 }
 
-fun resolveInitialWebRoute(): AppRoute {
-    val initialHash = jsGetHash()
-    if (initialHash.isNotBlank()) {
-        val parsed = parseLegacyHash(initialHash)
-        if (parsed != null && parsed !is SplashRoute) return parsed
+fun resolveInitialWebRoute(hasSeenIntroVideo: Boolean = true): AppRoute {
+    return resolveInitialWebRoute(
+        path = jsGetCurrentPath(),
+        search = jsGetCurrentSearch(),
+        hash = jsGetHash(),
+        hasSeenIntroVideo = hasSeenIntroVideo
+    )
+}
+
+internal fun resolveInitialWebRoute(
+    path: String,
+    search: String,
+    hash: String,
+    hasSeenIntroVideo: Boolean
+): AppRoute {
+    val defaultEntryRoute: AppRoute = if (hasSeenIntroVideo) MainRoute else IntroVideoRoute
+    if (hash.isNotBlank()) {
+        val parsed = parseLegacyHash(hash)
+        if (parsed != null && parsed !is SplashRoute) {
+            return if (parsed is MainRoute && !hasSeenIntroVideo) IntroVideoRoute else parsed
+        }
     }
-    val path = jsGetCurrentPath()
-    val search = jsGetCurrentSearch()
+    val cleanPath = path.substringAfter("/app").trim('/')
+    if (cleanPath.isEmpty()) {
+        return defaultEntryRoute
+    }
     val route = urlToRoute(path, search)
-    return if (route != null && route !is SplashRoute) route else MainRoute
+    return when {
+        route == null || route is SplashRoute -> defaultEntryRoute
+        route is MainRoute && !hasSeenIntroVideo -> IntroVideoRoute
+        else -> route
+    }
 }
 
 /**
@@ -85,35 +107,23 @@ fun WebBrowserNavigation(
     onRouteChanged: (AppRoute?) -> Unit = {}
 ) {
     LaunchedEffect(backStack) {
-        // 1. Initial URL inspection (detect deep-links or legacy hash fragments)
-        val initialHash = jsGetHash()
-        val initialPath = jsGetCurrentPath()
-        val initialSearch = jsGetCurrentSearch()
-
-        var initialRoute: AppRoute? = null
-        if (initialHash.isNotBlank()) {
-            initialRoute = parseLegacyHash(initialHash)
-        }
-        if (initialRoute == null) {
-            initialRoute = urlToRoute(initialPath, initialSearch)
-        }
-
-        if (initialRoute != null && initialRoute !is SplashRoute) {
-            // Restore deep link or converted legacy hash cleanly
-            if (initialRoute is MainRoute || initialRoute is LoginRoute || initialRoute is IntroVideoRoute) {
-                backStack.clear()
-                backStack.add(initialRoute)
-            } else {
+        // 1. Synchronize initial backStack (resolved by resolveInitialWebRoute) with browser URL
+        val initialTop = backStack.lastOrNull() as? AppRoute
+        if (initialTop != null && initialTop !is SplashRoute) {
+            if (initialTop !is MainRoute && initialTop !is LoginRoute && initialTop !is IntroVideoRoute && backStack.none { it is MainRoute }) {
                 backStack.clear()
                 backStack.add(MainRoute)
-                backStack.add(initialRoute)
+                backStack.add(initialTop)
             }
-            jsReplaceUrl(routeToUrl(initialRoute))
+            jsReplaceUrl(routeToUrl(initialTop))
         }
         onRouteChanged(backStack.lastOrNull() as? AppRoute)
 
         // 2. Observe backStack changes and push clean HTML5 paths to window.history
-        var previousWasSplash = (backStack.lastOrNull() is SplashRoute)
+        var previousWasTransientRoot = (
+            backStack.lastOrNull() is SplashRoute ||
+                (backStack.size == 1 && backStack.lastOrNull() is IntroVideoRoute)
+            )
 
         launch {
             snapshotFlow { backStack.toList() }.collect { stack ->
@@ -123,14 +133,17 @@ fun WebBrowserNavigation(
                 val currentUrl = jsGetCurrentPath() + jsGetCurrentSearch()
 
                 if (targetUrl != currentUrl) {
-                    if (top is SplashRoute || previousWasSplash) {
+                    if (top is SplashRoute || previousWasTransientRoot) {
                         jsReplaceUrl(targetUrl)
                     } else {
                         jsPushUrl(targetUrl)
                     }
                 }
 
-                previousWasSplash = (top is SplashRoute)
+                previousWasTransientRoot = (
+                    top is SplashRoute ||
+                        (stack.size == 1 && top is IntroVideoRoute)
+                    )
             }
         }
 

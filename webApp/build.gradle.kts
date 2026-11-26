@@ -33,6 +33,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":sharedUI"))
+            implementation(project(":domain"))
             implementation(project(":navigation"))
             implementation(project(":utils"))
             implementation(project(":network"))
