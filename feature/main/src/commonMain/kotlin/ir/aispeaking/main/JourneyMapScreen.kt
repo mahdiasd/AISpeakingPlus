@@ -74,7 +74,6 @@ import ir.aispeaking.sharedui.ui.game.GameButton
 import ir.aispeaking.sharedui.ui.game.GameButtonStyle
 import ir.aispeaking.sharedui.ui.game.GameChip
 import ir.aispeaking.sharedui.ui.game.GameIconButton
-import ir.aispeaking.sharedui.ui.game.GameStars
 import ir.aispeaking.sharedui.ui.game.GameStatPill
 import ir.aispeaking.sharedui.ui.game.GameText
 import ir.aispeaking.sharedui.ui.game.GlassPanel
@@ -448,77 +447,91 @@ private fun StageCard(
     GlassPanel(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        shape = RoundedCornerShape(26.dp)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        shape = RoundedCornerShape(24.dp)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                GameText(
-                    text = "مرحله ${stageNumber.fa()} از ${totalStages.fa()}",
-                    size = 12.sp,
-                    bold = true,
-                    color = Game.Blue
-                )
-                GameStars(stars = stars, size = 22.dp, spacing = 2.dp)
-            }
-
-            GameText(
-                text = stage.titleFa,
-                size = 19.sp,
-                lineHeight = 28.sp,
-                bold = true,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 GameAvatar(
                     name = stage.characterName,
                     imageUrl = stage.characterAvatarUrl,
-                    size = 28.dp
+                    size = 42.dp
                 )
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        GameText(
+                            text = "مرحله ${stageNumber.fa()} از ${totalStages.fa()}",
+                            size = 11.sp,
+                            bold = true,
+                            color = Game.Blue,
+                            maxLines = 1
+                        )
+                        GameText(
+                            text = "·",
+                            size = 11.sp,
+                            color = Game.TextMuted
+                        )
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            GameText(
+                                text = stage.characterName,
+                                size = 11.sp,
+                                latin = true,
+                                color = Game.TextSecondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
                     GameText(
-                        text = stage.characterName,
-                        size = 13.sp,
-                        latin = true,
-                        color = Game.TextSecondary,
-                        maxLines = 1,
+                        text = stage.titleFa,
+                        size = 17.sp,
+                        lineHeight = 23.sp,
+                        bold = true,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            GameButton(
-                text = ctaText,
-                onClick = onStart,
-                modifier = Modifier.fillMaxWidth().then(startModifier),
-                style = ctaStyle,
-                icon = when (stage.lockStatus) {
-                    StageLockStatus.UNLOCKED -> Res.drawable.ic_play
-                    StageLockStatus.LOCKED_SUBSCRIPTION -> Res.drawable.ic_gem
-                    else -> null
-                }
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                GameButton(
+                    text = ctaText,
+                    onClick = onStart,
+                    modifier = Modifier.fillMaxWidth().then(startModifier),
+                    style = ctaStyle,
+                    height = 48.dp,
+                    textSize = 15.sp,
+                    icon = when (stage.lockStatus) {
+                        StageLockStatus.UNLOCKED -> Res.drawable.ic_play
+                        StageLockStatus.LOCKED_SUBSCRIPTION -> Res.drawable.ic_gem
+                        else -> null
+                    }
+                )
 
-            GameButton(
-                text = if (pastCount > 0) "همه مرحله‌ها (${pastCount.fa()} تا کامل شده)" else "همه مرحله‌ها و پیشرفت",
-                onClick = onOpenList,
-                modifier = Modifier.fillMaxWidth().then(listModifier),
-                style = GameButtonStyle.Glass,
-                height = 44.dp,
-                textSize = 13.sp
-            )
+                GameButton(
+                    text = if (pastCount > 0) "همه مرحله‌ها (${pastCount.fa()} تا کامل شده)" else "همه مرحله‌ها و پیشرفت",
+                    onClick = onOpenList,
+                    modifier = Modifier.fillMaxWidth().then(listModifier),
+                    style = GameButtonStyle.Glass,
+                    height = 40.dp,
+                    textSize = 13.sp
+                )
+            }
         }
     }
 }
