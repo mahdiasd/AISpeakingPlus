@@ -56,6 +56,7 @@ import ir.aispeaking.profile.component.EditNickNameDialog
 import ir.aispeaking.profile.component.GuestBannerCard
 import ir.aispeaking.profile.component.LevelPickerBottomSheet
 import ir.aispeaking.profile.component.PlacementTestCard
+import ir.aispeaking.profile.component.PlacementTestIntroDialog
 import ir.aispeaking.profile.component.ProfileHeaderCard
 import ir.aispeaking.profile.component.SignOutConfirmDialog
 import ir.aispeaking.profile.component.StoryVideoCard
@@ -82,6 +83,7 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    onSignOutComplete: () -> Unit = onNavigateToLogin,
     onNavigateToSubscription: () -> Unit,
     onNavigateToPlacementTest: () -> Unit = {},
     onNavigateToIntroVideo: () -> Unit = {},
@@ -89,6 +91,7 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showSupportDialog by remember { mutableStateOf(false) }
+    var showPlacementIntroDialog by remember { mutableStateOf(false) }
     val isDark = AppTheme.isDark
     val screenBg = if (isDark) Color(0xFF0F1015) else Color(0xFFF2F4F7)
 
@@ -196,7 +199,7 @@ fun ProfileScreen(
 
                         PlacementTestCard(
                             user = user,
-                            onClick = onNavigateToPlacementTest
+                            onClick = { showPlacementIntroDialog = true }
                         )
 
                         // Apple Theme Appearance Selector (System / Dark / Light)
@@ -283,9 +286,18 @@ fun ProfileScreen(
             SignOutConfirmDialog(
                 visible = uiState.showSignOutDialog,
                 onConfirm = {
-                    viewModel.onConfirmSignOut(onComplete = onNavigateToLogin)
+                    viewModel.onConfirmSignOut(onComplete = onSignOutComplete)
                 },
                 onDismiss = { viewModel.onDismissDialogs() }
+            )
+
+            PlacementTestIntroDialog(
+                visible = showPlacementIntroDialog,
+                onStart = {
+                    showPlacementIntroDialog = false
+                    onNavigateToPlacementTest()
+                },
+                onDismiss = { showPlacementIntroDialog = false }
             )
 
             LevelPickerBottomSheet(
