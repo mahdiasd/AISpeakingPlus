@@ -113,6 +113,7 @@ export const AuditLogsPage: React.FC = () => {
             { id: 'STAGE', label: 'مراحل' },
             { id: 'USER', label: 'کاربران' },
             { id: 'SUBSCRIPTION', label: 'اشتراک‌ها' },
+            { id: 'CONFIG', label: 'تنظیمات' },
           ].map((item) => (
             <button
               key={item.id}

@@ -15,7 +15,7 @@ import ir.speaking.core.utils.MyConstant
 import ir.speaking.core.utils.getUserUid
 import ir.speaking.feature.config.dto.ConfigRequestDto
 import ir.speaking.feature.config.dto.ConfigResponseDto
-import ir.speaking.feature.config.dto.UpdateResponseDto
+import ir.speaking.feature.config.service.AppConfigService
 import ir.speaking.feature.notification.service.DeviceTokenService
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
@@ -24,6 +24,7 @@ import java.util.UUID
 @OptIn(ExperimentalKtorApi::class)
 fun Application.configRouting() {
     val deviceTokenService by inject<DeviceTokenService>()
+    val appConfigService by inject<AppConfigService>()
     val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
     routing {
@@ -59,14 +60,7 @@ fun Application.configRouting() {
                 } catch (_: Exception) {}
             }
 
-            // Force update response directing legacy users (version <= 9) to update to V2 (version 10+)
-            val updateConfig = UpdateResponseDto(
-                forceVersion = 10,
-                lastVersion = 10,
-                suggestVersion = 10,
-                link = "https://cafebazaar.ir/app/ir.aispeaking",
-                message = "نسخه جدید AI Speaking با مراحل داستانی و هوش مصنوعی پیشرفته منتشر شد. برای ادامه لطفاً برنامه را بروزرسانی نمایید."
-            )
+            val updateConfig = appConfigService.getUpdateResponseDto()
 
             val response = ConfigResponseDto(
                 update = updateConfig,
@@ -104,6 +98,12 @@ fun Application.configRouting() {
                 tag("App Config")
                 summary = "Get App Config (v1 GET)"
                 description = "Returns application update requirements and server configuration"
+                responses {
+                    HttpStatusCode.OK {
+                        description = "Configuration data"
+                        schema = jsonSchema<SuccessResponse<ConfigResponseDto>>()
+                    }
+                }
             }
         }
 
@@ -115,6 +115,17 @@ fun Application.configRouting() {
                 tag("App Config")
                 summary = "Get App Config & Force Update (v2)"
                 description = "Returns application update requirements and server configuration for V2 clients"
+                requestBody {
+                    description = "Optional device info and push token"
+                    required = false
+                    schema = jsonSchema<ConfigRequestDto>()
+                }
+                responses {
+                    HttpStatusCode.OK {
+                        description = "Configuration data"
+                        schema = jsonSchema<SuccessResponse<ConfigResponseDto>>()
+                    }
+                }
             }
 
             get {
@@ -123,6 +134,12 @@ fun Application.configRouting() {
                 tag("App Config")
                 summary = "Get App Config (v2 GET)"
                 description = "Returns application update requirements and server configuration"
+                responses {
+                    HttpStatusCode.OK {
+                        description = "Configuration data"
+                        schema = jsonSchema<SuccessResponse<ConfigResponseDto>>()
+                    }
+                }
             }
         }
     }

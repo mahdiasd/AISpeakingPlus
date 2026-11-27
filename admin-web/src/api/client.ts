@@ -26,6 +26,8 @@ import {
   AnnouncementItem,
   AnnouncementListResponse,
   AnnouncementUpsertPayload,
+  AppVersionConfig,
+  UpdateAppVersionConfigPayload,
 } from '../types';
 
 const BASE_URL = '';
@@ -437,6 +439,20 @@ class ApiClient {
   async sendPushNotification(payload: AdminNotificationPayload): Promise<AdminNotificationResponse> {
     const res = await this.request<AdminNotificationResponse>('/api/admin/notifications/send', {
       method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return res.data;
+  }
+
+  // --- App Version Config ---
+  async getAppVersionConfig(): Promise<AppVersionConfig> {
+    const res = await this.request<AppVersionConfig>('/api/admin/config/app-version');
+    return res.data;
+  }
+
+  async updateAppVersionConfig(payload: UpdateAppVersionConfigPayload): Promise<AppVersionConfig> {
+    const res = await this.request<AppVersionConfig>('/api/admin/config/app-version', {
+      method: 'PUT',
       body: JSON.stringify(payload),
     });
     return res.data;

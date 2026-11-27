@@ -167,5 +167,11 @@ fun sanitizeOpenApiForApidog(rawJson: String): String {
         """"properties":{"mobile":{"type":"string","example":"09152413498"},"otpCode":{"type":"string","example":"87799"}}"""
     )
 
+    // 6. Add example payload for UpdateAppVersionConfigRequest
+    sanitized = sanitized.replace(
+        """"schema":{"${'$'}ref":"#/components/schemas/UpdateAppVersionConfigRequest"}""",
+        """"schema":{"${'$'}ref":"#/components/schemas/UpdateAppVersionConfigRequest"},"example":{"lastVersion":12,"minVersion":10,"suggestVersion":11,"link":"https://cafebazaar.ir/app/ir.aispeaking","message":"نسخه جدید AI Speaking منتشر شد. برای دریافت امکانات جدید لطفاً برنامه را به‌روزرسانی کنید."}"""
+    )
+
     return sanitized
 }

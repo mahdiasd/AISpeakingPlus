@@ -43,3 +43,23 @@ data class ConfigResponseDto(
     val welcomeMessage: WelcomeMessageResponseDto? = null,
     val tokenAlive: Boolean = true
 )
+
+@Serializable
+data class AppVersionConfigDto(
+    val platform: String = "android",
+    val lastVersion: Int,
+    val minVersion: Int,
+    val suggestVersion: Int,
+    val link: String,
+    val message: String,
+    val updatedAt: String? = null
+)
+
+@Serializable
+data class UpdateAppVersionConfigRequest(
+    val lastVersion: Int,
+    val minVersion: Int,
+    val suggestVersion: Int,
+    val link: String,
+    val message: String
+)

@@ -9,6 +9,7 @@ import {
   TicketPercent,
   Bell,
   Megaphone,
+  Smartphone,
   X,
 } from 'lucide-react';
 
@@ -38,6 +39,11 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       to: '/admin/announcements',
       label: 'پیام‌ها و اطلاعیه‌ها',
       icon: Megaphone,
+    },
+    {
+      to: '/admin/app-version',
+      label: 'تنظیمات نسخه اپلیکیشن',
+      icon: Smartphone,
     },
     {
       to: '/admin/notifications',

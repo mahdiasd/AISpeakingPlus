@@ -82,6 +82,9 @@ class OpenApiRoutingTest {
             "/api/v2/tts/speak",
             "/api/v2/tts/audio/{filename}",
             "/api/v2/stt/live",
+            "/api/v1/config",
+            "/api/v2/config",
+            "/api/admin/config/app-version",
             "/health"
         )
 
@@ -100,6 +103,10 @@ class OpenApiRoutingTest {
         val verifyOtpPath = paths["/api/v2/auth/otp/verify"]?.jsonObject?.get("post")?.jsonObject
         assertNotNull(verifyOtpPath, "POST /api/v2/auth/otp/verify must exist")
         assertTrue(verifyOtpPath.containsKey("requestBody"), "POST /api/v2/auth/otp/verify must have requestBody")
+
+        val adminAppVersionPut = paths["/api/admin/config/app-version"]?.jsonObject?.get("put")?.jsonObject
+        assertNotNull(adminAppVersionPut, "PUT /api/admin/config/app-version must exist")
+        assertTrue(adminAppVersionPut.containsKey("requestBody"), "PUT /api/admin/config/app-version must have requestBody")
 
         // Test GET /openapi.json
         val openApiJsonAliasResponse = client.get("/openapi.json")

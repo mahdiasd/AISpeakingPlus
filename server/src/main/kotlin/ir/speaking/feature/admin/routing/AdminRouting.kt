@@ -2,6 +2,7 @@ package ir.speaking.feature.admin.routing
 
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
+import ir.speaking.core.redis.di.RedisClientHolder
 import ir.speaking.feature.admin.audit.service.AuditLogService
 import ir.speaking.feature.admin.auth.AdminAuthService
 import ir.speaking.feature.admin.auth.routing.adminAuthRouting
@@ -20,6 +21,10 @@ import ir.speaking.feature.admin.user.routing.adminUserRouting
 import ir.speaking.feature.admin.user.service.AdminUserService
 import ir.speaking.feature.announcement.routing.adminAnnouncementRouting
 import ir.speaking.feature.announcement.service.AnnouncementService
+import ir.speaking.feature.config.repository.AppVersionConfigRepository
+import ir.speaking.feature.config.routing.adminConfigRouting
+import ir.speaking.feature.config.service.AppConfigService
+import org.koin.ktor.ext.get
 
 fun Application.adminRouting() {
     val auditLogService = AuditLogService()
@@ -31,6 +36,10 @@ fun Application.adminRouting() {
     val adminPromoService = AdminPromoService()
     val adminNotificationService = AdminNotificationService()
     val announcementService = AnnouncementService()
+    val appConfigServiceProvider: () -> AppConfigService = {
+        runCatching { get<AppConfigService>() }
+            .getOrElse { AppConfigService(AppVersionConfigRepository(), RedisClientHolder(null)) }
+    }
 
     routing {
         adminAuthRouting(adminAuthService, auditLogService)
@@ -41,6 +50,7 @@ fun Application.adminRouting() {
         adminPromoRouting(adminPromoService, auditLogService)
         adminNotificationRouting(adminNotificationService, auditLogService)
         adminAnnouncementRouting(announcementService, auditLogService)
+        adminConfigRouting(appConfigServiceProvider, auditLogService)
         adminMediaRouting()
     }
 }

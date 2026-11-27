@@ -351,4 +351,23 @@ export interface AnnouncementListResponse {
   activeAnnouncementId?: string | null;
 }
 
+// App Version Config Models
+export interface AppVersionConfig {
+  platform: string;
+  lastVersion: number;
+  minVersion: number;
+  suggestVersion: number;
+  link: string;
+  message: string;
+  updatedAt?: string | null;
+}
+
+export interface UpdateAppVersionConfigPayload {
+  lastVersion: number;
+  minVersion: number;
+  suggestVersion: number;
+  link: string;
+  message: string;
+}
+
 

@@ -39,6 +39,9 @@ const NotificationsPage = lazy(() =>
 const AnnouncementsPage = lazy(() =>
   import('./pages/AnnouncementsPage').then((m) => ({ default: m.AnnouncementsPage }))
 );
+const AppVersionConfigPage = lazy(() =>
+  import('./pages/AppVersionConfigPage').then((m) => ({ default: m.AppVersionConfigPage }))
+);
 
 const PageFallback: React.FC = () => (
   <div className="min-h-screen bg-[#0B0F17] flex items-center justify-center">
@@ -72,6 +75,7 @@ export const App: React.FC = () => {
                   <Route path="stages/:id" element={<StageEditorPage />} />
                   <Route path="voice-lab" element={<VoiceLabPage />} />
                   <Route path="announcements" element={<AnnouncementsPage />} />
+                  <Route path="app-version" element={<AppVersionConfigPage />} />
                   <Route path="notifications" element={<NotificationsPage />} />
                   <Route path="users" element={<UsersPage />} />
                   <Route path="promo-codes" element={<PromoCodesPage />} />
@@ -83,6 +87,7 @@ export const App: React.FC = () => {
                 <Route path="/stages" element={<Navigate to="/admin/stages" replace />} />
                 <Route path="/voice-lab" element={<Navigate to="/admin/voice-lab" replace />} />
                 <Route path="/announcements" element={<Navigate to="/admin/announcements" replace />} />
+                <Route path="/app-version" element={<Navigate to="/admin/app-version" replace />} />
                 <Route path="/notifications" element={<Navigate to="/admin/notifications" replace />} />
                 <Route path="/users" element={<Navigate to="/admin/users" replace />} />
                 <Route path="/promo-codes" element={<Navigate to="/admin/promo-codes" replace />} />

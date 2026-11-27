@@ -21,6 +21,8 @@ import ir.speaking.feature.placement.db.PlacementSeedData
 import ir.speaking.feature.dictionary.db.LexiconTable
 import ir.speaking.feature.leitner.db.UserFlashcardTable
 import ir.speaking.feature.leitner.db.UserLeitnerSettingsTable
+import ir.speaking.feature.config.db.AppVersionConfigTable
+import ir.speaking.feature.config.service.AppConfigService
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
@@ -48,7 +50,8 @@ private val allTables = arrayOf<Table>(
     DeviceTokensTable,
     LexiconTable,
     UserFlashcardTable,
-    UserLeitnerSettingsTable
+    UserLeitnerSettingsTable,
+    AppVersionConfigTable
 )
 
 fun createHikariDataSource(): HikariDataSource {
@@ -103,9 +106,24 @@ fun configureDatabases() {
             seedOrSyncStages()
             PlacementSeedData.seedIfEmpty()
             seedSuperAdminIfEmpty()
+            seedDefaultAppVersionConfigIfEmpty()
         }
     } catch (e: Exception) {
         PrintHelper.error(e.message.toString())
+    }
+}
+
+fun seedDefaultAppVersionConfigIfEmpty() {
+    if (AppVersionConfigTable.selectAll().where { AppVersionConfigTable.platform eq AppConfigService.DEFAULT_PLATFORM }.empty()) {
+        AppVersionConfigTable.insert {
+            it[platform] = AppConfigService.DEFAULT_PLATFORM
+            it[lastVersion] = AppConfigService.DEFAULT_LAST_VERSION
+            it[minVersion] = AppConfigService.DEFAULT_MIN_VERSION
+            it[suggestVersion] = AppConfigService.DEFAULT_SUGGEST_VERSION
+            it[link] = AppConfigService.DEFAULT_LINK
+            it[message] = AppConfigService.DEFAULT_MESSAGE
+        }
+        PrintHelper.info("Default Android app version config seeded")
     }
 }
 
